@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamento de Portas</title>
+
+<!-- CSS principal -->
+<style>
+body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
+.app { display:grid; grid-template-columns:18% 82%; height:100vh; }
+.sidebar { background:#1e1e1e; color:white; padding:20px; display:flex; flex-direction:column; gap:10px; }
+.sidebar button { padding:10px; border:none; background:#333; color:white; border-radius:6px; cursor:pointer; }
+.content { padding:25px; overflow-y:auto; height:100vh; }
+label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
+input { padding:7px; margin-top:5px; }
+.btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
+.btn-danger { background:#c0392b; }
+#formCliente { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+#portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
+table { border-collapse: collapse; width:100%; }
+th, td { border:1px solid #ccc; padding:5px; text-align:left; }
+th { background:#ddd; }
+</style>
+
+<!-- CSS dark mode externo -->
+<link id="tema-css" rel="stylesheet" href="">
+<script>
+// Aplica dark mode se estiver ativado no localStorage
+if(localStorage.getItem("darkmode") === "true"){
+    document.getElementById("tema-css").href = "/static/css/indexdark.css";
+}
+</script>
+
+</head>
+<body>
+<div class="app">
+    <div class="sidebar">
+        <h3>ColorGlass</h3>
+        <button onclick="go('/')">Home</button>
+        <button onclick="go('/perfis')">Perfis</button>
+        <button onclick="go('/vidros')">Vidros</button>
+        <button onclick="go('/producao')">Produção</button>
+        <button onclick="go('/insumos')">Insumos</button>
+        <button onclick="go('/catalogo')">Catálogo</button>
+        <button onclick="go('/ajustes')">Ajustes</button>   
+    </div>
+
+    <div class="content">
+        <h1>Orçamento de Portas</h1>
+
+        <!-- FORMULÁRIO FICHA DO CLIENTE -->
+        <div id="formCliente">
+            <label>Nome do Cliente<input type="text" id="clienteNome"></label>
+            <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
+        </div>
+
+        <!-- ORÇAMENTOS EXISTENTES -->
+        <h2>Orçamentos Existentes</h2>
+        <div id="orcamentosExistentes"><em>Carregando...</em></div>
+
+        <h2>Portas Salvas</h2>
+        <div id="portasSalvas"></div>
+
+        <button class="btn" onclick="salvarOrcamento()" style="margin-top:20px;">
+            Salvar Orçamento Final
+        </button>
+    </div>
+</div>
+
+<script>
+function go(p){ window.location.href = p }
+
+// URL base do backend no Render
+const BACKEND_URL = "https://colorglass.onrender.com";
+
+// =====================
+// CARREGAR ORÇAMENTOS EXISTENTES
+// =====================
+function carregarOrcamentos() {
+    fetch(`${BACKEND_URL}/api/orcamentos`)
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById("orcamentosExistentes");
+        container.innerHTML = "";
+
+        const orcamentos = data.orcamentos || [];
+        if(orcamentos.length === 0){
+            container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
+            return;
+        }
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th># Pedido</th>
+                    <th>Cliente</th>
+                    <th>Data Criação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+
+        const tbody = table.querySelector("tbody");
+
+        orcamentos.forEach(o => {
+            const tr = document.createElement("tr");
+            const dataCriacao = o.data_criacao
+                ? new Date(o.data_criacao).toLocaleString()
+                : "";
+
+            tr.innerHTML = `
+                <td>${o.numero_pedido}</td>
+                <td>${o.cliente_nome}</td>
+                <td>${dataCriacao}</td>
+                <td>
+                    <button class="btn" onclick="editarOrcamento('${o.id}')">
+                        Editar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        container.appendChild(table);
+    })
+    .catch(err=>{
+        console.error("Erro ao carregar orçamentos:", err);
+        document.getElementById("orcamentosExistentes").innerHTML =
+            "<em>Erro ao carregar orçamentos.</em>";
+    });
+}
+carregarOrcamentos();
+
+// 🔥 UUID DO ORÇAMENTO É MANTIDO NA URL
+function editarOrcamento(uuid){
+    window.location.href = `/portas-page?orcamento_uuid=${encodeURIComponent(uuid)}`;
+}
+
+// =====================
+// FICHA CLIENTE
+// =====================
+let cliente = {nome:"", id:null};
+let portasSalvas = [];
+let idCounter = 0;
+
+async function criarFichaCliente(){
+    const nome = document.getElementById("clienteNome").value.trim();
+    if(!nome){
+        alert("Digite o nome do cliente");
+        return;
+    }
+
+    cliente.nome = nome;
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({cliente_nome: cliente.nome})
+        });
+        const data = await res.json();
+
+        if(data.success){
+            cliente.id = data.id;
+            alert("Ficha criada com sucesso! ID: " + data.id);
+            document.getElementById("formCliente").style.display="none";
+            carregarOrcamentos();
+        } else {
+            alert("Erro ao criar ficha: " + data.error);
+        }
+    } catch(err) {
+        console.error("Erro criarFichaCliente:", err);
+        alert("Erro ao criar ficha, veja o console.");
+    }
+}
+</script>
+</body>
+</html>
+
+
+
