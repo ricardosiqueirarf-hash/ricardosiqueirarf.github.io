@@ -69,16 +69,20 @@ th { background:#eee; }
 </table>
 
 <script>
-// =====================
-// PERFIS
-// =====================
-const BASE_URL = "https://colorglass.onrender.com"; // URL do backend no Render
+/* =====================
+   CONFIG BACKEND
+===================== */
+const BASE_URL = "https://colorglass.onrender.com";
 
+/* =====================
+   PERFIS
+===================== */
 async function carregar() {
     const res = await fetch(`${BASE_URL}/api/perfis`);
     const data = await res.json();
     const tbody = document.getElementById("tabela");
     tbody.innerHTML = "";
+
     data.forEach(p => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -87,8 +91,8 @@ async function carregar() {
             <td>${p.margem}%</td>
             <td>${p.perda}%</td>
             <td><b>R$ ${Number(p.preco).toFixed(2)}</b></td>
-            <td>${(p.tipologias||[]).join(", ")}</td>
-            <td>${(p.insumos||[]).join(", ")}</td>
+            <td>${(p.tipologias || []).join(", ")}</td>
+            <td>${(p.insumos || []).join(", ")}</td>
             <td>
                 <button onclick='editar(${JSON.stringify(p)})'>Editar</button>
                 <button onclick="excluir('${p.id}')">Excluir</button>
@@ -103,9 +107,9 @@ function getTipologiasSelecionadas() {
         .map(c => c.value);
 }
 
-// =====================
-// INSUMOS
-// =====================
+/* =====================
+   INSUMOS
+===================== */
 let insumosLista = [];
 
 async function carregarInsumos() {
@@ -152,19 +156,19 @@ function getInsumosSelecionados() {
         .filter(v => v);
 }
 
-// =====================
-// SALVAR / EDITAR / EXCLUIR
-// =====================
+/* =====================
+   SALVAR / EDITAR / EXCLUIR
+===================== */
 async function salvar() {
     const id = perfil_id.value;
-    const nome = document.getElementById("nome").value;
-    const custo = parseFloat(document.getElementById("custo").value);
-    const margem = parseFloat(document.getElementById("margem").value);
-    const perda = parseFloat(document.getElementById("perda").value);
+    const nome = nomeInput.value;
+    const custo = parseFloat(custoInput.value);
+    const margem = parseFloat(margemInput.value);
+    const perda = parseFloat(perdaInput.value);
     const tipologias = getTipologiasSelecionadas();
     const insumos = getInsumosSelecionados();
 
-    if(!nome || isNaN(custo) || isNaN(margem) || isNaN(perda) || tipologias.length===0){
+    if (!nome || isNaN(custo) || isNaN(margem) || isNaN(perda) || tipologias.length === 0) {
         alert("Preencha todos os campos e selecione ao menos uma tipologia");
         return;
     }
@@ -173,9 +177,9 @@ async function salvar() {
     const url = id ? `${BASE_URL}/api/perfis/${id}` : `${BASE_URL}/api/perfis`;
     const method = id ? "PUT" : "POST";
 
-    await fetch(url,{
+    await fetch(url, {
         method,
-        headers: {"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     });
 
@@ -185,20 +189,18 @@ async function salvar() {
 
 function editar(p) {
     perfil_id.value = p.id;
-    document.getElementById("nome").value = p.nome;
-    document.getElementById("custo").value = p.custo;
-    document.getElementById("margem").value = p.margem;
-    document.getElementById("perda").value = p.perda;
+    nome.value = p.nome;
+    custo.value = p.custo;
+    margem.value = p.margem;
+    perda.value = p.perda;
 
     document.querySelectorAll(".tipologias input")
-        .forEach(c=>c.checked=p.tipologias?.includes(c.value));
+        .forEach(c => c.checked = p.tipologias?.includes(c.value));
 
     const container = document.getElementById("insumos-container");
     container.innerHTML = "";
 
-    const insumosDoPerfil = p.insumos?.length ? p.insumos : [""];
-
-    insumosDoPerfil.forEach(insumo=>{
+    (p.insumos?.length ? p.insumos : [""]).forEach(insumo => {
         const div = document.createElement("div");
         div.className = "insumo-item";
         div.innerHTML = `
@@ -210,31 +212,28 @@ function editar(p) {
     });
 
     atualizarSelects();
-
-    const selects = document.querySelectorAll(".insumo-select");
-    selects.forEach((select, idx)=>{
-        select.value = insumosDoPerfil[idx] || "";
-    });
+    document.querySelectorAll(".insumo-select")
+        .forEach((s, i) => s.value = p.insumos?.[i] || "");
 }
 
-async function excluir(id){
-    if(!confirm("Excluir este perfil?")) return;
-    await fetch(`${BASE_URL}/api/perfis/${id}`,{method:"DELETE"});
+async function excluir(id) {
+    if (!confirm("Excluir este perfil?")) return;
+    await fetch(`${BASE_URL}/api/perfis/${id}`, { method: "DELETE" });
     carregar();
 }
 
-// =====================
-// CANCELAR
-// =====================
-function cancelar(){
-    perfil_id.value="";
-    document.getElementById("nome").value="";
-    document.getElementById("custo").value="";
-    document.getElementById("margem").value="";
-    document.getElementById("perda").value="";
-    document.querySelectorAll(".tipologias input").forEach(c=>c.checked=false);
-    const container = document.getElementById("insumos-container");
-    container.innerHTML = `
+/* =====================
+   CANCELAR
+===================== */
+function cancelar() {
+    perfil_id.value = "";
+    nome.value = "";
+    custo.value = "";
+    margem.value = "";
+    perda.value = "";
+    document.querySelectorAll(".tipologias input").forEach(c => c.checked = false);
+
+    document.getElementById("insumos-container").innerHTML = `
         <div class="insumo-item">
             <select class="insumo-select"></select>
             <button type="button" onclick="adicionarInsumo(this)">+</button>
@@ -243,10 +242,16 @@ function cancelar(){
     atualizarSelects();
 }
 
-// =====================
-// INICIALIZAÇÃO
-// =====================
-window.addEventListener("DOMContentLoaded", ()=>{
+/* =====================
+   INIT
+===================== */
+const nomeInput = document.getElementById("nome");
+const custoInput = document.getElementById("custo");
+const margemInput = document.getElementById("margem");
+const perdaInput = document.getElementById("perda");
+const perfil_id = document.getElementById("perfil_id");
+
+window.addEventListener("DOMContentLoaded", () => {
     carregarInsumos();
     carregar();
 });
