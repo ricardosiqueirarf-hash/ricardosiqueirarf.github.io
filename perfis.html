@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfis de Alumínio</title>
+
+<style>
+body { font-family: Arial, sans-serif; background: #f5f5f5; margin:0; padding:20px; }
+h1 { margin-bottom: 10px; }
+.menu { margin-bottom: 20px; }
+button { padding: 8px 14px; margin: 4px; cursor:pointer; }
+input, select { padding:6px; margin:4px; width:120px; }
+.tipologias, .insumos-container { margin:10px 0; display:flex; gap:12px; flex-wrap:wrap; }
+table { width:100%; border-collapse:collapse; background:#fff; margin-top:20px; }
+th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+th { background:#eee; }
+</style>
+</head>
+<body>
+
+<h1>Perfis de Alumínio</h1>
+
+<div class="menu">
+    <button onclick="window.location.href='/'">Voltar</button>
+</div>
+
+<h3>Novo / Editar Perfil</h3>
+
+<input type="hidden" id="perfil_id">
+<input id="nome" placeholder="Nome">
+<input id="custo" type="number" step="0.01" placeholder="Custo">
+<input id="margem" type="number" step="0.01" placeholder="Margem %">
+<input id="perda" type="number" step="0.01" placeholder="Perda %">
+
+<h4>Tipologias compatíveis</h4>
+<div class="tipologias">
+    <label><input type="checkbox" value="giro"> Giro</label>
+    <label><input type="checkbox" value="correr"> Correr</label>
+    <label><input type="checkbox" value="deslizante"> Deslizante</label>
+    <label><input type="checkbox" value="pivotante"> Pivotante</label>
+</div>
+
+<h4>Insumos</h4>
+<div id="insumos-container">
+    <div class="insumo-item">
+        <select class="insumo-select"></select>
+        <button type="button" onclick="adicionarInsumo(this)">+</button>
+    </div>
+</div>
+
+<button onclick="salvar()">Salvar</button>
+<button onclick="cancelar()">Cancelar</button>
+
+<table>
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Custo</th>
+            <th>Margem</th>
+            <th>Perda</th>
+            <th>Preço Final</th>
+            <th>Tipologias</th>
+            <th>Insumos</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody id="tabela"></tbody>
+</table>
+
+<script>
+// =====================
+// PERFIS
+// =====================
+const BASE_URL = "https://colorglass.onrender.com"; // URL do backend no Render
+
+async function carregar() {
+    const res = await fetch(`${BASE_URL}/api/perfis`);
+    const data = await res.json();
+    const tbody = document.getElementById("tabela");
+    tbody.innerHTML = "";
+    data.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${p.nome}</td>
+            <td>R$ ${Number(p.custo).toFixed(2)}</td>
+            <td>${p.margem}%</td>
+            <td>${p.perda}%</td>
+            <td><b>R$ ${Number(p.preco).toFixed(2)}</b></td>
+            <td>${(p.tipologias||[]).join(", ")}</td>
+            <td>${(p.insumos||[]).join(", ")}</td>
+            <td>
+                <button onclick='editar(${JSON.stringify(p)})'>Editar</button>
+                <button onclick="excluir('${p.id}')">Excluir</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function getTipologiasSelecionadas() {
+    return Array.from(document.querySelectorAll(".tipologias input:checked"))
+        .map(c => c.value);
+}
+
+// =====================
+// INSUMOS
+// =====================
+let insumosLista = [];
+
+async function carregarInsumos() {
+    const res = await fetch(`${BASE_URL}/api/materiais`);
+    const data = await res.json();
+    insumosLista = data.map(m => m.nome);
+    atualizarSelects();
+}
+
+function atualizarSelects() {
+    document.querySelectorAll(".insumo-select").forEach(select => {
+        const valorAtual = select.value;
+        select.innerHTML = "<option value=''>--Selecione--</option>";
+        insumosLista.forEach(insumo => {
+            const opt = document.createElement("option");
+            opt.value = insumo;
+            opt.textContent = insumo;
+            select.appendChild(opt);
+        });
+        select.value = valorAtual;
+    });
+}
+
+function adicionarInsumo(botao) {
+    const container = document.getElementById("insumos-container");
+    const novoItem = document.createElement("div");
+    novoItem.className = "insumo-item";
+    novoItem.innerHTML = `
+        <select class="insumo-select"></select>
+        <button type="button" onclick="adicionarInsumo(this)">+</button>
+        <button type="button" onclick="removerInsumo(this)">-</button>
+    `;
+    container.appendChild(novoItem);
+    atualizarSelects();
+}
+
+function removerInsumo(botao) {
+    botao.parentElement.remove();
+}
+
+function getInsumosSelecionados() {
+    return Array.from(document.querySelectorAll(".insumo-select"))
+        .map(s => s.value)
+        .filter(v => v);
+}
+
+// =====================
+// SALVAR / EDITAR / EXCLUIR
+// =====================
+async function salvar() {
+    const id = perfil_id.value;
+    const nome = document.getElementById("nome").value;
+    const custo = parseFloat(document.getElementById("custo").value);
+    const margem = parseFloat(document.getElementById("margem").value);
+    const perda = parseFloat(document.getElementById("perda").value);
+    const tipologias = getTipologiasSelecionadas();
+    const insumos = getInsumosSelecionados();
+
+    if(!nome || isNaN(custo) || isNaN(margem) || isNaN(perda) || tipologias.length===0){
+        alert("Preencha todos os campos e selecione ao menos uma tipologia");
+        return;
+    }
+
+    const payload = { nome, custo, margem, perda, tipologias, insumos };
+    const url = id ? `${BASE_URL}/api/perfis/${id}` : `${BASE_URL}/api/perfis`;
+    const method = id ? "PUT" : "POST";
+
+    await fetch(url,{
+        method,
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+    });
+
+    cancelar();
+    carregar();
+}
+
+function editar(p) {
+    perfil_id.value = p.id;
+    document.getElementById("nome").value = p.nome;
+    document.getElementById("custo").value = p.custo;
+    document.getElementById("margem").value = p.margem;
+    document.getElementById("perda").value = p.perda;
+
+    document.querySelectorAll(".tipologias input")
+        .forEach(c=>c.checked=p.tipologias?.includes(c.value));
+
+    const container = document.getElementById("insumos-container");
+    container.innerHTML = "";
+
+    const insumosDoPerfil = p.insumos?.length ? p.insumos : [""];
+
+    insumosDoPerfil.forEach(insumo=>{
+        const div = document.createElement("div");
+        div.className = "insumo-item";
+        div.innerHTML = `
+            <select class="insumo-select"></select>
+            <button type="button" onclick="adicionarInsumo(this)">+</button>
+            <button type="button" onclick="removerInsumo(this)">-</button>
+        `;
+        container.appendChild(div);
+    });
+
+    atualizarSelects();
+
+    const selects = document.querySelectorAll(".insumo-select");
+    selects.forEach((select, idx)=>{
+        select.value = insumosDoPerfil[idx] || "";
+    });
+}
+
+async function excluir(id){
+    if(!confirm("Excluir este perfil?")) return;
+    await fetch(`${BASE_URL}/api/perfis/${id}`,{method:"DELETE"});
+    carregar();
+}
+
+// =====================
+// CANCELAR
+// =====================
+function cancelar(){
+    perfil_id.value="";
+    document.getElementById("nome").value="";
+    document.getElementById("custo").value="";
+    document.getElementById("margem").value="";
+    document.getElementById("perda").value="";
+    document.querySelectorAll(".tipologias input").forEach(c=>c.checked=false);
+    const container = document.getElementById("insumos-container");
+    container.innerHTML = `
+        <div class="insumo-item">
+            <select class="insumo-select"></select>
+            <button type="button" onclick="adicionarInsumo(this)">+</button>
+        </div>
+    `;
+    atualizarSelects();
+}
+
+// =====================
+// INICIALIZAÇÃO
+// =====================
+window.addEventListener("DOMContentLoaded", ()=>{
+    carregarInsumos();
+    carregar();
+});
+</script>
+
+</body>
+</html>
