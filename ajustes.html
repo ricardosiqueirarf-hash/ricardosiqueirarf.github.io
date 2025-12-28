@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:20px;
+    transition: background 0.3s, color 0.3s;
+    background: #f5f5f5;
+    color: #111;
+}
+
+h1 { margin-bottom:20px; }
+
+label { display:flex; align-items:center; gap:10px; font-size:1.1rem; cursor:pointer; }
+
+input[type="checkbox"] { width:20px; height:20px; }
+
+.dark-mode {
+    background: #111;
+    color: #f5f5f5;
+}
+
+.dark-mode button { background:#333; color:#f5f5f5; border:none; }
+button { padding:8px 14px; margin-top:10px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<h1>Configurações</h1>
+
+<label>
+    <input type="checkbox" id="darkModeToggle"> Ativar Dark Mode
+</label>
+
+<script>
+// ======== Função para alternar Dark Mode ========
+const toggle = document.getElementById("darkModeToggle");
+
+function setDarkMode(enable) {
+    if(enable){
+        document.body.classList.add("dark-mode");
+        localStorage.setItem("darkMode", "true");
+    } else {
+        document.body.classList.remove("dark-mode");
+        localStorage.setItem("darkMode", "false");
+    }
+}
+
+// Carregar preferência do usuário
+const saved = localStorage.getItem("darkMode");
+if(saved === "true"){
+    setDarkMode(true);
+    toggle.checked = true;
+}
+
+toggle.addEventListener("change", () => {
+    setDarkMode(toggle.checked);
+});
+</script>
+
+</body>
+</html> 
