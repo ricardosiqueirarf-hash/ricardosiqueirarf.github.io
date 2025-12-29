@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portas do Orçamento</title>
+
+<style>
+body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
+.app { display:grid; grid-template-columns:18% 82%; height:100vh; }
+.sidebar { background:#1e1e1e; color:white; padding:20px; display:flex; flex-direction:column; gap:10px; }
+.sidebar button { padding:10px; border:none; background:#333; color:white; border-radius:6px; cursor:pointer; }
+.content { padding:25px; overflow-y:auto; height:100vh; }
+
+.row { display:flex; gap:15px; flex-wrap:wrap; margin-top:10px; }
+label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
+input, select { padding:7px; margin-top:5px; }
+
+.btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
+
+#formPorta { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+#portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+    <div class="sidebar">
+        <h3>ColorGlass</h3>
+        <button onclick="go('/')">Voltar</button>
+    </div>
+
+    <div class="content">
+        <h1>Portas do Orçamento</h1>
+        <p id="infoOrcamento"></p>
+
+        <div id="formPorta">
+            <label>
+                Tipologia
+                <select id="tipologia" onchange="renderCampos()">
+                    <option value="">Selecione</option>
+                    <option value="giro">Porta de Giro</option>
+                    <option value="deslizante">Porta Deslizante</option>
+                    <option value="correr">Porta de Correr</option>
+                    <option value="pivotante">Porta Pivotante</option>
+                </select>
+            </label>
+
+            <div class="row" id="campos"></div>
+
+            <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
+
+            <svg id="portaSVG" width="220" height="420" style="border:1px solid #000; margin-top:15px;"></svg>
+        </div>
+
+        <h2>Portas Criadas</h2>
+        <div id="portasSalvas"></div>
+    </div>
+</div>
+
+<script>
+function go(p){ window.location.href = p }
+
+// =====================
+// BACKEND (RENDER)
+// =====================
+const API_BASE = "https://colorglass.onrender.com";
+
+// =====================
+// UUID DO ORÇAMENTO
+// =====================
+const params = new URLSearchParams(window.location.search)
+const ORCAMENTO_UUID = params.get("orcamento_uuid")
+if(!ORCAMENTO_UUID){
+    document.getElementById("infoOrcamento").innerHTML =
+        "<strong style='color:red'>UUID do orçamento não encontrado</strong>"
+    throw new Error("orcamento_uuid ausente")
+}
+document.getElementById("infoOrcamento").innerHTML =
+    `Editando orçamento: <strong>${ORCAMENTO_UUID}</strong>`
+
+// =====================
+// TIPOLOGIAS
+// =====================
+const TIPOLOGIAS = {
+    giro: ["largura","altura","perfil","vidro","dobradica"],
+    deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
+    correr: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
+    pivotante: ["largura","altura","perfil","vidro","pivo"]
+}
+
+// =====================
+// DADOS
+// =====================
+let todosPerfis = []
+let todosVidros = []
+
+async function carregarPerfis() {
+    const res = await fetch(`${API_BASE}/api/perfis`)
+    todosPerfis = await res.json()
+    atualizarPerfisSelect()
+}
+
+async function carregarVidros() {
+    const res = await fetch(`${API_BASE}/api/vidros`)
+    todosVidros = await res.json()
+    atualizarVidrosSelect()
+}
+
+function atualizarPerfisSelect() {
+    const tipo = document.getElementById("tipologia").value
+    const perfilSelect = document.getElementById("perfil")
+    if(!perfilSelect) return
+    perfilSelect.innerHTML = "<option value=''>Selecione</option>"
+    todosPerfis.filter(p => p.tipologias.includes(tipo))
+        .forEach(p => {
+            perfilSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/m</option>`
+        })
+}
+
+function atualizarVidrosSelect() {
+    const vidroSelect = document.getElementById("vidro")
+    if(!vidroSelect) return
+    vidroSelect.innerHTML = "<option value=''>Selecione</option>"
+    todosVidros.forEach(v => {
+        vidroSelect.innerHTML += `<option value="${v.id}">${v.tipo} ${v.espessura || ""}mm - R$ ${v.preco}/m²</option>`
+    })
+}
+
+// =====================
+// PREÇO
+// =====================
+function calcularPrecoPorta(){
+    const largura = (+document.getElementById("largura")?.value || 0)/1000
+    const altura = (+document.getElementById("altura")?.value || 0)/1000
+    const perfil = todosPerfis.find(p=>p.id==document.getElementById("perfil")?.value)
+    const vidro = todosVidros.find(v=>v.id==document.getElementById("vidro")?.value)
+
+    let total = 0
+    if(perfil) total += perfil.preco * 2 * (largura + altura)
+    if(vidro) total += vidro.preco * largura * altura
+    return total
+}
+
+function atualizarPrecoPorta(){
+    const preco = calcularPrecoPorta()
+    document.getElementById("precoPorta")?.remove()
+    document.getElementById("campos").insertAdjacentHTML(
+        "beforeend",
+        `<div id="precoPorta"><strong>Preço estimado: R$ ${preco.toFixed(2)}</strong></div>`
+    )
+}
+
+// =====================
+// RENDER CAMPOS
+// =====================
+function renderCampos(){
+    const tipo = document.getElementById("tipologia").value
+    const container = document.getElementById("campos")
+    container.innerHTML=""
+    if(!TIPOLOGIAS[tipo]) return
+
+    TIPOLOGIAS[tipo].forEach(c=>{
+        const map={
+            largura:`Largura (mm)<input id="largura" type="number" value="800" oninput="desenharPorta(); atualizarPrecoPorta()">`,
+            altura:`Altura (mm)<input id="altura" type="number" value="2000" oninput="desenharPorta(); atualizarPrecoPorta()">`,
+            perfil:`Perfil<select id="perfil" onchange="atualizarPrecoPorta()"></select>`,
+            vidro:`Vidro<select id="vidro" onchange="atualizarPrecoPorta()"></select>`,
+            trilho:`Trilho<select><option>Padrão</option></select>`,
+            qtd_folhas:`Qtd Folhas<input id="qtd_folhas" type="number" value="2">`,
+            dobradica:`Dobradiça<select><option>Padrão</option></select>`,
+            pivo:`Pivô<select><option>Superior</option></select>`
+        }
+        container.innerHTML += `<label>${map[c]}</label>`
+    })
+
+    desenharPorta()
+    atualizarPerfisSelect()
+    atualizarVidrosSelect()
+    atualizarPrecoPorta()
+}
+
+// =====================
+// SVG
+// =====================
+function desenharPorta(){
+    const svg = document.getElementById("portaSVG")
+    const w = +document.getElementById("largura")?.value
+    const h = +document.getElementById("altura")?.value
+    if(!w||!h) return
+    svg.innerHTML=""
+    const scale = Math.min(200/w, 380/h)
+    svg.innerHTML = `<rect x="10" y="10" width="${w*scale}" height="${h*scale}" fill="#ccc" stroke="#000" stroke-width="6"/>`
+}
+
+// =====================
+// PORTAS LOCAL
+// =====================
+let portas=[], editando=null, idCounter=0
+
+function salvarPorta(){
+    const tipo=document.getElementById("tipologia").value
+    if(!tipo) return alert("Selecione a tipologia")
+
+    const dados={}
+    TIPOLOGIAS[tipo].forEach(c=>{
+        const el=document.getElementById(c)
+        if(el) dados[c]=el.value
+    })
+
+    const porta={ id:editando??idCounter++, tipo, dados, preco:calcularPrecoPorta(), svg:portaSVG.outerHTML }
+    editando===null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando),porta)
+    editando=null
+    renderPortas()
+}
+
+function renderPortas(){
+    const c=document.getElementById("portasSalvas")
+    c.innerHTML=""
+    portas.forEach(p=>{
+        c.innerHTML+=`<div><strong>${p.tipo}</strong><br>Preço: R$ ${p.preco.toFixed(2)}<br>${p.svg}</div>`
+    })
+}
+
+// =====================
+carregarPerfis()
+carregarVidros()
+</script>
+
+</body>
+</html>
