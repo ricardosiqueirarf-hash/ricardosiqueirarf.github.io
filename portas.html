@@ -96,9 +96,9 @@ if(localStorage.getItem("darkmode") === "true"){
 function go(p){ window.location.href = p }
 
 // =====================
-// BACKEND
+// BACKEND (RENDER)
 // =====================
-const API_BASE = "https://colorglass.onrender.com"
+const API_BASE = "https://colorglass.onrender.com";
 
 // =====================
 // UUID DO ORÇAMENTO
@@ -118,15 +118,16 @@ document.getElementById("infoOrcamento").innerHTML =
 // =====================
 const TIPOLOGIAS = {
     giro: ["largura","altura","perfil","vidro","dobradica"],
-    deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
-    correr: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
+    deslizante: ["largura","altura","perfil","vidro","trilho"],
+    correr: ["largura","altura","perfil","vidro","trilho"],
     pivotante: ["largura","altura","perfil","vidro","pivo"]
 }
 
 // =====================
 // DADOS
 // =====================
-let todosPerfis = [], todosVidros = []
+let todosPerfis = []
+let todosVidros = []
 
 async function carregarPerfis() {
     const res = await fetch(`${API_BASE}/api/perfis`)
@@ -202,7 +203,6 @@ function renderCampos(){
             perfil:`Perfil<select id="perfil" onchange="atualizarPrecoPorta()"></select>`,
             vidro:`Vidro<select id="vidro" onchange="atualizarPrecoPorta()"></select>`,
             trilho:`Trilho<select><option>Padrão</option></select>`,
-            qtd_folhas:`Qtd Folhas<input id="qtd_folhas" type="number" value="1" min="1">`,
             dobradica:`Dobradiça<select><option>Padrão</option></select>`,
             pivo:`Pivô<select><option>Superior</option></select>`
         }
@@ -237,10 +237,6 @@ function salvarPorta(){
     const tipo = document.getElementById("tipologia").value
     if(!tipo) return alert("Selecione a tipologia")
 
-    desenharPorta()
-    const svgEl = document.getElementById("portaSVG")
-    const svgString = svgEl ? svgEl.outerHTML : ""
-
     const dados = {}
     TIPOLOGIAS[tipo].forEach(c=>{
         const el = document.getElementById(c)
@@ -251,12 +247,11 @@ function salvarPorta(){
     const porta = {
         id: editando ?? idCounter++,
         tipo,
-        dados,
-        quantidade,
+        dados,         // sem qtd_folhas
+        quantidade,    // separado
         preco: calcularPrecoPorta(),
-        svg: svgString
+        svg: portaSVG.outerHTML
     }
-
     editando === null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando), porta)
     editando = null
     renderPortas()
@@ -294,11 +289,13 @@ function editarPorta(id){
     desenharPorta()
 }
 
+// =====================
+// APAGAR PORTA
+// =====================
 function apagarPorta(id){
-    if(confirm("Tem certeza que deseja apagar esta porta? Esta ação não pode ser desfeita.")){
-        portas = portas.filter(p => p.id !== id)
-        renderPortas()
-    }
+    if(!confirm("Tem certeza que deseja apagar esta porta?")) return
+    portas = portas.filter(p=>p.id!==id)
+    renderPortas()
 }
 
 // =====================
