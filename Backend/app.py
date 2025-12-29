@@ -46,6 +46,7 @@ from api_insumos import insumos_bp
 from api_orcamentos import orcamentos_bp
 from api_portas import portas_bp  # ✅ blueprint de portas
 from api_orc import orc_bp  
+from api_corte import corte_bp  # ✅ blueprint de corte de vidro
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
@@ -53,7 +54,7 @@ app.register_blueprint(insumos_bp)
 app.register_blueprint(orcamentos_bp)
 app.register_blueprint(portas_bp)  # ✅ registrando blueprint de portas
 app.register_blueprint(orc_bp)  
-
+app.register_blueprint(corte_bp)  # ✅ registrando blueprint de corte de vidro
 
 # =====================
 # START
