@@ -121,24 +121,20 @@ function desenharSVG(cortesCalculados){
     const chapaHeight = 3210;
     const scale = Math.min(800/chapaWidth, 1000/chapaHeight);
 
-    // Chapa
+    // Desenhar a chapa
     svg.innerHTML = `<rect x="0" y="0" width="${chapaWidth*scale}" height="${chapaHeight*scale}" fill="#ddd" stroke="#000" stroke-width="2"/>`;
 
-    let offsetX=0, offsetY=0, rowHeight=0;
     cortesCalculados.forEach(c=>{
-        const w = c.largura*scale;
-        const h = c.altura*scale;
-        if(offsetX + w > chapaWidth*scale){
-            offsetX=0;
-            offsetY+=rowHeight;
-            rowHeight=0;
-        }
-        svg.innerHTML += `<rect x="${offsetX}" y="${offsetY}" width="${w}" height="${h}" fill="#9cf" stroke="#000" stroke-width="1"/>`;
-        offsetX += w;
-        rowHeight = Math.max(rowHeight,h);
+        const x = c.x * scale;
+        const y = c.y * scale;
+        const w = c.largura * scale;
+        const h = c.altura * scale;
+
+        svg.innerHTML += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#9cf" stroke="#000" stroke-width="1"/>`;
     });
 }
 </script>
 </body>
 </html>
+
 
