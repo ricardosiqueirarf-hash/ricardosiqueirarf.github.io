@@ -77,10 +77,19 @@ async function calcularCortes(){
     if(cortes.length===0) return alert("Adicione pelo menos um corte.");
 
     try{
+        // Preparar array compatível com a API
+        const pecasEnviar = cortes.map(c => ({
+            largura: c.largura,
+            altura: c.altura,
+            quantidade: 1,
+            tipoVidro: c.tipoVidro,
+            insumos: {}
+        }));
+
         const res = await fetch('https://colorglass.onrender.com/api/cortevidro', {
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({cortes})
+            body:JSON.stringify({ pecas: pecasEnviar })
         });
         const data = await res.json();
 
@@ -89,15 +98,15 @@ async function calcularCortes(){
         const resultadoDiv = document.getElementById('resultado');
         resultadoDiv.innerHTML = `<h3>Resultado do Corte</h3>`;
         let totalCusto = 0;
-        let totalPerda = 0;
-        data.cortes.forEach((c,i)=>{
-            totalCusto += c.custo;
-            totalPerda += c.perda;
-            resultadoDiv.innerHTML += `<p>Corte ${i+1}: Área ${c.areaLiquida.toFixed(3)} m², Perda ${c.perda.toFixed(3)} m², Custo R$ ${c.custo.toFixed(2)}</p>`;
-        });
-        resultadoDiv.innerHTML += `<strong>Total Custo: R$ ${totalCusto.toFixed(2)}, Total Perda: ${totalPerda.toFixed(3)} m²</strong>`;
+        let perdaPercent = data.perda_percent;
 
-        desenharSVG(data.cortes);
+        data.pecas.forEach((c,i)=>{
+            totalCusto += c.custo;
+            resultadoDiv.innerHTML += `<p>Corte ${i+1}: ${c.largura}x${c.altura} mm, Tipo: ${c.tipo_vidro}, Custo: R$ ${c.custo.toFixed(2)}</p>`;
+        });
+        resultadoDiv.innerHTML += `<strong>Total Custo: R$ ${totalCusto.toFixed(2)}, Perda: ${perdaPercent}%</strong>`;
+
+        desenharSVG(data.pecas);
 
     } catch(err){
         console.error(err);
