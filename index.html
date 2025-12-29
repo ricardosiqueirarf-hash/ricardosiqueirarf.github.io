@@ -19,13 +19,12 @@
 <!-- CANONICAL -->
 <link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
 
-<!-- OPEN GRAPH (WhatsApp / Facebook) -->
+<!-- OPEN GRAPH -->
 <meta property="og:title" content="Portas de Vidro e Alumínio em Fortaleza | ColorGlass">
 <meta property="og:description" content="Orçamento rápido em portas de vidro e alumínio sob medida em Fortaleza. Qualidade premium e instalação profissional.">
 <meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
 <meta property="og:type" content="website">
 
-<!-- CSS principal -->
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
@@ -43,10 +42,8 @@ th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
 </style>
 
-<!-- CSS dark mode externo -->
 <link id="tema-css" rel="stylesheet" href="">
 <script>
-// Aplica dark mode se estiver ativado no localStorage
 if(localStorage.getItem("darkmode") === "true"){
     document.getElementById("tema-css").href = "/static/css/indexdark.css";
 }
@@ -68,13 +65,11 @@ if(localStorage.getItem("darkmode") === "true"){
     <div class="content">
         <h1>Orçamento de Portas</h1>
 
-        <!-- FORMULÁRIO FICHA DO CLIENTE -->
         <div id="formCliente">
             <label>Nome do Cliente<input type="text" id="clienteNome"></label>
             <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
         </div>
 
-        <!-- ORÇAMENTOS EXISTENTES -->
         <h2>Orçamentos Existentes</h2>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
 
@@ -90,16 +85,40 @@ if(localStorage.getItem("darkmode") === "true"){
 <script>
 function go(p){ window.location.href = p }
 
-// URL base do backend no Render
+// URL do backend
 const BACKEND_URL = "https://colorglass.onrender.com";
 
-// 🔐 REDIRECIONAMENTO PARA LOGIN
+// 🔐 LOGIN SE NÃO HOUVER TOKEN
 if(!localStorage.getItem("ADMIN_TOKEN")){
-    window.location.href = BACKEND_URL;
+    let senha = prompt("Digite a senha de desenvolvimento:");
+    if(!senha) {
+        alert("Senha obrigatória");
+        throw new Error("Senha não informada");
+    }
+
+    fetch(`${BACKEND_URL}/get_token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: senha })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.token){
+            localStorage.setItem("ADMIN_TOKEN", data.token);
+            location.reload();
+        } else {
+            alert("Senha incorreta");
+            location.reload();
+        }
+    })
+    .catch(err=>{
+        console.error("Erro no login:", err);
+        alert("Erro de conexão com o backend");
+    });
 }
 
 // =====================
-// CARREGAR ORÇAMENTOS EXISTENTES
+// CARREGAR ORÇAMENTOS
 // =====================
 function carregarOrcamentos() {
     fetch(`${BACKEND_URL}/api/orcamentos`, {
@@ -130,7 +149,6 @@ function carregarOrcamentos() {
             </thead>
             <tbody></tbody>
         `;
-
         const tbody = table.querySelector("tbody");
 
         orcamentos.forEach(o => {
@@ -151,7 +169,6 @@ function carregarOrcamentos() {
             `;
             tbody.appendChild(tr);
         });
-
         container.appendChild(table);
     })
     .catch(err=>{
@@ -162,7 +179,7 @@ function carregarOrcamentos() {
 }
 carregarOrcamentos();
 
-// 🔥 UUID DO ORÇAMENTO É MANTIDO NA URL
+// 🔥 UUID DO ORÇAMENTO
 function editarOrcamento(uuid){
     window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
