@@ -1,13 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Portas de Vidro e Alumínio em Fortaleza | ColorGlass</title>
+<title>Portas de Vidro e Alumínio | ColorGlass</title>
 
 <meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
 <meta name="robots" content="index, follow">
@@ -21,13 +17,6 @@
 <!-- CANONICAL -->
 <link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
 
-<!-- OPEN GRAPH (WhatsApp / Facebook) -->
-<meta property="og:title" content="Portas de Vidro e Alumínio em Fortaleza | ColorGlass">
-<meta property="og:description" content="Orçamento rápido em portas de vidro e alumínio sob medida em Fortaleza. Qualidade premium e instalação profissional.">
-<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
-<meta property="og:type" content="website">
-
-<!-- CSS principal -->
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
@@ -45,17 +34,9 @@ th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
 </style>
 
-<!-- CSS dark mode externo -->
-<link id="tema-css" rel="stylesheet" href="">
-<script>
-// Aplica dark mode se estiver ativado no localStorage
-if(localStorage.getItem("darkmode") === "true"){
-    document.getElementById("tema-css").href = "/static/css/indexdark.css";
-}
-</script>
-
 </head>
 <body>
+
 <div class="app">
     <div class="sidebar">
         <h3>ColorGlass</h3>
@@ -90,7 +71,14 @@ if(localStorage.getItem("darkmode") === "true"){
 </div>
 
 <script>
-function go(p){ window.location.href = p }
+// REDIRECIONA PARA LOGIN SE NÃO TIVER TOKEN
+const token = localStorage.getItem("ADMIN_TOKEN");
+if(!token){
+    window.location.href = "https://colorglass.onrender.com/login.html";
+}
+
+// FUNÇÃO DE NAVEGAÇÃO
+function go(p){ window.location.href = p + "?token=" + token }
 
 // URL base do backend no Render
 const BACKEND_URL = "https://colorglass.onrender.com";
@@ -99,12 +87,13 @@ const BACKEND_URL = "https://colorglass.onrender.com";
 // CARREGAR ORÇAMENTOS EXISTENTES
 // =====================
 function carregarOrcamentos() {
-    fetch(`${BACKEND_URL}/api/orcamentos`)
+    fetch(`${BACKEND_URL}/api/orcamentos`, {
+        headers: { "Authorization": token }
+    })
     .then(res => res.json())
     .then(data => {
         const container = document.getElementById("orcamentosExistentes");
         container.innerHTML = "";
-
         const orcamentos = data.orcamentos || [];
         if(orcamentos.length === 0){
             container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
@@ -123,41 +112,32 @@ function carregarOrcamentos() {
             </thead>
             <tbody></tbody>
         `;
-
         const tbody = table.querySelector("tbody");
-
         orcamentos.forEach(o => {
             const tr = document.createElement("tr");
-            const dataCriacao = o.data_criacao
-                ? new Date(o.data_criacao).toLocaleString()
-                : "";
-
+            const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
             tr.innerHTML = `
                 <td>${o.numero_pedido}</td>
                 <td>${o.cliente_nome}</td>
                 <td>${dataCriacao}</td>
                 <td>
-                    <button class="btn" onclick="editarOrcamento('${o.id}')">
-                        Editar
-                    </button>
+                    <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-
         container.appendChild(table);
     })
     .catch(err=>{
         console.error("Erro ao carregar orçamentos:", err);
-        document.getElementById("orcamentosExistentes").innerHTML =
-            "<em>Erro ao carregar orçamentos.</em>";
+        document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
     });
 }
 carregarOrcamentos();
 
 // 🔥 UUID DO ORÇAMENTO É MANTIDO NA URL
 function editarOrcamento(uuid){
-    window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+    window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}&token=${token}`;
 }
 
 // =====================
@@ -169,21 +149,19 @@ let idCounter = 0;
 
 async function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
-    if(!nome){
-        alert("Digite o nome do cliente");
-        return;
-    }
-
+    if(!nome){ alert("Digite o nome do cliente"); return; }
     cliente.nome = nome;
 
     try {
         const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
             method:'POST',
-            headers:{'Content-Type':'application/json'},
+            headers:{
+                'Content-Type':'application/json',
+                'Authorization': token
+            },
             body:JSON.stringify({cliente_nome: cliente.nome})
         });
         const data = await res.json();
-
         if(data.success){
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: " + data.id);
@@ -200,6 +178,3 @@ async function criarFichaCliente(){
 </script>
 </body>
 </html>
-
-
-
