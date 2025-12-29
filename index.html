@@ -7,21 +7,6 @@
 <meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
 <meta name="robots" content="index, follow">
 
-<!-- SEO LOCAL -->
-<meta name="geo.region" content="BR-CE">
-<meta name="geo.placename" content="Fortaleza">
-<meta name="geo.position" content="-3.7319;-38.5267">
-<meta name="ICBM" content="-3.7319, -38.5267">
-
-<!-- CANONICAL -->
-<link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
-
-<!-- OPEN GRAPH -->
-<meta property="og:title" content="Portas de Vidro e Alumínio em Fortaleza | ColorGlass">
-<meta property="og:description" content="Orçamento rápido em portas de vidro e alumínio sob medida em Fortaleza. Qualidade premium e instalação profissional.">
-<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
-<meta property="og:type" content="website">
-
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
@@ -33,18 +18,10 @@ input { padding:7px; margin-top:5px; }
 .btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
 .btn-danger { background:#c0392b; }
 #formCliente { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
-#portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
 table { border-collapse: collapse; width:100%; }
 th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
 </style>
-
-<link id="tema-css" rel="stylesheet" href="">
-<script>
-if(localStorage.getItem("darkmode") === "true"){
-    document.getElementById("tema-css").href = "/static/css/indexdark.css";
-}
-</script>
 
 </head>
 <body>
@@ -69,33 +46,40 @@ if(localStorage.getItem("darkmode") === "true"){
 
         <h2>Orçamentos Existentes</h2>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
-
-        <h2>Portas Salvas</h2>
-        <div id="portasSalvas"></div>
-
-        <button class="btn" onclick="salvarOrcamento()" style="margin-top:20px;">
-            Salvar Orçamento Final
-        </button>
     </div>
 </div>
 
 <script>
 function go(p){ window.location.href = p }
 
-// URL do backend
 const BACKEND_URL = "https://colorglass.onrender.com";
 
 // =====================
-// CARREGAR ORÇAMENTOS
+// CARREGAR ORÇAMENTOS + PORTAS (1 REQUISIÇÃO)
 // =====================
-function carregarOrcamentos() {
-    fetch(`${BACKEND_URL}/api/orcamentos`)
-    .then(res => res.json())
-    .then(async data => {
+async function carregarOrcamentos() {
+    try {
+        // Buscar todos os orçamentos
+        const resOrc = await fetch(`${BACKEND_URL}/api/orcamentos`);
+        const dataOrc = await resOrc.json();
+        const orcamentos = dataOrc.orcamentos || [];
+
+        // Buscar todas as portas de uma vez
+        const resPortas = await fetch(`${BACKEND_URL}/api/portas`);
+        const dataPortas = await resPortas.json();
+        const todasPortas = dataPortas.portas || [];
+
+        // Agrupar portas por orçamento
+        const portasPorOrcamento = {};
+        todasPortas.forEach(p => {
+            const id = p.orcamento_id || p.orcamento_uuid;
+            if(!portasPorOrcamento[id]) portasPorOrcamento[id] = [];
+            portasPorOrcamento[id].push(p);
+        });
+
         const container = document.getElementById("orcamentosExistentes");
         container.innerHTML = "";
 
-        const orcamentos = data.orcamentos || [];
         if(orcamentos.length === 0){
             container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
             return;
@@ -118,52 +102,32 @@ function carregarOrcamentos() {
         const tbody = table.querySelector("tbody");
 
         for(const o of orcamentos){
-            try {
-                // Buscar portas do orçamento
-                const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${o.id}/portas`);
-                const dataPortas = await resPortas.json();
+            const portas = portasPorOrcamento[o.id] || [];
+            let qtdTotal = 0, valorTotal = 0;
+            portas.forEach(p => {
+                const qtd = +p.quantidade || 1;
+                qtdTotal += qtd;
+                valorTotal += (p.preco || 0) * qtd;
+            });
 
-                let qtdTotal = 0;
-                let valorTotal = 0;
-                if(dataPortas.success && dataPortas.portas){
-                    dataPortas.portas.forEach(p => {
-                        const quantidade = +p.dados?.qtd_folhas || 1; // padrão 1
-                        qtdTotal += quantidade;
-                        valorTotal += (p.preco || 0) * quantidade;
-                    });
-                }
-
-                const tr = document.createElement("tr");
-                const dataCriacao = o.data_criacao
-                    ? new Date(o.data_criacao).toLocaleString()
-                    : "";
-
-                tr.innerHTML = `
-                    <td>${o.numero_pedido}</td>
-                    <td>${o.cliente_nome}</td>
-                    <td>${dataCriacao}</td>
-                    <td>${qtdTotal}</td>
-                    <td>${valorTotal.toFixed(2)}</td>
-                    <td>
-                        <button class="btn" onclick="editarOrcamento('${o.id}')">
-                            Editar
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-
-            } catch(err) {
-                console.error("Erro ao carregar portas do orçamento:", err);
-            }
+            const tr = document.createElement("tr");
+            const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
+            tr.innerHTML = `
+                <td>${o.numero_pedido}</td>
+                <td>${o.cliente_nome}</td>
+                <td>${dataCriacao}</td>
+                <td>${qtdTotal}</td>
+                <td>${valorTotal.toFixed(2)}</td>
+                <td><button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button></td>
+            `;
+            tbody.appendChild(tr);
         }
 
         container.appendChild(table);
-    })
-    .catch(err=>{
+    } catch(err) {
         console.error("Erro ao carregar orçamentos:", err);
-        document.getElementById("orcamentosExistentes").innerHTML =
-            "<em>Erro ao carregar orçamentos.</em>";
-    });
+        document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
+    }
 }
 
 // 🔥 EDITAR ORÇAMENTO
@@ -175,16 +139,9 @@ function editarOrcamento(uuid){
 // FICHA CLIENTE
 // =====================
 let cliente = {nome:"", id:null};
-let portasSalvas = [];
-let idCounter = 0;
-
 async function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
-    if(!nome){
-        alert("Digite o nome do cliente");
-        return;
-    }
-
+    if(!nome){ alert("Digite o nome do cliente"); return; }
     cliente.nome = nome;
 
     try {
@@ -194,23 +151,21 @@ async function criarFichaCliente(){
             body:JSON.stringify({cliente_nome: cliente.nome})
         });
         const data = await res.json();
-
         if(data.success){
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: " + data.id);
             document.getElementById("formCliente").style.display="none";
             carregarOrcamentos();
-        } else {
-            alert("Erro ao criar ficha: " + data.error);
-        }
+        } else alert("Erro ao criar ficha: " + data.error);
     } catch(err) {
         console.error("Erro criarFichaCliente:", err);
         alert("Erro ao criar ficha, veja o console.");
     }
 }
 
-// Carrega orçamentos automaticamente ao abrir a página
+// Carrega orçamentos instantaneamente
 carregarOrcamentos();
 </script>
 </body>
 </html>
+
