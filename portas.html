@@ -7,6 +7,21 @@
 <meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
 <meta name="robots" content="index, follow">
 
+<!-- SEO LOCAL -->
+<meta name="geo.region" content="BR-CE">
+<meta name="geo.placename" content="Fortaleza">
+<meta name="geo.position" content="-3.7319;-38.5267">
+<meta name="ICBM" content="-3.7319, -38.5267">
+
+<!-- CANONICAL -->
+<link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
+
+<!-- OPEN GRAPH -->
+<meta property="og:title" content="Portas de Vidro e Alumínio em Fortaleza | ColorGlass">
+<meta property="og:description" content="Orçamento rápido em portas de vidro e alumínio sob medida em Fortaleza. Qualidade premium e instalação profissional.">
+<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
+<meta property="og:type" content="website">
+
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
@@ -24,6 +39,14 @@ th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
 #portaSVG { width:220px; height:400px; border:1px solid #333; margin-top:10px; background:white; }
 </style>
+
+<link id="tema-css" rel="stylesheet" href="">
+<script>
+if(localStorage.getItem("darkmode") === "true"){
+    document.getElementById("tema-css").href = "/static/css/indexdark.css";
+}
+</script>
+
 </head>
 <body>
 <div class="app">
@@ -39,6 +62,7 @@ th { background:#ddd; }
 
     <div class="content">
         <h1>Orçamento de Portas</h1>
+
         <div id="infoOrcamento" style="margin-bottom:15px;"></div>
 
         <label>Tipologia
@@ -54,6 +78,7 @@ th { background:#ddd; }
         <label>Quantidade<input type="number" id="quantidade" value="1" min="1" onchange="atualizarPrecoPorta()"></label>
 
         <div id="campos"></div>
+
         <svg id="portaSVG"></svg>
 
         <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
@@ -71,10 +96,9 @@ th { background:#ddd; }
 function go(p){ window.location.href = p }
 
 // =====================
-// BACKEND
+// BACKEND (RENDER)
 // =====================
-const API_PORTAS = "https://colorglass.onrender.com/api_portas";
-const API_ORCAMENTOS = "https://colorglass.onrender.com/api_orcamentos";
+const API_BASE = "https://colorglass.onrender.com";
 
 // =====================
 // UUID DO ORÇAMENTO
@@ -106,13 +130,13 @@ let todosPerfis = []
 let todosVidros = []
 
 async function carregarPerfis() {
-    const res = await fetch(`${API_ORCAMENTOS}/perfils`)
+    const res = await fetch(`${API_BASE}/api/perfis`)
     todosPerfis = await res.json()
     atualizarPerfisSelect()
 }
 
 async function carregarVidros() {
-    const res = await fetch(`${API_ORCAMENTOS}/vidros`)
+    const res = await fetch(`${API_BASE}/api/vidros`)
     todosVidros = await res.json()
     atualizarVidrosSelect()
 }
@@ -223,8 +247,8 @@ function salvarPorta(){
     const porta = {
         id: editando ?? idCounter++,
         tipo,
-        dados,         
-        quantidade,    
+        dados,         // sem qtd_folhas
+        quantidade,    // separado
         preco: calcularPrecoPorta(),
         svg: portaSVG.outerHTML
     }
@@ -265,6 +289,9 @@ function editarPorta(id){
     desenharPorta()
 }
 
+// =====================
+// APAGAR PORTA
+// =====================
 function apagarPorta(id){
     if(!confirm("Tem certeza que deseja apagar esta porta?")) return
     portas = portas.filter(p=>p.id!==id)
@@ -277,40 +304,24 @@ function apagarPorta(id){
 async function finalizarOrcamento(){
     if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
 
-    const quantidade_total = portas.reduce((acc, p) => acc + (+p.quantidade || 1), 0);
-    const valor_total = portas.reduce((acc, p) => acc + ((+p.preco || 0) * (+p.quantidade || 0)), 0);
-
     const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
 
-    try {
-        // Salva portas
-        const resPortas = await fetch(`${API_PORTAS}/salvar`, {
+    try{
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ portas: portasComUUID })
-        });
-        const dataPortas = await resPortas.json();
-        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
-
-        // Atualiza orçamento
-        const resOrc = await fetch(`${API_ORCAMENTOS}/finalizar`, {
-            method: "POST",
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-                uuid: ORCAMENTO_UUID,
-                quantidade_total,
-                valor_total
-            })
-        });
-        const dataOrc = await resOrc.json();
-        if(!dataOrc.success) throw new Error(dataOrc.error || "Erro ao atualizar orçamento");
-
-        alert("Orçamento finalizado com sucesso!");
-        window.location.href = "/";
-
+        })
+        const data = await res.json()
+        if(data.success){
+            alert("Orçamento finalizado com sucesso!")
+            window.location.href = "/"
+        } else {
+            alert("Erro ao finalizar orçamento: " + (data.error || ""))
+        }
     } catch(err){
-        console.error(err);
-        alert("Erro ao finalizar orçamento: " + err.message);
+        console.error(err)
+        alert("Erro de conexão ao finalizar orçamento.")
     }
 }
 
@@ -319,7 +330,7 @@ async function finalizarOrcamento(){
 // =====================
 async function carregarPortas(){
     try{
-        const res = await fetch(`${API_PORTAS}?orcamento_uuid=${ORCAMENTO_UUID}`)
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`)
         const data = await res.json()
         if(data.success && data.portas){
             portas = data.portas.map((p, idx) => ({ ...p, id: idCounter++ }))
@@ -337,6 +348,5 @@ carregarPortas()
 </script>
 </body>
 </html>
-
 
 
