@@ -46,8 +46,8 @@ if(localStorage.getItem("darkmode") === "true"){
     document.getElementById("tema-css").href = "/static/css/indexdark.css";
 }
 </script>
-
 </head>
+
 <body>
 <div class="app">
     <div class="sidebar">
@@ -78,7 +78,6 @@ if(localStorage.getItem("darkmode") === "true"){
         <label>Quantidade<input type="number" id="quantidade" value="1" min="1" onchange="atualizarPrecoPorta()"></label>
 
         <div id="campos"></div>
-
         <svg id="portaSVG"></svg>
 
         <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
@@ -96,7 +95,7 @@ if(localStorage.getItem("darkmode") === "true"){
 function go(p){ window.location.href = p }
 
 // =====================
-// BACKEND (RENDER)
+// BACKEND
 // =====================
 const API_BASE = "https://colorglass.onrender.com";
 
@@ -296,7 +295,7 @@ function apagarPorta(id){
 }
 
 // =====================
-// FINALIZAR ORÇAMENTO COM API_PORTAS + API_ORC
+// FINALIZAR ORÇAMENTO
 // =====================
 async function finalizarOrcamento(){
     if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
@@ -307,23 +306,14 @@ async function finalizarOrcamento(){
     const valor_total = portas.reduce((acc,p)=>acc+(+p.preco||0)*(+p.quantidade||0),0);
 
     try{
-        // 1️⃣ Salvar portas no Supabase via API_PORTAS
-        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+        // Salvar portas
+        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ portas: portasComUUID })
+            body: JSON.stringify({ portas: portasComUUID, quantidade_total, valor_total })
         });
         const dataPortas = await resPortas.json();
-        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
-
-        // 2️⃣ Atualizar quantidade total e valor total via API_ORC
-        const resOrc = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
-            method: "POST",
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ quantidade_total, valor_total })
-        });
-        const dataOrc = await resOrc.json();
-        if(!dataOrc.success) throw new Error(dataOrc.error || "Erro ao atualizar orçamento");
+        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas e finalizar orçamento");
 
         alert("Orçamento finalizado com sucesso!");
         window.location.href = "/"
