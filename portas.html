@@ -300,27 +300,37 @@ function apagarPorta(id){
 async function finalizarOrcamento(){
     if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
 
+    // 1️⃣ Preparar portas com UUID
     const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
 
-    const quantidade_total = portas.reduce((acc,p)=>acc+(+p.quantidade||0),0);
-    const valor_total = portas.reduce((acc,p)=>acc+(+p.preco||0)*(+p.quantidade||0),0);
-
     try{
-        // Salvar portas
-        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
+        // 2️⃣ Salvar portas
+        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ portas: portasComUUID, quantidade_total, valor_total })
+            body: JSON.stringify({ portas: portasComUUID })
         });
         const dataPortas = await resPortas.json();
-        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas e finalizar orçamento");
+        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
+
+        // 3️⃣ Finalizar orçamento (atualizar totais)
+        const quantidade_total = portas.reduce((acc,p)=>acc+(+p.quantidade||0),0);
+        const valor_total = portas.reduce((acc,p)=>acc+(+p.preco||0)*(+p.quantidade||0),0);
+
+        const resFinal = await fetch(`${API_BASE}/api/orcamentos/${ORCAMENTO_UUID}/finalizar`, {
+            method: "POST",
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ quantidade_total, valor_total })
+        });
+        const dataFinal = await resFinal.json();
+        if(!dataFinal.success) throw new Error(dataFinal.error || "Erro ao finalizar orçamento");
 
         alert("Orçamento finalizado com sucesso!");
-        window.location.href = "/"
+        window.location.href = "/";
 
     } catch(err){
-        console.error(err)
-        alert("Erro ao finalizar orçamento: " + err.message)
+        console.error(err);
+        alert("Erro ao finalizar orçamento: " + err.message);
     }
 }
 
