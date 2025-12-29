@@ -91,7 +91,7 @@ const BACKEND_URL = "https://colorglass.onrender.com";
 function carregarOrcamentos() {
     fetch(`${BACKEND_URL}/api/orcamentos`)
     .then(res => res.json())
-    .then(data => {
+    .then(async data => {
         const container = document.getElementById("orcamentosExistentes");
         container.innerHTML = "";
 
@@ -108,6 +108,8 @@ function carregarOrcamentos() {
                     <th># Pedido</th>
                     <th>Cliente</th>
                     <th>Data Criação</th>
+                    <th>Qtd Portas</th>
+                    <th>Valor Total (R$)</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -115,24 +117,46 @@ function carregarOrcamentos() {
         `;
         const tbody = table.querySelector("tbody");
 
-        orcamentos.forEach(o => {
-            const tr = document.createElement("tr");
-            const dataCriacao = o.data_criacao
-                ? new Date(o.data_criacao).toLocaleString()
-                : "";
+        for(const o of orcamentos){
+            try {
+                // Buscar portas do orçamento
+                const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${o.id}/portas`);
+                const dataPortas = await resPortas.json();
 
-            tr.innerHTML = `
-                <td>${o.numero_pedido}</td>
-                <td>${o.cliente_nome}</td>
-                <td>${dataCriacao}</td>
-                <td>
-                    <button class="btn" onclick="editarOrcamento('${o.id}')">
-                        Editar
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+                let qtdTotal = 0;
+                let valorTotal = 0;
+                if(dataPortas.success && dataPortas.portas){
+                    dataPortas.portas.forEach(p => {
+                        const quantidade = +p.dados?.qtd_folhas || 1; // padrão 1
+                        qtdTotal += quantidade;
+                        valorTotal += (p.preco || 0) * quantidade;
+                    });
+                }
+
+                const tr = document.createElement("tr");
+                const dataCriacao = o.data_criacao
+                    ? new Date(o.data_criacao).toLocaleString()
+                    : "";
+
+                tr.innerHTML = `
+                    <td>${o.numero_pedido}</td>
+                    <td>${o.cliente_nome}</td>
+                    <td>${dataCriacao}</td>
+                    <td>${qtdTotal}</td>
+                    <td>${valorTotal.toFixed(2)}</td>
+                    <td>
+                        <button class="btn" onclick="editarOrcamento('${o.id}')">
+                            Editar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+            } catch(err) {
+                console.error("Erro ao carregar portas do orçamento:", err);
+            }
+        }
+
         container.appendChild(table);
     })
     .catch(err=>{
@@ -142,7 +166,7 @@ function carregarOrcamentos() {
     });
 }
 
-// 🔥 UUID DO ORÇAMENTO
+// 🔥 EDITAR ORÇAMENTO
 function editarOrcamento(uuid){
     window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
@@ -166,9 +190,7 @@ async function criarFichaCliente(){
     try {
         const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
             method:'POST',
-            headers:{
-                'Content-Type':'application/json'
-            },
+            headers:{ 'Content-Type':'application/json' },
             body:JSON.stringify({cliente_nome: cliente.nome})
         });
         const data = await res.json();
