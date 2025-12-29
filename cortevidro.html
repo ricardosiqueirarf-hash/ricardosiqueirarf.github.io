@@ -3,143 +3,130 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Corte de Vidro - ColorGlass</title>
+<title>Corte de Vidro | ColorGlass</title>
 <style>
-body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 0; padding: 0; }
-.container { max-width: 1200px; margin: auto; padding: 20px; }
+body { font-family: Arial, sans-serif; background: #f2f2f2; margin:0; padding:0;}
+.container { padding: 20px; max-width: 900px; margin:auto; }
 h1 { text-align:center; }
 label { display:block; margin:10px 0 5px; }
-input, select { padding:5px; width:150px; margin-right:10px; }
-button { padding: 6px 12px; margin-top:10px; cursor:pointer; }
-table { border-collapse: collapse; width:100%; margin-top:15px; }
-th, td { border:1px solid #ccc; padding:5px; text-align:center; }
-th { background:#ddd; }
-#svgChapa { border:1px solid #333; background:#fff; margin-top:20px; width: 600px; height: 800px; }
+input { padding:5px; width: 100px; margin-right:10px; }
+button { padding:7px 14px; margin-top:10px; cursor:pointer; }
+#cortesLista div { background:#fff; padding:10px; margin-bottom:10px; border-radius:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+#resultado { margin-top:20px; padding:10px; background:#fff; border-radius:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+svg { border:1px solid #333; margin-top:10px; }
 </style>
 </head>
 <body>
 <div class="container">
-    <h1>Simulador de Corte de Vidro</h1>
+<h1>Corte de Vidro</h1>
 
-    <div id="formPeca">
-        <label>Largura (mm)<input type="number" id="largura" value="500"></label>
-        <label>Altura (mm)<input type="number" id="altura" value="600"></label>
-        <label>Espessura (mm)<input type="number" id="espessura" value="8"></label>
-        <label>Tipo de Vidro
-            <select id="tipoVidro">
-                <option value="comum">Comum</option>
-                <option value="temperado">Temperado</option>
-                <option value="laminado">Laminado</option>
-            </select>
-        </label>
-        <label>Perda (%)<input type="number" id="perda" value="5"></label>
-        <label>Quantidade<input type="number" id="quantidade" value="1"></label>
-        <button onclick="adicionarPeca()">Adicionar Peça</button>
-    </div>
+<h2>Adicionar Corte</h2>
+<label>Largura (mm) <input type="number" id="largura"></label>
+<label>Altura (mm) <input type="number" id="altura"></label>
+<label>Espessura (mm) <input type="number" id="espessura" value="8"></label>
+<label>Tipo de Vidro 
+<select id="tipoVidro">
+    <option value="comum">Comum</option>
+    <option value="temperado">Temperado</option>
+    <option value="laminado">Laminado</option>
+</select>
+</label>
+<button onclick="adicionarCorte()">Adicionar Corte</button>
 
-    <h2>Peças Adicionadas</h2>
-    <table id="tabelaPecas">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Largura</th>
-                <th>Altura</th>
-                <th>Espessura</th>
-                <th>Tipo</th>
-                <th>Perda</th>
-                <th>Qtd</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+<h2>Cortes Adicionados</h2>
+<div id="cortesLista"></div>
 
-    <button onclick="calcularCorte()">Calcular Corte</button>
+<button onclick="calcularCortes()">Calcular Melhor Distribuição</button>
 
-    <h2>Distribuição na Chapa (SVG)</h2>
-    <svg id="svgChapa"></svg>
-
-    <h2>Resultado</h2>
-    <pre id="resultado"></pre>
+<div id="resultado"></div>
+<svg id="svgCorte" width="800" height="1000"></svg>
 </div>
 
 <script>
-const PEÇAS = [];
-const CHAPA_LARGURA = 2400;
-const CHAPA_ALTURA = 3210;
+const cortes = [];
 
-function adicionarPeca() {
-    const largura = +document.getElementById("largura").value;
-    const altura = +document.getElementById("altura").value;
-    const espessura = +document.getElementById("espessura").value;
-    const tipoVidro = document.getElementById("tipoVidro").value;
-    const perda = +document.getElementById("perda").value;
-    const quantidade = +document.getElementById("quantidade").value;
+function adicionarCorte(){
+    const largura = +document.getElementById('largura').value;
+    const altura = +document.getElementById('altura').value;
+    const espessura = +document.getElementById('espessura').value;
+    const tipoVidro = document.getElementById('tipoVidro').value;
 
-    PEÇAS.push({ largura, altura, espessura, tipoVidro, perda, quantidade });
-    renderTabela();
+    if(!largura || !altura || !espessura) return alert("Preencha todas as dimensões.");
+
+    cortes.push({largura, altura, espessura, tipoVidro});
+    renderCortes();
 }
 
-function renderTabela() {
-    const tbody = document.querySelector("#tabelaPecas tbody");
-    tbody.innerHTML = "";
-    PEÇAS.forEach((p, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${i+1}</td>
-            <td>${p.largura}</td>
-            <td>${p.altura}</td>
-            <td>${p.espessura}</td>
-            <td>${p.tipoVidro}</td>
-            <td>${p.perda}</td>
-            <td>${p.quantidade}</td>
-            <td><button onclick="removerPeca(${i})">Remover</button></td>
-        `;
-        tbody.appendChild(tr);
+function renderCortes(){
+    const container = document.getElementById('cortesLista');
+    container.innerHTML = '';
+    cortes.forEach((c, idx)=>{
+        container.innerHTML += `<div>
+            Corte ${idx+1}: ${c.largura}x${c.altura} mm - ${c.tipoVidro} 
+            <button onclick="removerCorte(${idx})">Remover</button>
+        </div>`;
     });
 }
 
-function removerPeca(idx) {
-    PEÇAS.splice(idx,1);
-    renderTabela();
+function removerCorte(idx){
+    cortes.splice(idx,1);
+    renderCortes();
 }
 
-async function calcularCorte() {
-    if(PEÇAS.length === 0) return alert("Adicione pelo menos uma peça.");
+async function calcularCortes(){
+    if(cortes.length===0) return alert("Adicione pelo menos um corte.");
 
-    try {
-        const res = await fetch("https://colorglass.onrender.com/api/cortevidro", {
-            method:"POST",
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({pecas: PEÇAS})
+    try{
+        const res = await fetch('https://colorglass.onrender.com/api/cortevidro', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({cortes})
         });
         const data = await res.json();
-        if(!data.success) throw new Error(data.error || "Erro ao calcular corte");
 
-        document.getElementById("resultado").textContent = JSON.stringify(data, null, 2);
-        desenharSVG(data.distribuicao || []);
-    } catch(e) {
-        console.error(e);
-        alert("Erro ao calcular corte: "+e.message);
+        if(!data.success) return alert(data.error || "Erro ao calcular cortes.");
+
+        const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.innerHTML = `<h3>Resultado do Corte</h3>`;
+        let totalCusto = 0;
+        let totalPerda = 0;
+        data.cortes.forEach((c,i)=>{
+            totalCusto += c.custo;
+            totalPerda += c.perda;
+            resultadoDiv.innerHTML += `<p>Corte ${i+1}: Área ${c.areaLiquida.toFixed(3)} m², Perda ${c.perda.toFixed(3)} m², Custo R$ ${c.custo.toFixed(2)}</p>`;
+        });
+        resultadoDiv.innerHTML += `<strong>Total Custo: R$ ${totalCusto.toFixed(2)}, Total Perda: ${totalPerda.toFixed(3)} m²</strong>`;
+
+        desenharSVG(data.cortes);
+
+    } catch(err){
+        console.error(err);
+        alert("Erro ao calcular cortes. Veja o console.");
     }
 }
 
-function desenharSVG(distribuicao) {
-    const svg = document.getElementById("svgChapa");
-    svg.innerHTML = "";
-    const scaleX = svg.clientWidth / CHAPA_LARGURA;
-    const scaleY = svg.clientHeight / CHAPA_ALTURA;
+function desenharSVG(cortesCalculados){
+    const svg = document.getElementById('svgCorte');
+    svg.innerHTML = '';
+    const chapaWidth = 2400;
+    const chapaHeight = 3210;
+    const scale = Math.min(800/chapaWidth, 1000/chapaHeight);
 
-    distribucao.forEach(p => {
-        const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
-        rect.setAttribute("x", p.x * scaleX);
-        rect.setAttribute("y", p.y * scaleY);
-        rect.setAttribute("width", p.largura * scaleX);
-        rect.setAttribute("height", p.altura * scaleY);
-        rect.setAttribute("fill", "#99ccff");
-        rect.setAttribute("stroke","#000");
-        rect.setAttribute("stroke-width",1);
-        svg.appendChild(rect);
+    // Chapa
+    svg.innerHTML = `<rect x="0" y="0" width="${chapaWidth*scale}" height="${chapaHeight*scale}" fill="#ddd" stroke="#000" stroke-width="2"/>`;
+
+    let offsetX=0, offsetY=0, rowHeight=0;
+    cortesCalculados.forEach(c=>{
+        const w = c.largura*scale;
+        const h = c.altura*scale;
+        if(offsetX + w > chapaWidth*scale){
+            offsetX=0;
+            offsetY+=rowHeight;
+            rowHeight=0;
+        }
+        svg.innerHTML += `<rect x="${offsetX}" y="${offsetY}" width="${w}" height="${h}" fill="#9cf" stroke="#000" stroke-width="1"/>`;
+        offsetX += w;
+        rowHeight = Math.max(rowHeight,h);
     });
 }
 </script>
