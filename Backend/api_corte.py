@@ -69,10 +69,15 @@ def calcular_corte():
 
         for abin in packer:
             for rect in abin:
-                x, y, w, h, idx = rect
+                # Corrigindo unpack para compatibilidade
+                if len(rect) == 5:
+                    x, y, w, h, idx = rect
+                else:
+                    x, y, w, h = rect
+                    idx = 0  # fallback caso não tenha id, mas geralmente não deve ocorrer
+
                 area_chapa_usada += (w/1000)*(h/1000)
                 info = pecas_info[idx].copy()
-                # área em m²
                 area_peca = (w/1000)*(h/1000)
                 preco_m2 = PRECO_VIDRO.get(info.get("tipo_vidro","comum"), 120)
                 custo_peca = area_peca * preco_m2
@@ -103,4 +108,5 @@ def calcular_corte():
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
