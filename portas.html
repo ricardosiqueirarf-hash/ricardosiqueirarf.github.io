@@ -48,6 +48,11 @@ input, select { padding:7px; margin-top:5px; }
                 </select>
             </label>
 
+            <label>
+                Quantidade
+                <input id="quantidade" type="number" value="1" min="1" oninput="atualizarPrecoPorta()">
+            </label>
+
             <div class="row" id="campos"></div>
 
             <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
@@ -138,11 +143,13 @@ function calcularPrecoPorta(){
     const altura = (+document.getElementById("altura")?.value || 0)/1000
     const perfil = todosPerfis.find(p=>p.id==document.getElementById("perfil")?.value)
     const vidro = todosVidros.find(v=>v.id==document.getElementById("vidro")?.value)
+    const quantidade = +document.getElementById("quantidade")?.value || 1
 
     let total = 0
     if(perfil) total += perfil.preco * 2 * (largura + altura)
     if(vidro) total += vidro.preco * largura * altura
-    return total
+
+    return total * quantidade
 }
 
 function atualizarPrecoPorta(){
@@ -202,28 +209,37 @@ function desenharPorta(){
 let portas=[], editando=null, idCounter=0
 
 function salvarPorta(){
-    const tipo=document.getElementById("tipologia").value
+    const tipo = document.getElementById("tipologia").value
     if(!tipo) return alert("Selecione a tipologia")
 
-    const dados={}
+    const dados = {}
     TIPOLOGIAS[tipo].forEach(c=>{
-        const el=document.getElementById(c)
-        if(el) dados[c]=el.value
+        const el = document.getElementById(c)
+        if(el) dados[c] = el.value
     })
+    const quantidade = +document.getElementById("quantidade")?.value || 1
 
-    const porta={ id:editando??idCounter++, tipo, dados, preco:calcularPrecoPorta(), svg:portaSVG.outerHTML }
-    editando===null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando),porta)
-    editando=null
+    const porta = {
+        id: editando ?? idCounter++,
+        tipo,
+        dados,
+        quantidade,
+        preco: calcularPrecoPorta(),
+        svg: portaSVG.outerHTML
+    }
+    editando === null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando), porta)
+    editando = null
     renderPortas()
 }
 
 function renderPortas(){
-    const c=document.getElementById("portasSalvas")
-    c.innerHTML=""
-    portas.forEach(p=>{
-        c.innerHTML+=`
+    const c = document.getElementById("portasSalvas")
+    c.innerHTML = ""
+    portas.forEach((p, idx)=>{
+        c.innerHTML += `
             <div>
-                <strong>${p.tipo}</strong><br>
+                <strong>${idx+1}. ${p.tipo}</strong><br>
+                Quantidade: ${p.quantidade}<br>
                 Preço: R$ ${p.preco.toFixed(2)}<br>
                 ${p.svg}<br>
                 <button class="btn" onclick="editarPorta(${p.id})">Editar</button>
@@ -237,6 +253,7 @@ function editarPorta(id){
     if(!porta) return
     editando = id
     document.getElementById("tipologia").value = porta.tipo
+    document.getElementById("quantidade").value = porta.quantidade
     renderCampos()
     for(const k in porta.dados){
         const el=document.getElementById(k)
@@ -297,3 +314,4 @@ carregarPortas()
 
 </body>
 </html>
+
