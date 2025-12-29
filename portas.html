@@ -300,11 +300,11 @@ function apagarPorta(id){
 async function finalizarOrcamento(){
     if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
 
-    // 1️⃣ Preparar portas com UUID
+    // Preparar portas com UUID
     const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
 
     try{
-        // 2️⃣ Salvar portas
+        // Salvar portas no Supabase
         const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
@@ -313,26 +313,15 @@ async function finalizarOrcamento(){
         const dataPortas = await resPortas.json();
         if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
 
-        // 3️⃣ Finalizar orçamento (atualizar totais)
-        const quantidade_total = portas.reduce((acc,p)=>acc+(+p.quantidade||0),0);
-        const valor_total = portas.reduce((acc,p)=>acc+(+p.preco||0)*(+p.quantidade||0),0);
-
-        const resFinal = await fetch(`${API_BASE}/api/orcamentos/${ORCAMENTO_UUID}/finalizar`, {
-            method: "POST",
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ quantidade_total, valor_total })
-        });
-        const dataFinal = await resFinal.json();
-        if(!dataFinal.success) throw new Error(dataFinal.error || "Erro ao finalizar orçamento");
-
-        alert("Orçamento finalizado com sucesso!");
-        window.location.href = "/";
+        alert("Portas salvas com sucesso!");
+        window.location.href = "/"; // ou mantem na página se quiser editar mais
 
     } catch(err){
         console.error(err);
-        alert("Erro ao finalizar orçamento: " + err.message);
+        alert("Erro ao salvar portas: " + err.message);
     }
 }
+
 
 // =====================
 // CARREGAR PORTAS EXISTENTES
