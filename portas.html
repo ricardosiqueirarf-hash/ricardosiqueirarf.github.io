@@ -250,12 +250,16 @@ function editarPorta(id){
 // FINALIZAR ORÇAMENTO
 // =====================
 async function finalizarOrcamento(){
-    if(portas.length === 0) return alert("Adicione pelo menos uma porta.")
+    if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
+
+    // Inclui o UUID em cada porta
+    const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
+
     try{
         const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ portas })
+            body: JSON.stringify({ portas: portasComUUID })
         })
         const data = await res.json()
         if(data.success){
