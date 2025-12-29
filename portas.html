@@ -17,6 +17,7 @@ label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
 input, select { padding:7px; margin-top:5px; }
 
 .btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
+.btn-danger { background:#c0392b; }
 
 #formPorta { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
 #portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
@@ -50,6 +51,7 @@ input, select { padding:7px; margin-top:5px; }
             <div class="row" id="campos"></div>
 
             <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
+            <button class="btn btn-danger" onclick="finalizarOrcamento()">Finalizar Orçamento</button>
 
             <svg id="portaSVG" width="220" height="420" style="border:1px solid #000; margin-top:15px;"></svg>
         </div>
@@ -219,8 +221,53 @@ function renderPortas(){
     const c=document.getElementById("portasSalvas")
     c.innerHTML=""
     portas.forEach(p=>{
-        c.innerHTML+=`<div><strong>${p.tipo}</strong><br>Preço: R$ ${p.preco.toFixed(2)}<br>${p.svg}</div>`
+        c.innerHTML+=`
+            <div>
+                <strong>${p.tipo}</strong><br>
+                Preço: R$ ${p.preco.toFixed(2)}<br>
+                ${p.svg}<br>
+                <button class="btn" onclick="editarPorta(${p.id})">Editar</button>
+            </div>
+        `
     })
+}
+
+function editarPorta(id){
+    const porta = portas.find(p=>p.id===id)
+    if(!porta) return
+    editando = id
+    document.getElementById("tipologia").value = porta.tipo
+    renderCampos()
+    for(const k in porta.dados){
+        const el=document.getElementById(k)
+        if(el) el.value = porta.dados[k]
+    }
+    atualizarPrecoPorta()
+    desenharPorta()
+}
+
+// =====================
+// FINALIZAR ORÇAMENTO
+// =====================
+async function finalizarOrcamento(){
+    if(portas.length === 0) return alert("Adicione pelo menos uma porta.")
+    try{
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
+            method: "POST",
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ portas })
+        })
+        const data = await res.json()
+        if(data.success){
+            alert("Orçamento finalizado com sucesso!")
+            window.location.href = "/"
+        } else {
+            alert("Erro ao finalizar orçamento: " + (data.error || ""))
+        }
+    } catch(err){
+        console.error(err)
+        alert("Erro de conexão ao finalizar orçamento.")
+    }
 }
 
 // =====================
