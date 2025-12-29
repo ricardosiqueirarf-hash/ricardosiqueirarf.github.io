@@ -184,6 +184,11 @@ function renderCampos(){
         container.innerHTML += `<label>${map[c]}</label>`
     })
 
+    // Quantidade independente do tipo
+    if(!document.getElementById("quantidade")){
+        container.innerHTML += `<label>Quantidade<input id="quantidade" type="number" value="1" oninput="atualizarPrecoPorta()"></label>`
+    }
+
     desenharPorta()
     atualizarPerfisSelect()
     atualizarVidrosSelect()
@@ -212,6 +217,10 @@ function salvarPorta(){
     const tipo = document.getElementById("tipologia").value
     if(!tipo) return alert("Selecione a tipologia")
 
+    desenharPorta() // garante que o SVG está desenhado
+    const svgEl = document.getElementById("portaSVG")
+    const svgString = svgEl ? svgEl.outerHTML : ""
+
     const dados = {}
     TIPOLOGIAS[tipo].forEach(c=>{
         const el = document.getElementById(c)
@@ -225,8 +234,9 @@ function salvarPorta(){
         dados,
         quantidade,
         preco: calcularPrecoPorta(),
-        svg: portaSVG.outerHTML
+        svg: svgString
     }
+
     editando === null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando), porta)
     editando = null
     renderPortas()
