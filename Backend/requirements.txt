@@ -1,8 +1,10 @@
-Flask
+flask
 flask-cors
 requests
 gunicorn
 PyJWT
 rectpack
-python-dotenv
+python-dotenv==1.2.1
+rectpack==0.2.2
+
 
