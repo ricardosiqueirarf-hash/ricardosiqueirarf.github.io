@@ -12,13 +12,8 @@
             padding: 20px;
         }
 
-        h1 {
-            margin-bottom: 10px;
-        }
-
-        .menu {
-            margin-bottom: 20px;
-        }
+        h1 { margin-bottom: 10px; }
+        .menu { margin-bottom: 20px; }
 
         button {
             padding: 8px 14px;
@@ -45,9 +40,7 @@
             text-align: center;
         }
 
-        th {
-            background: #eee;
-        }
+        th { background: #eee; }
     </style>
 </head>
 <body>
@@ -56,6 +49,7 @@
 
 <div class="menu">
     <button onclick="window.location.href='/'">Voltar</button>
+    <button onclick="logout()">Sair</button>
 </div>
 
 <h3>Novo / Editar Vidro</h3>
@@ -87,17 +81,48 @@
 </table>
 
 <script>
-    // 📦 CARREGAR VIDROS
-    async function carregar() {
-        const res = await fetch("/api/vidros");
-        const data = await res.json();
+    // =====================
+    // AUTH
+    // =====================
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("Faça login primeiro");
+        window.location.href = "/login.html";
+    }
+
+    const AUTH_HEADERS = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+    }
+
+    // =====================
+    // CARREGAR
+    // =====================
+
+    async function carregar() {
+        const res = await fetch("/api/vidros", {
+            headers: AUTH_HEADERS
+        });
+
+        if (!res.ok) {
+            alert("Sessão inválida. Faça login novamente.");
+            logout();
+            return;
+        }
+
+        const data = await res.json();
         const tbody = document.getElementById("tabela");
         tbody.innerHTML = "";
 
         data.forEach(v => {
             const tr = document.createElement("tr");
-
             tr.innerHTML = `
                 <td>${v.tipo}</td>
                 <td>${v.espessura} mm</td>
@@ -117,74 +142,73 @@
                     <button onclick="excluir('${v.id}')">Excluir</button>
                 </td>
             `;
-
             tbody.appendChild(tr);
         });
     }
 
-    // 💾 SALVAR / ATUALIZAR
+    // =====================
+    // SALVAR
+    // =====================
+
     async function salvar() {
         const id = document.getElementById("vidro_id").value;
-        const tipo = document.getElementById("tipo").value;
-        const espessura = parseFloat(document.getElementById("espessura").value);
-        const custo = parseFloat(document.getElementById("custo").value);
-        const margem = parseFloat(document.getElementById("margem").value);
-        const perda = parseFloat(document.getElementById("perda").value);
+        const payload = {
+            tipo: document.getElementById("tipo").value,
+            espessura: parseFloat(document.getElementById("espessura").value),
+            custo: parseFloat(document.getElementById("custo").value),
+            margem: parseFloat(document.getElementById("margem").value),
+            perda: parseFloat(document.getElementById("perda").value)
+        };
 
-        if (!tipo || isNaN(espessura) || isNaN(custo) || isNaN(margem) || isNaN(perda)) {
-            alert("Preencha todos os campos corretamente");
+        if (Object.values(payload).some(v => v === "" || isNaN(v))) {
+            alert("Preencha tudo corretamente");
             return;
         }
 
-        const payload = { tipo, espessura, custo, margem, perda };
+        const url = id ? `/api/vidros/${id}` : "/api/vidros";
+        const method = id ? "PUT" : "POST";
 
-        if (id) {
-            await fetch(`/api/vidros/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-        } else {
-            await fetch("/api/vidros", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-        }
+        await fetch(url, {
+            method,
+            headers: AUTH_HEADERS,
+            body: JSON.stringify(payload)
+        });
 
         cancelar();
         carregar();
     }
 
-    // ✏️ EDITAR
+    // =====================
+    // EDITAR / EXCLUIR
+    // =====================
+
     function editar(id, tipo, espessura, custo, margem, perda) {
-        document.getElementById("vidro_id").value = id;
-        document.getElementById("tipo").value = tipo;
-        document.getElementById("espessura").value = espessura;
-        document.getElementById("custo").value = custo;
-        document.getElementById("margem").value = margem;
-        document.getElementById("perda").value = perda;
+        vidro_id.value = id;
+        tipo.value = tipo;
+        espessura.value = espessura;
+        custo.value = custo;
+        margem.value = margem;
+        perda.value = perda;
     }
 
-    // ❌ EXCLUIR
     async function excluir(id) {
         if (!confirm("Excluir este vidro?")) return;
 
         await fetch(`/api/vidros/${id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: AUTH_HEADERS
         });
 
         carregar();
     }
 
-    // 🔄 CANCELAR
     function cancelar() {
-        document.getElementById("vidro_id").value = "";
-        document.getElementById("tipo").value = "";
-        document.getElementById("espessura").value = "";
-        document.getElementById("custo").value = "";
-        document.getElementById("margem").value = "";
-        document.getElementById("perda").value = "";
+        vidro_id.value = "";
+        tipo.value = "";
+        espessura.value = "";
+        custo.value = "";
+        margem.value = "";
+        perda.value = "";
     }
 
     carregar();
