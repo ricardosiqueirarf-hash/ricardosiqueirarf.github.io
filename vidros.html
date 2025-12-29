@@ -49,7 +49,6 @@
 
 <div class="menu">
     <button onclick="window.location.href='/'">Voltar</button>
-    <button onclick="logout()">Sair</button>
 </div>
 
 <h3>Novo / Editar Vidro</h3>
@@ -82,41 +81,10 @@
 
 <script>
     // =====================
-    // AUTH
-    // =====================
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-        alert("Faça login primeiro");
-        window.location.href = "/login.html";
-    }
-
-    const AUTH_HEADERS = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-    };
-
-    function logout() {
-        localStorage.removeItem("token");
-        window.location.href = "/login.html";
-    }
-
-    // =====================
     // CARREGAR
     // =====================
-
     async function carregar() {
-        const res = await fetch("/api/vidros", {
-            headers: AUTH_HEADERS
-        });
-
-        if (!res.ok) {
-            alert("Sessão inválida. Faça login novamente.");
-            logout();
-            return;
-        }
-
+        const res = await fetch("/api/vidros");
         const data = await res.json();
         const tbody = document.getElementById("tabela");
         tbody.innerHTML = "";
@@ -149,7 +117,6 @@
     // =====================
     // SALVAR
     // =====================
-
     async function salvar() {
         const id = document.getElementById("vidro_id").value;
         const payload = {
@@ -170,7 +137,7 @@
 
         await fetch(url, {
             method,
-            headers: AUTH_HEADERS,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
@@ -181,7 +148,6 @@
     // =====================
     // EDITAR / EXCLUIR
     // =====================
-
     function editar(id, tipo, espessura, custo, margem, perda) {
         vidro_id.value = id;
         tipo.value = tipo;
@@ -196,7 +162,7 @@
 
         await fetch(`/api/vidros/${id}`, {
             method: "DELETE",
-            headers: AUTH_HEADERS
+            headers: { 'Content-Type': 'application/json' }
         });
 
         carregar();
