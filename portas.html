@@ -39,7 +39,6 @@ th { background:#ddd; }
 
     <div class="content">
         <h1>Orçamento de Portas</h1>
-
         <div id="infoOrcamento" style="margin-bottom:15px;"></div>
 
         <label>Tipologia
@@ -73,11 +72,6 @@ th { background:#ddd; }
 function go(p){ window.location.href = p }
 
 // =====================
-// BACKEND (RENDER)
-// =====================
-const API_BASE = "https://colorglass.onrender.com";
-
-// =====================
 // UUID DO ORÇAMENTO
 // =====================
 const params = new URLSearchParams(window.location.search)
@@ -107,13 +101,13 @@ let todosPerfis = []
 let todosVidros = []
 
 async function carregarPerfis() {
-    const res = await fetch(`${API_BASE}/api/perfis`)
+    const res = await fetch(`/api_perfis`)
     todosPerfis = await res.json()
     atualizarPerfisSelect()
 }
 
 async function carregarVidros() {
-    const res = await fetch(`${API_BASE}/api/vidros`)
+    const res = await fetch(`/api_vidros`)
     todosVidros = await res.json()
     atualizarVidrosSelect()
 }
@@ -285,7 +279,7 @@ async function finalizarOrcamento(){
 
     try {
         // Salva portas
-        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+        const resPortas = await fetch(`/api_portas`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ portas: portasComUUID })
@@ -294,7 +288,7 @@ async function finalizarOrcamento(){
         if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
 
         // Atualiza orçamento com quantidade e valor total
-        const resOrc = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
+        const resOrc = await fetch(`/api_orcamentos/${ORCAMENTO_UUID}/finalizar`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
@@ -319,7 +313,7 @@ async function finalizarOrcamento(){
 // =====================
 async function carregarPortas(){
     try{
-        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`)
+        const res = await fetch(`/api_portas?orcamento_uuid=${ORCAMENTO_UUID}`)
         const data = await res.json()
         if(data.success && data.portas){
             portas = data.portas.map((p, idx) => ({ ...p, id: idCounter++ }))
@@ -337,4 +331,5 @@ carregarPortas()
 </script>
 </body>
 </html>
+
 
