@@ -29,22 +29,22 @@ def calcular_corte():
         if not pecas:
             return jsonify({"success": False, "error": "Nenhuma peça enviada"}), 400
 
-        # Preparar retângulos para o bin packer
         rectangles = []
         pecas_info = []
-        for idx, p in enumerate(pecas):
-            largura = float(p.get("largura",0))
-            altura = float(p.get("altura",0))
-            quantidade = int(p.get("quantidade",1))
-            tipo_vidro = p.get("tipoVidro","comum")
-            insumos = p.get("insumos",{})
 
-            if largura <=0 or altura <=0:
+        for idx, p in enumerate(pecas):
+            largura = float(p.get("largura", 0))
+            altura = float(p.get("altura", 0))
+            quantidade = int(p.get("quantidade", 1))
+            tipo_vidro = p.get("tipoVidro", "comum")
+            insumos = p.get("insumos", {})
+
+            if largura <= 0 or altura <= 0:
                 return jsonify({"success": False, "error": f"Dimensões inválidas para peça {idx}"}), 400
 
             for _ in range(quantidade):
                 rectangles.append((largura, altura, idx))
-            
+
             pecas_info.append({
                 "largura": largura,
                 "altura": altura,
@@ -55,8 +55,10 @@ def calcular_corte():
         # Criar packer
         packer = newPacker(rotation=False)
         packer.add_bin(CHAPA_LARGURA, CHAPA_ALTURA)
+
         for r in rectangles:
             packer.add_rect(r[0], r[1], r[2])
+
         packer.pack()
 
         resultado = []
@@ -64,23 +66,21 @@ def calcular_corte():
         area_total_pecas = sum((p["largura"]/1000)*(p["altura"]/1000)*int(p.get("quantidade",1)) for p in pecas)
         area_chapa_usada = 0
 
-        # Agora pegamos os objetos Rectangle do rectpack
         for abin in packer:
             for rect in abin:
-                x = rect.x
-                y = rect.y
-                w = rect.width
-                h = rect.height
-                idx = rect.rid  # aqui o idx que colocamos na adição do retângulo
+                # acessar atributos do objeto Rectangle
+                x, y = rect.x, rect.y
+                w, h = rect.width, rect.height
+                idx = rect.rid  # id que passamos ao adicionar o retângulo
 
                 area_chapa_usada += (w/1000)*(h/1000)
                 info = pecas_info[idx].copy()
                 area_peca = (w/1000)*(h/1000)
-                preco_m2 = PRECO_VIDRO.get(info.get("tipo_vidro","comum"), 120)
+                preco_m2 = PRECO_VIDRO.get(info.get("tipo_vidro", "comum"), 120)
                 custo_peca = area_peca * preco_m2
 
                 for insumo, qtd in info.get("insumos", {}).items():
-                    custo_peca += INSUMOS.get(insumo,0) * qtd
+                    custo_peca += INSUMOS.get(insumo, 0) * qtd
 
                 custo_total += custo_peca
 
@@ -91,7 +91,7 @@ def calcular_corte():
                     "altura": h,
                     "tipo_vidro": info.get("tipo_vidro"),
                     "insumos": info.get("insumos"),
-                    "custo": round(custo_peca,2)
+                    "custo": round(custo_peca, 2)
                 })
 
         perda_percent = max(0, round((area_chapa_usada - area_total_pecas) / area_total_pecas * 100,2))
@@ -105,6 +105,7 @@ def calcular_corte():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 
