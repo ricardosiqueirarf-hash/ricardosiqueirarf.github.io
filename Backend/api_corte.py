@@ -54,12 +54,9 @@ def calcular_corte():
 
         # Criar packer
         packer = newPacker(rotation=False)
-        # Adicionar uma chapa como bin
         packer.add_bin(CHAPA_LARGURA, CHAPA_ALTURA)
-        # Adicionar retângulos
         for r in rectangles:
             packer.add_rect(r[0], r[1], r[2])
-        # Rodar o algoritmo
         packer.pack()
 
         resultado = []
@@ -67,14 +64,14 @@ def calcular_corte():
         area_total_pecas = sum((p["largura"]/1000)*(p["altura"]/1000)*int(p.get("quantidade",1)) for p in pecas)
         area_chapa_usada = 0
 
+        # Agora pegamos os objetos Rectangle do rectpack
         for abin in packer:
             for rect in abin:
-                # Corrigindo unpack para compatibilidade
-                if len(rect) == 5:
-                    x, y, w, h, idx = rect
-                else:
-                    x, y, w, h = rect
-                    idx = 0  # fallback caso não tenha id, mas geralmente não deve ocorrer
+                x = rect.x
+                y = rect.y
+                w = rect.width
+                h = rect.height
+                idx = rect.rid  # aqui o idx que colocamos na adição do retângulo
 
                 area_chapa_usada += (w/1000)*(h/1000)
                 info = pecas_info[idx].copy()
@@ -82,7 +79,6 @@ def calcular_corte():
                 preco_m2 = PRECO_VIDRO.get(info.get("tipo_vidro","comum"), 120)
                 custo_peca = area_peca * preco_m2
 
-                # insumos
                 for insumo, qtd in info.get("insumos", {}).items():
                     custo_peca += INSUMOS.get(insumo,0) * qtd
 
@@ -106,7 +102,9 @@ def calcular_corte():
             "custo_total": round(custo_total,2),
             "perda_percent": perda_percent
         })
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
