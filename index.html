@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orçamentos | ColorGlass</title>
-<meta name="description" content="Lista de orçamentos de portas de vidro e alumínio em Fortaleza.">
+<title>Portas de Vidro e Alumínio em Fortaleza | ColorGlass</title>
+<meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
+<meta name="robots" content="index, follow">
 
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
@@ -12,17 +13,21 @@ body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .sidebar { background:#1e1e1e; color:white; padding:20px; display:flex; flex-direction:column; gap:10px; }
 .sidebar button { padding:10px; border:none; background:#333; color:white; border-radius:6px; cursor:pointer; }
 .content { padding:25px; overflow-y:auto; height:100vh; }
+label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
+input { padding:7px; margin-top:5px; }
+.btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
+.btn-danger { background:#c0392b; }
+#formCliente { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+#portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
 table { border-collapse: collapse; width:100%; margin-top:10px; }
 th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
-.btn { padding:5px 10px; border:none; border-radius:5px; cursor:pointer; background:#0078d7; color:white; }
 </style>
 </head>
 <body>
 <div class="app">
     <div class="sidebar">
         <h3>ColorGlass</h3>
-        <button onclick="go('portas.html')">Orçamentos</button>
         <button onclick="go('perfis.html')">Perfis</button>
         <button onclick="go('vidros.html')">Vidros</button>
         <button onclick="go('producao.html')">Produção</button>
@@ -30,33 +35,42 @@ th { background:#ddd; }
         <button onclick="go('catalogo.html')">Catálogo</button>
         <button onclick="go('ajustes.html')">Ajustes</button>
     </div>
-
     <div class="content">
-        <h1>Orçamentos Existentes</h1>
+        <h1>Orçamento de Portas</h1>
+
+        <div id="formCliente">
+            <label>Nome do Cliente<input type="text" id="clienteNome"></label>
+            <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
+        </div>
+
+        <h2>Orçamentos Existentes</h2>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
+
+        <h2>Portas Salvas</h2>
+        <div id="portasSalvas"></div>
+
+        <button class="btn" onclick="salvarOrcamento()" style="margin-top:20px;">
+            Salvar Orçamento Final
+        </button>
     </div>
 </div>
 
 <script>
-function go(p){ window.location.href = p; }
+function go(p){ window.location.href = p }
+
+// URL do backend
+const BACKEND_URL = "https://colorglass.onrender.com";
 
 // =====================
-// CONFIGURAÇÃO SUPABASE
+// CARREGAR ORÇAMENTOS
 // =====================
-const SUPABASE_URL = "https://<SEU_PROJECT_ID>.supabase.co";
-const SUPABASE_KEY = "<SUA_SUPABASE_KEY>";
-
 async function carregarOrcamentos() {
     try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/orcamentos?select=*`, {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY
-            }
-        });
-        const orcamentos = await res.json();
+        const res = await fetch(`${BACKEND_URL}/api/orcamentos`);
+        const data = await res.json();
         const container = document.getElementById("orcamentosExistentes");
         container.innerHTML = "";
+        const orcamentos = data.orcamentos || [];
 
         if(orcamentos.length === 0){
             container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
@@ -79,34 +93,88 @@ async function carregarOrcamentos() {
         `;
         const tbody = table.querySelector("tbody");
 
-        orcamentos.forEach(o => {
-            const tr = document.createElement("tr");
-            const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
-            tr.innerHTML = `
-                <td>${o.numero_pedido || ""}</td>
-                <td>${o.cliente_nome || ""}</td>
-                <td>${dataCriacao}</td>
-                <td>${o.quantidade_total || 0}</td>
-                <td>${(o.valor_total || 0).toFixed(2)}</td>
-                <td><button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
+        for(const o of orcamentos){
+            try {
+                // Buscar portas do orçamento
+                const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${o.id}/portas`);
+                const dataPortas = await resPortas.json();
+                let qtdTotal = 0;
+                let valorTotal = 0;
+
+                if(dataPortas.success && dataPortas.portas){
+                    dataPortas.portas.forEach(p => {
+                        const quantidade = +p.quantidade || 1;
+                        qtdTotal += quantidade;
+                        valorTotal += (p.preco || 0) * quantidade;
+                    });
+                }
+
+                // Se as colunas do Supabase existirem, sobrescreve os totais
+                qtdTotal = o.quantidade_total ?? qtdTotal;
+                valorTotal = o.valor_total ?? valorTotal;
+
+                const tr = document.createElement("tr");
+                const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
+                tr.innerHTML = `
+                    <td>${o.numero_pedido}</td>
+                    <td>${o.cliente_nome}</td>
+                    <td>${dataCriacao}</td>
+                    <td>${qtdTotal}</td>
+                    <td>${valorTotal.toFixed(2)}</td>
+                    <td>
+                        <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            } catch(err) {
+                console.error("Erro ao carregar portas do orçamento:", err);
+            }
+        }
 
         container.appendChild(table);
+
     } catch(err){
         console.error("Erro ao carregar orçamentos:", err);
         document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
     }
 }
 
+// 🔥 EDITAR ORÇAMENTO
 function editarOrcamento(uuid){
     window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
 
 // =====================
-// CARREGA TUDO AO INICIAR
+// FICHA CLIENTE
 // =====================
+let cliente = {nome:"", id:null};
+async function criarFichaCliente(){
+    const nome = document.getElementById("clienteNome").value.trim();
+    if(!nome){ alert("Digite o nome do cliente"); return; }
+    cliente.nome = nome;
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body:JSON.stringify({cliente_nome: cliente.nome})
+        });
+        const data = await res.json();
+        if(data.success){
+            cliente.id = data.id;
+            alert("Ficha criada com sucesso! ID: " + data.id);
+            document.getElementById("formCliente").style.display="none";
+            carregarOrcamentos();
+        } else {
+            alert("Erro ao criar ficha: " + data.error);
+        }
+    } catch(err) {
+        console.error("Erro criarFichaCliente:", err);
+        alert("Erro ao criar ficha, veja o console.");
+    }
+}
+
+// Carrega orçamentos automaticamente ao abrir a página
 carregarOrcamentos();
 </script>
 </body>
