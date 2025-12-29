@@ -252,7 +252,6 @@ function editarPorta(id){
 async function finalizarOrcamento(){
     if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
 
-    // Inclui o UUID em cada porta
     const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
 
     try{
@@ -275,8 +274,25 @@ async function finalizarOrcamento(){
 }
 
 // =====================
+// CARREGAR PORTAS EXISTENTES
+// =====================
+async function carregarPortas(){
+    try{
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`)
+        const data = await res.json()
+        if(data.success && data.portas){
+            portas = data.portas.map((p, idx) => ({ ...p, id: idCounter++ }))
+            renderPortas()
+        }
+    } catch(err){
+        console.error(err)
+    }
+}
+
+// =====================
 carregarPerfis()
 carregarVidros()
+carregarPortas()
 </script>
 
 </body>
