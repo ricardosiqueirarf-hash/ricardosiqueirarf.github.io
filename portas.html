@@ -247,8 +247,8 @@ function salvarPorta(){
     const porta = {
         id: editando ?? idCounter++,
         tipo,
-        dados,         // sem qtd_folhas
-        quantidade,    // separado
+        dados,
+        quantidade,
         preco: calcularPrecoPorta(),
         svg: portaSVG.outerHTML
     }
@@ -289,9 +289,6 @@ function editarPorta(id){
     desenharPorta()
 }
 
-// =====================
-// APAGAR PORTA
-// =====================
 function apagarPorta(id){
     if(!confirm("Tem certeza que deseja apagar esta porta?")) return
     portas = portas.filter(p=>p.id!==id)
@@ -299,29 +296,41 @@ function apagarPorta(id){
 }
 
 // =====================
-// FINALIZAR ORÇAMENTO
+// FINALIZAR ORÇAMENTO COM API_PORTAS + API_ORC
 // =====================
 async function finalizarOrcamento(){
     if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
 
     const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
 
+    const quantidade_total = portas.reduce((acc,p)=>acc+(+p.quantidade||0),0);
+    const valor_total = portas.reduce((acc,p)=>acc+(+p.preco||0)*(+p.quantidade||0),0);
+
     try{
-        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
+        // 1️⃣ Salvar portas no Supabase via API_PORTAS
+        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ portas: portasComUUID })
-        })
-        const data = await res.json()
-        if(data.success){
-            alert("Orçamento finalizado com sucesso!")
-            window.location.href = "/"
-        } else {
-            alert("Erro ao finalizar orçamento: " + (data.error || ""))
-        }
+        });
+        const dataPortas = await resPortas.json();
+        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
+
+        // 2️⃣ Atualizar quantidade total e valor total via API_ORC
+        const resOrc = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/finalizar`, {
+            method: "POST",
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ quantidade_total, valor_total })
+        });
+        const dataOrc = await resOrc.json();
+        if(!dataOrc.success) throw new Error(dataOrc.error || "Erro ao atualizar orçamento");
+
+        alert("Orçamento finalizado com sucesso!");
+        window.location.href = "/"
+
     } catch(err){
         console.error(err)
-        alert("Erro de conexão ao finalizar orçamento.")
+        alert("Erro ao finalizar orçamento: " + err.message)
     }
 }
 
