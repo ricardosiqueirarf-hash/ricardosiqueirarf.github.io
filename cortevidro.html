@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corte de Vidro | ColorGlass</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f2f2f2; margin:0; padding:20px; }
+label { display:flex; flex-direction:column; margin-bottom:10px; }
+input, select { padding:5px; margin-top:3px; }
+.btn { padding:8px 14px; border:none; border-radius:5px; cursor:pointer; background:#0078d7; color:white; }
+#svgContainer { margin-top:20px; border:1px solid #333; width:400px; height:300px; background:white; display:flex; justify-content:center; align-items:center; }
+</style>
+</head>
+<body>
+
+<h1>Cálculo de Corte de Vidro</h1>
+
+<label>Largura (mm)<input type="number" id="largura" value="1000" oninput="desenharVidro()"></label>
+<label>Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharVidro()"></label>
+<label>Espessura (mm)<input type="number" id="espessura" value="8"></label>
+<label>Tipo de Vidro
+    <select id="tipoVidro">
+        <option value="comum">Comum</option>
+        <option value="temperado">Temperado</option>
+        <option value="laminado">Laminado</option>
+    </select>
+</label>
+<label>Perda (%)<input type="number" id="perda" value="5"></label>
+
+<button class="btn" onclick="calcularCorte()">Calcular Corte</button>
+
+<h2>Resultado</h2>
+<div id="resultado"></div>
+
+<h2>Visualização do Vidro</h2>
+<div id="svgContainer">
+    <svg id="vidroSVG" width="380" height="280"></svg>
+</div>
+
+<script>
+const API_BASE = "https://colorglass.onrender.com";
+
+function desenharVidro(){
+    const svg = document.getElementById("vidroSVG");
+    const w = +document.getElementById("largura").value;
+    const h = +document.getElementById("altura").value;
+    if(!w||!h) return;
+    svg.innerHTML="";
+    const scale = Math.min(360/w, 260/h);
+    svg.innerHTML = `<rect x="10" y="10" width="${w*scale}" height="${h*scale}" fill="#a0d8f0" stroke="#000" stroke-width="4"/>`;
+}
+
+async function calcularCorte(){
+    const largura = +document.getElementById("largura").value;
+    const altura = +document.getElementById("altura").value;
+    const espessura = +document.getElementById("espessura").value;
+    const tipoVidro = document.getElementById("tipoVidro").value;
+    const perda = +document.getElementById("perda").value;
+
+    try{
+        const res = await fetch(`${API_BASE}/api/cortevidro`, {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ largura, altura, espessura, tipoVidro, perda })
+        });
+        const data = await res.json();
+        if(data.success){
+            document.getElementById("resultado").innerHTML = `
+                <p>Custo estimado: R$ ${data.custo.toFixed(2)}</p>
+                <p>Área líquida: ${data.areaLiquida.toFixed(2)} m²</p>
+            `;
+        } else {
+            alert("Erro: " + data.error);
+        }
+    } catch(err){
+        console.error(err);
+        alert("Erro ao calcular corte, veja console.");
+    }
+}
+
+desenharVidro();
+</script>
+</body>
+</html>
