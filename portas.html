@@ -54,7 +54,6 @@ th { background:#ddd; }
         <label>Quantidade<input type="number" id="quantidade" value="1" min="1" onchange="atualizarPrecoPorta()"></label>
 
         <div id="campos"></div>
-
         <svg id="portaSVG"></svg>
 
         <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
@@ -70,6 +69,12 @@ th { background:#ddd; }
 
 <script>
 function go(p){ window.location.href = p }
+
+// =====================
+// BACKEND
+// =====================
+const API_PORTAS = "https://colorglass.onrender.com/api_portas";
+const API_ORCAMENTOS = "https://colorglass.onrender.com/api_orcamentos";
 
 // =====================
 // UUID DO ORÇAMENTO
@@ -101,13 +106,13 @@ let todosPerfis = []
 let todosVidros = []
 
 async function carregarPerfis() {
-    const res = await fetch(`/api_perfis`)
+    const res = await fetch(`${API_ORCAMENTOS}/perfils`)
     todosPerfis = await res.json()
     atualizarPerfisSelect()
 }
 
 async function carregarVidros() {
-    const res = await fetch(`/api_vidros`)
+    const res = await fetch(`${API_ORCAMENTOS}/vidros`)
     todosVidros = await res.json()
     atualizarVidrosSelect()
 }
@@ -279,7 +284,7 @@ async function finalizarOrcamento(){
 
     try {
         // Salva portas
-        const resPortas = await fetch(`/api_portas`, {
+        const resPortas = await fetch(`${API_PORTAS}/salvar`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ portas: portasComUUID })
@@ -287,11 +292,12 @@ async function finalizarOrcamento(){
         const dataPortas = await resPortas.json();
         if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
 
-        // Atualiza orçamento com quantidade e valor total
-        const resOrc = await fetch(`/api_orcamentos/${ORCAMENTO_UUID}/finalizar`, {
+        // Atualiza orçamento
+        const resOrc = await fetch(`${API_ORCAMENTOS}/finalizar`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
+                uuid: ORCAMENTO_UUID,
                 quantidade_total,
                 valor_total
             })
@@ -313,7 +319,7 @@ async function finalizarOrcamento(){
 // =====================
 async function carregarPortas(){
     try{
-        const res = await fetch(`/api_portas?orcamento_uuid=${ORCAMENTO_UUID}`)
+        const res = await fetch(`${API_PORTAS}?orcamento_uuid=${ORCAMENTO_UUID}`)
         const data = await res.json()
         if(data.success && data.portas){
             portas = data.portas.map((p, idx) => ({ ...p, id: idCounter++ }))
@@ -331,5 +337,6 @@ carregarPortas()
 </script>
 </body>
 </html>
+
 
 
