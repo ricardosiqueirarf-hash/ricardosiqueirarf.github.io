@@ -84,7 +84,7 @@
     // CARREGAR PUXADORES
     // =====================
     async function carregar() {
-        const res = await fetch(`${API_BASE}/api/materiais`, {
+        const res = await fetch(`${API_BASE}/api/puxadores`, {
             headers: { "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN") }
         });
         const data = await res.json();
