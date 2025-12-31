@@ -22,13 +22,13 @@ HEADERS = {
 # BLUEPRINT
 # =====================
 
-insumos_bp = Blueprint("puxadores_bp", __name__)
+puxadores_bp = Blueprint("puxadores_bp", __name__)
 
 # =====================
 # ROTAS INSUMOS
 # =====================
 
-@insumos_bp.route("/api/puxadores", methods=["GET"])
+@puxadores_bp.route("/api/puxadores", methods=["GET"])
 def listar_puxadores():
     try:
         r = requests.get(
@@ -41,8 +41,8 @@ def listar_puxadores():
         return jsonify({"error": str(e)}), 500
 
 
-@insumos_bp.route("/api/puxadores", methods=["POST"])
-def criar_material():
+@puxadores_bp.route("/api/puxadores", methods=["POST"])
+def criar_puxadores():
     try:
         data = request.json or {}
 
@@ -69,7 +69,7 @@ def criar_material():
         return jsonify({"error": str(e)}), 500
 
 
-@insumos_bp.route("/api/puxadores/<id>", methods=["PUT"])
+@puxadores_bp.route("/api/puxadores/<id>", methods=["PUT"])
 def editar_puxadores(id):
     try:
         data = request.json or {}
@@ -96,7 +96,7 @@ def editar_puxadores(id):
         return jsonify({"error": str(e)}), 500
 
 
-@insumos_bp.route("/api/puxadores/<id>", methods=["DELETE"])
+@puxadores_bp.route("/api/puxadores/<id>", methods=["DELETE"])
 def deletar_puxadores(id):
     try:
         r = requests.delete(
