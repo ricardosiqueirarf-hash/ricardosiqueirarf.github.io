@@ -383,6 +383,8 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let selectedLine = null;
 let originalDirection = null;
+let editingAxis = null;
+const originalColors = new Map(); // Para guardar cor original das linhas
 
 renderer.domElement.addEventListener("dblclick", (event) => {
   const rect = renderer.domElement.getBoundingClientRect();
@@ -394,67 +396,78 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   if (intersects.length === 0) return;
 
   selectedLine = intersects[0].object;
-  const geometry = selectedLine.geometry;
-  const currentLen = geometry.parameters.height;
-
   const index = lines.indexOf(selectedLine);
   if (index === -1) return;
+
   const axis = history[index].axis;
+  editingAxis = axis;
+
+  const geometry = selectedLine.geometry;
+  const currentLen = geometry.parameters.height;
 
   // Salva direção original
   originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
+  // Guarda cores originais e muda cor das linhas do eixo selecionado
+  history.forEach((h, i) => {
+    if (h.axis === axis) {
+      originalColors.set(lines[i], lines[i].material.color.getHex());
+      lines[i].material.color.setHex(0xffa500); // laranja
+    }
+  });
+
   // Popup para novo comprimento
   const inputLen = prompt("Digite o novo comprimento do vetor:", currentLen.toFixed(2));
-  if (inputLen === null) return;
+  
+  // Cancela edição → restaura cores
+  if (inputLen === null) {
+    history.forEach((h, i) => {
+      if (h.axis === axis && originalColors.has(lines[i])) {
+        lines[i].material.color.setHex(originalColors.get(lines[i]));
+      }
+    });
+    originalColors.clear();
+    editingAxis = null;
+    return;
+  }
+
   const newLen = parseFloat(inputLen);
   if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
 
   const diff = newLen - currentLen;
 
-  // Atualiza todas as linhas
   history.forEach((h, i) => {
     const line = lines[i];
     const dir = new THREE.Vector3().subVectors(h.to, h.from).normalize();
 
     if (h.axis === axis) {
-      // REDUÇÃO SEMPRE EM DIREÇÃO AO ZERO DO EIXO
-      const from = new THREE.Vector3(
-        axis === 'X' ? 0 : h.from.x,
-        axis === 'Y' ? 0 : h.from.y,
-        axis === 'Z' ? 0 : h.from.z
-      );
-      const to = from.clone().add(dir.clone().multiplyScalar(newLen));
+      // Reduz/alongar linha do eixo selecionado no sentido do 0,0,0
+      const from = h.from.clone();
+      const to = from.clone().add(dir.clone().multiplyScalar(h.to.distanceTo(h.from) + diff));
 
       line.geometry.dispose();
       line.geometry = new THREE.BoxGeometry(0.08, from.distanceTo(to), 0.08);
       line.position.copy(from.clone().add(to).multiplyScalar(0.5));
       line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
 
-      h.from.copy(from);
       h.to.copy(to);
 
-    } else {
-      // DESLOCAMENTO DE LINHAS CONECTADAS
-      // Só mover se a ponta da linha alterada tocar a linha atual
-      const selectedFrom = history[index].from;
-      const selectedTo = history[index].to;
-
-      const touchesFrom = selectedFrom.distanceTo(h.from) < 0.001;
-      const touchesTo = selectedTo.distanceTo(h.from) < 0.001;
-
-      if (touchesFrom || touchesTo) {
-        const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
-        h.from.add(moveVec);
-        h.to.add(moveVec);
-
-        const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-        const direction = new THREE.Vector3().subVectors(h.to, h.from);
-        line.geometry.dispose();
-        line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-        line.position.copy(center);
-        line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+      // Restaura cor para original após edição
+      if (originalColors.has(line)) {
+        line.material.color.setHex(originalColors.get(line));
       }
+    } else {
+      // Linhas de outros eixos → deslocadas na direção da linha selecionada
+      const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
+      h.from.add(moveVec);
+      h.to.add(moveVec);
+
+      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+      const direction = new THREE.Vector3().subVectors(h.to, h.from);
+      line.geometry.dispose();
+      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
+      line.position.copy(center);
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
     }
   });
 
@@ -464,10 +477,12 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
   setInputs(newPoint.x, newPoint.y, newPoint.z);
 
+  // Limpa edição
+  originalColors.clear();
+  editingAxis = null;
+
   updateMetrics();
 });
-
-
 </script>
 
 </body>
