@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Desenho 3D com Vetores</title>
+<title>Desenho 3D Vetorial</title>
 <style>
   body {
     margin: 0;
@@ -52,19 +52,19 @@
 <body>
 
 <div id="ui">
-  <h3>Desenhar Reta 3D</h3>
+  <h3>Desenho 3D Encadeado</h3>
 
-  <label>X inicial</label>
+  <label>X</label>
   <input id="x" type="number" value="0">
 
-  <label>Y inicial</label>
+  <label>Y</label>
   <input id="y" type="number" value="0">
 
-  <label>Z inicial</label>
+  <label>Z</label>
   <input id="z" type="number" value="0">
 
   <label>Comprimento</label>
-  <input id="len" type="number" value="2" step="0.1">
+  <input id="len" type="number" value="3" step="0.1">
 
   <button onclick="drawLine(1,0,0)">→ Direita (X+)</button>
   <button onclick="drawLine(-1,0,0)">← Esquerda (X-)</button>
@@ -99,20 +99,29 @@
   renderer.setSize(window.innerWidth - 280, window.innerHeight);
   document.getElementById("canvas-container").appendChild(renderer.domElement);
 
-  // Eixos
+  // Helpers
   scene.add(new THREE.AxesHelper(5));
-
-  // Grid
   scene.add(new THREE.GridHelper(20, 20));
 
-  // Armazena linhas
   const lines = [];
 
+  function getInputs() {
+    return {
+      x: parseFloat(document.getElementById("x").value),
+      y: parseFloat(document.getElementById("y").value),
+      z: parseFloat(document.getElementById("z").value),
+      len: parseFloat(document.getElementById("len").value)
+    };
+  }
+
+  function setInputs(x, y, z) {
+    document.getElementById("x").value = x.toFixed(2);
+    document.getElementById("y").value = y.toFixed(2);
+    document.getElementById("z").value = z.toFixed(2);
+  }
+
   function drawLine(dx, dy, dz) {
-    const x = parseFloat(document.getElementById("x").value);
-    const y = parseFloat(document.getElementById("y").value);
-    const z = parseFloat(document.getElementById("z").value);
-    const len = parseFloat(document.getElementById("len").value);
+    const { x, y, z, len } = getInputs();
 
     const start = new THREE.Vector3(x, y, z);
     const direction = new THREE.Vector3(dx, dy, dz).normalize();
@@ -124,11 +133,15 @@
     const line = new THREE.Line(geometry, material);
     scene.add(line);
     lines.push(line);
+
+    // 🔥 ATUALIZA O PONTO ATUAL (ENCADENAMENTO)
+    setInputs(end.x, end.y, end.z);
   }
 
   function clearScene() {
     lines.forEach(line => scene.remove(line));
     lines.length = 0;
+    setInputs(0, 0, 0);
   }
 
   function animate() {
