@@ -227,13 +227,18 @@ tr:hover { background: #f0f8ff; }
 // =====================
 <script>
 function toggleDropdown() {
-    const menu = document.getElementById('dropdownMenu');
-    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    const menu = document.getElementById("dropdownMenu");
+    menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
 }
 
-function go(url) {
-    window.location.href = url;
-}
+// Se quiser fechar o dropdown ao clicar fora dele
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById("dropdownMenu");
+    const toggle = document.querySelector(".dropdown-toggle");
+    if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = "none";
+    }
+});
 
 // URL do backend
 const BACKEND_URL = "https://colorglass.onrender.com";
