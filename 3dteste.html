@@ -601,6 +601,51 @@ function refreshTotals() {
   calculateFixers(); // já atualiza #fixers
 }
 
+// ===================== CLIQUE PARA MOVER O PONTO ATUAL NA LINHA =====================
+renderer.domElement.addEventListener("click", (event) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  const mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  const raycasterClick = new THREE.Raycaster();
+  raycasterClick.setFromCamera({ x: mouseX, y: mouseY }, camera);
+  const intersects = raycasterClick.intersectObjects(lines);
+
+  if (intersects.length === 0) return; // Nenhuma linha clicada
+
+  const clickedLine = intersects[0].object;
+  const index = lines.indexOf(clickedLine);
+  if (index === -1) return;
+
+  const h = history[index];
+  const axis = h.axis;
+  const axisLower = axis.toLowerCase();
+
+  // Valores mínimo e máximo da linha no eixo
+  const minVal = Math.min(h.from[axisLower], h.to[axisLower]);
+  const maxVal = Math.max(h.from[axisLower], h.to[axisLower]);
+
+  // Pergunta onde posicionar o ponto atual
+  const input = prompt(`Linha eixo ${axis} de ${minVal.toFixed(2)} -> ${maxVal.toFixed(2)}\nDigite a posição desejada:`);
+  if (input === null) return; // Cancelou
+  let newVal = parseFloat(input);
+  if (isNaN(newVal) || newVal < minVal || newVal > maxVal) {
+    return alert(`Valor inválido! Deve estar entre ${minVal.toFixed(2)} e ${maxVal.toFixed(2)}.`);
+  }
+
+  // Mantém os outros eixos iguais ao ponto inicial da linha
+  let newX = h.from.x;
+  let newY = h.from.y;
+  let newZ = h.from.z;
+
+  if (axisLower === 'x') newX = newVal;
+  else if (axisLower === 'y') newY = newVal;
+  else if (axisLower === 'z') newZ = newVal;
+
+  // Atualiza ponto atual
+  setInputs(newX, newY, newZ);
+});
+
 </script>
 </body>
 </html>
