@@ -436,38 +436,68 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
   const diff = newLen - currentLen;
 
+  // Calcula ponto mais próximo de 0 do eixo selecionado
+  let minValue = Infinity;
+  history.forEach((h) => {
+    if (h.axis === axis) {
+      const fromVal = axis === 'X' ? h.from.x : axis === 'Y' ? h.from.y : h.from.z;
+      const toVal = axis === 'X' ? h.to.x : axis === 'Y' ? h.to.y : h.to.z;
+      minValue = Math.min(minValue, fromVal, toVal);
+    }
+  });
+
   history.forEach((h, i) => {
     const line = lines[i];
     const dir = new THREE.Vector3().subVectors(h.to, h.from).normalize();
 
     if (h.axis === axis) {
-      // Reduz/alongar linha do eixo selecionado no sentido do 0,0,0
-      const from = h.from.clone();
-      const to = from.clone().add(dir.clone().multiplyScalar(h.to.distanceTo(h.from) + diff));
+      // Reduz/alongar linha do eixo selecionado em direção ao ponto mais próximo de 0
+      const fromVal = axis === 'X' ? h.from.x : axis === 'Y' ? h.from.y : h.from.z;
+      const toVal = axis === 'X' ? h.to.x : axis === 'Y' ? h.to.y : h.to.z;
+      const farEnd = (fromVal > toVal ? h.from.clone() : h.to.clone());
+      const nearEnd = (fromVal > toVal ? h.to.clone() : h.from.clone());
+
+      // Calcula nova posição da ponta mais distante mantendo a ponta próxima de 0 fixa
+      const newFarEnd = nearEnd.clone().add(dir.clone().multiplyScalar(newLen));
 
       line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, from.distanceTo(to), 0.08);
-      line.position.copy(from.clone().add(to).multiplyScalar(0.5));
+      line.geometry = new THREE.BoxGeometry(0.08, nearEnd.distanceTo(newFarEnd), 0.08);
+      line.position.copy(nearEnd.clone().add(newFarEnd).multiplyScalar(0.5));
       line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
 
-      h.to.copy(to);
+      h.from.copy(nearEnd);
+      h.to.copy(newFarEnd);
 
-      // Restaura cor para original após edição
+      // Restaura cor
       if (originalColors.has(line)) {
         line.material.color.setHex(originalColors.get(line));
       }
-    } else {
-      // Linhas de outros eixos → deslocadas na direção da linha selecionada
-      const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
-      h.from.add(moveVec);
-      h.to.add(moveVec);
 
-      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-      const direction = new THREE.Vector3().subVectors(h.to, h.from);
-      line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-      line.position.copy(center);
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    } else {
+      // Linhas de outros eixos → deslocadas na direção do eixo selecionado
+      // Só desloca se estiverem conectadas ao eixo selecionado
+      const moveVec = new THREE.Vector3();
+      if (axis === 'X') moveVec.set(-diff, 0, 0);
+      else if (axis === 'Y') moveVec.set(0, -diff, 0);
+      else moveVec.set(0, 0, -diff);
+
+      // Verifica conexão aproximada
+      const selectedFrom = history[index].from;
+      const selectedTo = history[index].to;
+      const touchesFrom = selectedFrom.distanceTo(h.from) < 0.001 || selectedFrom.distanceTo(h.to) < 0.001;
+      const touchesTo = selectedTo.distanceTo(h.from) < 0.001 || selectedTo.distanceTo(h.to) < 0.001;
+
+      if (touchesFrom || touchesTo) {
+        h.from.add(moveVec);
+        h.to.add(moveVec);
+
+        const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+        const direction = new THREE.Vector3().subVectors(h.to, h.from);
+        line.geometry.dispose();
+        line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
+        line.position.copy(center);
+        line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+      }
     }
   });
 
