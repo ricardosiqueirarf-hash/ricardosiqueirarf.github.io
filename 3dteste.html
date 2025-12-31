@@ -95,8 +95,7 @@
 
   <hr>
 
-  <button onclick="saveImage()">📸 Salvar Imagem</button>
-  <button onclick="saveHistory()">🧾 Salvar Histórico</button>
+  <button onclick="salvarLocalEstrutura()">💾 Salvar Local</button>
   <button onclick="clearScene()">🧹 Limpar</button>
 </div>
 
@@ -105,6 +104,15 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
+  // ===================== CONFIGURAÇÃO DO ORÇAMENTO =====================
+  const params = new URLSearchParams(window.location.search)
+  const ORCAMENTO_UUID = params.get("orcamento_uuid")
+  if(!ORCAMENTO_UUID){
+      alert("UUID do orçamento não encontrado")
+      throw new Error("orcamento_uuid ausente")
+  }
+
+  // ===================== CENA 3D =====================
   const scene = new THREE.Scene();
 
   const camera = new THREE.PerspectiveCamera(
@@ -298,10 +306,34 @@
   }
 
   animate();
+
+  // ===================== SALVAR LOCAL =====================
+  function salvarLocalEstrutura() {
+    const dados = {
+      orcamento_uuid: ORCAMENTO_UUID,
+      history: history.map(h => ({
+        from: { x: h.from.x, y: h.from.y, z: h.from.z },
+        to: { x: h.to.x, y: h.to.y, z: h.to.z },
+        axis: h.axis
+      })),
+      totalLength,
+      fixadores: fixersEl.textContent
+    };
+
+    // Recupera estruturas existentes ou inicializa array
+    const chave = `estruturas_${ORCAMENTO_UUID}`;
+    const existentes = JSON.parse(localStorage.getItem(chave)) || [];
+    existentes.push(dados);
+    localStorage.setItem(chave, JSON.stringify(existentes));
+
+    alert("Estrutura salva localmente!");
+  }
+
 </script>
 
 </body>
 </html>
+
 
 
 
