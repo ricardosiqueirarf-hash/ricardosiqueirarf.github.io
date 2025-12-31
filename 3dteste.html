@@ -415,63 +415,76 @@ renderer.domElement.addEventListener("contextmenu", (event) => {
       const totalAxisLen = axisMax - axisMin;
 
       history.forEach((h, i) => {
-        const line = lines[i];
-        const dirVec = new THREE.Vector3().subVectors(h.to, h.from).normalize();
+  const line = lines[i];
+  const dirVec = new THREE.Vector3().subVectors(h.to, h.from).normalize();
 
-        if (h.axis === axis) {
-          const fromVal = h.from[axis.toLowerCase()];
-          const toVal = h.to[axis.toLowerCase()];
+  if (h.axis === axis) {
+    const fromVal = h.from[axis.toLowerCase()];
+    const toVal = h.to[axis.toLowerCase()];
 
-          // Ponto mais distante de 0
-          let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
-          const sign = Math.sign(maxPointVal);
+    // Ponto mais distante de 0
+    let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
+    const sign = Math.sign(maxPointVal);
 
-          // Calcula nova posição proporcional ao comprimento total do eixo
-          const newMaxVal = maxPointVal + diff * sign;
+    // Calcula nova posição proporcional ao comprimento total do eixo
+    const newMaxVal = maxPointVal + diff * sign;
 
-          let newFrom = h.from.clone();
-          let newTo = h.to.clone();
-          if (toVal === maxPointVal) {
-            newTo[axis.toLowerCase()] = newMaxVal;
-          } else {
-            newFrom[axis.toLowerCase()] = newMaxVal;
-          }
+    let newFrom = h.from.clone();
+    let newTo = h.to.clone();
+    if (toVal === maxPointVal) {
+      newTo[axis.toLowerCase()] = newMaxVal;
+    } else {
+      newFrom[axis.toLowerCase()] = newMaxVal;
+    }
 
-          line.geometry.dispose();
-          line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
-          line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
-          line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
+    // Mantém a espessura original da linha
+    const oldGeom = line.geometry.parameters;
+    const width = oldGeom.width || 0.08;
+    const depth = oldGeom.depth || 0.08;
+    const height = newFrom.distanceTo(newTo);
 
-          h.from.copy(newFrom);
-          h.to.copy(newTo);
+    line.geometry.dispose();
+    line.geometry = new THREE.BoxGeometry(width, height, depth);
+    line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
+    line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
 
-        } else {
-          // Linhas de outros eixos: deslocamento sempre em direção a 0
-          if (h.from[axis.toLowerCase()] !== 0 || h.to[axis.toLowerCase()] !== 0) { // condicional para não deslocar se já zerado
-            const moveVec = new THREE.Vector3(0, 0, 0);
-            moveVec[axis.toLowerCase()] = diff;
-            h.from.add(moveVec);
-            h.to.add(moveVec);
-          }
+    h.from.copy(newFrom);
+    h.to.copy(newTo);
 
-          const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-          const direction = new THREE.Vector3().subVectors(h.to, h.from);
-          line.geometry.dispose();
-          line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-          line.position.copy(center);
-          line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-        }
-      });
+  } else {
+    // Linhas de outros eixos: deslocamento sempre em direção a 0
+    if (h.from[axis.toLowerCase()] !== 0 || h.to[axis.toLowerCase()] !== 0) {
+      const moveVec = new THREE.Vector3(0, 0, 0);
+      moveVec[axis.toLowerCase()] = diff;
+      h.from.add(moveVec);
+      h.to.add(moveVec);
+    }
 
-      // Atualiza ponto atual
-      const inputs = getInputs();
-      const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
-      const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
-      setInputs(newPoint.x, newPoint.y, newPoint.z);
+    const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+    const direction = new THREE.Vector3().subVectors(h.to, h.from);
 
-      updateMetrics();
-      refreshTotals();
-      break;
+    // Mantém a espessura original da linha
+    const oldGeom = line.geometry.parameters;
+    const width = oldGeom.width || 0.08;
+    const depth = oldGeom.depth || 0.08;
+    const height = direction.length();
+
+    line.geometry.dispose();
+    line.geometry = new THREE.BoxGeometry(width, height, depth);
+    line.position.copy(center);
+    line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+  }
+});
+
+// Atualiza ponto atual
+const inputs = getInputs();
+const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
+const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
+setInputs(newPoint.x, newPoint.y, newPoint.z);
+
+updateMetrics();
+refreshTotals();
+break;
 
     case "2":
     editSelectedLine(selectedLine, index);
