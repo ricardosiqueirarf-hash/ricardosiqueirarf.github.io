@@ -408,6 +408,9 @@ renderer.domElement.addEventListener("dblclick", (event) => {
     const newLen = parseFloat(inputLen);
     if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
 
+    // Calcula diferença de comprimento
+    const diff = newLen - currentLen;
+
     // Atualiza geometria mantendo direção
     const center = selectedLine.position.clone();
     const dir = originalDirection.clone().normalize();
@@ -420,16 +423,22 @@ renderer.domElement.addEventListener("dblclick", (event) => {
     const index = lines.indexOf(selectedLine);
     if (index !== -1) {
       const from = history[index].from.clone();
-      const to = from.clone().add(dir.multiplyScalar(newLen));
+      const to = from.clone().add(dir.clone().multiplyScalar(newLen));
       selectedLine.position.copy(from.clone().add(to).multiplyScalar(0.5));
 
       // Atualiza histórico
       history[index].to.copy(to);
     }
 
+    // Ajusta ponto atual do desenho somando a diferença no sentido do vetor
+    const inputs = getInputs();
+    const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(dir.clone().multiplyScalar(diff));
+    setInputs(newPoint.x, newPoint.y, newPoint.z);
+
     updateMetrics();
   }
 });
+
 
 </script>
 
