@@ -355,7 +355,7 @@
         if (now - lastUp < doublePressThreshold) {
           drawLine(0,1,0,'Y'); // Duplo ↑ → cima (Y)
         } else {
-          drawLine(0,0,1,'Z'); // ↑ → frente (Z)
+          drawLine(0,0,-1,'Z'); // ↑ → frente (Z)
         }
         lastUp = now;
         break;
@@ -364,7 +364,7 @@
         if (nowD - lastDown < doublePressThreshold) {
           drawLine(0,-1,0,'Y'); // Duplo ↓ → baixo (Y)
         } else {
-          drawLine(0,0,-1,'Z'); // ↓ → trás (Z)
+          drawLine(0,0,1,'Z'); // ↓ → trás (Z)
         }
         lastDown = nowD;
         break;
