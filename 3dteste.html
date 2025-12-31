@@ -13,7 +13,7 @@
   }
 
   #ui {
-    width: 280px;
+    width: 300px;
     padding: 15px;
     background: #1c1c1c;
     box-sizing: border-box;
@@ -52,7 +52,7 @@
 <body>
 
 <div id="ui">
-  <h3>Desenho 3D Encadeado</h3>
+  <h3>Desenho 3D</h3>
 
   <label>X</label>
   <input id="x" type="number" value="0">
@@ -66,13 +66,17 @@
   <label>Comprimento</label>
   <input id="len" type="number" value="3" step="0.1">
 
-  <button onclick="drawLine(1,0,0)">→ Direita (X+)</button>
-  <button onclick="drawLine(-1,0,0)">← Esquerda (X-)</button>
-  <button onclick="drawLine(0,1,0)">↑ Cima (Y+)</button>
-  <button onclick="drawLine(0,-1,0)">↓ Baixo (Y-)</button>
-  <button onclick="drawLine(0,0,1)">⬢ Frente (Z+)</button>
-  <button onclick="drawLine(0,0,-1)">⬡ Trás (Z-)</button>
+  <button onclick="drawLine(1,0,0,'X+')">→ Direita</button>
+  <button onclick="drawLine(-1,0,0,'X-')">← Esquerda</button>
+  <button onclick="drawLine(0,1,0,'Y+')">↑ Cima</button>
+  <button onclick="drawLine(0,-1,0,'Y-')">↓ Baixo</button>
+  <button onclick="drawLine(0,0,1,'Z+')">⬢ Frente</button>
+  <button onclick="drawLine(0,0,-1,'Z-')">⬡ Trás</button>
 
+  <hr>
+
+  <button onclick="saveImage()">📸 Salvar Imagem</button>
+  <button onclick="saveHistory()">🧾 Salvar Histórico</button>
   <button onclick="clearScene()">🧹 Limpar</button>
 </div>
 
@@ -81,66 +85,99 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
-  // Cena
   const scene = new THREE.Scene();
 
-  // Câmera
   const camera = new THREE.PerspectiveCamera(
     75,
-    (window.innerWidth - 280) / window.innerHeight,
+    (window.innerWidth - 300) / window.innerHeight,
     0.1,
     1000
   );
   camera.position.set(6, 6, 6);
   camera.lookAt(0, 0, 0);
 
-  // Renderer
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth - 280, window.innerHeight);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(window.innerWidth - 300, window.innerHeight);
   document.getElementById("canvas-container").appendChild(renderer.domElement);
 
-  // Helpers
-  scene.add(new THREE.AxesHelper(5));
-  scene.add(new THREE.GridHelper(20, 20));
+  const axes = new THREE.AxesHelper(5);
+  const grid = new THREE.GridHelper(20, 20);
+  scene.add(axes);
+  scene.add(grid);
 
   const lines = [];
+  const history = [];
 
   function getInputs() {
     return {
-      x: parseFloat(document.getElementById("x").value),
-      y: parseFloat(document.getElementById("y").value),
-      z: parseFloat(document.getElementById("z").value),
-      len: parseFloat(document.getElementById("len").value)
+      x: parseFloat(xInput.value),
+      y: parseFloat(yInput.value),
+      z: parseFloat(zInput.value),
+      len: parseFloat(lenInput.value)
     };
   }
 
   function setInputs(x, y, z) {
-    document.getElementById("x").value = x.toFixed(2);
-    document.getElementById("y").value = y.toFixed(2);
-    document.getElementById("z").value = z.toFixed(2);
+    xInput.value = x.toFixed(2);
+    yInput.value = y.toFixed(2);
+    zInput.value = z.toFixed(2);
   }
 
-  function drawLine(dx, dy, dz) {
+  const xInput = document.getElementById("x");
+  const yInput = document.getElementById("y");
+  const zInput = document.getElementById("z");
+  const lenInput = document.getElementById("len");
+
+  function drawLine(dx, dy, dz, label) {
     const { x, y, z, len } = getInputs();
 
     const start = new THREE.Vector3(x, y, z);
-    const direction = new THREE.Vector3(dx, dy, dz).normalize();
-    const end = start.clone().add(direction.multiplyScalar(len));
+    const dir = new THREE.Vector3(dx, dy, dz).normalize();
+    const end = start.clone().add(dir.multiplyScalar(len));
 
     const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
     const material = new THREE.LineBasicMaterial({ color: 0x00ffcc });
-
     const line = new THREE.Line(geometry, material);
+
     scene.add(line);
     lines.push(line);
 
-    // 🔥 ATUALIZA O PONTO ATUAL (ENCADENAMENTO)
+    history.push({
+      from: [start.x, start.y, start.z],
+      to: [end.x, end.y, end.z],
+      direction: label,
+      length: len
+    });
+
     setInputs(end.x, end.y, end.z);
   }
 
+  function saveImage() {
+    axes.visible = false;
+    grid.visible = false;
+
+    renderer.render(scene, camera);
+    const link = document.createElement("a");
+    link.download = "desenho_3d.png";
+    link.href = renderer.domElement.toDataURL("image/png");
+    link.click();
+
+    axes.visible = true;
+    grid.visible = true;
+  }
+
+  function saveHistory() {
+    const blob = new Blob([JSON.stringify(history, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.download = "historico_desenho.json";
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  }
+
   function clearScene() {
-    lines.forEach(line => scene.remove(line));
+    lines.forEach(l => scene.remove(l));
     lines.length = 0;
+    history.length = 0;
     setInputs(0, 0, 0);
   }
 
@@ -150,13 +187,8 @@
   }
 
   animate();
-
-  window.addEventListener("resize", () => {
-    camera.aspect = (window.innerWidth - 280) / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth - 280, window.innerHeight);
-  });
 </script>
 
 </body>
 </html>
+
