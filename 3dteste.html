@@ -440,14 +440,8 @@ renderer.domElement.addEventListener("dblclick", (event) => {
       }
 
       // Reduz ou aumenta a linha a partir do ponto mais distante de 0
-      let newMax = maxPoint.clone();
-      if (diff < 0) {
-        // Redução → move maxPoint em direção a 0
-        newMax[axis.toLowerCase()] -= diff; // diff é negativo, então soma
-      } else {
-        // Aumento → move maxPoint no sentido oposto a 0
-        newMax[axis.toLowerCase()] += diff;
-      }
+      const newMax = maxPoint.clone();
+      newMax[axis.toLowerCase()] -= diff; // Redução → subtrai diff, Aumento → diff positivo
 
       const newFrom = minPoint.clone();
       const newTo = newMax.clone();
@@ -484,7 +478,6 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   editingAxis = null;
   updateMetrics();
 });
-
 
 </script>
 
