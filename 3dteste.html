@@ -120,6 +120,7 @@
 
   // ===================== CENA 3D =====================
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111111); // fundo escuro para ver melhor
 
   const camera = new THREE.PerspectiveCamera(
     75,
@@ -138,16 +139,16 @@
   const grid = new THREE.GridHelper(2000, 10);
   scene.add(axes, grid);
 
+  // ===================== VARIÁVEIS DE LINHAS =====================
   const lines = [];
   const history = [];
   const bbox = new THREE.Box3();
-
   const segmentMap = new Map();
   let totalLength = 0;
-
   const vertexMap = new Map();
   const fixersEl = document.getElementById("fixers");
 
+  // ===================== FUNÇÕES AUXILIARES =====================
   function vertexKey(v) {
     return `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
   }
@@ -170,7 +171,6 @@
   const yInput = document.getElementById("y");
   const zInput = document.getElementById("z");
   const lenInput = document.getElementById("len");
-
   const sizeXEl = document.getElementById("sizeX");
   const sizeYEl = document.getElementById("sizeY");
   const sizeZEl = document.getElementById("sizeZ");
@@ -214,7 +214,6 @@
 
     bbox.makeEmpty();
     lines.forEach(l => bbox.expandByObject(l));
-
     const size = new THREE.Vector3();
     bbox.getSize(size);
 
@@ -226,14 +225,14 @@
     calculateFixers();
   }
 
+  // ===================== FUNÇÕES DE LINHA =====================
   function drawLine(dx, dy, dz, axis) {
     const { x, y, z, len } = getInputs();
-
     const start = new THREE.Vector3(x, y, z);
     const dir = new THREE.Vector3(dx, dy, dz).normalize();
     const end = start.clone().add(dir.multiplyScalar(len));
-
     const key = segmentKey(start, end);
+
     if (!segmentMap.has(key)) {
       segmentMap.set(key, true);
       totalLength += segmentLength(start, end);
@@ -255,7 +254,6 @@
 
     scene.add(tube);
     lines.push(tube);
-
     history.push({ from: start.clone(), to: end.clone(), axis });
 
     registerVertex(start, axis);
@@ -276,12 +274,7 @@
 
     history.forEach(h => {
       setInputs(h.from.x, h.from.y, h.from.z);
-      drawLine(
-        h.to.x - h.from.x,
-        h.to.y - h.from.y,
-        h.to.z - h.from.z,
-        h.axis
-      );
+      drawLine(h.to.x - h.from.x, h.to.y - h.from.y, h.to.z - h.from.z, h.axis);
     });
   }
 
@@ -296,6 +289,7 @@
     rebuildFromHistory();
   }
 
+  // ===================== PONTO ATUAL =====================
   const currentPointGeometry = new THREE.SphereGeometry(10, 16, 16);
   const currentPointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
   const currentPointMesh = new THREE.Mesh(currentPointGeometry, currentPointMaterial);
@@ -317,14 +311,23 @@
   controls.maxDistance = 2000;
   controls.maxPolarAngle = Math.PI / 2;
 
+  // ===================== AJUSTE AO REDIMENSIONAR =====================
+  window.addEventListener("resize", () => {
+    camera.aspect = (window.innerWidth - 300) / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth - 300, window.innerHeight);
+  });
+
   // ===================== LOOP DE ANIMAÇÃO =====================
   function animate() {
     requestAnimationFrame(animate);
-    controls.update(); // necessário para damping
+    controls.update();
     renderer.render(scene, camera);
   }
 
   animate();
+</script>
+
 
   // ===================== SALVAR LOCAL =====================
   function salvarLocalEstrutura() {
