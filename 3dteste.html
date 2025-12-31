@@ -439,35 +439,35 @@ renderer.domElement.addEventListener("dblclick", (event) => {
         minPoint = h.from.clone();
       }
 
-      // Reduz ou aumenta a linha a partir do ponto mais distante de 0
-      const newMax = maxPoint.clone();
-      newMax[axis.toLowerCase()] += diff; // Redução → subtrai diff, Aumento → diff positivo
+// Reduz ou aumenta a linha a partir do ponto mais distante de 0
+const newMax = maxPoint.clone();
+const sign = Math.sign(maxPoint[axis.toLowerCase()]); // 1 se positivo, -1 se negativo
+newMax[axis.toLowerCase()] = maxPoint[axis.toLowerCase()] + diff * sign;
 
-      const newFrom = minPoint.clone();
-      const newTo = newMax.clone();
+const newFrom = minPoint.clone();
+const newTo = newMax.clone();
 
-      line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
-      line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
+line.geometry.dispose();
+line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
+line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
+line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
 
-      h.from.copy(newFrom);
-      h.to.copy(newTo);
+h.from.copy(newFrom);
+h.to.copy(newTo);
 
-    } else {
-      // Linhas de outros eixos: deslocamento pelo vetor da linha selecionada
-      const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
-      h.from.add(moveVec);
-      h.to.add(moveVec);
+} else {
+  // Linhas de outros eixos: deslocamento pelo vetor da linha selecionada
+  const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
+  h.from.add(moveVec);
+  h.to.add(moveVec);
 
-      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-      const direction = new THREE.Vector3().subVectors(h.to, h.from);
-      line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-      line.position.copy(center);
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-    }
-  });
+  const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+  const direction = new THREE.Vector3().subVectors(h.to, h.from);
+  line.geometry.dispose();
+  line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
+  line.position.copy(center);
+  line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+}
 
   // Atualiza ponto atual
   const inputs = getInputs();
