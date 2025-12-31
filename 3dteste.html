@@ -400,93 +400,127 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   const axis = history[index].axis;
   editingAxis = axis;
 
-  const geometry = selectedLine.geometry;
-  const currentLen = geometry.parameters.height;
-
-  // Salva direção original
-  originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
-
-  // Popup para novo comprimento com indicação do eixo
-  const inputLen = prompt(`Você selecionou eixo (${axis}). Digite o novo comprimento do vetor:`, currentLen.toFixed(2));
-  if (inputLen === null) {
+  // === MENU DE OPÇÕES ===
+  const action = prompt(
+    "Você selecionou uma linha. Escolha uma ação:\n" +
+    "1 - Alterar eixo\n" +
+    "2 - Alterar comprimento da linha\n" +
+    "3 - Deletar linha"
+  );
+  if (action === null) {
     editingAxis = null;
     return; // cancelou
   }
 
-  const newLen = parseFloat(inputLen);
-  if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
-
-  const diff = newLen - currentLen;
-
-  // Determina o comprimento total do eixo selecionado (espaço ocupado)
-  let axisMin = Infinity;
-  let axisMax = -Infinity;
-  history.forEach(h => {
-    if (h.axis === axis) {
-      axisMin = Math.min(axisMin, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
-      axisMax = Math.max(axisMax, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
-    }
-  });
-  const totalAxisLen = axisMax - axisMin;
-
-  history.forEach((h, i) => {
-    const line = lines[i];
-    const dirVec = new THREE.Vector3().subVectors(h.to, h.from).normalize();
-
-    if (h.axis === axis) {
-      const fromVal = h.from[axis.toLowerCase()];
-      const toVal = h.to[axis.toLowerCase()];
-
-      // Ponto mais distante de 0
-      let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
-      const sign = Math.sign(maxPointVal);
-
-      // Calcula nova posição proporcional ao comprimento total do eixo
-      const scale = (Math.abs(maxPointVal) - Math.abs(Math.min(fromVal, toVal))) / totalAxisLen;
-      const newMaxVal = maxPointVal + diff * sign;
-
-      let newFrom = h.from.clone();
-      let newTo = h.to.clone();
-      if (toVal === maxPointVal) {
-        newTo[axis.toLowerCase()] = newMaxVal;
-      } else {
-        newFrom[axis.toLowerCase()] = newMaxVal;
+  switch(action) {
+    case "1":
+      // Alterar eixo
+      const newAxis = prompt(`Eixo atual: ${axis}. Digite o novo eixo (X, Y ou Z):`).toUpperCase();
+      if (["X","Y","Z"].includes(newAxis)) {
+        history[index].axis = newAxis;
+        alert(`Eixo alterado para ${newAxis}`);
+        rebuildFromHistory(); // redesenha tudo
       }
+      break;
 
-      line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
-      line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
+    case "2":
+      // Alterar comprimento da linha (mantendo lógica original)
+      const geometry = selectedLine.geometry;
+      const currentLen = geometry.parameters.height;
 
-      h.from.copy(newFrom);
-      h.to.copy(newTo);
+      // Salva direção original
+      originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
-    } else {
-    // Linhas de outros eixos: deslocamento sempre em direção a 0
-if (h.from[axis.toLowerCase()] !== 0 || h.to[axis.toLowerCase()] !== 0) {
-    const moveVec = new THREE.Vector3(0, 0, 0);
-    moveVec[axis.toLowerCase()] = diff;
-    h.from.add(moveVec);
-    h.to.add(moveVec);
-}
+      const inputLen = prompt(`Digite o novo comprimento da linha no eixo ${axis}:`, currentLen.toFixed(2));
+      if (inputLen === null) break; // cancelou
+      const newLen = parseFloat(inputLen);
+      if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
+      const diff = newLen - currentLen;
 
-      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-      const direction = new THREE.Vector3().subVectors(h.to, h.from);
-      line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-      line.position.copy(center);
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-    }
-  });
+      // Determina o comprimento total do eixo selecionado (espaço ocupado)
+      let axisMin = Infinity;
+      let axisMax = -Infinity;
+      history.forEach(h => {
+        if (h.axis === axis) {
+          axisMin = Math.min(axisMin, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
+          axisMax = Math.max(axisMax, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
+        }
+      });
+      const totalAxisLen = axisMax - axisMin;
 
-  // Atualiza ponto atual
-  const inputs = getInputs();
-  const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
-  const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
-  setInputs(newPoint.x, newPoint.y, newPoint.z);
+      history.forEach((h, i) => {
+        const line = lines[i];
+        const dirVec = new THREE.Vector3().subVectors(h.to, h.from).normalize();
+
+        if (h.axis === axis) {
+          const fromVal = h.from[axis.toLowerCase()];
+          const toVal = h.to[axis.toLowerCase()];
+
+          // Ponto mais distante de 0
+          let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
+          const sign = Math.sign(maxPointVal);
+
+          // Calcula nova posição proporcional ao comprimento total do eixo
+          const newMaxVal = maxPointVal + diff * sign;
+
+          let newFrom = h.from.clone();
+          let newTo = h.to.clone();
+          if (toVal === maxPointVal) {
+            newTo[axis.toLowerCase()] = newMaxVal;
+          } else {
+            newFrom[axis.toLowerCase()] = newMaxVal;
+          }
+
+          line.geometry.dispose();
+          line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
+          line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
+          line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
+
+          h.from.copy(newFrom);
+          h.to.copy(newTo);
+
+        } else {
+          // Linhas de outros eixos: deslocamento sempre em direção a 0
+          if (h.from[axis.toLowerCase()] !== 0 || h.to[axis.toLowerCase()] !== 0) { // condicional para não deslocar se já zerado
+            const moveVec = new THREE.Vector3(0, 0, 0);
+            moveVec[axis.toLowerCase()] = diff;
+            h.from.add(moveVec);
+            h.to.add(moveVec);
+          }
+
+          const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+          const direction = new THREE.Vector3().subVectors(h.to, h.from);
+          line.geometry.dispose();
+          line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
+          line.position.copy(center);
+          line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+        }
+      });
+
+      // Atualiza ponto atual
+      const inputs = getInputs();
+      const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
+      const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
+      setInputs(newPoint.x, newPoint.y, newPoint.z);
+
+      updateMetrics();
+      break;
+
+    case "3":
+      // Deletar linha
+      if (confirm("Tem certeza que deseja deletar esta linha?")) {
+        history.splice(index, 1); // remove do histórico
+        scene.remove(selectedLine); // remove do 3D
+        lines.splice(index, 1); // remove do array de linhas
+        updateMetrics();
+      }
+      break;
+
+    default:
+      alert("Opção inválida!");
+  }
 
   editingAxis = null;
-  updateMetrics();
 });
 </script>
 </body>
