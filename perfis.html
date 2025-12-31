@@ -82,13 +82,19 @@ h1 { color: #1079ba; margin-bottom: 10px; }
 }
 
 /* TIPOS E INSUMOS FIXOS EMBAIXO */
-.form-perfil .tipologias,
-.form-perfil #insumos-container {
+.form-perfil .tipologias-container,
+.form-perfil .insumos-container {
     grid-column: 1 / -1; /* ocupa toda a largura do grid */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.tipologias {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-top: 10px;
 }
 .tipologias label, .insumo-item {
     background: #f0f4fb;
@@ -134,8 +140,8 @@ tr:hover { background: #e6f0fa; }
 @media(max-width: 768px) {
     .form-perfil { grid-template-columns: 1fr; }
     .menu { flex-direction: column; }
+    .tipologias, .insumos-container { flex-direction: column; }
 }
-
 </style>
 </head>
 
@@ -157,7 +163,7 @@ tr:hover { background: #e6f0fa; }
         <input id="margem" type="number" step="0.01" placeholder="Margem %">
         <input id="perda" type="number" step="0.01" placeholder="Perda %">
         
-        <div>
+        <div class="tipologias-container">
             <h4>Tipologias</h4>
             <div class="tipologias">
                 <label><input type="checkbox" value="giro"> Giro</label>
@@ -167,7 +173,7 @@ tr:hover { background: #e6f0fa; }
             </div>
         </div>
 
-        <div>
+        <div class="insumos-container">
             <h4>Insumos</h4>
             <div id="insumos-container">
                 <div class="insumo-item">
@@ -196,7 +202,6 @@ tr:hover { background: #e6f0fa; }
         </table>
     </section>
 </div>
-
 <script>
 // =====================
 // CONFIGURAÇÕES BACKEND
