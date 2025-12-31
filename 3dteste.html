@@ -441,7 +441,7 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
       // Reduz ou aumenta a linha a partir do ponto mais distante de 0
       const newMax = maxPoint.clone();
-      newMax[axis.toLowerCase()] -= diff; // Redução → subtrai diff, Aumento → diff positivo
+      newMax[axis.toLowerCase()] += diff; // Redução → subtrai diff, Aumento → diff positivo
 
       const newFrom = minPoint.clone();
       const newTo = newMax.clone();
