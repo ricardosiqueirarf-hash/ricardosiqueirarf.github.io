@@ -654,9 +654,9 @@ renderer.domElement.addEventListener("click", (event) => {
 let previewLine = null;
 let previewActive = false;
 const thickness = 5.0; // espessura da linha
-const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // comprimento do input
+const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 100;
 
-// ==================== PRÉ-VISUALIZAÇÃO + X/Y/Z DINÂMICOS ====================
+// ==================== PRÉ-VISUALIZAÇÃO ====================
 renderer.domElement.addEventListener('mousemove', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -671,22 +671,18 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    // atualiza inputs X/Y/Z dinamicamente
+    // atualiza X/Y/Z no HTML e inputs
     document.getElementById('x').value = intersectPoint.x.toFixed(2);
     document.getElementById('y').value = intersectPoint.y.toFixed(2);
     document.getElementById('z').value = intersectPoint.z.toFixed(2);
     document.getElementById('coordsDisplay').textContent = 
-    `X: ${intersectPoint.x.toFixed(2)}, Y: ${intersectPoint.y.toFixed(2)}, Z: ${intersectPoint.z.toFixed(2)}`;
+        `X: ${intersectPoint.x.toFixed(2)}, Y: ${intersectPoint.y.toFixed(2)}, Z: ${intersectPoint.z.toFixed(2)}`;
 
-    // ponto atual baseado nos inputs
-    const inputs = {
-        x: parseFloat(document.getElementById('x').value),
-        y: parseFloat(document.getElementById('y').value),
-        z: parseFloat(document.getElementById('z').value)
-    };
+    // ponto atual do preview vermelho = inputs atuais
+    const inputs = getInputs(); // ponto atual fixo
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // cria preview vermelho se ainda não existir
+    // cria ou atualiza preview vermelho
     if (!previewActive) {
         previewActive = true;
         const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
@@ -695,10 +691,9 @@ renderer.domElement.addEventListener('mousemove', (event) => {
         scene.add(previewLine);
     }
 
-    // vetor do ponto atual até o mouse
     const dirVec = new THREE.Vector3().subVectors(intersectPoint, previewStart);
     const length = dirVec.length();
-    if (length < 0.001) return; // evita vetor zero
+    if (length < 0.001) return;
 
     previewLine.geometry.dispose();
     previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
@@ -706,39 +701,29 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
 });
 
-// ==================== CRIAÇÃO DA LINHA FINAL (verde) ====================
+// ==================== LINHA FINAL VERDE ====================
 renderer.domElement.addEventListener('contextmenu', (event) => {
     event.preventDefault();
     if (!previewActive) return;
 
     const length = getInputLength();
 
-    // ponto atual
-    const inputs = {
-        x: parseFloat(document.getElementById('x').value),
-        y: parseFloat(document.getElementById('y').value),
-        z: parseFloat(document.getElementById('z').value)
-    };
+    const inputs = getInputs(); // ponto atual
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // vetor do preview
     const previewVec = new THREE.Vector3().subVectors(previewLine.position, fromPoint);
 
-    // eixo dominante
     const absDir = [Math.abs(previewVec.x), Math.abs(previewVec.y), Math.abs(previewVec.z)];
-    let dominantAxis = absDir.indexOf(Math.max(...absDir));
+    const dominantAxis = absDir.indexOf(Math.max(...absDir));
 
-    // vetor alinhado ao eixo dominante
     let dirVec = new THREE.Vector3(0,0,0);
     if (dominantAxis === 0) dirVec.x = Math.sign(previewVec.x) || 1;
     if (dominantAxis === 1) dirVec.y = Math.sign(previewVec.y) || 1;
     if (dominantAxis === 2) dirVec.z = Math.sign(previewVec.z) || 1;
     dirVec.normalize();
 
-    // ponto final baseado no comprimento do input
     const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(length));
 
-    // cria linha final verde
     const geometry = new THREE.BoxGeometry(thickness, fromPoint.distanceTo(toPoint), thickness);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const finalLine = new THREE.Mesh(geometry, material);
@@ -746,14 +731,12 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     finalLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec);
     scene.add(finalLine);
 
-    // limpa preview
     scene.remove(previewLine);
     previewLine.geometry.dispose();
     previewLine.material.dispose();
     previewLine = null;
     previewActive = false;
 });
-
 
 </script>
 </body>
