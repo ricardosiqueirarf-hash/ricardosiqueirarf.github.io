@@ -496,67 +496,47 @@ renderer.domElement.addEventListener("dblclick", (event) => {
       updateMetrics();
       break;
 
-    case "2":
-    // Alterar eixo da linha selecionada usando a mesma lógica do case 1
-    const line = selectedLine;
-    const h = history[index];
+   case "2":
+  // Alterar comprimento apenas da linha selecionada
+  const geometry = selectedLine.geometry;
+  const currentLen = geometry.parameters.height;
 
-    // Pergunta pelo novo eixo
-    const newAxis = prompt(`Eixo atual: ${h.axis}. Digite o novo eixo (X, Y ou Z):`).toUpperCase();
-    if (!["X","Y","Z"].includes(newAxis)) return alert("Eixo inválido!");
+  // Salva direção original da linha
+  originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
-    // Pergunta pelo novo comprimento
-    const currentLen = line.geometry.parameters.height;
-    const inputLen = prompt(`Digite o novo comprimento da linha no eixo ${newAxis}:`, currentLen.toFixed(2));
-    if (inputLen === null) break; // cancelou
-    const newLen = parseFloat(inputLen);
-    if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
-    const diff = newLen - currentLen;
+  // Pergunta novo comprimento
+  const inputLen = prompt(`Digite o novo comprimento da linha selecionada no eixo ${axis}:`, currentLen.toFixed(2));
+  if (inputLen === null) break; // cancelou
 
-    // Salva direção original da linha
-    const originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(line.quaternion);
+  const newLen = parseFloat(inputLen);
+  if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
+  const diff = newLen - currentLen;
 
-    // Identifica ponto mais distante de 0 no eixo selecionado
-    const axisLower = newAxis.toLowerCase();
-    const fromVal = h.from[axisLower];
-    const toVal = h.to[axisLower];
-    let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
+  // Calcula novo ponto final da linha
+  const fromClone = history[index].from.clone();
+  const toClone = history[index].to.clone();
+  const dirVec = new THREE.Vector3().subVectors(toClone, fromClone).normalize();
 
-    // Calcula a nova posição do ponto mais distante considerando sinal
-    const newPos = maxPointVal >= 0 ? maxPointVal + diff : maxPointVal - diff;
+  const newTo = fromClone.clone().add(dirVec.multiplyScalar(newLen));
 
-    let newFrom = h.from.clone();
-    let newTo = h.to.clone();
+  // Atualiza a geometria da linha
+  selectedLine.geometry.dispose();
+  selectedLine.geometry = new THREE.BoxGeometry(0.08, fromClone.distanceTo(newTo), 0.08);
+  selectedLine.position.copy(fromClone.clone().add(newTo).multiplyScalar(0.5));
+  selectedLine.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
 
-    if (toVal === maxPointVal) {
-        newTo[axisLower] = newPos;
-    } else {
-        newFrom[axisLower] = newPos;
-    }
+  // Atualiza histórico da linha
+  history[index].to.copy(newTo);
 
-    // Atualiza geometria e posição da linha
-    line.geometry.dispose();
-    line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
-    line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
-    line.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        new THREE.Vector3().subVectors(newTo, newFrom).normalize()
-    );
+  // Atualiza ponto atual
+  const inputs = getInputs();
+  const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(originalDirection.clone().normalize().multiplyScalar(diff));
+  setInputs(newPoint.x, newPoint.y, newPoint.z);
 
-    // Atualiza histórico
-    h.from.copy(newFrom);
-    h.to.copy(newTo);
-    h.axis = newAxis;
+  updateMetrics();
+  break;
 
-    // Atualiza ponto atual na direção da linha
-    const inputs = getInputs();
-    const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
-    const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
-    setInputs(newPoint.x, newPoint.y, newPoint.z);
-
-    updateMetrics();
-    break;
-      
+    
     case "3":
       // Deletar linha
       if (confirm("Tem certeza que deseja deletar esta linha?")) {
@@ -576,6 +556,31 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
