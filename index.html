@@ -6,97 +6,103 @@
 <title>Portas de Vidro e Alumínio em Fortaleza | ColorGlass</title>
 <meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
 <meta name="robots" content="index, follow">
-
 <style>
 /* RESET BÁSICO */
-* { box-sizing: border-box; margin:0; padding:0; }
-
-/* BODY */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f5f6fa;
-    color: #333;
-    display: flex;
-    min-height: 100vh;
-}
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #ffffff; color: #333; display: flex; min-height: 100vh; }
 
 /* APP WRAPPER */
-.app {
-    display: flex;
-    width: 100%;
-}
+.app { display: flex; width: 100%; }
 
 /* SIDEBAR */
 .sidebar {
     width: 220px;
-    background: #2f3640;
+    background: #1079ba;
     color: #fff;
     display: flex;
     flex-direction: column;
-    padding: 20px;
-    gap: 10px;
-    box-shadow: 2px 0 6px rgba(0,0,0,0.2);
-    flex-shrink: 0;
+    padding: 25px 20px;
+    gap: 12px;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+    border-radius: 0 10px 10px 0;
+    position: relative;
+    transition: all 0.3s ease;
 }
 
 .sidebar h3 {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     cursor: pointer;
     margin-bottom: 15px;
-    transition: color 0.2s ease;
+    transition: color 0.3s ease, transform 0.3s ease;
 }
-.sidebar h3:hover { color: #00a8ff; }
+.sidebar h3:hover {
+    color: #fffbe6;
+    transform: scale(1.05);
+}
 
 /* DROPDOWN */
 #dropdownMenu {
     display: none;
     flex-direction: column;
     margin-bottom: 10px;
+    background: #0d5d8c;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    transition: all 0.3s ease;
 }
 #dropdownMenu button {
-    background: #353b48;
+    background: none;
     color: #fff;
     border: none;
     padding: 12px 15px;
     text-align: left;
     cursor: pointer;
-    border-radius: 6px;
-    margin-bottom: 3px;
-    transition: background 0.2s ease;
+    transition: all 0.2s ease;
 }
-#dropdownMenu button:hover { background: #00a8ff; }
+#dropdownMenu button:hover {
+    background: #0a4a6b;
+    transform: translateX(5px);
+}
 
 /* BOTÕES SIDEBAR */
 .sidebar button:not(.dropdown-toggle) {
-    background: #353b48;
+    background: #0d5d8c;
     padding: 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
     text-align: left;
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    color: #fff;
 }
 .sidebar button:not(.dropdown-toggle):hover {
-    background: #00a8ff;
+    background: #0a4a6b;
+    transform: translateX(5px);
 }
 
 /* CONTENT */
 .content {
     flex: 1;
-    padding: 30px;
+    padding: 35px;
     overflow-y: auto;
-    background: #f5f6fa;
+    background: #f9f9f9;
+    border-radius: 0 10px 10px 0;
+    transition: all 0.3s ease;
 }
 
 /* FORMULÁRIOS */
 #formCliente {
     background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
+#formCliente:hover { transform: translateY(-2px); }
+
 #formCliente label {
     font-size: 0.95rem;
     margin-bottom: 10px;
@@ -104,46 +110,80 @@ body {
     flex-direction: column;
 }
 #formCliente input {
-    padding: 8px 10px;
-    border-radius: 6px;
+    padding: 10px 12px;
+    border-radius: 8px;
     border: 1px solid #ccc;
     margin-top: 5px;
-}
-.btn {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background: #00a8ff;
-    color: #fff;
-    font-weight: 600;
-    margin-top: 10px;
     transition: all 0.2s ease;
 }
-.btn:hover { background: #0097e6; }
+#formCliente input:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 5px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+/* BOTÕES FORMAIS */
+.btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #1079ba;
+    color: #fff;
+    font-weight: 600;
+    margin-top: 12px;
+    transition: all 0.3s ease;
+}
+.btn:hover {
+    background: #0d5d8c;
+    transform: translateY(-2px);
+}
+.btn-danger {
+    background: #e84118;
+}
+.btn-danger:hover {
+    background: #c23616;
+    transform: translateY(-2px);
+}
 
 /* PORTAS SALVAS */
 #portasSalvas div {
-    margin-bottom: 12px;
-    border-radius: 8px;
+    margin-bottom: 14px;
+    border-radius: 10px;
     border: 1px solid #dcdde1;
-    padding: 12px;
+    padding: 14px;
     background: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
 }
+#portasSalvas div:hover { transform: translateY(-2px); }
 
 /* TABELAS */
 table { 
     border-collapse: collapse; 
     width: 100%; 
-    margin-top: 15px; 
+    margin-top: 18px; 
     background: #fff;
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
 }
-th, td { border:1px solid #dcdde1; padding:8px; text-align:left; }
-th { background: #f1f2f6; }
+th, td { border:1px solid #dcdde1; padding:10px; text-align:left; }
+th { background: #e6f0fa; }
+tr:hover { background: #f0f8ff; }
+
+/* SCROLLBARS CUSTOM */
+.content::-webkit-scrollbar {
+    width: 10px;
+}
+.content::-webkit-scrollbar-thumb {
+    background: #1079ba;
+    border-radius: 5px;
+}
+.content::-webkit-scrollbar-track {
+    background: #f9f9f9;
+}
 </style>
 
 </head>
