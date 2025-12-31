@@ -335,10 +335,47 @@
     alert("Estrutura salva localmente!");
   }
 
+  // ===================== CONTROLE PELO TECLADO =====================
+  let lastUp = 0;
+  let lastDown = 0;
+  const doublePressThreshold = 250; // ms
+
+  document.addEventListener('keydown', (e) => {
+    const len = parseFloat(lenInput.value) || 1;
+
+    switch(e.key) {
+      case "ArrowLeft":
+        drawLine(-1,0,0,'X');
+        break;
+      case "ArrowRight":
+        drawLine(1,0,0,'X');
+        break;
+      case "ArrowUp":
+        const now = Date.now();
+        if (now - lastUp < doublePressThreshold) {
+          drawLine(0,1,0,'Y'); // Duplo ↑ → cima (Y)
+        } else {
+          drawLine(0,0,1,'Z'); // ↑ → frente (Z)
+        }
+        lastUp = now;
+        break;
+      case "ArrowDown":
+        const nowD = Date.now();
+        if (nowD - lastDown < doublePressThreshold) {
+          drawLine(0,-1,0,'Y'); // Duplo ↓ → baixo (Y)
+        } else {
+          drawLine(0,0,-1,'Z'); // ↓ → trás (Z)
+        }
+        lastDown = nowD;
+        break;
+    }
+  });
+
 </script>
 
 </body>
 </html>
+
 
 
 
