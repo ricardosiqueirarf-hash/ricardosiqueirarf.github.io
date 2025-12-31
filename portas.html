@@ -372,17 +372,17 @@ function carregarEstruturas3D() {
 function renderEstruturas3D() {
     const container = document.getElementById("portasSalvas");
     estruturas3D.forEach((e, idx) => {
-        // Cada estrutura será exibida como um SVG ou miniatura HTML
         container.innerHTML += `
             <div style="margin-bottom:10px; border:1px solid #333; padding:10px; background:#e0e0e0;">
                 <strong>Estrutura 3D ${idx + 1}</strong><br>
-                X: ${e.x}, Y: ${e.y}, Z: ${e.z}<br>
                 Total de linhas: ${e.history.length}<br>
+                Fixadores: ${e.fixadores || "Nenhum"}<br>
                 <button class="btn" onclick="verEstrutura3D(${idx})">Ver 3D</button>
             </div>
         `;
     });
 }
+
 
 function verEstrutura3D(idx) {
     // Reabrir a estrutura em 3dteste.html passando o índice
