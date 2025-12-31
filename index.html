@@ -10,8 +10,8 @@
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
-.sidebar { background:#1e1e1e; color:white; padding:20px; display:flex; flex-direction:column; gap:10px; }
-.sidebar button { padding:10px; border:none; background:#333; color:white; border-radius:6px; cursor:pointer; }
+.sidebar { background:#1e1e1e; color:white; padding:20px; display:flex; flex-direction:column; gap:10px; position:relative; }
+.sidebar h3 { margin:0; cursor:pointer; }
 .content { padding:25px; overflow-y:auto; height:100vh; }
 label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
 input { padding:7px; margin-top:5px; }
@@ -22,22 +22,58 @@ input { padding:7px; margin-top:5px; }
 table { border-collapse: collapse; width:100%; margin-top:10px; }
 th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
+
+/* Dropdown sidebar */
+.sidebar .dropdown {
+    position: relative;
+    width: 100%;
+}
+.sidebar .dropdown-content {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    left: 0;
+    top: 30px;
+    background: #1c1c1c;
+    width: 100%;
+    z-index: 10;
+}
+.sidebar .dropdown-content button {
+    background: #333;
+    color: white;
+    border: none;
+    padding: 10px;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    border-bottom: 1px solid #222;
+}
+.sidebar .dropdown-content button:hover {
+    background: #444;
+}
+.sidebar .dropdown:hover .dropdown-content {
+    display: flex;
+}
 </style>
 </head>
 <body>
 <div class="app">
     <div class="sidebar">
-        <h3>ColorGlass</h3>
-        <button onclick="go('perfis.html')">Perfis</button>
-        <button onclick="go('vidros.html')">Vidros</button>
-        <button onclick="go('producao.html')">Produção</button>
-        <button onclick="go('insumos.html')">Insumos</button>
-        <button onclick="go('catalogo.html')">Catálogo</button>
-        <button onclick="go('ajustes.html')">Ajustes</button>
-        <button onclick="go('cortevidro.html')">Cortevidro</button>
-        <button onclick="go('puxadores.html')">puxadores</button>
-<button onclick="go('3dteste.html')">3d</button>
+        <h3 class="dropdown">ColorGlass
+            <div class="dropdown-content">
+                <button onclick="go('perfis.html')">Perfis</button>
+                <button onclick="go('vidros.html')">Vidros</button>
+                <button onclick="go('producao.html')">Produção</button>
+                <button onclick="go('insumos.html')">Insumos</button>
+                <button onclick="go('catalogo.html')">Catálogo</button>
+                <button onclick="go('ajustes.html')">Ajustes</button>
+                <button onclick="go('cortevidro.html')">Cortevidro</button>
+                <button onclick="go('puxadores.html')">Puxadores</button>
+                <button onclick="go('3dteste.html')">3D</button>
+            </div>
+        </h3>
     </div>
+
     <div class="content">
         <h1>Orçamento de Portas</h1>
 
