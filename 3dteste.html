@@ -462,10 +462,12 @@ renderer.domElement.addEventListener("dblclick", (event) => {
       h.to.copy(newTo);
 
     } else {
-      // Linhas de outros eixos: deslocamento pelo vetor da linha selecionada
-      const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
+     // Linhas de outros eixos: deslocamento sempre em direção a 0
+      const moveVec = new THREE.Vector3(0, 0, 0);
+      moveVec[axis.toLowerCase()] = diff; // diff positivo → aumenta, diff negativo → reduz
       h.from.add(moveVec);
       h.to.add(moveVec);
+
 
       const center = h.from.clone().add(h.to).multiplyScalar(0.5);
       const direction = new THREE.Vector3().subVectors(h.to, h.from);
