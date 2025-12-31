@@ -129,7 +129,6 @@
   const segmentMap = new Map();
   let totalLength = 0;
 
-  /* 🔩 FIXADORES */
   const vertexMap = new Map();
   const fixersEl = document.getElementById("fixers");
 
@@ -148,9 +147,7 @@
   function calculateFixers() {
     let total = 0;
     vertexMap.forEach(axes => {
-      if (axes.size >= 2) {
-        total += (axes.size - 1);
-      }
+      if (axes.size >= 2) total += (axes.size - 1);
     });
     fixersEl.textContent = total;
   }
@@ -227,18 +224,27 @@
     const end = start.clone().add(dir.multiplyScalar(len));
 
     const key = segmentKey(start, end);
-
     if (!segmentMap.has(key)) {
       segmentMap.set(key, true);
       totalLength += segmentLength(start, end);
     }
 
-    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
-    const material = new THREE.LineBasicMaterial({ color: 0x00ffcc });
-    const line = new THREE.Line(geometry, material);
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const length = direction.length();
+    const thickness = 0.08;
 
-    scene.add(line);
-    lines.push(line);
+    const geometry = new THREE.BoxGeometry(thickness, length, thickness);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+    const tube = new THREE.Mesh(geometry, material);
+
+    tube.position.copy(start).add(direction.clone().multiplyScalar(0.5));
+    tube.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direction.clone().normalize()
+    );
+
+    scene.add(tube);
+    lines.push(tube);
 
     history.push({
       from: [start.x, start.y, start.z],
@@ -257,12 +263,10 @@
     axes.visible = false;
     grid.visible = false;
     renderer.render(scene, camera);
-
     const link = document.createElement("a");
     link.download = "desenho_3d.png";
     link.href = renderer.domElement.toDataURL("image/png");
     link.click();
-
     axes.visible = true;
     grid.visible = true;
   }
@@ -288,7 +292,6 @@
     updateMetrics();
   }
 
-  /* 🔴 PONTO VERMELHO – POSIÇÃO ATUAL */
   const currentPointGeometry = new THREE.SphereGeometry(0.08, 16, 16);
   const currentPointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
   const currentPointMesh = new THREE.Mesh(currentPointGeometry, currentPointMaterial);
@@ -311,6 +314,7 @@
 
 </body>
 </html>
+
 
 
 
