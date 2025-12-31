@@ -126,7 +126,7 @@
     0.1,
     1000
   );
-  camera.position.set(6, 6, 6);
+  camera.position.set(30, 30, 30);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -134,7 +134,7 @@
   document.getElementById("canvas-container").appendChild(renderer.domElement);
 
   const axes = new THREE.AxesHelper(5);
-  const grid = new THREE.GridHelper(40, 20);
+  const grid = new THREE.GridHelper(40, 40);
   scene.add(axes, grid);
 
   const lines = [];
