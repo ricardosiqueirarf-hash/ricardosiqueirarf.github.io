@@ -39,25 +39,47 @@ h1 { color: #1079ba; margin-bottom: 10px; }
 .form-perfil {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    gap: 12px; /* um pouco menor para compactar */
     background: #fff;
-    padding: 25px;
+    padding: 20px; /* menos padding para diminuir altura geral */
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     margin-bottom: 30px;
 }
-.form-perfil input, .form-perfil select {
-    padding: 10px;
+
+.form-perfil input, 
+.form-perfil select {
+    padding: 6px 10px; /* menos padding, altura menor */
+    font-size: 0.95rem; /* tamanho de fonte ajustado */
     border-radius: 8px;
     border: 1px solid #ccc;
     width: 100%;
     transition: all 0.2s ease;
 }
-.form-perfil input:focus, .form-perfil select:focus {
-    border-color: #1079ba;
-    box-shadow: 0 0 5px rgba(16,121,186,0.4);
+
+.form-perfil input:focus, 
+.form-perfil select:focus {
+    border-color: #1079ba; /* cor da sua marca */
+    box-shadow: 0 0 4px rgba(16,121,186,0.4); /* leve destaque */
     outline: none;
 }
+
+.form-perfil button {
+    padding: 6px 12px; /* botões menores */
+    font-size: 0.95rem;
+    border-radius: 8px;
+    border: none;
+    background: #1079ba;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-perfil button:hover {
+    background: #0d5d8c;
+    transform: translateY(-1px);
+}
+
 
 /* TIPOS E INSUMOS */
 .tipologias, #insumos-container {
