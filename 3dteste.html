@@ -626,6 +626,8 @@ let previewLine = null;
 let previewStart = new THREE.Vector3();
 let previewActive = false;
 
+const thickness = 5.0; // espessura bem grande para linha transparente e final
+
 const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // seu input
 
 // Mouse move → atualiza pré-visualização
@@ -647,7 +649,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
         previewStart.copy(intersectPoint);
         previewActive = true;
 
-        const geometry = new THREE.BoxGeometry(0.08, 1, 0.08); // altura temporária
+        const geometry = new THREE.BoxGeometry(thickness, 1, thickness); // altura temporária
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
         previewLine = new THREE.Mesh(geometry, material);
         scene.add(previewLine);
@@ -657,7 +659,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const dirVec = new THREE.Vector3().subVectors(intersectPoint, previewStart);
     const length = dirVec.length();
     previewLine.geometry.dispose();
-    previewLine.geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+    previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
     previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
     previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
 });
@@ -671,7 +673,7 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     const length = getInputLength();
     const dirVec = new THREE.Vector3().subVectors(previewLine.position.clone().add(new THREE.Vector3(0, length/2, 0)), previewLine.position).normalize();
 
-    const geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+    const geometry = new THREE.BoxGeometry(thickness, length, thickness);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const finalLine = new THREE.Mesh(geometry, material);
     finalLine.position.copy(previewLine.position);
