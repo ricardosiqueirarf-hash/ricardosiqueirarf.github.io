@@ -47,7 +47,7 @@ from api_orcamentos import orcamentos_bp
 from api_portas import portas_bp 
 from api_orc import orc_bp  
 from api_corte import corte_bp  
-from api_puxadpres import puxadores_bp  
+from api_puxadores import puxadores_bp  
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
