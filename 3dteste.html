@@ -381,7 +381,7 @@ renderer.domElement.addEventListener("dblclick", (event) => {
     "1 - Alterar eixo\n" +
     "2 - Alterar comprimento da linha\n" +
     "3 - Deletar linha"
-    "3 - Alterar ponto atual"
+    "4 - Alterar ponto atual"
   );
   if (action === null) {
     editingAxis = null;
@@ -489,12 +489,9 @@ renderer.domElement.addEventListener("dblclick", (event) => {
         refreshTotals()
       }
       break;
-        case "3":
+        case "4":
          movePointAlongSelectedLine();
       break;
-
-
-      movePointAlongSelectedLine();
 
     default:
       alert("Opção inválida!");
@@ -614,9 +611,11 @@ function movePointAlongSelectedLine() {
   if (axisLower === 'x') newX = newVal;
   else if (axisLower === 'y') newY = newVal;
   else if (axisLower === 'z') newZ = newVal;
+  
 
   // Atualiza ponto atual
   setInputs(newX, newY, newZ);
+  });
   updateCurrentPoint();
 }
 
