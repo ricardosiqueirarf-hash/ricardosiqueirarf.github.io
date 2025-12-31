@@ -621,12 +621,13 @@ renderer.domElement.addEventListener("click", (event) => {
   // Atualiza ponto atual
   setInputs(newX, newY, newZ);
 });
-let previewLine = null;
-let previewActive = false;
-let dynamicPreviewVec = new THREE.Vector3();
 
-const thickness = 5.0;
-const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1;
+  let previewLine = null;
+let previewActive = false;
+let dynamicPreviewVec = new THREE.Vector3(); // vetor dinâmico do preview
+
+const thickness = 5.0; // espessura da linha
+const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // comprimento do input
 
 // ==================== PRÉ-VISUALIZAÇÃO ====================
 renderer.domElement.addEventListener('mousemove', (event) => {
@@ -641,66 +642,82 @@ renderer.domElement.addEventListener('mousemove', (event) => {
 
     const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersectPoint = new THREE.Vector3();
-    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
+    raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    const inputs = getInputs(); // ponto atual
+    // ponto atual
+    const inputs = getInputs(); // retorna {x, y, z}
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // vetor do mouse
+    // atualiza vetor dinâmico
     dynamicPreviewVec.subVectors(intersectPoint, previewStart);
-    const length = dynamicPreviewVec.length();
-    if (length < 0.001) return;
 
-    // calcula eixo dominante
+    // determina eixo dominante
     const absDir = [Math.abs(dynamicPreviewVec.x), Math.abs(dynamicPreviewVec.y), Math.abs(dynamicPreviewVec.z)];
     const dominantAxis = absDir.indexOf(Math.max(...absDir));
 
-    // vetor unitário no eixo dominante
-    const dirVec = new THREE.Vector3(0, 0, 0);
+    // vetor unitário do eixo dominante
+    let dirVec = new THREE.Vector3(0, 0, 0);
     if (dominantAxis === 0) dirVec.x = Math.sign(dynamicPreviewVec.x) || 1;
     if (dominantAxis === 1) dirVec.y = Math.sign(dynamicPreviewVec.y) || 1;
     if (dominantAxis === 2) dirVec.z = Math.sign(dynamicPreviewVec.z) || 1;
+    dirVec.normalize();
 
-    // preview com comprimento do input
-    const previewLength = getInputLength();
+    // comprimento do preview = input
+    const length = getInputLength();
+    const previewEnd = previewStart.clone().add(dirVec.clone().multiplyScalar(length));
 
     if (!previewActive) {
         previewActive = true;
-        const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
+        const geometry = new THREE.BoxGeometry(thickness, length, thickness);
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
         previewLine = new THREE.Mesh(geometry, material);
         scene.add(previewLine);
+    } else {
+        previewLine.geometry.dispose();
+        previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
     }
 
-    previewLine.scale.set(1, previewLength, 1);
-    previewLine.position.copy(previewStart.clone().add(dirVec.clone().multiplyScalar(previewLength / 2)));
-    previewLine.lookAt(previewStart.clone().add(dirVec));
+    previewLine.position.copy(previewStart.clone().add(previewEnd).multiplyScalar(0.5));
+    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
 });
 
 // ==================== CRIAÇÃO DA LINHA FINAL ====================
-renderer.domElement.addEventListener('click', (event) => { // clique normal
+renderer.domElement.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
     if (!previewActive) return;
 
-    const inputs = getInputs(); // ponto inicial no momento do clique
+    // congela o vetor do preview no momento do clique
+    const frozenVec = dynamicPreviewVec.clone();
+    if (frozenVec.length() < 0.001) return;
+
+    // eixo dominante
+    const absDir = [Math.abs(frozenVec.x), Math.abs(frozenVec.y), Math.abs(frozenVec.z)];
+    const dominantAxis = absDir.indexOf(Math.max(...absDir));
+
+    // vetor unitário do eixo dominante
+    let dirVec = new THREE.Vector3(0, 0, 0);
+    if (dominantAxis === 0) dirVec.x = Math.sign(frozenVec.x) || 1;
+    if (dominantAxis === 1) dirVec.y = Math.sign(frozenVec.y) || 1;
+    if (dominantAxis === 2) dirVec.z = Math.sign(frozenVec.z) || 1;
+    dirVec.normalize();
+
+    // ponto inicial = ponto atual
+    const inputs = getInputs(); 
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // vetor dominante congelado
-    const dirVec = new THREE.Vector3(0, 0, 0);
-    if (Math.abs(dynamicPreviewVec.x) >= Math.abs(dynamicPreviewVec.y) &&
-        Math.abs(dynamicPreviewVec.x) >= Math.abs(dynamicPreviewVec.z)) dirVec.x = Math.sign(dynamicPreviewVec.x) || 1;
-    else if (Math.abs(dynamicPreviewVec.y) >= Math.abs(dynamicPreviewVec.x) &&
-             Math.abs(dynamicPreviewVec.y) >= Math.abs(dynamicPreviewVec.z)) dirVec.y = Math.sign(dynamicPreviewVec.y) || 1;
-    else dirVec.z = Math.sign(dynamicPreviewVec.z) || 1;
+    // ponto final = from + vetor dominante * comprimento do input
+    const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(getInputLength()));
 
-    const length = getInputLength();
-    const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(length));
-
+    // cria linha final
     const geometry = new THREE.BoxGeometry(thickness, fromPoint.distanceTo(toPoint), thickness);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const finalLine = new THREE.Mesh(geometry, material);
     finalLine.position.copy(fromPoint.clone().add(toPoint).multiplyScalar(0.5));
-    finalLine.lookAt(toPoint);
+    finalLine.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
     scene.add(finalLine);
+
+    // opcional: adicionar ao history
+    // history.push({ from: fromPoint.clone(), to: toPoint.clone(), axis: ['X','Y','Z'][dominantAxis] });
 
     // limpa preview
     scene.remove(previewLine);
@@ -709,7 +726,6 @@ renderer.domElement.addEventListener('click', (event) => { // clique normal
     previewLine = null;
     previewActive = false;
 });
-
 
 
 </script>
