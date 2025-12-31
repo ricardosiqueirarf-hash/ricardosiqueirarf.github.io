@@ -421,27 +421,45 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
   history.forEach((h, i) => {
     const line = lines[i];
-    const dir = new THREE.Vector3().subVectors(h.to, h.from).normalize();
+    const dirVec = new THREE.Vector3().subVectors(h.to, h.from).normalize();
 
     if (h.axis === axis) {
-      // Linhas do eixo selecionado: ajuste de tamanho sem deslocamento
-      const from = h.from.clone();
-      let to;
+      // Determina qual ponto é o mais próximo de 0 e qual é o mais distante
+      const coordFrom = h.from[axis.toLowerCase()];
+      const coordTo = h.to[axis.toLowerCase()];
 
-      if (diff < 0) {
-        // Redução → no sentido de 0
-        to = from.clone().add(dir.clone().multiplyScalar(h.to.distanceTo(h.from) + diff));
+      let minPoint = h.from.clone();
+      let maxPoint = h.to.clone();
+
+      if (Math.abs(coordFrom) > Math.abs(coordTo)) {
+        maxPoint = h.from.clone();
+        minPoint = h.to.clone();
       } else {
-        // Aumento → no sentido oposto a 0
-        to = from.clone().add(dir.clone().multiplyScalar(h.to.distanceTo(h.from) + diff));
+        maxPoint = h.to.clone();
+        minPoint = h.from.clone();
       }
 
-      line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, from.distanceTo(to), 0.08);
-      line.position.copy(from.clone().add(to).multiplyScalar(0.5));
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      // Reduz ou aumenta a linha a partir do ponto mais distante de 0
+      let newMax = maxPoint.clone();
+      if (diff < 0) {
+        // Redução → move maxPoint em direção a 0
+        newMax[axis.toLowerCase()] -= diff; // diff é negativo, então soma
+      } else {
+        // Aumento → move maxPoint no sentido oposto a 0
+        newMax[axis.toLowerCase()] += diff;
+      }
 
-      h.to.copy(to);
+      const newFrom = minPoint.clone();
+      const newTo = newMax.clone();
+
+      line.geometry.dispose();
+      line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
+      line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
+
+      h.from.copy(newFrom);
+      h.to.copy(newTo);
+
     } else {
       // Linhas de outros eixos: deslocamento pelo vetor da linha selecionada
       const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
@@ -466,6 +484,7 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   editingAxis = null;
   updateMetrics();
 });
+
 
 </script>
 
