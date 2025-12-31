@@ -6,6 +6,7 @@
 <title>Portas de Vidro e Alumínio em Fortaleza | ColorGlass</title>
 <meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
 <meta name="robots" content="index, follow">
+
 <style>
 /* RESET BÁSICO */
 * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -35,10 +36,7 @@ body { background: #ffffff; color: #333; display: flex; min-height: 100vh; }
     margin-bottom: 15px;
     transition: color 0.3s ease, transform 0.3s ease;
 }
-.sidebar h3:hover {
-    color: #fffbe6;
-    transform: scale(1.05);
-}
+.sidebar h3:hover { color: #fffbe6; transform: scale(1.05); }
 
 /* DROPDOWN */
 #dropdownMenu {
@@ -60,10 +58,7 @@ body { background: #ffffff; color: #333; display: flex; min-height: 100vh; }
     cursor: pointer;
     transition: all 0.2s ease;
 }
-#dropdownMenu button:hover {
-    background: #0a4a6b;
-    transform: translateX(5px);
-}
+#dropdownMenu button:hover { background: #0a4a6b; transform: translateX(5px); }
 
 /* BOTÕES SIDEBAR */
 .sidebar button:not(.dropdown-toggle) {
@@ -134,17 +129,9 @@ body { background: #ffffff; color: #333; display: flex; min-height: 100vh; }
     margin-top: 12px;
     transition: all 0.3s ease;
 }
-.btn:hover {
-    background: #0d5d8c;
-    transform: translateY(-2px);
-}
-.btn-danger {
-    background: #e84118;
-}
-.btn-danger:hover {
-    background: #c23616;
-    transform: translateY(-2px);
-}
+.btn:hover { background: #0d5d8c; transform: translateY(-2px); }
+.btn-danger { background: #e84118; }
+.btn-danger:hover { background: #c23616; transform: translateY(-2px); }
 
 /* PORTAS SALVAS */
 #portasSalvas div {
@@ -174,18 +161,10 @@ th { background: #e6f0fa; }
 tr:hover { background: #f0f8ff; }
 
 /* SCROLLBARS CUSTOM */
-.content::-webkit-scrollbar {
-    width: 10px;
-}
-.content::-webkit-scrollbar-thumb {
-    background: #1079ba;
-    border-radius: 5px;
-}
-.content::-webkit-scrollbar-track {
-    background: #f9f9f9;
-}
+.content::-webkit-scrollbar { width: 10px; }
+.content::-webkit-scrollbar-thumb { background: #1079ba; border-radius: 5px; }
+.content::-webkit-scrollbar-track { background: #f9f9f9; }
 </style>
-
 </head>
 <body>
 <div class="app">
@@ -197,7 +176,6 @@ tr:hover { background: #f0f8ff; }
             <button onclick="go('insumos.html')">Insumos</button>
             <button onclick="go('puxadores.html')">Puxadores</button>
         </div>
-
         <button onclick="go('producao.html')">Produção</button>
         <button onclick="go('catalogo.html')">Catálogo</button>
         <button onclick="go('ajustes.html')">Ajustes</button>
@@ -223,15 +201,14 @@ tr:hover { background: #f0f8ff; }
 
 <script>
 // =====================
-// css dropdown
+// DROPDOWN FUNCIONAL
 // =====================
-<script>
 function toggleDropdown() {
     const menu = document.getElementById("dropdownMenu");
     menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
 }
 
-// Se quiser fechar o dropdown ao clicar fora dele
+// Fechar dropdown ao clicar fora
 document.addEventListener('click', function(e) {
     const dropdown = document.getElementById("dropdownMenu");
     const toggle = document.querySelector(".dropdown-toggle");
@@ -240,7 +217,14 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// Navegação
+function go(url){
+    window.location.href = url;
+}
+
+// =====================
 // URL do backend
+// =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
 
 // =====================
@@ -277,7 +261,6 @@ async function carregarOrcamentos() {
 
         for(const o of orcamentos){
             try {
-                // Buscar portas do orçamento
                 const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${o.id}/portas`);
                 const dataPortas = await resPortas.json();
                 let qtdTotal = 0;
@@ -291,7 +274,6 @@ async function carregarOrcamentos() {
                     });
                 }
 
-                // Se as colunas do Supabase existirem, sobrescreve os totais
                 qtdTotal = o.quantidade_total ?? qtdTotal;
                 valorTotal = o.valor_total ?? valorTotal;
 
@@ -361,5 +343,6 @@ carregarOrcamentos();
 </script>
 </body>
 </html>
+
 
 
