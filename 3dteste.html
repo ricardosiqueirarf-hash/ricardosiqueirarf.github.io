@@ -90,11 +90,7 @@
   <button onclick="undoLast()">↩ Desfazer última linha</button>
 
   <div id="metrics">
-    <strong>📐 Métricas Reais</strong><br>
-    Largura X: <span id="sizeX">0.00</span> m<br>
-    Altura Y: <span id="sizeY">0.00</span> m<br>
-    Profundidade Z: <span id="sizeZ">0.00</span> m<br>
-    <hr>
+    <strong>📐 Métricas Reais</strong>
     📏 Comprimento Total: <strong><span id="totalLen">0.00</span> m</strong><br>
     🔩 Fixadores: <strong><span id="fixers">0</span></strong>
   </div>
@@ -126,15 +122,15 @@
     0.1,
     1000
   );
-  camera.position.set(100, 100, 100);
+  camera.position.set(400, 400, 400);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setSize(window.innerWidth - 300, window.innerHeight);
   document.getElementById("canvas-container").appendChild(renderer.domElement);
 
-  const axes = new THREE.AxesHelper(10);
-  const grid = new THREE.GridHelper(400, 80);
+  const axes = new THREE.AxesHelper(200);
+  const grid = new THREE.GridHelper(2000, 80);
   scene.add(axes, grid);
 
   const lines = [];
