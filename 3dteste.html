@@ -624,48 +624,34 @@ renderer.domElement.addEventListener("click", (event) => {
 
 let previewLine = null;
 let previewActive = false;
-let dynamicPreviewVec = new THREE.Vector3(); // vetor dinâmico do preview
 
 const thickness = 5.0; // espessura da linha
-const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // input do usuário
+const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // comprimento da linha
 
 // ==================== PRÉ-VISUALIZAÇÃO ====================
-renderer.domElement.addEventListener('mousemove', (event) => {
-    const rect = renderer.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-
-    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    const intersectPoint = new THREE.Vector3();
-    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
-
-    // ponto inicial
-    const inputs = getInputs(); // retorna {x, y, z}
+renderer.domElement.addEventListener('mousemove', () => {
+    // ponto inicial = ponto atual
+    const inputs = getInputs(); // {x, y, z}
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // atualiza vetor dinâmico
-    dynamicPreviewVec.subVectors(intersectPoint, previewStart);
-    const length = dynamicPreviewVec.length();
-    if (length < 0.001) return; // evita vetor zero
+    // determina o eixo dominante usando algum vetor de referência
+    // para preview, podemos usar um vetor default (ex: para frente Z)
+    // ou manter último eixo dominante (aqui assumimos Z+ como default)
+    const dirVec = new THREE.Vector3(0, 0, 1); // preview sempre para Z+ inicialmente
+    const length = getInputLength();
 
-    // cria preview se ainda não existe
     if (!previewActive) {
         previewActive = true;
-        const geometry = new THREE.BoxGeometry(thickness, 1, thickness); // escala Y = 1, ajustaremos depois
+        const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
         previewLine = new THREE.Mesh(geometry, material);
         scene.add(previewLine);
     }
 
-    // atualiza preview usando escala e rotação
+    // atualiza preview: escala e posição
     previewLine.scale.set(1, length, 1);
-    previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
-    previewLine.lookAt(intersectPoint);
+    previewLine.position.copy(previewStart.clone().add(dirVec.clone().multiplyScalar(length / 2)));
+    previewLine.lookAt(previewStart.clone().add(dirVec));
 });
 
 // ==================== CRIAÇÃO DA LINHA FINAL ====================
@@ -673,26 +659,12 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     event.preventDefault();
     if (!previewActive) return;
 
-    // congela o vetor do preview
-    const frozenVec = dynamicPreviewVec.clone();
-    if (frozenVec.length() < 0.001) return;
-
-    // determina eixo dominante
-    const absDir = [Math.abs(frozenVec.x), Math.abs(frozenVec.y), Math.abs(frozenVec.z)];
-    const dominantAxis = absDir.indexOf(Math.max(...absDir));
-
-    // vetor unitário do eixo dominante
-    const dirVec = new THREE.Vector3(
-        dominantAxis === 0 ? Math.sign(frozenVec.x) || 1 : 0,
-        dominantAxis === 1 ? Math.sign(frozenVec.y) || 1 : 0,
-        dominantAxis === 2 ? Math.sign(frozenVec.z) || 1 : 0
-    ).normalize();
-
     // ponto inicial
     const inputs = getInputs();
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // ponto final
+    // determina eixo dominante (pode usar preview ou calcular a partir de alguma lógica)
+    const dirVec = new THREE.Vector3(0, 0, 1); // mesma direção do preview
     const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(getInputLength()));
 
     // cria linha final
