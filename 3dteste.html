@@ -623,11 +623,9 @@ renderer.domElement.addEventListener("click", (event) => {
 });
 
 let previewLine = null;
-let previewStart = new THREE.Vector3();
 let previewActive = false;
 
-const thickness = 5.0; // espessura grande da linha de preview e final
-
+const thickness = 5.0; // espessura da linha
 const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // seu input
 
 // ==================== PRÉ-VISUALIZAÇÃO ====================
@@ -645,44 +643,50 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    if (!previewActive) {
-        previewStart.copy(intersectPoint);
-        previewActive = true;
+    // ponto atual
+    const inputs = getInputs(); // retorna {x, y, z}
+    const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
+    if (!previewActive) {
+        previewActive = true;
         const geometry = new THREE.BoxGeometry(thickness, 1, thickness); // altura temporária
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
         previewLine = new THREE.Mesh(geometry, material);
         scene.add(previewLine);
     }
 
+    // vetor do ponto atual até o mouse
     const dirVec = new THREE.Vector3().subVectors(intersectPoint, previewStart);
     const length = dirVec.length();
     previewLine.geometry.dispose();
     previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
     previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
-    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec.normalize());
+    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
 });
 
 // ==================== CRIAÇÃO DA LINHA FINAL ====================
 renderer.domElement.addEventListener('contextmenu', (event) => {
-    event.preventDefault(); // evita menu do navegador
+    event.preventDefault();
     if (!previewActive) return;
 
     const length = getInputLength();
 
-    // vetor da linha de preview
+    // ponto atual
+    const inputs = getInputs();
+    const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
+
+    // vetor do preview
     const previewVec = new THREE.Vector3().subVectors(previewLine.position.clone(), previewStart);
 
-    // identifica eixo dominante
+    // eixo dominante
     const absDir = [Math.abs(previewVec.x), Math.abs(previewVec.y), Math.abs(previewVec.z)];
     let dominantAxis = absDir.indexOf(Math.max(...absDir));
 
-    // cria vetor alinhado ao eixo dominante
+    // vetor alinhado ao eixo dominante
     let dirVec = new THREE.Vector3(0, 0, 0);
     if (dominantAxis === 0) dirVec.x = Math.sign(previewVec.x) || 1;
     if (dominantAxis === 1) dirVec.y = Math.sign(previewVec.y) || 1;
     if (dominantAxis === 2) dirVec.z = Math.sign(previewVec.z) || 1;
-
     dirVec.normalize();
 
     // cria linha final
@@ -703,6 +707,7 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     previewLine = null;
     previewActive = false;
 });
+
 
 </script>
 </body>
