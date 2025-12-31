@@ -379,7 +379,7 @@ function renderEstruturas3D() {
         container.innerHTML += `
             <div style="margin-bottom:10px; border:1px solid #333; padding:10px; background:#e0e0e0;">
                 <strong>Estrutura 3D ${idx + 1}</strong><br>
-                Total de linhas: ${e.history.length}<br>
+                Comprimento total: ${e.totalLength.toFixed(2)} mm<br>
                 Fixadores: ${e.fixadores || "Nenhum"}<br>
                 <button class="btn" onclick="verEstrutura3D(${idx})">Ver 3D</button>
             </div>
