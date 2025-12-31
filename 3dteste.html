@@ -379,6 +379,71 @@ document.addEventListener('keyup', (e) => {
   }
 });
 
+// ===================== EDIÇÃO DE LINHA POR DUPLO CLIQUE =====================
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let selectedLine = null;
+let originalDirection = null;
+
+const lenInput = document.getElementById("len");
+
+// Captura duplo clique
+renderer.domElement.addEventListener("dblclick", (event) => {
+  // Normaliza coordenadas do mouse (-1 a 1)
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(lines);
+  if (intersects.length > 0) {
+    selectedLine = intersects[0].object;
+
+    // Calcula comprimento atual da linha
+    const geometry = selectedLine.geometry;
+    const length = geometry.parameters.height;
+    lenInput.value = length.toFixed(2);
+
+    // Salva direção original para ajustar a nova escala corretamente
+    const start = new THREE.Vector3();
+    selectedLine.getWorldPosition(start); // centro
+    originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
+  }
+});
+
+// Atualiza comprimento da linha ao alterar input
+lenInput.addEventListener("input", () => {
+  if (!selectedLine || !originalDirection) return;
+
+  const newLen = parseFloat(lenInput.value);
+  if (isNaN(newLen) || newLen <= 0) return;
+
+  // Recupera posição central atual e direção
+  const center = selectedLine.position.clone();
+  const dir = originalDirection.clone().normalize();
+
+  // Calcula novo ponto final baseado na direção
+  const newGeometry = new THREE.BoxGeometry(0.08, newLen, 0.08);
+  selectedLine.geometry.dispose(); // remove geometria antiga
+  selectedLine.geometry = newGeometry;
+
+  // Reposiciona a linha para manter o ponto inicial
+  const midpointOffset = dir.clone().multiplyScalar(newLen / 2);
+  const from = center.clone().sub(midpointOffset);
+  const to = center.clone().add(midpointOffset);
+  selectedLine.position.copy(from.clone().add(to).multiplyScalar(0.5));
+
+  // Atualiza histórico para manter consistência
+  const index = lines.indexOf(selectedLine);
+  if (index !== -1) {
+    history[index].to = from.clone().add(dir.clone().multiplyScalar(newLen));
+  }
+
+  updateMetrics();
+});
+
+
 </script>
 
 </body>
