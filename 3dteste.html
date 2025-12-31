@@ -518,19 +518,15 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   editingAxis = null;
 });
 
-  // ===================== FUNÇÃO PARA ALTERAR UMA LINHA =====================
+// ===================== FUNÇÃO PARA ALTERAR COMPRIMENTO DA LINHA =====================
 function editSelectedLine(selectedLine, index) {
   const h = history[index];
   const axis = h.axis;
 
-  // Pergunta pelo novo eixo
-  const newAxis = prompt(`Eixo atual: ${axis}. Digite o novo eixo (X, Y ou Z):`).toUpperCase();
-  if (!["X","Y","Z"].includes(newAxis)) return alert("Eixo inválido!");
-
   // Pergunta pelo novo comprimento
   const geometry = selectedLine.geometry;
   const currentLen = geometry.parameters.height;
-  const inputLen = prompt(`Digite o novo comprimento da linha no eixo ${newAxis}:`, currentLen.toFixed(2));
+  const inputLen = prompt(`Digite o novo comprimento da linha no eixo ${axis}:`, currentLen.toFixed(2));
   if (inputLen === null) return; // cancelou
   const newLen = parseFloat(inputLen);
   if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
@@ -540,7 +536,7 @@ function editSelectedLine(selectedLine, index) {
   const originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
   // Ponto mais distante de 0 no eixo selecionado
-  const axisLower = newAxis.toLowerCase();
+  const axisLower = axis.toLowerCase();
   const fromVal = h.from[axisLower];
   const toVal = h.to[axisLower];
   let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
@@ -567,17 +563,15 @@ function editSelectedLine(selectedLine, index) {
   // Atualiza histórico
   h.from.copy(newFrom);
   h.to.copy(newTo);
-  h.axis = newAxis;
 
-  // Atualiza ponto atual
+  // Atualiza ponto atual na direção da linha
   const inputs = getInputs();
   const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
   const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
   setInputs(newPoint.x, newPoint.y, newPoint.z);
 
-  // Recalcula totalLength e atualiza métricas
+  // Recalcula totalLength e fixadores
   totalLength = 0;
-  segmentMap.clear();
   vertexMap.clear();
   history.forEach(lineHistory => {
     totalLength += lineHistory.from.distanceTo(lineHistory.to);
@@ -587,6 +581,7 @@ function editSelectedLine(selectedLine, index) {
 
   updateMetrics();
 }
+
 </script>
 </body>
 </html>
