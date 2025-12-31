@@ -39,18 +39,19 @@ h1 { color: #1079ba; margin-bottom: 10px; }
 .form-perfil {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px; /* um pouco menor para compactar */
+    gap: 12px;
     background: #fff;
-    padding: 20px; /* menos padding para diminuir altura geral */
+    padding: 20px;
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     margin-bottom: 30px;
 }
 
+/* INPUTS E SELECTS */
 .form-perfil input, 
 .form-perfil select {
-    padding: 6px 10px; /* menos padding, altura menor */
-    font-size: 0.95rem; /* tamanho de fonte ajustado */
+    padding: 6px 10px;
+    font-size: 0.95rem;
     border-radius: 8px;
     border: 1px solid #ccc;
     width: 100%;
@@ -59,13 +60,14 @@ h1 { color: #1079ba; margin-bottom: 10px; }
 
 .form-perfil input:focus, 
 .form-perfil select:focus {
-    border-color: #1079ba; /* cor da sua marca */
-    box-shadow: 0 0 4px rgba(16,121,186,0.4); /* leve destaque */
+    border-color: #1079ba;
+    box-shadow: 0 0 4px rgba(16,121,186,0.4);
     outline: none;
 }
 
+/* BOTÕES DO FORMULÁRIO */
 .form-perfil button {
-    padding: 6px 12px; /* botões menores */
+    padding: 6px 12px;
     font-size: 0.95rem;
     border-radius: 8px;
     border: none;
@@ -74,18 +76,19 @@ h1 { color: #1079ba; margin-bottom: 10px; }
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .form-perfil button:hover {
     background: #0d5d8c;
     transform: translateY(-1px);
 }
 
-
-/* TIPOS E INSUMOS */
-.tipologias, #insumos-container {
+/* TIPOS E INSUMOS FIXOS EMBAIXO */
+.form-perfil .tipologias,
+.form-perfil #insumos-container {
+    grid-column: 1 / -1; /* ocupa toda a largura do grid */
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    margin-top: 10px;
 }
 .tipologias label, .insumo-item {
     background: #f0f4fb;
@@ -98,7 +101,7 @@ h1 { color: #1079ba; margin-bottom: 10px; }
 }
 .insumo-item select { width: auto; }
 
-/* BOTÕES */
+/* BOTÕES GERAIS */
 button, .form-perfil button {
     padding: 10px 16px;
     border-radius: 8px;
@@ -132,6 +135,7 @@ tr:hover { background: #e6f0fa; }
     .form-perfil { grid-template-columns: 1fr; }
     .menu { flex-direction: column; }
 }
+
 </style>
 </head>
 
