@@ -462,24 +462,21 @@ renderer.domElement.addEventListener("dblclick", (event) => {
       h.to.copy(newTo);
 
     } else {
-     // Linhas de outros eixos: deslocamento sempre em direção a 0
-const coordAxis = axis.toLowerCase();
+    // Linhas de outros eixos: deslocamento sempre em direção a 0
+      const moveVec = new THREE.Vector3(0, 0, 0);
+      moveVec[axis.toLowerCase()] = diff; // diff positivo → aumenta, diff negativo → reduz
+      h.from.add(moveVec);
+      h.to.add(moveVec);
 
-// Só move se alguma extremidade não estiver em 0 no eixo selecionado
-if (h.from[coordAxis] !== 0 || h.to[coordAxis] !== 0) {
-  const moveVec = new THREE.Vector3(0, 0, 0);
-  moveVec[coordAxis] = diff; // diff positivo → aumenta, diff negativo → reduz
-  h.from.add(moveVec);
-  h.to.add(moveVec);
-}
 
-const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-const direction = new THREE.Vector3().subVectors(h.to, h.from);
-line.geometry.dispose();
-line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-line.position.copy(center);
-line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-
+      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+      const direction = new THREE.Vector3().subVectors(h.to, h.from);
+      line.geometry.dispose();
+      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
+      line.position.copy(center);
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    }
+  });
 
   // Atualiza ponto atual
   const inputs = getInputs();
