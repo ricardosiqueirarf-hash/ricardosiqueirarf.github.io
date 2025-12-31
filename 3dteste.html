@@ -390,7 +390,6 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
-
   const intersects = raycaster.intersectObjects(lines);
   if (intersects.length === 0) return;
 
@@ -407,7 +406,7 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
   // Popup para novo comprimento
-  const inputLen = prompt("Digite o novo comprimento da linha:", currentLen.toFixed(2));
+  const inputLen = prompt("Digite o novo comprimento do vetor:", currentLen.toFixed(2));
   if (inputLen === null) return;
   const newLen = parseFloat(inputLen);
   if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
@@ -417,34 +416,31 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   // Atualiza todas as linhas do mesmo eixo
   history.forEach((h, i) => {
     const line = lines[i];
+    const dir = new THREE.Vector3().subVectors(h.to, h.from).normalize();
+
     if (h.axis === axis) {
-      const dir = new THREE.Vector3().subVectors(h.to, h.from).normalize();
+      // Redimensiona a linha do mesmo eixo
       const from = h.from.clone();
-      const to = from.clone().add(dir.clone().multiplyScalar(h.axis === axis ? h.to.distanceTo(h.from) + diff : h.to.distanceTo(h.from)));
-      
-      // Atualiza geometria
-      const length = from.distanceTo(to);
+      const to = from.clone().add(dir.clone().multiplyScalar(h.to.distanceTo(h.from) + diff));
+
       line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+      line.geometry = new THREE.BoxGeometry(0.08, from.distanceTo(to), 0.08);
       line.position.copy(from.clone().add(to).multiplyScalar(0.5));
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
 
       h.to.copy(to);
-    }
-    else {
-      // Linhas de outros eixos são deslocadas pelo vetor
+    } else {
+      // Linhas de outros eixos → deslocadas pelo vetor
       const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
       h.from.add(moveVec);
       h.to.add(moveVec);
 
-      // Atualiza mesh
       const center = h.from.clone().add(h.to).multiplyScalar(0.5);
       const direction = new THREE.Vector3().subVectors(h.to, h.from);
-      const length = direction.length();
       line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
       line.position.copy(center);
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), direction.normalize());
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
     }
   });
 
@@ -456,6 +452,7 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
   updateMetrics();
 });
+
 
 
 </script>
