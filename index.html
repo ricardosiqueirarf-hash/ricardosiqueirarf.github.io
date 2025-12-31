@@ -8,49 +8,157 @@
 <meta name="robots" content="index, follow">
 
 <style>
-body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
-.app { display:grid; grid-template-columns:18% 82%; height:100vh; }
-.sidebar { background:#1e1e1e; color:white; padding:20px; display:flex; flex-direction:column; gap:10px; position:relative; }
-.sidebar h3 { margin:0; cursor:pointer; }
-.content { padding:25px; overflow-y:auto; height:100vh; }
-label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
-input { padding:7px; margin-top:5px; }
-.btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
-.btn-danger { background:#c0392b; }
-#formCliente { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
-#portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
-table { border-collapse: collapse; width:100%; margin-top:10px; }
-th, td { border:1px solid #ccc; padding:5px; text-align:left; }
-th { background:#ddd; }
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; }
 
-/* Dropdown sidebar clicável */
-.sidebar .dropdown {
-    position: relative;
-    width: 100%;
+/* BODY */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f6fa;
+    color: #333;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    height: 100vh;
 }
+
+/* SIDEBAR */
+.sidebar {
+    background: #2f3640;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 10px;
+    position: relative;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.sidebar h3 {
+    font-size: 1.3rem;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: color 0.2s ease;
+}
+.sidebar h3:hover { color: #00a8ff; }
+
+/* DROPDOWN */
 .sidebar .dropdown-content {
     display: none;
     flex-direction: column;
-    position: relative;
-    background: #1c1c1c;
-    width: 100%;
-    z-index: 10;
     margin-top: 5px;
+    background: #353b48;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 .sidebar .dropdown-content button {
-    background: #333;
-    color: white;
+    background: none;
+    color: #fff;
     border: none;
-    padding: 10px;
+    padding: 12px 15px;
     text-align: left;
-    width: 100%;
     cursor: pointer;
-    border-bottom: 1px solid #222;
+    transition: background 0.2s ease;
 }
 .sidebar .dropdown-content button:hover {
-    background: #444;
+    background: #00a8ff;
+}
+
+/* BOTÕES SIDEBAR */
+.sidebar button:not(.dropdown-toggle) {
+    background: #353b48;
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.sidebar button:not(.dropdown-toggle):hover {
+    background: #00a8ff;
+}
+
+/* CONTENT */
+.content {
+    padding: 30px;
+    overflow-y: auto;
+    background: #f5f6fa;
+}
+
+/* FORMULÁRIOS */
+#formCliente {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+#formCliente label {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+#formCliente input {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+}
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #00a8ff;
+    color: #fff;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: all 0.2s ease;
+}
+.btn:hover { background: #0097e6; }
+.btn-danger {
+    background: #e84118;
+}
+.btn-danger:hover { background: #c23616; }
+
+/* PORTAS SALVAS */
+#portasSalvas div {
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #dcdde1;
+    padding: 12px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* TABELAS */
+table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    margin-top: 15px; 
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+th, td { border:1px solid #dcdde1; padding:8px; text-align:left; }
+th { background: #f1f2f6; }
+
+/* SCROLLBARS CUSTOM */
+.content::-webkit-scrollbar {
+    width: 8px;
+}
+.content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+.content::-webkit-scrollbar-track {
+    background: #f5f6fa;
 }
 </style>
+
 </head>
 <body>
 <div class="app">
