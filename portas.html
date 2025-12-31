@@ -6,6 +6,22 @@
 <title>Portas de Vidro e Alumínio em Fortaleza | ColorGlass</title>
 <meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
 <meta name="robots" content="index, follow">
+
+<!-- SEO LOCAL -->
+<meta name="geo.region" content="BR-CE">
+<meta name="geo.placename" content="Fortaleza">
+<meta name="geo.position" content="-3.7319;-38.5267">
+<meta name="ICBM" content="-3.7319, -38.5267">
+
+<!-- CANONICAL -->
+<link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
+
+<!-- OPEN GRAPH -->
+<meta property="og:title" content="Portas de Vidro e Alumínio em Fortaleza | ColorGlass">
+<meta property="og:description" content="Orçamento rápido em portas de vidro e alumínio sob medida em Fortaleza. Qualidade premium e instalação profissional.">
+<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
+<meta property="og:type" content="website">
+
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
@@ -21,8 +37,15 @@ input, select { padding:7px; margin-top:5px; }
 table { border-collapse: collapse; width:100%; margin-top:10px; }
 th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
-#portaSVG { width:220px; height:400px; border:1px solid #333; margin-top:10px; }
+#portaSVG { width:220px; height:400px; border:1px solid #333; margin-top:10px; background:white; }
 </style>
+
+<link id="tema-css" rel="stylesheet" href="">
+<script>
+if(localStorage.getItem("darkmode") === "true"){
+    document.getElementById("tema-css").href = "/static/css/indexdark.css";
+}
+</script>
 </head>
 
 <body>
@@ -53,7 +76,7 @@ th { background:#ddd; }
         </label>
 
         <button class="btn" onclick="abrirEstrutura3D()" style="margin-top:10px;">
-            🧱 Orçar Estrutura 3D
+    🧱 Orçar Estrutura 3D
         </button>
 
         <label>Quantidade<input type="number" id="quantidade" value="1" min="1" onchange="atualizarPrecoPorta()"></label>
@@ -62,7 +85,6 @@ th { background:#ddd; }
         <svg id="portaSVG"></svg>
 
         <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
-        <button class="btn" onclick="salvarLocal()">💾 Salvar Local</button>
 
         <h2>Portas Salvas</h2>
         <div id="portasSalvas"></div>
@@ -75,6 +97,11 @@ th { background:#ddd; }
 
 <script>
 function go(p){ window.location.href = p }
+
+// =====================
+// BACKEND
+// =====================
+const API_BASE = "https://colorglass.onrender.com";
 
 // =====================
 // UUID DO ORÇAMENTO
@@ -106,13 +133,13 @@ let todosPerfis = []
 let todosVidros = []
 
 async function carregarPerfis() {
-    const res = await fetch(`/api/perfis`)
+    const res = await fetch(`${API_BASE}/api/perfis`)
     todosPerfis = await res.json()
     atualizarPerfisSelect()
 }
 
 async function carregarVidros() {
-    const res = await fetch(`/api/vidros`)
+    const res = await fetch(`${API_BASE}/api/vidros`)
     todosVidros = await res.json()
     atualizarVidrosSelect()
 }
@@ -226,32 +253,11 @@ function salvarPorta(){
         dados,
         quantidade,
         preco: calcularPrecoPorta(),
-        svg: portaSVG.outerHTML,
-        estrutura3D: localStorage.getItem(`estrutura3D_${ORCAMENTO_UUID}`) || null
+        svg: portaSVG.outerHTML
     }
     editando === null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando), porta)
     editando = null
     renderPortas()
-}
-
-// =====================
-// SALVAR LOCALSTORAGE
-// =====================
-function salvarLocal(){
-    if(portas.length === 0) return alert("Nenhuma porta para salvar localmente.")
-    localStorage.setItem(`portas_${ORCAMENTO_UUID}`, JSON.stringify(portas))
-    alert("Portas salvas localmente!")
-}
-
-// =====================
-function carregarLocal(){
-    const saved = localStorage.getItem(`portas_${ORCAMENTO_UUID}`)
-    if(saved){
-        portas = JSON.parse(saved)
-        portas.forEach((p, idx)=>p.id = idx)
-        idCounter = portas.length
-        renderPortas()
-    }
 }
 
 function renderPortas(){
@@ -263,20 +269,12 @@ function renderPortas(){
                 <strong>${idx+1}. ${p.tipo}</strong><br>
                 Quantidade: ${p.quantidade}<br>
                 Preço: R$ ${p.preco.toFixed(2)}<br>
-                ${p.svg}
-                ${p.estrutura3D ? `<br><a href="#" onclick="abrir3D('${p.estrutura3D}')">Visualizar 3D</a>` : ''}
-                <br>
+                ${p.svg}<br>
                 <button class="btn" onclick="editarPorta(${p.id})">Editar</button>
                 <button class="btn btn-danger" onclick="apagarPorta(${p.id})">Apagar</button>
             </div>
         `
     })
-}
-
-function abrir3D(encoded){
-    const win = window.open("", "_blank")
-    win.document.write(encoded)
-    win.document.close()
 }
 
 function editarPorta(id){
@@ -305,29 +303,36 @@ function apagarPorta(id){
 // =====================
 async function finalizarOrcamento(){
     if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
+
+    // Preparar portas com UUID
     const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
+
     try{
-        const resPortas = await fetch(`/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+        // Salvar portas no Supabase
+        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
             method: "POST",
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ portas: portasComUUID })
         });
         const dataPortas = await resPortas.json();
         if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
+
         alert("Portas salvas com sucesso!");
-        window.location.href = "/";
+        window.location.href = "/"; // ou mantem na página se quiser editar mais
+
     } catch(err){
         console.error(err);
         alert("Erro ao salvar portas: " + err.message);
     }
 }
 
+
 // =====================
 // CARREGAR PORTAS EXISTENTES
 // =====================
 async function carregarPortas(){
     try{
-        const res = await fetch(`/api/orcamento/${ORCAMENTO_UUID}/portas`)
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`)
         const data = await res.json()
         if(data.success && data.portas){
             portas = data.portas.map((p, idx) => ({ ...p, id: idCounter++ }))
@@ -341,21 +346,61 @@ async function carregarPortas(){
 // =====================
 // LINK ESTRUTURAS 3D
 // =====================    
+
 function abrirEstrutura3D(){
     const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}`;
     window.open(url, "_blank");
 }
 
+
 // =====================
-// INICIALIZAÇÃO
+// CARREGAR ESTRUTURAS 3D SALVAS
+// =====================
+let estruturas3D = [];
+
+function carregarEstruturas3D() {
+    try {
+        const data = localStorage.getItem(`estruturas_${ORCAMENTO_UUID}`);
+        if (!data) return;
+        estruturas3D = JSON.parse(data);
+        renderEstruturas3D();
+    } catch (err) {
+        console.error("Erro ao carregar estruturas 3D:", err);
+    }
+}
+
+function renderEstruturas3D() {
+    const container = document.getElementById("portasSalvas");
+    estruturas3D.forEach((e, idx) => {
+        // Cada estrutura será exibida como um SVG ou miniatura HTML
+        container.innerHTML += `
+            <div style="margin-bottom:10px; border:1px solid #333; padding:10px; background:#e0e0e0;">
+                <strong>Estrutura 3D ${idx + 1}</strong><br>
+                X: ${e.x}, Y: ${e.y}, Z: ${e.z}<br>
+                Total de linhas: ${e.history.length}<br>
+                <button class="btn" onclick="verEstrutura3D(${idx})">Ver 3D</button>
+            </div>
+        `;
+    });
+}
+
+function verEstrutura3D(idx) {
+    // Reabrir a estrutura em 3dteste.html passando o índice
+    const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}&estrutura_idx=${idx}`;
+    window.open(url, "_blank");
+}
+
+
 // =====================
 carregarPerfis()
 carregarVidros()
-carregarLocal()
 carregarPortas()
+carregarEstruturas3D()
 </script>
 </body>
 </html>
+
+
 
 
 
