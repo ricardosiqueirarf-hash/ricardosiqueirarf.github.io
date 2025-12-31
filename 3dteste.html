@@ -674,6 +674,11 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, intersectPoint);
+  // adiciona isto dentro do listener 'mousemove', depois de calcular intersectPoint
+    document.getElementById('x').value = intersectPoint.x.toFixed(2);
+    document.getElementById('y').value = intersectPoint.y.toFixed(2);
+    document.getElementById('z').value = intersectPoint.z.toFixed(2);
+
 
     // ponto atual
     const inputs = getInputs(); // retorna {x, y, z}
@@ -681,6 +686,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
 
     // atualiza vetor dinâmico
     dynamicPreviewVec.subVectors(intersectPoint, previewStart);
+    
 
     // determina eixo dominante
     const absDir = [Math.abs(dynamicPreviewVec.x), Math.abs(dynamicPreviewVec.y), Math.abs(dynamicPreviewVec.z)];
@@ -757,6 +763,9 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     previewLine = null;
     previewActive = false;
 });
+
+
+
 
 
 </script>
