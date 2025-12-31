@@ -516,8 +516,10 @@ function editSelectedLine(selectedLine, index) {
   const axis = h.axis;
 
   // Pergunta pelo novo comprimento
-  const geometry = selectedLine.geometry;
-  const currentLen = geometry.parameters.height;
+  const oldGeom = selectedLine.geometry.parameters;
+  const width = oldGeom.width || 0.08;  // mantém largura original
+  const depth = oldGeom.depth || 0.08;  // mantém profundidade original
+  const currentLen = oldGeom.height || 1; // comprimento atual
   const inputLen = prompt(`Digite o novo comprimento da linha no eixo ${axis}:`, currentLen.toFixed(2));
   if (inputLen === null) return; // cancelou
   const newLen = parseFloat(inputLen);
@@ -543,9 +545,10 @@ function editSelectedLine(selectedLine, index) {
     newFrom[axisLower] = newPos;
   }
 
-  // Atualiza geometria e posição
+  // Atualiza geometria e posição mantendo a espessura original
+  const height = newFrom.distanceTo(newTo);
   selectedLine.geometry.dispose();
-  selectedLine.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
+  selectedLine.geometry = new THREE.BoxGeometry(width, height, depth);
   selectedLine.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
   selectedLine.quaternion.setFromUnitVectors(
     new THREE.Vector3(0, 1, 0),
@@ -572,22 +575,6 @@ function editSelectedLine(selectedLine, index) {
   });
 
   updateMetrics();
-}
-
-
-function refreshTotals() {
-  // Reset totalLength e vertexMap
-  totalLength = 0;
-  vertexMap.clear();
-
-  history.forEach(h => {
-    totalLength += h.from.distanceTo(h.to);
-    registerVertex(h.from, h.axis);
-    registerVertex(h.to, h.axis);
-  });
-
-  totalLenEl.textContent = totalLength.toFixed(2);
-  calculateFixers(); // já atualiza #fixers
 }
 
 // ===================== CLIQUE PARA MOVER O PONTO ATUAL NA LINHA =====================
