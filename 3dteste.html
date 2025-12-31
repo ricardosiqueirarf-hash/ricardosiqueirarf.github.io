@@ -384,11 +384,10 @@ const mouse = new THREE.Vector2();
 let selectedLine = null;
 let originalDirection = null;
 
-// Captura duplo clique no canvas
 renderer.domElement.addEventListener("dblclick", (event) => {
   const rect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
@@ -398,42 +397,38 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
     // Pega comprimento atual da linha
     const geometry = selectedLine.geometry;
-    const length = geometry.parameters.height;
-    lenInput.value = length.toFixed(2);
+    const currentLen = geometry.parameters.height;
 
     // Salva direção original
     originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
+
+    // Abre popup para alterar o comprimento
+    const inputLen = prompt("Digite o novo comprimento da linha:", currentLen.toFixed(2));
+    if (inputLen === null) return; // Cancelou
+    const newLen = parseFloat(inputLen);
+    if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
+
+    // Atualiza geometria mantendo direção
+    const center = selectedLine.position.clone();
+    const dir = originalDirection.clone().normalize();
+
+    const newGeometry = new THREE.BoxGeometry(0.08, newLen, 0.08);
+    selectedLine.geometry.dispose();
+    selectedLine.geometry = newGeometry;
+
+    // Reposiciona linha para manter ponto inicial fixo
+    const index = lines.indexOf(selectedLine);
+    if (index !== -1) {
+      const from = history[index].from.clone();
+      const to = from.clone().add(dir.multiplyScalar(newLen));
+      selectedLine.position.copy(from.clone().add(to).multiplyScalar(0.5));
+
+      // Atualiza histórico
+      history[index].to.copy(to);
+    }
+
+    updateMetrics();
   }
-});
-
-// Atualiza comprimento da linha ao alterar input
-lenInput.addEventListener("input", () => {
-  if (!selectedLine || !originalDirection) return;
-
-  const newLen = parseFloat(lenInput.value);
-  if (isNaN(newLen) || newLen <= 0) return;
-
-  // Atualiza geometria mantendo direção
-  const center = selectedLine.position.clone();
-  const dir = originalDirection.clone().normalize();
-
-  const newGeometry = new THREE.BoxGeometry(0.08, newLen, 0.08);
-  selectedLine.geometry.dispose();
-  selectedLine.geometry = newGeometry;
-
-  // Reposiciona linha para manter ponto inicial
-  const midpointOffset = dir.clone().multiplyScalar(newLen / 2);
-  const from = center.clone().sub(midpointOffset);
-  const to = center.clone().add(midpointOffset);
-  selectedLine.position.copy(from.clone().add(to).multiplyScalar(0.5));
-
-  // Atualiza histórico
-  const index = lines.indexOf(selectedLine);
-  if (index !== -1) {
-    history[index].to = from.clone().add(dir.clone().multiplyScalar(newLen));
-  }
-
-  updateMetrics();
 });
 
 </script>
