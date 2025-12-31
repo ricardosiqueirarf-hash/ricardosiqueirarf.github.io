@@ -651,6 +651,13 @@ renderer.domElement.addEventListener("click", (event) => {
   setInputs(newX, newY, newZ);
 });
 
+// cria um plano invisível na cena, plano XY no Z=0
+const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
+const planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
+const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+planeMesh.rotation.x = -Math.PI / 2; // orienta para XY
+scene.add(planeMesh);
+
 renderer.domElement.addEventListener('mousemove', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -661,16 +668,19 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    // Plano Z=0
-    const planeZ = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
-    const intersectPoint = new THREE.Vector3();
-    raycaster.ray.intersectPlane(planeZ, intersectPoint);
+    const intersects = raycaster.intersectObject(planeMesh);
+    if (intersects.length === 0) return;
 
-    // atualiza inputs com valores do mouse
+    const intersectPoint = intersects[0].point;
+
+    // atualiza inputs
     document.getElementById('x').value = intersectPoint.x.toFixed(2);
     document.getElementById('y').value = intersectPoint.y.toFixed(2);
     document.getElementById('z').value = intersectPoint.z.toFixed(2);
+
+    console.log(intersectPoint); // pra conferir
 });
+
 
 </script>
 </body>
