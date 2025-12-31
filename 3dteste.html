@@ -653,18 +653,11 @@ renderer.domElement.addEventListener("click", (event) => {
 
 let previewLine = null;
 let previewActive = false;
+
 const thickness = 5.0; // espessura da linha
+const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // seu input
 
-// Função para pegar ponto atual
-function getInputs() {
-    return {
-        x: parseFloat(document.getElementById('x').value) || 0,
-        y: parseFloat(document.getElementById('y').value) || 0,
-        z: parseFloat(document.getElementById('z').value) || 0
-    };
-}
-
-// ==================== PRÉ-VISUALIZAÇÃO + VALORES X/Y/Z ====================
+// ==================== PRÉ-VISUALIZAÇÃO ====================
 renderer.domElement.addEventListener('mousemove', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -675,21 +668,14 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    // projeta no plano Z=0
-    const planeZ = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
+    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    // ⚡ atualiza inputs dinâmicos X/Y/Z
-    document.getElementById('x').value = intersectPoint.x.toFixed(2);
-    document.getElementById('y').value = intersectPoint.y.toFixed(2);
-    document.getElementById('z').value = intersectPoint.z.toFixed(2);
-
     // ponto atual
-    const inputs = getInputs();
+    const inputs = getInputs(); // retorna {x, y, z}
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // cria preview se não existir
     if (!previewActive) {
         previewActive = true;
         const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
@@ -707,6 +693,53 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
     previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
     previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
+});
+
+// ==================== CRIAÇÃO DA LINHA FINAL ====================
+renderer.domElement.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+    if (!previewActive) return;
+
+    const length = getInputLength();
+
+    // ponto atual
+    const inputs = getInputs();
+    const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
+
+    // vetor da pré-visualização
+    const previewVec = new THREE.Vector3().subVectors(previewLine.position, fromPoint);
+
+    // eixo dominante
+    const absDir = [Math.abs(previewVec.x), Math.abs(previewVec.y), Math.abs(previewVec.z)];
+    let dominantAxis = absDir.indexOf(Math.max(...absDir));
+
+    // vetor alinhado ao eixo dominante
+    let dirVec = new THREE.Vector3(0,0,0);
+    if (dominantAxis === 0) dirVec.x = Math.sign(previewVec.x) || 1;
+    if (dominantAxis === 1) dirVec.y = Math.sign(previewVec.y) || 1;
+    if (dominantAxis === 2) dirVec.z = Math.sign(previewVec.z) || 1;
+    dirVec.normalize();
+
+    // ponto final baseado no comprimento do input
+    const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(length));
+
+    // cria linha final
+    const geometry = new THREE.BoxGeometry(thickness, fromPoint.distanceTo(toPoint), thickness);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const finalLine = new THREE.Mesh(geometry, material);
+    finalLine.position.copy(fromPoint.clone().add(toPoint).multiplyScalar(0.5));
+    finalLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec);
+    scene.add(finalLine);
+
+    // opcional: adicionar ao history
+    // history.push({ from: fromPoint.clone(), to: toPoint.clone(), axis: ['X','Y','Z'][dominantAxis] });
+
+    // limpa preview
+    scene.remove(previewLine);
+    previewLine.geometry.dispose();
+    previewLine.material.dispose();
+    previewLine = null;
+    previewActive = false;
 });
 
 
