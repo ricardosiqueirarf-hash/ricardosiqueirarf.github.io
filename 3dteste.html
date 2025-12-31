@@ -134,7 +134,7 @@
   document.getElementById("canvas-container").appendChild(renderer.domElement);
 
   const axes = new THREE.AxesHelper(200);
-  const grid = new THREE.GridHelper(2000, 1000);
+  const grid = new THREE.GridHelper(2000, 10);
   scene.add(axes, grid);
 
   const lines = [];
