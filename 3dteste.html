@@ -643,8 +643,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    // ponto atual
-    const inputs = getInputs(); // retorna {x, y, z}
+    const inputs = getInputs(); // ponto atual
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
     if (!previewActive) {
@@ -655,10 +654,9 @@ renderer.domElement.addEventListener('mousemove', (event) => {
         scene.add(previewLine);
     }
 
-    // vetor do ponto atual até o mouse
     const dirVec = new THREE.Vector3().subVectors(intersectPoint, previewStart);
     const length = dirVec.length();
-    if (length < 0.001) return; // evita vetor zero
+    if (length < 0.001) return;
 
     previewLine.geometry.dispose();
     previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
@@ -671,27 +669,25 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     event.preventDefault();
     if (!previewActive) return;
 
-    const length = getInputLength();
+    const length = getInputLength(); // comprimento exato da linha
 
     // ponto atual
     const inputs = getInputs();
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // vetor da pré-visualização
-    const previewVec = new THREE.Vector3().subVectors(previewLine.position, fromPoint);
-
-    // eixo dominante
-    const absDir = [Math.abs(previewVec.x), Math.abs(previewVec.y), Math.abs(previewVec.z)];
+    // vetor do preview para identificar eixo dominante
+    const previewDir = new THREE.Vector3().subVectors(previewLine.position, fromPoint);
+    const absDir = [Math.abs(previewDir.x), Math.abs(previewDir.y), Math.abs(previewDir.z)];
     let dominantAxis = absDir.indexOf(Math.max(...absDir));
 
-    // vetor alinhado ao eixo dominante
+    // vetor final alinhado ao eixo dominante
     let dirVec = new THREE.Vector3(0,0,0);
-    if (dominantAxis === 0) dirVec.x = Math.sign(previewVec.x) || 1;
-    if (dominantAxis === 1) dirVec.y = Math.sign(previewVec.y) || 1;
-    if (dominantAxis === 2) dirVec.z = Math.sign(previewVec.z) || 1;
+    if (dominantAxis === 0) dirVec.x = Math.sign(previewDir.x) || 1;
+    if (dominantAxis === 1) dirVec.y = Math.sign(previewDir.y) || 1;
+    if (dominantAxis === 2) dirVec.z = Math.sign(previewDir.z) || 1;
     dirVec.normalize();
 
-    // ponto final baseado no comprimento do input
+    // ponto final da linha
     const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(length));
 
     // cria linha final
