@@ -336,16 +336,14 @@
   }
 
 // ===================== CONTROLE PELO TECLADO =====================
-let lastUp = 0;
-let lastDown = 0;
-let pressTimerUp = null;
-let pressTimerDown = null;
+let upPressCount = 0;
+let downPressCount = 0;
 const doublePressThreshold = 250; // ms
+let upTimer = null;
+let downTimer = null;
 
-document.addEventListener('keydown', (e) => {
-  const len = parseFloat(lenInput.value) || 1;
-
-  switch(e.key) {
+document.addEventListener('keyup', (e) => {
+  switch(e.key){
     case "ArrowLeft":
       drawLine(-1,0,0,'X');
       break;
@@ -353,36 +351,30 @@ document.addEventListener('keydown', (e) => {
       drawLine(1,0,0,'X');
       break;
     case "ArrowUp":
-      const now = Date.now();
-      if (now - lastUp < doublePressThreshold) {
-        // Double press detectado → dispara Y
-        clearTimeout(pressTimerUp);
-        pressTimerUp = null;
-        drawLine(0,1,0,'Y'); // Duplo ↑ → cima (Y)
-      } else {
-        // Adia single press de Z
-        pressTimerUp = setTimeout(() => {
-          drawLine(0,0,-1,'Z'); // ↑ → frente (Z)
-          pressTimerUp = null;
-        }, doublePressThreshold);
-      }
-      lastUp = now;
+      upPressCount++;
+      if(upTimer) clearTimeout(upTimer);
+      upTimer = setTimeout(() => {
+        if(upPressCount === 1){
+          drawLine(0,0,-1,'Z'); // single press
+        } else if(upPressCount >= 2){
+          drawLine(0,1,0,'Y'); // double press
+        }
+        upPressCount = 0;
+        upTimer = null;
+      }, doublePressThreshold);
       break;
     case "ArrowDown":
-      const nowD = Date.now();
-      if (nowD - lastDown < doublePressThreshold) {
-        // Double press detectado → dispara Y
-        clearTimeout(pressTimerDown);
-        pressTimerDown = null;
-        drawLine(0,-1,0,'Y'); // Duplo ↓ → baixo (Y)
-      } else {
-        // Adia single press de Z
-        pressTimerDown = setTimeout(() => {
-          drawLine(0,0,1,'Z'); // ↓ → trás (Z)
-          pressTimerDown = null;
-        }, doublePressThreshold);
-      }
-      lastDown = nowD;
+      downPressCount++;
+      if(downTimer) clearTimeout(downTimer);
+      downTimer = setTimeout(() => {
+        if(downPressCount === 1){
+          drawLine(0,0,1,'Z'); // single press
+        } else if(downPressCount >= 2){
+          drawLine(0,-1,0,'Y'); // double press
+        }
+        downPressCount = 0;
+        downTimer = null;
+      }, doublePressThreshold);
       break;
   }
 });
