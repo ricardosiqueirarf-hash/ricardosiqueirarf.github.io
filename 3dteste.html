@@ -642,31 +642,30 @@ renderer.domElement.addEventListener('mousemove', (event) => {
 
     const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersectPoint = new THREE.Vector3();
-    raycaster.ray.intersectPlane(planeZ, intersectPoint);
+    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
 
-    // ponto atual
+    // ponto inicial
     const inputs = getInputs(); // retorna {x, y, z}
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
     // atualiza vetor dinâmico
     dynamicPreviewVec.subVectors(intersectPoint, previewStart);
+    const length = dynamicPreviewVec.length();
+    if (length < 0.001) return; // evita vetor zero
 
+    // cria preview se ainda não existe
     if (!previewActive) {
         previewActive = true;
-        const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
+        const geometry = new THREE.BoxGeometry(thickness, 1, thickness); // escala Y = 1, ajustaremos depois
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
         previewLine = new THREE.Mesh(geometry, material);
         scene.add(previewLine);
     }
 
-    const dirVec = dynamicPreviewVec.clone();
-    const length = dirVec.length();
-    if (length < 0.001) return; // evita vetor zero
-
-    previewLine.geometry.dispose();
-    previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
+    // atualiza preview usando escala e rotação
+    previewLine.scale.set(1, length, 1);
     previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
-    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec.normalize());
+    previewLine.lookAt(intersectPoint);
 });
 
 // ==================== CRIAÇÃO DA LINHA FINAL ====================
@@ -674,26 +673,26 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     event.preventDefault();
     if (!previewActive) return;
 
-    // congela o vetor do preview naquele instante
+    // congela o vetor do preview
     const frozenVec = dynamicPreviewVec.clone();
-    if (frozenVec.length() < 0.001) return; // evita vetor zero
+    if (frozenVec.length() < 0.001) return;
 
     // determina eixo dominante
     const absDir = [Math.abs(frozenVec.x), Math.abs(frozenVec.y), Math.abs(frozenVec.z)];
-    let dominantAxis = absDir.indexOf(Math.max(...absDir));
+    const dominantAxis = absDir.indexOf(Math.max(...absDir));
 
     // vetor unitário do eixo dominante
-    let dirVec = new THREE.Vector3(0, 0, 0);
-    if (dominantAxis === 0) dirVec.x = Math.sign(frozenVec.x) || 1;
-    if (dominantAxis === 1) dirVec.y = Math.sign(frozenVec.y) || 1;
-    if (dominantAxis === 2) dirVec.z = Math.sign(frozenVec.z) || 1;
-    dirVec.normalize();
+    const dirVec = new THREE.Vector3(
+        dominantAxis === 0 ? Math.sign(frozenVec.x) || 1 : 0,
+        dominantAxis === 1 ? Math.sign(frozenVec.y) || 1 : 0,
+        dominantAxis === 2 ? Math.sign(frozenVec.z) || 1 : 0
+    ).normalize();
 
-    // ponto inicial = ponto atual
-    const inputs = getInputs(); 
+    // ponto inicial
+    const inputs = getInputs();
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // ponto final = from + dir dominante * comprimento do input
+    // ponto final
     const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(getInputLength()));
 
     // cria linha final
@@ -701,11 +700,8 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const finalLine = new THREE.Mesh(geometry, material);
     finalLine.position.copy(fromPoint.clone().add(toPoint).multiplyScalar(0.5));
-    finalLine.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
+    finalLine.lookAt(toPoint);
     scene.add(finalLine);
-
-    // opcional: adicionar ao history
-    // history.push({ from: fromPoint.clone(), to: toPoint.clone(), axis: ['X','Y','Z'][dominantAxis] });
 
     // limpa preview
     scene.remove(previewLine);
@@ -714,6 +710,7 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     previewLine = null;
     previewActive = false;
 });
+
 
 </script>
 </body>
