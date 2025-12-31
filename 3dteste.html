@@ -626,11 +626,11 @@ let previewLine = null;
 let previewStart = new THREE.Vector3();
 let previewActive = false;
 
-const thickness = 5.0; // espessura bem grande para linha transparente e final
+const thickness = 5.0; // espessura grande da linha de preview e final
 
 const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // seu input
 
-// Mouse move → atualiza pré-visualização
+// ==================== PRÉ-VISUALIZAÇÃO ====================
 renderer.domElement.addEventListener('mousemove', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -655,39 +655,54 @@ renderer.domElement.addEventListener('mousemove', (event) => {
         scene.add(previewLine);
     }
 
-    // Atualiza comprimento da linha transparente baseado na distância atual do mouse
     const dirVec = new THREE.Vector3().subVectors(intersectPoint, previewStart);
     const length = dirVec.length();
     previewLine.geometry.dispose();
     previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
     previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
-    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
+    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec.normalize());
 });
 
-// Botão direito → cria linha real
+// ==================== CRIAÇÃO DA LINHA FINAL ====================
 renderer.domElement.addEventListener('contextmenu', (event) => {
     event.preventDefault(); // evita menu do navegador
-
     if (!previewActive) return;
 
     const length = getInputLength();
-    const dirVec = new THREE.Vector3().subVectors(previewLine.position.clone().add(new THREE.Vector3(0, length/2, 0)), previewLine.position).normalize();
 
+    // vetor da linha de preview
+    const previewVec = new THREE.Vector3().subVectors(previewLine.position.clone(), previewStart);
+
+    // identifica eixo dominante
+    const absDir = [Math.abs(previewVec.x), Math.abs(previewVec.y), Math.abs(previewVec.z)];
+    let dominantAxis = absDir.indexOf(Math.max(...absDir));
+
+    // cria vetor alinhado ao eixo dominante
+    let dirVec = new THREE.Vector3(0, 0, 0);
+    if (dominantAxis === 0) dirVec.x = Math.sign(previewVec.x) || 1;
+    if (dominantAxis === 1) dirVec.y = Math.sign(previewVec.y) || 1;
+    if (dominantAxis === 2) dirVec.z = Math.sign(previewVec.z) || 1;
+
+    dirVec.normalize();
+
+    // cria linha final
     const geometry = new THREE.BoxGeometry(thickness, length, thickness);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const finalLine = new THREE.Mesh(geometry, material);
-    finalLine.position.copy(previewLine.position);
+    finalLine.position.copy(previewStart.clone().add(dirVec.clone().multiplyScalar(length / 2)));
     finalLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec);
     scene.add(finalLine);
 
-    // Limpa pré-visualização
+    // opcional: adicionar ao history
+    // history.push({ from: previewStart.clone(), to: previewStart.clone().add(dirVec.clone().multiplyScalar(length)), axis: ['X','Y','Z'][dominantAxis] });
+
+    // limpa preview
     scene.remove(previewLine);
     previewLine.geometry.dispose();
     previewLine.material.dispose();
     previewLine = null;
     previewActive = false;
 });
-
 
 </script>
 </body>
