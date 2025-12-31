@@ -653,11 +653,10 @@ renderer.domElement.addEventListener("click", (event) => {
 
 let previewLine = null;
 let previewActive = false;
-
 const thickness = 5.0; // espessura da linha
-const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // seu input
+const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // comprimento do input
 
-// ==================== PRÉ-VISUALIZAÇÃO ====================
+// ==================== PRÉ-VISUALIZAÇÃO + X/Y/Z DINÂMICOS ====================
 renderer.domElement.addEventListener('mousemove', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -668,14 +667,24 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const planeZ = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    // ponto atual
-    const inputs = getInputs(); // retorna {x, y, z}
+    // atualiza inputs X/Y/Z dinamicamente
+    document.getElementById('x').value = intersectPoint.x.toFixed(2);
+    document.getElementById('y').value = intersectPoint.y.toFixed(2);
+    document.getElementById('z').value = intersectPoint.z.toFixed(2);
+
+    // ponto atual baseado nos inputs
+    const inputs = {
+        x: parseFloat(document.getElementById('x').value),
+        y: parseFloat(document.getElementById('y').value),
+        z: parseFloat(document.getElementById('z').value)
+    };
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
+    // cria preview vermelho se ainda não existir
     if (!previewActive) {
         previewActive = true;
         const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
@@ -695,7 +704,7 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
 });
 
-// ==================== CRIAÇÃO DA LINHA FINAL ====================
+// ==================== CRIAÇÃO DA LINHA FINAL (verde) ====================
 renderer.domElement.addEventListener('contextmenu', (event) => {
     event.preventDefault();
     if (!previewActive) return;
@@ -703,10 +712,14 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     const length = getInputLength();
 
     // ponto atual
-    const inputs = getInputs();
+    const inputs = {
+        x: parseFloat(document.getElementById('x').value),
+        y: parseFloat(document.getElementById('y').value),
+        z: parseFloat(document.getElementById('z').value)
+    };
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // vetor da pré-visualização
+    // vetor do preview
     const previewVec = new THREE.Vector3().subVectors(previewLine.position, fromPoint);
 
     // eixo dominante
@@ -723,16 +736,13 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     // ponto final baseado no comprimento do input
     const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(length));
 
-    // cria linha final
+    // cria linha final verde
     const geometry = new THREE.BoxGeometry(thickness, fromPoint.distanceTo(toPoint), thickness);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const finalLine = new THREE.Mesh(geometry, material);
     finalLine.position.copy(fromPoint.clone().add(toPoint).multiplyScalar(0.5));
     finalLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec);
     scene.add(finalLine);
-
-    // opcional: adicionar ao history
-    // history.push({ from: fromPoint.clone(), to: toPoint.clone(), axis: ['X','Y','Z'][dominantAxis] });
 
     // limpa preview
     scene.remove(previewLine);
