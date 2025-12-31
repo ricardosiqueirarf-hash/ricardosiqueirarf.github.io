@@ -89,6 +89,9 @@ if(localStorage.getItem("darkmode") === "true"){
         <h2>Portas Salvas</h2>
         <div id="portasSalvas"></div>
 
+        <h2>Estruturas 3D Salvas</h2>
+        <div id="estruturas3DSalvas"></div>
+
         <button class="btn" onclick="finalizarOrcamento()" style="margin-top:20px;">
             Finalizar Orçamento
         </button>
@@ -370,7 +373,8 @@ function carregarEstruturas3D() {
 }
 
 function renderEstruturas3D() {
-    const container = document.getElementById("portasSalvas");
+    const container = document.getElementById("estruturas3DSalvas");
+    container.innerHTML = ""; // limpa antes de renderizar
     estruturas3D.forEach((e, idx) => {
         container.innerHTML += `
             <div style="margin-bottom:10px; border:1px solid #333; padding:10px; background:#e0e0e0;">
