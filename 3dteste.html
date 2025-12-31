@@ -62,36 +62,44 @@
 <div id="ui">
   <h3>Desenho 3D</h3>
 
-  <!-- Inputs invisíveis -->
-  <input id="x" type="number" value="0" style="display:none;">
-  <input id="y" type="number" value="0" style="display:none;">
-  <input id="z" type="number" value="0" style="display:none;">
+  <label>X</label>
+  <input id="x" type="number" value="0">
 
-  <!-- Input visível: comprimento -->
-  <label>Comprimento (mm)</label>
-  <input id="comprimento" type="number" value="1000">
+  <label>Y</label>
+  <input id="y" type="number" value="0">
 
-  <!-- Drop-down de Perfil -->
-  <label>Perfil</label>
-  <select id="perfil">
-    <option value="">Selecione um perfil</option>
-    <option value="1">Perfil 1036</option>
-    <option value="2">Perfil 088</option>
-    <option value="3">Perfil 2215</option>
-  </select>
+  <label>Z</label>
+  <input id="z" type="number" value="0">
 
-  <button onclick="adicionarLinha()">Adicionar Linha</button>
-  <button onclick="salvarLocalEstrutura()">Salvar Estrutura</button>
+  <label>Comprimento</label>
+  <input id="len" type="number" value="3" step="0.1">
+
+  <button onclick="drawLine(1,0,0,'X')">→ Direita</button>
+  <button onclick="drawLine(-1,0,0,'X')">← Esquerda</button>
+  <button onclick="drawLine(0,1,0,'Y')">↑ Cima</button>
+  <button onclick="drawLine(0,-1,0,'Y')">↓ Baixo</button>
+  <button onclick="drawLine(0,0,1,'Z')">⬢ Frente</button>
+  <button onclick="drawLine(0,0,-1,'Z')">⬡ Trás</button>
+
+  <button onclick="undoLast()">↩ Desfazer última linha</button>
 
   <div id="metrics">
-    <!-- Informações sobre a estrutura aparecerão aqui -->
+    <strong>📐 Métricas Reais</strong><br>
+    Largura X: <span id="sizeX">0.00</span> m<br>
+    Altura Y: <span id="sizeY">0.00</span> m<br>
+    Profundidade Z: <span id="sizeZ">0.00</span> m<br>
+    <hr>
+    📏 Comprimento Total: <strong><span id="totalLen">0.00</span> m</strong><br>
+    🔩 Fixadores: <strong><span id="fixers">0</span></strong>
   </div>
+
+  <hr>
+
+  <button onclick="salvarLocalEstrutura()">💾 Salvar Local</button>
+  <button onclick="clearScene()">🧹 Limpar</button>
 </div>
 
-<div id="canvas-container">
-  <canvas id="canvas3d"></canvas>
-</div>
-
+<div id="canvas-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
@@ -325,6 +333,12 @@
 
 </body>
 </html>
+
+
+
+
+
+
 
 
 
