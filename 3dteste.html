@@ -337,9 +337,9 @@
 // ===================== CONTROLE PELO TECLADO =====================
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
-  if (key === "s") {
+  if (key === "w") {
     drawLine(0, 0, 1, "Z"); // frente
-  } else if (key === "w") {
+  } else if (key === "s") {
     drawLine(0, 0, -1, "Z"); // trás
   } else if (key === "arrowup") {
     drawLine(0, 1, 0, "Y"); // cima
@@ -381,7 +381,6 @@ renderer.domElement.addEventListener("dblclick", (event) => {
     "1 - Alterar eixo\n" +
     "2 - Alterar comprimento da linha\n" +
     "3 - Deletar linha"
-    "4 - Alterar ponto atual"
   );
   if (action === null) {
     editingAxis = null;
@@ -489,9 +488,6 @@ renderer.domElement.addEventListener("dblclick", (event) => {
         refreshTotals()
       }
       break;
-        case "4":
-         movePointAlongSelectedLine();
-      break;
 
     default:
       alert("Opção inválida!");
@@ -580,11 +576,20 @@ function refreshTotals() {
   calculateFixers(); // já atualiza #fixers
 }
 
-// ===================== FUNÇÃO PARA MOVER O PONTO ATUAL NA LINHA SELECIONADA =====================
-function movePointAlongSelectedLine() {
-  if (!selectedLine) return;
+// ===================== CLIQUE PARA MOVER O PONTO ATUAL NA LINHA =====================
+renderer.domElement.addEventListener("click", (event) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  const mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-  const index = lines.indexOf(selectedLine);
+  const raycasterClick = new THREE.Raycaster();
+  raycasterClick.setFromCamera({ x: mouseX, y: mouseY }, camera);
+  const intersects = raycasterClick.intersectObjects(lines);
+
+  if (intersects.length === 0) return; // Nenhuma linha clicada
+
+  const clickedLine = intersects[0].object;
+  const index = lines.indexOf(clickedLine);
   if (index === -1) return;
 
   const h = history[index];
@@ -611,17 +616,143 @@ function movePointAlongSelectedLine() {
   if (axisLower === 'x') newX = newVal;
   else if (axisLower === 'y') newY = newVal;
   else if (axisLower === 'z') newZ = newVal;
-  
 
   // Atualiza ponto atual
   setInputs(newX, newY, newZ);
-  });
-  updateCurrentPoint();
-}
+});
 
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
