@@ -621,24 +621,48 @@ renderer.domElement.addEventListener("click", (event) => {
   // Atualiza ponto atual
   setInputs(newX, newY, newZ);
 });
-
 let previewLine = null;
 let previewActive = false;
+let dynamicPreviewVec = new THREE.Vector3();
 
-const thickness = 5.0; // espessura da linha
-const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // comprimento da linha
+const thickness = 5.0;
+const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1;
 
 // ==================== PRÉ-VISUALIZAÇÃO ====================
-renderer.domElement.addEventListener('mousemove', () => {
-    // ponto inicial = ponto atual
-    const inputs = getInputs(); // {x, y, z}
+renderer.domElement.addEventListener('mousemove', (event) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const intersectPoint = new THREE.Vector3();
+    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
+
+    const inputs = getInputs(); // ponto atual
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // determina o eixo dominante usando algum vetor de referência
-    // para preview, podemos usar um vetor default (ex: para frente Z)
-    // ou manter último eixo dominante (aqui assumimos Z+ como default)
-    const dirVec = new THREE.Vector3(0, 0, 1); // preview sempre para Z+ inicialmente
-    const length = getInputLength();
+    // vetor do mouse
+    dynamicPreviewVec.subVectors(intersectPoint, previewStart);
+    const length = dynamicPreviewVec.length();
+    if (length < 0.001) return;
+
+    // calcula eixo dominante
+    const absDir = [Math.abs(dynamicPreviewVec.x), Math.abs(dynamicPreviewVec.y), Math.abs(dynamicPreviewVec.z)];
+    const dominantAxis = absDir.indexOf(Math.max(...absDir));
+
+    // vetor unitário no eixo dominante
+    const dirVec = new THREE.Vector3(0, 0, 0);
+    if (dominantAxis === 0) dirVec.x = Math.sign(dynamicPreviewVec.x) || 1;
+    if (dominantAxis === 1) dirVec.y = Math.sign(dynamicPreviewVec.y) || 1;
+    if (dominantAxis === 2) dirVec.z = Math.sign(dynamicPreviewVec.z) || 1;
+
+    // preview com comprimento do input
+    const previewLength = getInputLength();
 
     if (!previewActive) {
         previewActive = true;
@@ -648,26 +672,29 @@ renderer.domElement.addEventListener('mousemove', () => {
         scene.add(previewLine);
     }
 
-    // atualiza preview: escala e posição
-    previewLine.scale.set(1, length, 1);
-    previewLine.position.copy(previewStart.clone().add(dirVec.clone().multiplyScalar(length / 2)));
+    previewLine.scale.set(1, previewLength, 1);
+    previewLine.position.copy(previewStart.clone().add(dirVec.clone().multiplyScalar(previewLength / 2)));
     previewLine.lookAt(previewStart.clone().add(dirVec));
 });
 
 // ==================== CRIAÇÃO DA LINHA FINAL ====================
-renderer.domElement.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
+renderer.domElement.addEventListener('click', (event) => { // clique normal
     if (!previewActive) return;
 
-    // ponto inicial
-    const inputs = getInputs();
+    const inputs = getInputs(); // ponto inicial no momento do clique
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // determina eixo dominante (pode usar preview ou calcular a partir de alguma lógica)
-    const dirVec = new THREE.Vector3(0, 0, 1); // mesma direção do preview
-    const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(getInputLength()));
+    // vetor dominante congelado
+    const dirVec = new THREE.Vector3(0, 0, 0);
+    if (Math.abs(dynamicPreviewVec.x) >= Math.abs(dynamicPreviewVec.y) &&
+        Math.abs(dynamicPreviewVec.x) >= Math.abs(dynamicPreviewVec.z)) dirVec.x = Math.sign(dynamicPreviewVec.x) || 1;
+    else if (Math.abs(dynamicPreviewVec.y) >= Math.abs(dynamicPreviewVec.x) &&
+             Math.abs(dynamicPreviewVec.y) >= Math.abs(dynamicPreviewVec.z)) dirVec.y = Math.sign(dynamicPreviewVec.y) || 1;
+    else dirVec.z = Math.sign(dynamicPreviewVec.z) || 1;
 
-    // cria linha final
+    const length = getInputLength();
+    const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(length));
+
     const geometry = new THREE.BoxGeometry(thickness, fromPoint.distanceTo(toPoint), thickness);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const finalLine = new THREE.Mesh(geometry, material);
@@ -682,6 +709,7 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     previewLine = null;
     previewActive = false;
 });
+
 
 
 </script>
