@@ -108,6 +108,7 @@
 <div id="canvas-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 <script>
   // ===================== CONFIGURAÇÃO DO ORÇAMENTO =====================
   const params = new URLSearchParams(window.location.search)
@@ -305,8 +306,21 @@
     currentPointMesh.position.set(x, y, z);
   }
 
+  // ===================== CONTROLES DE CÂMERA =====================
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.zoomSpeed = 1.2;
+  controls.rotateSpeed = 1.0;
+  controls.panSpeed = 0.8;
+  controls.minDistance = 50;
+  controls.maxDistance = 2000;
+  controls.maxPolarAngle = Math.PI / 2;
+
+  // ===================== LOOP DE ANIMAÇÃO =====================
   function animate() {
     requestAnimationFrame(animate);
+    controls.update(); // necessário para damping
     renderer.render(scene, camera);
   }
 
