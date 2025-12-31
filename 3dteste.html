@@ -651,13 +651,20 @@ renderer.domElement.addEventListener("click", (event) => {
   setInputs(newX, newY, newZ);
 });
 
-// cria um plano invisível na cena, plano XY no Z=0
-const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
-const planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
-const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-planeMesh.rotation.x = -Math.PI / 2; // orienta para XY
-scene.add(planeMesh);
+let previewLine = null;
+let previewActive = false;
+const thickness = 5.0; // espessura da linha
 
+// Função para pegar ponto atual
+function getInputs() {
+    return {
+        x: parseFloat(document.getElementById('x').value) || 0,
+        y: parseFloat(document.getElementById('y').value) || 0,
+        z: parseFloat(document.getElementById('z').value) || 0
+    };
+}
+
+// ==================== PRÉ-VISUALIZAÇÃO + VALORES X/Y/Z ====================
 renderer.domElement.addEventListener('mousemove', (event) => {
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -668,17 +675,38 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObject(planeMesh);
-    if (intersects.length === 0) return;
+    // projeta no plano Z=0
+    const planeZ = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
+    const intersectPoint = new THREE.Vector3();
+    raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    const intersectPoint = intersects[0].point;
-
-    // atualiza inputs
+    // ⚡ atualiza inputs dinâmicos X/Y/Z
     document.getElementById('x').value = intersectPoint.x.toFixed(2);
     document.getElementById('y').value = intersectPoint.y.toFixed(2);
     document.getElementById('z').value = intersectPoint.z.toFixed(2);
 
-    console.log(intersectPoint); // pra conferir
+    // ponto atual
+    const inputs = getInputs();
+    const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
+
+    // cria preview se não existir
+    if (!previewActive) {
+        previewActive = true;
+        const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
+        previewLine = new THREE.Mesh(geometry, material);
+        scene.add(previewLine);
+    }
+
+    // vetor do ponto atual até o mouse
+    const dirVec = new THREE.Vector3().subVectors(intersectPoint, previewStart);
+    const length = dirVec.length();
+    if (length < 0.001) return; // evita vetor zero
+
+    previewLine.geometry.dispose();
+    previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
+    previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
+    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
 });
 
 
