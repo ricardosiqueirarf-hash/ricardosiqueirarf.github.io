@@ -608,7 +608,8 @@ renderer.domElement.addEventListener("click", (event) => {
   if (isNaN(newVal) || newVal < minVal || newVal > maxVal) {
     return alert(`Valor inválido! Deve estar entre ${minVal.toFixed(2)} e ${maxVal.toFixed(2)}.`);
   }
-let previewLine = null;
+
+  let previewLine = null;
 let previewActive = false;
 let dynamicPreviewVec = new THREE.Vector3(); // vetor dinâmico do preview
 
@@ -628,27 +629,27 @@ renderer.domElement.addEventListener('mousemove', (event) => {
 
     const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const intersectPoint = new THREE.Vector3();
-    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
+    raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    // ponto inicial = ponto atual
+    // ponto atual
     const inputs = getInputs(); // {x, y, z}
     const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // vetor dinâmico do preview
+    // atualiza vetor dinâmico
     dynamicPreviewVec.subVectors(intersectPoint, previewStart);
+
     const length = dynamicPreviewVec.length();
     if (length < 0.001) return; // evita vetor zero
 
-    // cria preview se não existir
     if (!previewActive) {
         previewActive = true;
-        const geometry = new THREE.BoxGeometry(thickness, 1, thickness); // altura inicial = 1
+        const geometry = new THREE.BoxGeometry(thickness, 1, thickness); // altura = 1 temporário
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
         previewLine = new THREE.Mesh(geometry, material);
         scene.add(previewLine);
     }
 
-    // atualiza preview: escala e posição
+    // atualiza preview
     previewLine.scale.set(1, length, 1);
     previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
     previewLine.lookAt(intersectPoint);
@@ -662,22 +663,21 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     const frozenVec = dynamicPreviewVec.clone();
     if (frozenVec.length() < 0.001) return;
 
-    // eixo dominante
-    const absDir = [Math.abs(frozenVec.x), Math.abs(frozenVec.y), Math.abs(frozenVec.z)];
-    const dominantAxis = absDir.indexOf(Math.max(...absDir));
-
-    // vetor unitário do eixo dominante
-    const dirVec = new THREE.Vector3(
-        dominantAxis === 0 ? Math.sign(frozenVec.x) || 1 : 0,
-        dominantAxis === 1 ? Math.sign(frozenVec.y) || 1 : 0,
-        dominantAxis === 2 ? Math.sign(frozenVec.z) || 1 : 0
-    ).normalize();
-
     // ponto inicial = ponto atual
     const inputs = getInputs();
     const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    // ponto final
+    // determina eixo dominante
+    const absDir = [Math.abs(frozenVec.x), Math.abs(frozenVec.y), Math.abs(frozenVec.z)];
+    const dominantAxis = absDir.indexOf(Math.max(...absDir));
+
+    // vetor unitário apenas no eixo dominante
+    const dirVec = new THREE.Vector3(0, 0, 0);
+    if (dominantAxis === 0) dirVec.x = Math.sign(frozenVec.x) || 1;
+    if (dominantAxis === 1) dirVec.y = Math.sign(frozenVec.y) || 1;
+    if (dominantAxis === 2) dirVec.z = Math.sign(frozenVec.z) || 1;
+
+    // ponto final = ponto inicial + eixo dominante * comprimento do input
     const toPoint = fromPoint.clone().add(dirVec.clone().multiplyScalar(getInputLength()));
 
     // cria linha final
