@@ -622,6 +622,71 @@ renderer.domElement.addEventListener("click", (event) => {
   setInputs(newX, newY, newZ);
 });
 
+let previewLine = null;
+let previewStart = new THREE.Vector3();
+let previewActive = false;
+
+const getInputLength = () => parseFloat(document.getElementById("lineLength").value) || 1; // seu input
+
+// Mouse move → atualiza pré-visualização
+renderer.domElement.addEventListener('mousemove', (event) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const intersectPoint = new THREE.Vector3();
+    raycaster.ray.intersectPlane(planeZ, intersectPoint);
+
+    if (!previewActive) {
+        previewStart.copy(intersectPoint);
+        previewActive = true;
+
+        const geometry = new THREE.BoxGeometry(0.08, 1, 0.08); // altura temporária
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
+        previewLine = new THREE.Mesh(geometry, material);
+        scene.add(previewLine);
+    }
+
+    // Atualiza comprimento da linha transparente baseado na distância atual do mouse
+    const dirVec = new THREE.Vector3().subVectors(intersectPoint, previewStart);
+    const length = dirVec.length();
+    previewLine.geometry.dispose();
+    previewLine.geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+    previewLine.position.copy(previewStart.clone().add(intersectPoint).multiplyScalar(0.5));
+    previewLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec.normalize());
+});
+
+// Botão direito → cria linha real
+renderer.domElement.addEventListener('contextmenu', (event) => {
+    event.preventDefault(); // evita menu do navegador
+
+    if (!previewActive) return;
+
+    const length = getInputLength();
+    const dirVec = new THREE.Vector3().subVectors(previewLine.position.clone().add(new THREE.Vector3(0, length/2, 0)), previewLine.position).normalize();
+
+    const geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const finalLine = new THREE.Mesh(geometry, material);
+    finalLine.position.copy(previewLine.position);
+    finalLine.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirVec);
+    scene.add(finalLine);
+
+    // Limpa pré-visualização
+    scene.remove(previewLine);
+    previewLine.geometry.dispose();
+    previewLine.material.dispose();
+    previewLine = null;
+    previewActive = false;
+});
+
+
 </script>
 </body>
 </html>
