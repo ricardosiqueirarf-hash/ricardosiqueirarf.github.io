@@ -494,10 +494,12 @@ renderer.domElement.addEventListener("dblclick", (event) => {
       setInputs(newPoint.x, newPoint.y, newPoint.z);
 
       updateMetrics();
+      refreshTotals();
       break;
 
     case "2":
     editSelectedLine(selectedLine, index);
+      refreshTotals();
     break;
 
     
@@ -508,6 +510,7 @@ renderer.domElement.addEventListener("dblclick", (event) => {
         scene.remove(selectedLine); // remove do 3D
         lines.splice(index, 1); // remove do array de linhas
         updateMetrics();
+        refreshTotals()
       }
       break;
 
@@ -580,6 +583,22 @@ function editSelectedLine(selectedLine, index) {
   });
 
   updateMetrics();
+}
+
+
+function refreshTotals() {
+  // Reset totalLength e vertexMap
+  totalLength = 0;
+  vertexMap.clear();
+
+  history.forEach(h => {
+    totalLength += h.from.distanceTo(h.to);
+    registerVertex(h.from, h.axis);
+    registerVertex(h.to, h.axis);
+  });
+
+  totalLenEl.textContent = totalLength.toFixed(2);
+  calculateFixers(); // já atualiza #fixers
 }
 
 </script>
