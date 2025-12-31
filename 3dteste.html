@@ -25,7 +25,7 @@
     font-size: 14px;
   }
 
-  input, button {
+  input, select, button {
     width: 100%;
     margin-top: 5px;
     padding: 6px;
@@ -62,17 +62,23 @@
 <div id="ui">
   <h3>Desenho 3D</h3>
 
-  <label>X</label>
-  <input id="x" type="number" value="0">
+  <!-- Inputs invisíveis -->
+  <input id="x" type="number" value="0" style="display:none;">
+  <input id="y" type="number" value="0" style="display:none;">
+  <input id="z" type="number" value="0" style="display:none;">
 
-  <label>Y</label>
-  <input id="y" type="number" value="0">
-
-  <label>Z</label>
-  <input id="z" type="number" value="0">
-
+  <!-- Input visível -->
   <label>Comprimento</label>
   <input id="len" type="number" value="3" step="0.1">
+
+  <!-- Drop-down Perfil -->
+  <label>Perfil</label>
+  <select id="perfil">
+    <option value="">Selecione um perfil</option>
+    <option value="1036">Perfil 1036</option>
+    <option value="088">Perfil 088</option>
+    <option value="2215">Perfil 2215</option>
+  </select>
 
   <button onclick="drawLine(1,0,0,'X')">→ Direita</button>
   <button onclick="drawLine(-1,0,0,'X')">← Esquerda</button>
