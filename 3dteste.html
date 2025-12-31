@@ -397,7 +397,6 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   const geometry = selectedLine.geometry;
   const currentLen = geometry.parameters.height;
 
-  // Detecta eixo da linha selecionada
   const index = lines.indexOf(selectedLine);
   if (index === -1) return;
   const axis = history[index].axis;
@@ -413,34 +412,49 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
   const diff = newLen - currentLen;
 
-  // Atualiza todas as linhas do mesmo eixo
+  // Atualiza todas as linhas
   history.forEach((h, i) => {
     const line = lines[i];
     const dir = new THREE.Vector3().subVectors(h.to, h.from).normalize();
 
     if (h.axis === axis) {
-      // Redimensiona a linha do mesmo eixo
-      const from = h.from.clone();
-      const to = from.clone().add(dir.clone().multiplyScalar(h.to.distanceTo(h.from) + diff));
+      // REDUÇÃO SEMPRE EM DIREÇÃO AO ZERO DO EIXO
+      const from = new THREE.Vector3(
+        axis === 'X' ? 0 : h.from.x,
+        axis === 'Y' ? 0 : h.from.y,
+        axis === 'Z' ? 0 : h.from.z
+      );
+      const to = from.clone().add(dir.clone().multiplyScalar(newLen));
 
       line.geometry.dispose();
       line.geometry = new THREE.BoxGeometry(0.08, from.distanceTo(to), 0.08);
       line.position.copy(from.clone().add(to).multiplyScalar(0.5));
       line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
 
+      h.from.copy(from);
       h.to.copy(to);
-    } else {
-      // Linhas de outros eixos → deslocadas pelo vetor
-      const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
-      h.from.add(moveVec);
-      h.to.add(moveVec);
 
-      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-      const direction = new THREE.Vector3().subVectors(h.to, h.from);
-      line.geometry.dispose();
-      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-      line.position.copy(center);
-      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    } else {
+      // DESLOCAMENTO DE LINHAS CONECTADAS
+      // Só mover se a ponta da linha alterada tocar a linha atual
+      const selectedFrom = history[index].from;
+      const selectedTo = history[index].to;
+
+      const touchesFrom = selectedFrom.distanceTo(h.from) < 0.001;
+      const touchesTo = selectedTo.distanceTo(h.from) < 0.001;
+
+      if (touchesFrom || touchesTo) {
+        const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
+        h.from.add(moveVec);
+        h.to.add(moveVec);
+
+        const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+        const direction = new THREE.Vector3().subVectors(h.to, h.from);
+        line.geometry.dispose();
+        line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
+        line.position.copy(center);
+        line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+      }
     }
   });
 
@@ -452,7 +466,6 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
   updateMetrics();
 });
-
 
 
 </script>
