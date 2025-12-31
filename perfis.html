@@ -6,16 +6,90 @@
 <title>Perfis de Alumínio</title>
 
 <style>
-body { font-family: Arial, sans-serif; background: #f5f5f5; margin:0; padding:20px; }
-h1 { margin-bottom: 10px; }
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #f5f7fa; color: #333; padding: 20px; }
+
+/* TITULOS */
+h1 { margin-bottom: 20px; color: #1079ba; }
+h3, h4 { margin-top: 20px; margin-bottom: 10px; color: #1079ba; }
+
+/* MENU */
 .menu { margin-bottom: 20px; }
-button { padding: 8px 14px; margin: 4px; cursor:pointer; }
-input, select { padding:6px; margin:4px; width:120px; }
-.tipologias, .insumos-container { margin:10px 0; display:flex; gap:12px; flex-wrap:wrap; }
-table { width:100%; border-collapse:collapse; background:#fff; margin-top:20px; }
-th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-th { background:#eee; }
+.menu button {
+    padding: 10px 16px;
+    background: #1079ba;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.menu button:hover { background: #0d5d8c; }
+
+/* INPUTS E SELECTS */
+input, select {
+    padding: 10px 12px;
+    margin: 4px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: all 0.2s ease;
+}
+input:focus, select:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 6px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+/* BOTÕES */
+button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #1079ba;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+button:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+/* CONTAINERS DE INSUMOS E TIPOS */
+.tipologias, #insumos-container, .insumos-container {
+    margin: 10px 0;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.insumo-item { display: flex; gap: 6px; align-items: center; }
+
+/* TABELA */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+th, td {
+    border: 1px solid #dcdde1;
+    padding: 10px;
+    text-align: center;
+}
+th { background: #1079ba; color: #fff; }
+tr:nth-child(even) { background: #f7f9fc; }
+tr:hover { background: #e6f0fa; }
+
+/* BOTÕES DE AÇÃO DA TABELA */
+table button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+}
 </style>
+
 </head>
 <body>
 
