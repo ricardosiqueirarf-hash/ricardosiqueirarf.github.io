@@ -675,6 +675,8 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     document.getElementById('x').value = intersectPoint.x.toFixed(2);
     document.getElementById('y').value = intersectPoint.y.toFixed(2);
     document.getElementById('z').value = intersectPoint.z.toFixed(2);
+    document.getElementById('coordsDisplay').textContent = 
+    `X: ${intersectPoint.x.toFixed(2)}, Y: ${intersectPoint.y.toFixed(2)}, Z: ${intersectPoint.z.toFixed(2)}`;
 
     // ponto atual baseado nos inputs
     const inputs = {
