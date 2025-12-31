@@ -44,6 +44,14 @@
     background: #444;
   }
 
+  #metrics {
+    margin-top: 15px;
+    padding: 10px;
+    background: #141414;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
   #canvas-container {
     flex: 1;
   }
@@ -72,6 +80,13 @@
   <button onclick="drawLine(0,-1,0,'Y-')">↓ Baixo</button>
   <button onclick="drawLine(0,0,1,'Z+')">⬢ Frente</button>
   <button onclick="drawLine(0,0,-1,'Z-')">⬡ Trás</button>
+
+  <div id="metrics">
+    <strong>📦 Espaço Ocupado Real</strong><br>
+    Largura X: <span id="sizeX">0.00</span> m<br>
+    Altura Y: <span id="sizeY">0.00</span> m<br>
+    Profundidade Z: <span id="sizeZ">0.00</span> m
+  </div>
 
   <hr>
 
@@ -107,6 +122,16 @@
 
   const lines = [];
   const history = [];
+  const bbox = new THREE.Box3();
+
+  const xInput = document.getElementById("x");
+  const yInput = document.getElementById("y");
+  const zInput = document.getElementById("z");
+  const lenInput = document.getElementById("len");
+
+  const sizeXEl = document.getElementById("sizeX");
+  const sizeYEl = document.getElementById("sizeY");
+  const sizeZEl = document.getElementById("sizeZ");
 
   function getInputs() {
     return {
@@ -123,10 +148,24 @@
     zInput.value = z.toFixed(2);
   }
 
-  const xInput = document.getElementById("x");
-  const yInput = document.getElementById("y");
-  const zInput = document.getElementById("z");
-  const lenInput = document.getElementById("len");
+  function updateMetrics() {
+    if (lines.length === 0) {
+      sizeXEl.textContent = "0.00";
+      sizeYEl.textContent = "0.00";
+      sizeZEl.textContent = "0.00";
+      return;
+    }
+
+    bbox.makeEmpty();
+    lines.forEach(line => bbox.expandByObject(line));
+
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+
+    sizeXEl.textContent = size.x.toFixed(2);
+    sizeYEl.textContent = size.y.toFixed(2);
+    sizeZEl.textContent = size.z.toFixed(2);
+  }
 
   function drawLine(dx, dy, dz, label) {
     const { x, y, z, len } = getInputs();
@@ -145,11 +184,11 @@
     history.push({
       from: [start.x, start.y, start.z],
       to: [end.x, end.y, end.z],
-      direction: label,
-      length: len
+      direction: label
     });
 
     setInputs(end.x, end.y, end.z);
+    updateMetrics();
   }
 
   function saveImage() {
@@ -178,7 +217,9 @@
     lines.forEach(l => scene.remove(l));
     lines.length = 0;
     history.length = 0;
+    bbox.makeEmpty();
     setInputs(0, 0, 0);
+    updateMetrics();
   }
 
   function animate() {
