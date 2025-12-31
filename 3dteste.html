@@ -74,12 +74,12 @@
   <label>Comprimento</label>
   <input id="len" type="number" value="3" step="0.1">
 
-  <button onclick="drawLine(1,0,0,'X+')">→ Direita</button>
-  <button onclick="drawLine(-1,0,0,'X-')">← Esquerda</button>
-  <button onclick="drawLine(0,1,0,'Y+')">↑ Cima</button>
-  <button onclick="drawLine(0,-1,0,'Y-')">↓ Baixo</button>
-  <button onclick="drawLine(0,0,1,'Z+')">⬢ Frente</button>
-  <button onclick="drawLine(0,0,-1,'Z-')">⬡ Trás</button>
+  <button onclick="drawLine(1,0,0,'X')">→ Direita</button>
+  <button onclick="drawLine(-1,0,0,'X')">← Esquerda</button>
+  <button onclick="drawLine(0,1,0,'Y')">↑ Cima</button>
+  <button onclick="drawLine(0,-1,0,'Y')">↓ Baixo</button>
+  <button onclick="drawLine(0,0,1,'Z')">⬢ Frente</button>
+  <button onclick="drawLine(0,0,-1,'Z')">⬡ Trás</button>
 
   <div id="metrics">
     <strong>📐 Métricas Reais</strong><br>
@@ -87,7 +87,8 @@
     Altura Y: <span id="sizeY">0.00</span> m<br>
     Profundidade Z: <span id="sizeZ">0.00</span> m<br>
     <hr>
-    📏 Comprimento Total: <strong><span id="totalLen">0.00</span> m</strong>
+    📏 Comprimento Total: <strong><span id="totalLen">0.00</span> m</strong><br>
+    🔩 Fixadores: <strong><span id="fixers">0</span></strong>
   </div>
 
   <hr>
@@ -125,9 +126,34 @@
   const history = [];
   const bbox = new THREE.Box3();
 
-  // 🔥 Segmentos únicos
   const segmentMap = new Map();
   let totalLength = 0;
+
+  /* 🔩 FIXADORES */
+  const vertexMap = new Map();
+  const fixersEl = document.getElementById("fixers");
+
+  function vertexKey(v) {
+    return `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
+  }
+
+  function registerVertex(point, axis) {
+    const key = vertexKey(point);
+    if (!vertexMap.has(key)) {
+      vertexMap.set(key, new Set());
+    }
+    vertexMap.get(key).add(axis);
+  }
+
+  function calculateFixers() {
+    let total = 0;
+    vertexMap.forEach(axes => {
+      if (axes.size >= 2) {
+        total += (axes.size - 1);
+      }
+    });
+    fixersEl.textContent = total;
+  }
 
   const xInput = document.getElementById("x");
   const yInput = document.getElementById("y");
@@ -174,6 +200,7 @@
       sizeYEl.textContent = "0.00";
       sizeZEl.textContent = "0.00";
       totalLenEl.textContent = "0.00";
+      fixersEl.textContent = "0";
       return;
     }
 
@@ -187,9 +214,11 @@
     sizeYEl.textContent = size.y.toFixed(2);
     sizeZEl.textContent = size.z.toFixed(2);
     totalLenEl.textContent = totalLength.toFixed(2);
+
+    calculateFixers();
   }
 
-  function drawLine(dx, dy, dz, label) {
+  function drawLine(dx, dy, dz, axis) {
     const { x, y, z, len } = getInputs();
 
     const start = new THREE.Vector3(x, y, z);
@@ -213,8 +242,11 @@
     history.push({
       from: [start.x, start.y, start.z],
       to: [end.x, end.y, end.z],
-      direction: label
+      direction: axis
     });
+
+    registerVertex(start, axis);
+    registerVertex(end, axis);
 
     setInputs(end.x, end.y, end.z);
     updateMetrics();
@@ -247,6 +279,7 @@
     lines.length = 0;
     history.length = 0;
     segmentMap.clear();
+    vertexMap.clear();
     totalLength = 0;
     bbox.makeEmpty();
     setInputs(0, 0, 0);
@@ -263,5 +296,6 @@
 
 </body>
 </html>
+
 
 
