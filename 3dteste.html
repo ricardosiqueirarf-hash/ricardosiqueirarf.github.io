@@ -108,7 +108,6 @@
 <div id="canvas-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-
 <script>
   // ===================== CONFIGURAÇÃO DO ORÇAMENTO =====================
   const params = new URLSearchParams(window.location.search)
@@ -419,55 +418,63 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
   const diff = newLen - currentLen;
 
+  // Determina o comprimento total do eixo selecionado (espaço ocupado)
+  let axisMin = Infinity;
+  let axisMax = -Infinity;
+  history.forEach(h => {
+    if (h.axis === axis) {
+      axisMin = Math.min(axisMin, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
+      axisMax = Math.max(axisMax, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
+    }
+  });
+  const totalAxisLen = axisMax - axisMin;
+
   history.forEach((h, i) => {
     const line = lines[i];
     const dirVec = new THREE.Vector3().subVectors(h.to, h.from).normalize();
 
     if (h.axis === axis) {
-      // Determina qual ponto é o mais próximo de 0 e qual é o mais distante
-      const coordFrom = h.from[axis.toLowerCase()];
-      const coordTo = h.to[axis.toLowerCase()];
+      const fromVal = h.from[axis.toLowerCase()];
+      const toVal = h.to[axis.toLowerCase()];
 
-      let minPoint = h.from.clone();
-      let maxPoint = h.to.clone();
+      // Ponto mais distante de 0
+      let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
+      const sign = Math.sign(maxPointVal);
 
-      if (Math.abs(coordFrom) > Math.abs(coordTo)) {
-        maxPoint = h.from.clone();
-        minPoint = h.to.clone();
+      // Calcula nova posição proporcional ao comprimento total do eixo
+      const scale = (Math.abs(maxPointVal) - Math.abs(Math.min(fromVal, toVal))) / totalAxisLen;
+      const newMaxVal = maxPointVal + diff * sign;
+
+      let newFrom = h.from.clone();
+      let newTo = h.to.clone();
+      if (toVal === maxPointVal) {
+        newTo[axis.toLowerCase()] = newMaxVal;
       } else {
-        maxPoint = h.to.clone();
-        minPoint = h.from.clone();
+        newFrom[axis.toLowerCase()] = newMaxVal;
       }
 
-// Reduz ou aumenta a linha a partir do ponto mais distante de 0
-const newMax = maxPoint.clone();
-const sign = Math.sign(maxPoint[axis.toLowerCase()]); // 1 se positivo, -1 se negativo
-newMax[axis.toLowerCase()] = maxPoint[axis.toLowerCase()] + diff * sign;
+      line.geometry.dispose();
+      line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
+      line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
 
-const newFrom = minPoint.clone();
-const newTo = newMax.clone();
+      h.from.copy(newFrom);
+      h.to.copy(newTo);
 
-line.geometry.dispose();
-line.geometry = new THREE.BoxGeometry(0.08, newFrom.distanceTo(newTo), 0.08);
-line.position.copy(newFrom.clone().add(newTo).multiplyScalar(0.5));
-line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
+    } else {
+      // Linhas de outros eixos: deslocamento pelo vetor da linha selecionada
+      const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
+      h.from.add(moveVec);
+      h.to.add(moveVec);
 
-h.from.copy(newFrom);
-h.to.copy(newTo);
-
-} else {
-  // Linhas de outros eixos: deslocamento pelo vetor da linha selecionada
-  const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
-  h.from.add(moveVec);
-  h.to.add(moveVec);
-
-  const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-  const direction = new THREE.Vector3().subVectors(h.to, h.from);
-  line.geometry.dispose();
-  line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
-  line.position.copy(center);
-  line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-}
+      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+      const direction = new THREE.Vector3().subVectors(h.to, h.from);
+      line.geometry.dispose();
+      line.geometry = new THREE.BoxGeometry(0.08, direction.length(), 0.08);
+      line.position.copy(center);
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    }
+  });
 
   // Atualiza ponto atual
   const inputs = getInputs();
@@ -478,8 +485,6 @@ h.to.copy(newTo);
   editingAxis = null;
   updateMetrics();
 });
-
-</script>
 
 </body>
 </html>
