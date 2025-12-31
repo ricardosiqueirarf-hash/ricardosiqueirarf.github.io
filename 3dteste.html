@@ -463,11 +463,12 @@ renderer.domElement.addEventListener("dblclick", (event) => {
 
     } else {
     // Linhas de outros eixos: deslocamento sempre em direção a 0
-      const moveVec = new THREE.Vector3(0, 0, 0);
-      moveVec[axis.toLowerCase()] = diff; // diff positivo → aumenta, diff negativo → reduz
-      h.from.add(moveVec);
-      h.to.add(moveVec);
-
+if (h.from[axis.toLowerCase()] !== 0 || h.to[axis.toLowerCase()] !== 0) {
+    const moveVec = new THREE.Vector3(0, 0, 0);
+    moveVec[axis.toLowerCase()] = diff;
+    h.from.add(moveVec);
+    h.to.add(moveVec);
+}
 
       const center = h.from.clone().add(h.to).multiplyScalar(0.5);
       const direction = new THREE.Vector3().subVectors(h.to, h.from);
