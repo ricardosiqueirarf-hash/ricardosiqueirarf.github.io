@@ -93,6 +93,7 @@
   <input id="y" type="number" value="0" style="display:none;">
   <input id="z" type="number" value="0" style="display:none;">
 
+
   <!-- Input visível -->
   <label>Comprimento</label>
   <input id="len" type="number" value="100">
@@ -660,16 +661,16 @@ renderer.domElement.addEventListener('mousemove', (event) => {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    // Plano Z=0
+    const planeZ = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
     const intersectPoint = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, intersectPoint);
 
-    // atualiza inputs dinâmicos X/Y/Z
+    // atualiza inputs com valores do mouse
     document.getElementById('x').value = intersectPoint.x.toFixed(2);
     document.getElementById('y').value = intersectPoint.y.toFixed(2);
     document.getElementById('z').value = intersectPoint.z.toFixed(2);
 });
-
 
 </script>
 </body>
