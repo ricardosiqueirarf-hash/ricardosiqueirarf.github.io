@@ -10,6 +10,8 @@
     background: #111;
     color: #fff;
     display: flex;
+    height: 100vh;
+    overflow: hidden;
   }
 
   #ui {
@@ -54,6 +56,30 @@
 
   #canvas-container {
     flex: 1;
+    position: relative;
+  }
+
+  /* Display de coordenadas */
+  #coordsDisplay {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    padding: 5px 10px;
+    font-family: monospace;
+    border-radius: 5px;
+    z-index: 1000;
+  }
+
+  /* Botão adicional de criar linha */
+  #btnCreateLine {
+    margin-top: 10px;
+    background: #006600;
+  }
+
+  #btnCreateLine:hover {
+    background: #009900;
   }
 </style>
 </head>
@@ -80,6 +106,9 @@
     <option value="2215">Perfil 2215</option>
   </select>
 
+  <!-- Botão de criação manual de linha -->
+  <button id="btnCreateLine">✚ Criar Linha Verde Dominante</button>
+
   <button onclick="drawLine(1,0,0,'X')">→ Direita</button>
   <button onclick="drawLine(-1,0,0,'X')">← Esquerda</button>
   <button onclick="drawLine(0,1,0,'Y')">↑ Cima</button>
@@ -105,7 +134,9 @@
   <button onclick="clearScene()">🧹 Limpar</button>
 </div>
 
-<div id="canvas-container"></div>
+<div id="canvas-container">
+  <div id="coordsDisplay">X: 0, Y: 0, Z: 0</div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
