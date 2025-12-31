@@ -378,7 +378,7 @@ document.addEventListener('keyup', (e) => {
       break;
   }
 });
-// ===================== EDIÇÃO DE LINHA POR DUPLO CLIQUE =====================
+// ===================== EDIÇÃO DE LINHA POR DUPLO CLIQUE DINÂMICA =====================
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let selectedLine = null;
@@ -392,51 +392,69 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   raycaster.setFromCamera(mouse, camera);
 
   const intersects = raycaster.intersectObjects(lines);
-  if (intersects.length > 0) {
-    selectedLine = intersects[0].object;
+  if (intersects.length === 0) return;
 
-    // Pega comprimento atual da linha
-    const geometry = selectedLine.geometry;
-    const currentLen = geometry.parameters.height;
+  selectedLine = intersects[0].object;
+  const geometry = selectedLine.geometry;
+  const currentLen = geometry.parameters.height;
 
-    // Salva direção original
-    originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
+  // Detecta eixo da linha selecionada
+  const index = lines.indexOf(selectedLine);
+  if (index === -1) return;
+  const axis = history[index].axis;
 
-    // Abre popup para alterar o comprimento
-    const inputLen = prompt("Digite o novo comprimento da linha:", currentLen.toFixed(2));
-    if (inputLen === null) return; // Cancelou
-    const newLen = parseFloat(inputLen);
-    if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
+  // Salva direção original
+  originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
-    // Calcula diferença de comprimento
-    const diff = newLen - currentLen;
+  // Popup para novo comprimento
+  const inputLen = prompt("Digite o novo comprimento da linha:", currentLen.toFixed(2));
+  if (inputLen === null) return;
+  const newLen = parseFloat(inputLen);
+  if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
 
-    // Atualiza geometria mantendo direção
-    const center = selectedLine.position.clone();
-    const dir = originalDirection.clone().normalize();
+  const diff = newLen - currentLen;
 
-    const newGeometry = new THREE.BoxGeometry(0.08, newLen, 0.08);
-    selectedLine.geometry.dispose();
-    selectedLine.geometry = newGeometry;
+  // Atualiza todas as linhas do mesmo eixo
+  history.forEach((h, i) => {
+    const line = lines[i];
+    if (h.axis === axis) {
+      const dir = new THREE.Vector3().subVectors(h.to, h.from).normalize();
+      const from = h.from.clone();
+      const to = from.clone().add(dir.clone().multiplyScalar(h.axis === axis ? h.to.distanceTo(h.from) + diff : h.to.distanceTo(h.from)));
+      
+      // Atualiza geometria
+      const length = from.distanceTo(to);
+      line.geometry.dispose();
+      line.geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+      line.position.copy(from.clone().add(to).multiplyScalar(0.5));
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
 
-    // Reposiciona linha para manter ponto inicial fixo
-    const index = lines.indexOf(selectedLine);
-    if (index !== -1) {
-      const from = history[index].from.clone();
-      const to = from.clone().add(dir.clone().multiplyScalar(newLen));
-      selectedLine.position.copy(from.clone().add(to).multiplyScalar(0.5));
-
-      // Atualiza histórico
-      history[index].to.copy(to);
+      h.to.copy(to);
     }
+    else {
+      // Linhas de outros eixos são deslocadas pelo vetor
+      const moveVec = originalDirection.clone().normalize().multiplyScalar(diff);
+      h.from.add(moveVec);
+      h.to.add(moveVec);
 
-    // Ajusta ponto atual do desenho somando a diferença no sentido do vetor
-    const inputs = getInputs();
-    const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(dir.clone().multiplyScalar(diff));
-    setInputs(newPoint.x, newPoint.y, newPoint.z);
+      // Atualiza mesh
+      const center = h.from.clone().add(h.to).multiplyScalar(0.5);
+      const direction = new THREE.Vector3().subVectors(h.to, h.from);
+      const length = direction.length();
+      line.geometry.dispose();
+      line.geometry = new THREE.BoxGeometry(0.08, length, 0.08);
+      line.position.copy(center);
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), direction.normalize());
+    }
+  });
 
-    updateMetrics();
-  }
+  // Atualiza ponto atual
+  const inputs = getInputs();
+  const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
+  const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
+  setInputs(newPoint.x, newPoint.y, newPoint.z);
+
+  updateMetrics();
 });
 
 
