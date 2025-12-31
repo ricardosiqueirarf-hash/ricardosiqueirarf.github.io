@@ -1,13 +1,82 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>3D - Seis Direções</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-  </style>
+<meta charset="UTF-8">
+<title>Desenho 3D com Vetores</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+    display: flex;
+  }
+
+  #ui {
+    width: 280px;
+    padding: 15px;
+    background: #1c1c1c;
+    box-sizing: border-box;
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  input, button {
+    width: 100%;
+    margin-top: 5px;
+    padding: 6px;
+    font-size: 14px;
+  }
+
+  button {
+    margin-top: 8px;
+    cursor: pointer;
+    background: #2a2a2a;
+    color: #fff;
+    border: none;
+  }
+
+  button:hover {
+    background: #444;
+  }
+
+  #canvas-container {
+    flex: 1;
+  }
+</style>
 </head>
 <body>
+
+<div id="ui">
+  <h3>Desenhar Reta 3D</h3>
+
+  <label>X inicial</label>
+  <input id="x" type="number" value="0">
+
+  <label>Y inicial</label>
+  <input id="y" type="number" value="0">
+
+  <label>Z inicial</label>
+  <input id="z" type="number" value="0">
+
+  <label>Comprimento</label>
+  <input id="len" type="number" value="2" step="0.1">
+
+  <button onclick="drawLine(1,0,0)">→ Direita (X+)</button>
+  <button onclick="drawLine(-1,0,0)">← Esquerda (X-)</button>
+  <button onclick="drawLine(0,1,0)">↑ Cima (Y+)</button>
+  <button onclick="drawLine(0,-1,0)">↓ Baixo (Y-)</button>
+  <button onclick="drawLine(0,0,1)">⬢ Frente (Z+)</button>
+  <button onclick="drawLine(0,0,-1)">⬡ Trás (Z-)</button>
+
+  <button onclick="clearScene()">🧹 Limpar</button>
+</div>
+
+<div id="canvas-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
@@ -18,58 +87,62 @@
   // Câmera
   const camera = new THREE.PerspectiveCamera(
     75,
-    window.innerWidth / window.innerHeight,
+    (window.innerWidth - 280) / window.innerHeight,
     0.1,
     1000
   );
-  camera.position.set(5, 5, 5);
+  camera.position.set(6, 6, 6);
   camera.lookAt(0, 0, 0);
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  renderer.setSize(window.innerWidth - 280, window.innerHeight);
+  document.getElementById("canvas-container").appendChild(renderer.domElement);
 
-  // Ponto central
-  const center = new THREE.Vector3(0, 0, 0);
+  // Eixos
+  scene.add(new THREE.AxesHelper(5));
 
-  // Direções (6)
-  const directions = [
-    new THREE.Vector3(1, 0, 0),   // direita
-    new THREE.Vector3(-1, 0, 0),  // esquerda
-    new THREE.Vector3(0, 1, 0),   // cima
-    new THREE.Vector3(0, -1, 0),  // baixo
-    new THREE.Vector3(0, 0, 1),   // frente
-    new THREE.Vector3(0, 0, -1)   // trás
-  ];
+  // Grid
+  scene.add(new THREE.GridHelper(20, 20));
 
-  const lineLength = 2;
+  // Armazena linhas
+  const lines = [];
 
-  directions.forEach(dir => {
-    const end = center.clone().add(dir.multiplyScalar(lineLength));
+  function drawLine(dx, dy, dz) {
+    const x = parseFloat(document.getElementById("x").value);
+    const y = parseFloat(document.getElementById("y").value);
+    const z = parseFloat(document.getElementById("z").value);
+    const len = parseFloat(document.getElementById("len").value);
 
-    const geometry = new THREE.BufferGeometry().setFromPoints([
-      center,
-      end
-    ]);
+    const start = new THREE.Vector3(x, y, z);
+    const direction = new THREE.Vector3(dx, dy, dz).normalize();
+    const end = start.clone().add(direction.multiplyScalar(len));
 
-    const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+    const material = new THREE.LineBasicMaterial({ color: 0x00ffcc });
 
     const line = new THREE.Line(geometry, material);
     scene.add(line);
-  });
+    lines.push(line);
+  }
 
-  // Eixos visuais (ajuda MUITO)
-  const axesHelper = new THREE.AxesHelper(3);
-  scene.add(axesHelper);
+  function clearScene() {
+    lines.forEach(line => scene.remove(line));
+    lines.length = 0;
+  }
 
-  // Render loop
   function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
   }
 
   animate();
+
+  window.addEventListener("resize", () => {
+    camera.aspect = (window.innerWidth - 280) / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth - 280, window.innerHeight);
+  });
 </script>
 
 </body>
