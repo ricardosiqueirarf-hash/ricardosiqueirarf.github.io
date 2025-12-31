@@ -335,48 +335,23 @@
   }
 
 // ===================== CONTROLE PELO TECLADO =====================
-let upPressCount = 0;
-let downPressCount = 0;
-const doublePressThreshold = 250; // ms
-let upTimer = null;
-let downTimer = null;
-
-document.addEventListener('keyup', (e) => {
-  switch(e.key){
-    case "ArrowLeft":
-      drawLine(-1,0,0,'X');
-      break;
-    case "ArrowRight":
-      drawLine(1,0,0,'X');
-      break;
-    case "ArrowUp":
-      upPressCount++;
-      if(upTimer) clearTimeout(upTimer);
-      upTimer = setTimeout(() => {
-        if(upPressCount === 1){
-          drawLine(0,0,-1,'Z'); // single press
-        } else if(upPressCount >= 2){
-          drawLine(0,1,0,'Y'); // double press
-        }
-        upPressCount = 0;
-        upTimer = null;
-      }, doublePressThreshold);
-      break;
-    case "ArrowDown":
-      downPressCount++;
-      if(downTimer) clearTimeout(downTimer);
-      downTimer = setTimeout(() => {
-        if(downPressCount === 1){
-          drawLine(0,0,1,'Z'); // single press
-        } else if(downPressCount >= 2){
-          drawLine(0,-1,0,'Y'); // double press
-        }
-        downPressCount = 0;
-        downTimer = null;
-      }, doublePressThreshold);
-      break;
+window.addEventListener("keydown", (event) => {
+  const key = event.key.toLowerCase();
+  if (key === "w") {
+    drawLine(0, 0, 1, "Z"); // frente
+  } else if (key === "s") {
+    drawLine(0, 0, -1, "Z"); // trás
+  } else if (key === "arrowup") {
+    drawLine(0, 1, 0, "Y"); // cima
+  } else if (key === "arrowdown") {
+    drawLine(0, -1, 0, "Y"); // baixo
+  } else if (key === "arrowright") {
+    drawLine(1, 0, 0, "X"); // direita
+  } else if (key === "arrowleft") {
+    drawLine(-1, 0, 0, "X"); // esquerda
   }
 });
+
 // ===================== EDIÇÃO DE LINHA POR DUPLO CLIQUE DINÂMICA =====================
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
