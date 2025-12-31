@@ -413,18 +413,8 @@ renderer.domElement.addEventListener("dblclick", (event) => {
   }
 
   switch(action) {
-    case "1":
-      // Alterar eixo
-      const newAxis = prompt(`Eixo atual: ${axis}. Digite o novo eixo (X, Y ou Z):`).toUpperCase();
-      if (["X","Y","Z"].includes(newAxis)) {
-        history[index].axis = newAxis;
-        alert(`Eixo alterado para ${newAxis}`);
-        rebuildFromHistory(); // redesenha tudo
-      }
-      break;
-
-    case "2":
-      // Alterar comprimento da linha (mantendo lógica original)
+      case "1":
+      // Alterar eixo da linha (mantendo lógica original)
       const geometry = selectedLine.geometry;
       const currentLen = geometry.parameters.height;
 
@@ -506,6 +496,17 @@ renderer.domElement.addEventListener("dblclick", (event) => {
       updateMetrics();
       break;
 
+    case "2":
+      // Alterar linha
+      const newAxis = prompt(`Eixo atual: ${axis}. Digite o novo eixo (X, Y ou Z):`).toUpperCase();
+      if (["X","Y","Z"].includes(newAxis)) {
+        history[index].axis = newAxis;
+        alert(`Eixo alterado para ${newAxis}`);
+        rebuildFromHistory(); // redesenha tudo
+      }
+      break;
+
+    
     case "3":
       // Deletar linha
       if (confirm("Tem certeza que deseja deletar esta linha?")) {
