@@ -4,22 +4,40 @@ window.App3D = window.App3D || {};
   const App3D = window.App3D;
   const { state } = App3D;
 
-  window.addEventListener("keydown", (event) => {
+  function handleDirectionKey(event) {
     const key = event.key.toLowerCase();
     if (key === "s") {
+      event.preventDefault();
       App3D.drawLine(0, 0, 1, "Z"); // frente
-    } else if (key === "w") {
+      return;
+    }
+    if (key === "w") {
+      event.preventDefault();
       App3D.drawLine(0, 0, -1, "Z"); // trás
-    } else if (key === "arrowup") {
+      return;
+    }
+    if (key === "arrowup") {
+      event.preventDefault();
       App3D.drawLine(0, 1, 0, "Y"); // cima
-    } else if (key === "arrowdown") {
+      return;
+    }
+    if (key === "arrowdown") {
+      event.preventDefault();
       App3D.drawLine(0, -1, 0, "Y"); // baixo
-    } else if (key === "arrowright") {
+      return;
+    }
+    if (key === "arrowright") {
+      event.preventDefault();
       App3D.drawLine(1, 0, 0, "X"); // direita
-    } else if (key === "arrowleft") {
+      return;
+    }
+    if (key === "arrowleft") {
+      event.preventDefault();
       App3D.drawLine(-1, 0, 0, "X"); // esquerda
     }
-  });
+  }
+
+  document.addEventListener("keydown", handleDirectionKey, true);
 
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -288,107 +306,6 @@ window.App3D = window.App3D || {};
     App3D.setInputs(newX, newY, newZ);
   });
 
-  /* let previewLine = null;
-  let previewActive = false;
-  let lastIntersectPoint = null; 
-
-  const thickness = 5.0;
-  const getInputLength = () =>
-    parseFloat(document.getElementById("len").value) || 100;
-
-  // ==================== PRÉ-VISUALIZAÇÃO ====================
-  App3D.renderer.domElement.addEventListener("mousemove", (event) => {
-    const rect = App3D.renderer.domElement.getBoundingClientRect();
-
-    const mouse = new THREE.Vector2(
-      ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, App3D.camera);
-
-    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    const intersectPoint = new THREE.Vector3();
-
-    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
-
-    lastIntersectPoint = intersectPoint.clone();
-
-    const inputs = App3D.getInputs(); // ponto atual dinâmico
-    const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
-
-    if (!previewActive) {
-      previewActive = true;
-
-      const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
-      const material = new THREE.MeshBasicMaterial({
-        color: 0xff0000,
-        transparent: true,
-        opacity: 0.3
-      });
-
-      previewLine = new THREE.Mesh(geometry, material);
-      App3D.scene.add(previewLine);
-    }
-
-    const dirVec = new THREE.Vector3().subVectors(
-      intersectPoint,
-      previewStart
-    );
-
-    const length = dirVec.length();
-    if (length < 0.001) return;
-
-    previewLine.geometry.dispose();
-    previewLine.geometry = new THREE.BoxGeometry(
-      thickness,
-      length,
-      thickness
-    );
-
-    previewLine.position.copy(
-      previewStart.clone().add(intersectPoint).multiplyScalar(0.5)
-    );
-
-    previewLine.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      dirVec.normalize()
-    );
-
-    // >>> DADOS PARA O CLICK FINAL <<<
-    previewLine.userData.start = previewStart.clone();
-    previewLine.userData.end = intersectPoint.clone();
-  });
-
-  // ==================== CONFIRMAÇÃO (LINHA NORMAL) ====================
-  App3D.renderer.domElement.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-
-    if (!previewActive || !previewLine) return;
-
-    const start = previewLine.userData.start.clone();
-    const end = previewLine.userData.end.clone();
-
-    // ===== RELATIVO AO PONTO ATUAL (APENAS XY) =====
-    const rx = end.x - start.x;
-    const ry = end.y - start.y;
-
-    const length = getInputLength();
-    const EPS = 0.0001;
-
-    if (Math.abs(rx) >= Math.abs(ry) && Math.abs(rx) > EPS) {
-      App3D.drawLine(Math.sign(rx) * length, 0, 0, "X");
-    }
-    else if (Math.abs(ry) > EPS) {
-      App3D.drawLine(0, Math.sign(ry) * length, 0, "Y");
-    }
-
-    // limpa preview
-    App3D.scene.remove(previewLine);
-    previewLine.geometry.dispose();
-    previewLine.material.dispose();
-    previewLine = null;
-    previewActive = false;
-  }); */
+  /* ... bloco de preview comentado ... */
 })();
+
