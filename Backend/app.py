@@ -68,3 +68,4 @@ app.register_blueprint(estruturas3d_bp)
 if __name__ == "__main__":
     app.run(debug=True)
 
+
