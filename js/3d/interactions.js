@@ -138,9 +138,11 @@ window.App3D = window.App3D || {};
             h.to.copy(newTo);
           } else {
             // Linhas de outros eixos: deslocamento sempre em direção a 0
-            if (h.from[axis.toLowerCase()] !== 0 || h.to[axis.toLowerCase()] !== 0) {
+            const axisLower = axis.toLowerCase();
+            if (h.from[axisLower] !== 0 || h.to[axisLower] !== 0) {
               const moveVec = new THREE.Vector3(0, 0, 0);
-              moveVec[axis.toLowerCase()] = diff;
+              const referenceValue = h.from[axisLower] !== 0 ? h.from[axisLower] : h.to[axisLower];
+              moveVec[axisLower] = -Math.sign(referenceValue) * diff;
               h.from.add(moveVec);
               h.to.add(moveVec);
             }
