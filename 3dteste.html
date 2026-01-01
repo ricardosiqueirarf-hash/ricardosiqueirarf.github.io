@@ -651,6 +651,47 @@ renderer.domElement.addEventListener("click", (event) => {
   setInputs(newX, newY, newZ);
 });
 
+// ==================== ESTADO PURO ====================
+const mousePoint = new THREE.Vector3();
+
+// ==================== POSIÇÃO DO MOUSE EM 3D ====================
+renderer.domElement.addEventListener("mousemove", (event) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+
+  const mouseNDC = new THREE.Vector2(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1
+  );
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouseNDC, camera);
+
+  // Plano XY (Z = 0) — MESMO plano do grid
+  const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
+  raycaster.ray.intersectPlane(plane, mousePoint);
+});
+
+// ==================== DEBUG DE ESTADO (APENAS LOG) ====================
+setInterval(() => {
+  const current = getInputs();
+
+  console.clear();
+  console.log("PONTO ATUAL:");
+  console.log(
+    "X:", current.x.toFixed(2),
+    "Y:", current.y.toFixed(2),
+    "Z:", current.z.toFixed(2)
+  );
+
+  console.log("MOUSE 3D:");
+  console.log(
+    "X:", mousePoint.x.toFixed(2),
+    "Y:", mousePoint.y.toFixed(2),
+    "Z:", mousePoint.z.toFixed(2)
+  );
+}, 200);
+
 </script>
 </body>
 </html>
