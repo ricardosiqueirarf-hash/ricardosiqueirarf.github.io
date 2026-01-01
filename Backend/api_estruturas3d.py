@@ -1,11 +1,14 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 import requests
 
 estruturas3d_bp = Blueprint("estruturas3d_bp", __name__)
 
 
-@estruturas3d_bp.route("/api/estruturas", methods=["POST"])
+@estruturas3d_bp.route("/api/estruturas", methods=["POST", "OPTIONS"])
 def salvar_estrutura_3d():
+    if request.method == "OPTIONS":
+        return make_response("", 204)
+
     from app import SUPABASE_URL, HEADERS, SUPABASE_TABLE_ESTRUTURAS3D
 
     data = request.json or {}
@@ -26,4 +29,5 @@ def salvar_estrutura_3d():
     )
     r.raise_for_status()
     return jsonify({"success": True, "data": r.json()})
+
 
