@@ -102,9 +102,6 @@
   <label>Perfil</label>
   <select id="perfil">
     <option value="">Selecione um perfil</option>
-    <option value="1036">Perfil 1036</option>
-    <option value="088">Perfil 088</option>
-    <option value="2215">Perfil 2215</option>
   </select>
 
   <button onclick="drawLine(1,0,0,'X')">→ Direita</button>
@@ -145,7 +142,33 @@
       alert("UUID do orçamento não encontrado")
       throw new Error("orcamento_uuid ausente")
   }
+  
+// ===================== PERFIS (TIPOLOGIA ESTRUTURAL) =====================
+  const API_BASE = "https://colorglass.onrender.com";
+  const perfisSelect = document.getElementById("perfil");
 
+  async function carregarPerfisEstruturais() {
+    try {
+      const res = await fetch(`${API_BASE}/api/perfis`);
+      const perfis = await res.json();
+      const perfisEstruturais = perfis.filter((perfil) => {
+        if (Array.isArray(perfil.tipologias)) {
+          return perfil.tipologias.includes("estrutural") || perfil.tipologias.includes("estruturais");
+        }
+        if (typeof perfil.tipologias === "string") {
+          return perfil.tipologias.includes("estrutural");
+        }
+        return false;
+      });
+
+      perfisSelect.innerHTML = "<option value=''>Selecione um perfil</option>";
+      perfisEstruturais.forEach((perfil) => {
+        perfisSelect.innerHTML += `<option value="${perfil.id}">${perfil.nome}</option>`;
+      });
+    } catch (error) {
+      console.error("Erro ao carregar perfis estruturais:", error);
+    }
+  }
   // ===================== CENA 3D =====================
   const scene = new THREE.Scene();
 
