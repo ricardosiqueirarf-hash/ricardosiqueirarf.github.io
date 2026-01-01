@@ -194,6 +194,62 @@ window.App3D = window.App3D || {};
     editingAxis = null;
   });
 
+  // ===================== CONTROLE DE CÂMERA (ARRASTAR + SCROLL) =====================
+  const cameraState = {
+    isDragging: false,
+    lastX: 0,
+    lastY: 0,
+    yaw: Math.PI / 4,
+    pitch: Math.PI / 6,
+    radius: App3D.camera.position.length()
+  };
+
+  function updateCameraPosition() {
+    const maxPitch = Math.PI / 2 - 0.05;
+    const minPitch = -maxPitch;
+    cameraState.pitch = Math.max(minPitch, Math.min(maxPitch, cameraState.pitch));
+
+    const x = cameraState.radius * Math.cos(cameraState.pitch) * Math.cos(cameraState.yaw);
+    const y = cameraState.radius * Math.sin(cameraState.pitch);
+    const z = cameraState.radius * Math.cos(cameraState.pitch) * Math.sin(cameraState.yaw);
+
+    App3D.camera.position.set(x, y, z);
+    App3D.camera.lookAt(0, 0, 0);
+  }
+
+  updateCameraPosition();
+
+  App3D.renderer.domElement.addEventListener("mousedown", (event) => {
+    if (event.button !== 0) return;
+    cameraState.isDragging = true;
+    cameraState.lastX = event.clientX;
+    cameraState.lastY = event.clientY;
+  });
+
+  window.addEventListener("mouseup", () => {
+    cameraState.isDragging = false;
+  });
+
+  window.addEventListener("mousemove", (event) => {
+    if (!cameraState.isDragging) return;
+    const deltaX = event.clientX - cameraState.lastX;
+    const deltaY = event.clientY - cameraState.lastY;
+    cameraState.lastX = event.clientX;
+    cameraState.lastY = event.clientY;
+
+    const sensitivity = 0.005;
+    cameraState.yaw -= deltaX * sensitivity;
+    cameraState.pitch -= deltaY * sensitivity;
+    updateCameraPosition();
+  });
+
+  App3D.renderer.domElement.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const zoomFactor = 1 + event.deltaY * 0.001;
+    cameraState.radius = Math.max(50, Math.min(5000, cameraState.radius * zoomFactor));
+    updateCameraPosition();
+  }, { passive: false });
+
   // ===================== FUNÇÃO PARA ALTERAR COMPRIMENTO DA LINHA =====================
   function editSelectedLine(selectedLine, index) {
     const h = state.history[index];
