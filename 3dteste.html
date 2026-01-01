@@ -651,46 +651,120 @@ renderer.domElement.addEventListener("click", (event) => {
   setInputs(newX, newY, newZ);
 });
 
-// ==================== ESTADO PURO ====================
-const mousePoint = new THREE.Vector3();
+let previewLine = null;
+let previewActive = false;
+let lastIntersectPoint = null;
+const thickness = 5.0;
+const getInputLength = () =>
+    parseFloat(document.getElementById("lineLength").value) || 100;
 
-// ==================== POSIÇÃO DO MOUSE EM 3D ====================
-renderer.domElement.addEventListener("mousemove", (event) => {
-  const rect = renderer.domElement.getBoundingClientRect();
+// ==================== PRÉ-VISUALIZAÇÃO ====================
+renderer.domElement.addEventListener('mousemove', (event) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+    );
 
-  const mouseNDC = new THREE.Vector2(
-    ((event.clientX - rect.left) / rect.width) * 2 - 1,
-    -((event.clientY - rect.top) / rect.height) * 2 + 1
-  );
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
 
-  const raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera(mouseNDC, camera);
+    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const intersectPoint = new THREE.Vector3();
+    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
 
-  // Plano XY (Z = 0) — MESMO plano do grid
-  const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    lastIntersectPoint = intersectPoint.clone();
 
-  raycaster.ray.intersectPlane(plane, mousePoint);
+    const inputs = getInputs(); // ponto atual DINÂMICO
+    const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
+
+    if (!previewActive) {
+        previewActive = true;
+        const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0.3
+        });
+        previewLine = new THREE.Mesh(geometry, material);
+        scene.add(previewLine);
+    }
+
+    const dirVec = new THREE.Vector3()
+        .subVectors(intersectPoint, previewStart);
+
+    const length = dirVec.length();
+    if (length < 0.001) return;
+
+    previewLine.geometry.dispose();
+    previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
+
+    previewLine.position.copy(
+        previewStart.clone().add(intersectPoint).multiplyScalar(0.5)
+    );
+
+    previewLine.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        dirVec.normalize()
+    );
 });
 
-// ==================== DEBUG DE ESTADO (APENAS LOG) ====================
-setInterval(() => {
-  const current = getInputs();
+// ==================== LINHA FINAL VERDE ====================
+renderer.domElement.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+    if (!previewActive || !lastIntersectPoint) return;
 
-  console.clear();
-  console.log("PONTO ATUAL:");
-  console.log(
-    "X:", current.x.toFixed(2),
-    "Y:", current.y.toFixed(2),
-    "Z:", current.z.toFixed(2)
-  );
+    const length = getInputLength();
 
-  console.log("MOUSE 3D:");
-  console.log(
-    "X:", mousePoint.x.toFixed(2),
-    "Y:", mousePoint.y.toFixed(2),
-    "Z:", mousePoint.z.toFixed(2)
-  );
-}, 200);
+    const inputs = getInputs();
+    const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
+
+    // ==================== LÓGICA CORRETA ====================
+    // RELATIVO AO PONTO ATUAL
+    const rx = lastIntersectPoint.x - fromPoint.x;
+    const ry = lastIntersectPoint.y - fromPoint.y;
+
+    let dirVec = new THREE.Vector3(0, 0, 0);
+
+    if (Math.abs(rx) >= Math.abs(ry)) {
+        // eixo X dominante
+        dirVec.x = Math.sign(rx) || 1;
+    } else {
+        // eixo Y dominante
+        dirVec.y = Math.sign(ry) || 1;
+    }
+
+    const toPoint = fromPoint.clone().add(
+        dirVec.clone().multiplyScalar(length)
+    );
+
+    const geometry = new THREE.BoxGeometry(
+        thickness,
+        fromPoint.distanceTo(toPoint),
+        thickness
+    );
+
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const finalLine = new THREE.Mesh(geometry, material);
+
+    finalLine.position.copy(
+        fromPoint.clone().add(toPoint).multiplyScalar(0.5)
+    );
+
+    finalLine.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        dirVec.normalize()
+    );
+
+    scene.add(finalLine);
+
+    // limpa preview
+    scene.remove(previewLine);
+    previewLine.geometry.dispose();
+    previewLine.material.dispose();
+    previewLine = null;
+    previewActive = false;
+});
 
 </script>
 </body>
