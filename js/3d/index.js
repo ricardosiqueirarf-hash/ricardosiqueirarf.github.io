@@ -14,24 +14,47 @@ window.App3D = window.App3D || {};
   App3D.animate();
   App3D.carregarPerfisEstruturais();
 
-  window.salvarLocalEstrutura = function salvarLocalEstrutura() {
-    const dados = {
-      orcamento_uuid: App3D.ORCAMENTO_UUID,
+  window.salvarEstruturaSupabase = async function salvarEstruturaSupabase() {
+    const perfisSelect = App3D.dom.perfisSelect;
+    const selectedOption = perfisSelect?.options?.[perfisSelect.selectedIndex];
+    const material = selectedOption?.textContent?.trim() || null;
+
+    const imagem = {
       history: App3D.state.history.map((h) => ({
         from: { x: h.from.x, y: h.from.y, z: h.from.z },
         to: { x: h.to.x, y: h.to.y, z: h.to.z },
         axis: h.axis
-      })),
-      totalLength: App3D.state.totalLength,
-      fixadores: App3D.dom.fixers.textContent
+      }))
     };
 
-    // Recupera estruturas existentes ou inicializa array
-    const chave = `estruturas_${App3D.ORCAMENTO_UUID}`;
-    const existentes = JSON.parse(localStorage.getItem(chave)) || [];
-    existentes.push(dados);
-    localStorage.setItem(chave, JSON.stringify(existentes));
+    const payload = {
+      orcamento_uuid: App3D.ORCAMENTO_UUID,
+      material,
+      imagem,
+      custototal: null,
+      precototal: null,
+      comprimentotot: App3D.state.totalLength,
+      fixadores: Number(App3D.dom.fixers.textContent || 0)
+    };
 
-    alert("Estrutura salva localmente!");
+    try {
+      const res = await fetch(
+        `${App3D.API_BASE}/api/orcamento/${App3D.ORCAMENTO_UUID}/estrutura3d`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.error || "Erro ao salvar estrutura 3D");
+      }
+      alert("Estrutura 3D salva no Supabase!");
+    } catch (error) {
+      console.error("Erro ao salvar estrutura 3D:", error);
+      alert("Erro ao salvar estrutura 3D.");
+    }
   };
 })();
+
