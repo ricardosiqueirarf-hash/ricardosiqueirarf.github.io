@@ -11,6 +11,7 @@ import datetime
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_TABLE_ESTRUTURAS3D = os.getenv("SUPABASE_TABLE_ESTRUTURAS3D", "orcamentos_3d")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não definidos")
@@ -48,6 +49,7 @@ from api_portas import portas_bp
 from api_orc import orc_bp  
 from api_corte import corte_bp  
 from api_puxadores import puxadores_bp  
+from api_estruturas3d import estruturas3d_bp
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
@@ -57,6 +59,7 @@ app.register_blueprint(portas_bp)
 app.register_blueprint(orc_bp)  
 app.register_blueprint(corte_bp)
 app.register_blueprint(puxadores_bp)
+app.register_blueprint(estruturas3d_bp)
 
 # =====================
 # START
@@ -64,3 +67,4 @@ app.register_blueprint(puxadores_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
