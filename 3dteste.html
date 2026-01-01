@@ -660,36 +660,6 @@ renderer.domElement.addEventListener("click", (event) => {
   setInputs(newX, newY, newZ);
 });
 
-let mousePoint = new THREE.Vector3();
-
-// ==================== POSIÇÃO DO MOUSE ====================
-renderer.domElement.addEventListener("mousemove", (event) => {
-    const rect = renderer.domElement.getBoundingClientRect();
-
-    const mouse = new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-
-    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    if (!raycaster.ray.intersectPlane(planeZ, mousePoint)) return;
-
-    // ===== MOSTRA POSIÇÃO DO MOUSE
-    document.getElementById("mouseX").textContent = mousePoint.x.toFixed(2);
-    document.getElementById("mouseY").textContent = mousePoint.y.toFixed(2);
-    document.getElementById("mouseZ").textContent = mousePoint.z.toFixed(2);
-
-    // ===== MOSTRA PONTO ATUAL (ESTADO)
-    const inputs = getInputs();
-
-    document.getElementById("currentX").textContent = inputs.x.toFixed(2);
-    document.getElementById("currentY").textContent = inputs.y.toFixed(2);
-    document.getElementById("currentZ").textContent = inputs.z.toFixed(2);
-});
-
 </script>
 </body>
 </html>
