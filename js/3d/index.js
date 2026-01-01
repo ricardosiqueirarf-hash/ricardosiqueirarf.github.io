@@ -38,14 +38,11 @@ window.App3D = window.App3D || {};
     };
 
     try {
-      const res = await fetch(
-        `${App3D.API_BASE}/api/orcamento/${App3D.ORCAMENTO_UUID}/estrutura3d`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }
-      );
+      const res = await fetch(`${App3D.API_BASE}/api/estruturas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
       const data = await res.json();
       if (!res.ok || data?.success === false) {
         throw new Error(data?.error || "Erro ao salvar estrutura 3D");
@@ -57,4 +54,5 @@ window.App3D = window.App3D || {};
     }
   };
 })();
+
 
