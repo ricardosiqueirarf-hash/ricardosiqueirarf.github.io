@@ -654,116 +654,105 @@ renderer.domElement.addEventListener("click", (event) => {
 let previewLine = null;
 let previewActive = false;
 let lastIntersectPoint = null;
+
 const thickness = 5.0;
 const getInputLength = () =>
-    parseFloat(document.getElementById("len").value) || 100;
+  parseFloat(document.getElementById("len").value) || 100;
 
 // ==================== PRÉ-VISUALIZAÇÃO ====================
-renderer.domElement.addEventListener('mousemove', (event) => {
-    const rect = renderer.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
+renderer.domElement.addEventListener("mousemove", (event) => {
+  const rect = renderer.domElement.getBoundingClientRect();
 
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
+  const mouse = new THREE.Vector2(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1
+  );
 
-    const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    const intersectPoint = new THREE.Vector3();
-    if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, camera);
 
-    lastIntersectPoint = intersectPoint.clone();
+  const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  const intersectPoint = new THREE.Vector3();
 
-    const inputs = getInputs(); // ponto atual DINÂMICO
-    const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
+  if (!raycaster.ray.intersectPlane(planeZ, intersectPoint)) return;
 
-    if (!previewActive) {
-        previewActive = true;
-        const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
-        const material = new THREE.MeshBasicMaterial({
-            color: 0xff0000,
-            transparent: true,
-            opacity: 0.3
-        });
-        previewLine = new THREE.Mesh(geometry, material);
-        scene.add(previewLine);
-    }
+  lastIntersectPoint = intersectPoint.clone();
 
-    const dirVec = new THREE.Vector3()
-        .subVectors(intersectPoint, previewStart);
+  const inputs = getInputs(); // ponto atual dinâmico
+  const previewStart = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
 
-    const length = dirVec.length();
-    if (length < 0.001) return;
+  if (!previewActive) {
+    previewActive = true;
 
-    previewLine.geometry.dispose();
-    previewLine.geometry = new THREE.BoxGeometry(thickness, length, thickness);
+    const geometry = new THREE.BoxGeometry(thickness, 1, thickness);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      transparent: true,
+      opacity: 0.3
+    });
 
-    previewLine.position.copy(
-        previewStart.clone().add(intersectPoint).multiplyScalar(0.5)
-    );
+    previewLine = new THREE.Mesh(geometry, material);
+    scene.add(previewLine);
+  }
 
-    previewLine.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        dirVec.normalize()
-    );
+  const dirVec = new THREE.Vector3().subVectors(
+    intersectPoint,
+    previewStart
+  );
+
+  const length = dirVec.length();
+  if (length < 0.001) return;
+
+  previewLine.geometry.dispose();
+  previewLine.geometry = new THREE.BoxGeometry(
+    thickness,
+    length,
+    thickness
+  );
+
+  previewLine.position.copy(
+    previewStart.clone().add(intersectPoint).multiplyScalar(0.5)
+  );
+
+  previewLine.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    dirVec.normalize()
+  );
+
+  // >>> DADOS PARA O CLICK FINAL <<<
+  previewLine.userData.start = previewStart.clone();
+  previewLine.userData.end = intersectPoint.clone();
 });
 
-// ==================== LINHA FINAL VERDE ====================
-renderer.domElement.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-    if (!previewActive || !lastIntersectPoint) return;
+// ==================== CONFIRMAÇÃO (LINHA NORMAL) ====================
+renderer.domElement.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
 
-    const length = getInputLength();
+  if (!previewActive || !previewLine) return;
 
-    const inputs = getInputs();
-    const fromPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z);
+  const start = previewLine.userData.start.clone();
+  const end = previewLine.userData.end.clone();
 
-    // ==================== LÓGICA CORRETA ====================
-    // RELATIVO AO PONTO ATUAL
-    const rx = lastIntersectPoint.x - fromPoint.x;
-    const ry = lastIntersectPoint.y - fromPoint.y;
+  // ===== RELATIVO AO PONTO ATUAL (APENAS XY) =====
+  const rx = end.x - start.x;
+  const ry = end.y - start.y;
 
-    let dirVec = new THREE.Vector3(0, 0, 0);
+  const length = getInputLength();
+  const EPS = 0.0001;
 
-    if (Math.abs(rx) >= Math.abs(ry)) {
-        // eixo X dominante
-        dirVec.x = Math.sign(rx) || 1;
-    } else {
-        // eixo Y dominante
-        dirVec.y = Math.sign(ry) || 1;
-    }
+  if (Math.abs(rx) >= Math.abs(ry) && Math.abs(rx) > EPS) {
+    drawLine(Math.sign(rx) * length, 0, 0, "X");
+  }
+  else if (Math.abs(ry) > EPS) {
+    drawLine(0, Math.sign(ry) * length, 0, "Y");
+  }
 
-    const toPoint = fromPoint.clone().add(
-        dirVec.clone().multiplyScalar(length)
-    );
-
-    const geometry = new THREE.BoxGeometry(
-        thickness,
-        fromPoint.distanceTo(toPoint),
-        thickness
-    );
-
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const finalLine = new THREE.Mesh(geometry, material);
-
-    finalLine.position.copy(
-        fromPoint.clone().add(toPoint).multiplyScalar(0.5)
-    );
-
-    finalLine.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        dirVec.normalize()
-    );
-
-    scene.add(finalLine);
-
-    // limpa preview
-    scene.remove(previewLine);
-    previewLine.geometry.dispose();
-    previewLine.material.dispose();
-    previewLine = null;
-    previewActive = false;
+  // limpa preview
+  scene.remove(previewLine);
+  previewLine.geometry.dispose();
+  previewLine.material.dispose();
+  previewLine = null;
+  previewActive = false;
 });
 
 </script>
