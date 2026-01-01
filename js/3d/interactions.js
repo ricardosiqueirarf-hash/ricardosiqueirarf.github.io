@@ -238,8 +238,8 @@ window.App3D = window.App3D || {};
     cameraState.lastY = event.clientY;
 
     const sensitivity = 0.005;
-    cameraState.yaw -= deltaX * sensitivity;
-    cameraState.pitch -= deltaY * sensitivity;
+    cameraState.yaw += deltaX * sensitivity;
+    cameraState.pitch += deltaY * sensitivity;
     updateCameraPosition();
   });
 
@@ -364,4 +364,5 @@ window.App3D = window.App3D || {};
 
   /* ... bloco de preview comentado ... */
 })();
+
 
