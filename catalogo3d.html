@@ -69,17 +69,6 @@
     hr { border: none; border-top:1px solid #333; margin: 12px 0; }
     .row { display:flex; gap:10px; }
     .row > * { flex:1; }
-
-    /* ====== PREVIEW DE COR ====== */
-    .colorRow { display:flex; gap:10px; align-items:center; }
-    .swatch {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: #000;
-      flex: 0 0 auto;
-    }
   </style>
 </head>
 
@@ -90,12 +79,9 @@
     <label>Modelo</label>
     <select id="modeloSelect"></select>
 
-    <!-- ✅ DROPLIST DE CORES (NOVO) -->
-    <label>Cor do perfil</label>
-    <div class="colorRow">
-      <select id="corSelect" style="flex:1;"></select>
-      <div id="corSwatch" class="swatch" title="Preview"></div>
-    </div>
+    <!-- ✅ DROPLIST DE CORES -->
+    <label>Cor do Perfil</label>
+    <select id="corSelect"></select>
 
     <div class="row">
       <button id="resetCamera">Resetar câmera</button>
@@ -248,8 +234,11 @@
       ];
     }
 
+    // ✅ ADICIONADO: 3545.glb (Perfil Slim) e 3446.glb (Perfil Invisível)
     const modelos = [
-      { label: "Perfil 1036", filename: "1036.glb" }
+      { label: "Perfil 1036", filename: "1036.glb" },
+      { label: "Perfil Slim (3545)", filename: "3545.glb" },
+      { label: "Perfil Invisível (3446)", filename: "3446.glb" }
     ].map(m => ({ label: m.label, urls: makeUrlCandidates(m.filename) }));
 
     const modeloSelect = document.getElementById("modeloSelect");
@@ -261,75 +250,57 @@
     });
 
     // =========================
-    // ✅ CORES (NOVO)
+    // CORES (DROPLIST)
     // =========================
-    const cores = [
-      { label: "Preto",   key: "preto",      hex: "#000000" },
-      { label: "Prata",   key: "prata",      hex: "#c6c7c9" },
-      { label: "Bronze 1001", key: "bronze1001", hex: "#716859" },
-      { label: "Dourado", key: "dourado",    hex: "#B89C5D" },
-      { label: "Inox",    key: "inox",       hex: "#918B82" },
+    const corSelect = document.getElementById("corSelect");
+
+    const CORES = [
+      { label: "Preto",      value: "preto",      hex: "#000000" },
+      { label: "Prata",      value: "prata",      hex: "#c6c7c9" },
+      { label: "Bronze 1001",value: "bronze1001", hex: "#716859" },
+      { label: "Dourado",    value: "dourado",    hex: "#B89C5D" },
+      { label: "Inox",       value: "inox",       hex: "#918B82" }
     ];
 
-    const corSelect = document.getElementById("corSelect");
-    const corSwatch = document.getElementById("corSwatch");
-
-    cores.forEach((c) => {
+    CORES.forEach(c => {
       const opt = document.createElement("option");
-      opt.value = c.key;
+      opt.value = c.value;
       opt.textContent = c.label;
       corSelect.appendChild(opt);
     });
 
-    function getSelectedColorHex() {
-      const key = corSelect.value;
-      const c = cores.find(x => x.key === key) || cores[0];
-      return c.hex;
-    }
-
-    function updateSwatch() {
-      corSwatch.style.background = getSelectedColorHex();
-    }
-
     function applyColorToModel(root, hex) {
       if (!root) return;
-
       const color = new THREE.Color(hex);
 
-      // pinta só materiais "comuns" (Standard/Physical/Lambert/Phong/Basic) sem quebrar textures.
-      // Se tiver textura, a cor vira multiplicador (tint).
       root.traverse((n) => {
-        if (!n.isMesh || !n.material) return;
-        const mats = Array.isArray(n.material) ? n.material : [n.material];
+        if (!n.isMesh) return;
 
+        const mats = Array.isArray(n.material) ? n.material : [n.material];
         mats.forEach((m) => {
           if (!m) return;
 
-          // garante compatibilidade
-          if (m.color && m.color.isColor) {
-            m.color.copy(color);
-            m.needsUpdate = true;
-          } else {
-            // se vier um material sem .color (raro), troca por MeshStandardMaterial
-            const newMat = new THREE.MeshStandardMaterial({ color });
-            // preserva wireframe
-            newMat.wireframe = !!m.wireframe;
-            n.material = Array.isArray(n.material)
-              ? mats.map(mm => (mm === m ? newMat : mm))
-              : newMat;
+          // Se o material não tiver "color" (ex: alguns shaders), tenta trocar por MeshStandardMaterial mantendo mapa
+          if (!("color" in m)) {
+            const next = new THREE.MeshStandardMaterial({
+              color,
+              map: m.map || null,
+              metalness: 0.6,
+              roughness: 0.35
+            });
+            next.side = THREE.DoubleSide;
+            next.needsUpdate = true;
+            n.material = next;
+            return;
           }
+
+          m.color.copy(color);
+          m.needsUpdate = true;
         });
       });
 
       logLine(`🎨 Cor aplicada: ${hex}`, "ok");
     }
-
-    corSelect.addEventListener("change", () => {
-      updateSwatch();
-      if (currentModel) applyColorToModel(currentModel, getSelectedColorHex());
-    });
-
-    updateSwatch();
 
     // =========================
     // CAMERA CONTROLS (orbital simples)
@@ -544,8 +515,9 @@
           // materiais sempre visíveis
           forceVisibleMaterials(currentModel);
 
-          // ✅ aplica cor selecionada logo que carrega
-          applyColorToModel(currentModel, getSelectedColorHex());
+          // aplica cor selecionada (mesmas opções para todos os modelos)
+          const corAtual = CORES.find(c => c.value === corSelect.value) || CORES[0];
+          applyColorToModel(currentModel, corAtual.hex);
 
           // BoxHelper pra você VER, mesmo se material estiver zoado
           boxHelper = new THREE.BoxHelper(currentModel, 0x00ff88);
@@ -580,6 +552,13 @@
     modeloSelect.addEventListener("change", async (e) => {
       const m = modelos.find(x => x.label === e.target.value) || modelos[0];
       await carregarModelo(m.label, m.urls);
+    });
+
+    // ✅ quando muda a cor, recolore o modelo atual (sem recarregar)
+    corSelect.addEventListener("change", () => {
+      const c = CORES.find(x => x.value === corSelect.value) || CORES[0];
+      if (!currentModel) return logLine("⚠️ Sem modelo carregado pra aplicar cor.", "warn");
+      applyColorToModel(currentModel, c.hex);
     });
 
     document.getElementById("btnTestGLB").addEventListener("click", async () => {
@@ -645,12 +624,10 @@
     // =========================
     // START
     // =========================
+    // default: primeira cor da lista
+    corSelect.value = CORES[0].value;
+
     modeloSelect.value = modelos[0].label;
-
-    // cor padrão
-    corSelect.value = cores[0].key;
-    updateSwatch();
-
     await carregarModelo(modelos[0].label, modelos[0].urls);
   </script>
 </body>
