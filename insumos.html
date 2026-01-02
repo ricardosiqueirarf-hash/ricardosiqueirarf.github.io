@@ -162,25 +162,12 @@
     const API_BASE = "https://colorglass.onrender.com";
 
     // 🔐 LOGIN / TOKEN
-    async function checkToken() {
+    function checkToken() {
         if (!localStorage.getItem("ADMIN_TOKEN")) {
-            let senha = prompt("Digite a senha de desenvolvimento:");
-            if(!senha) { alert("Senha obrigatória"); throw new Error("Senha não informada"); }
-
-            const res = await fetch(`${API_BASE}/get_token`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: senha })
-            });
-            const data = await res.json();
-
-            if(data.token){
-                localStorage.setItem("ADMIN_TOKEN", data.token);
-            } else {
-                alert("Senha incorreta");
-                location.reload();
-            }
+            alert("Token de admin não encontrado. Faça login novamente.");
+            return false;
         }
+        return true;
     }
 
     // =====================
@@ -203,7 +190,7 @@
     // CARREGAR MATERIAIS
     // =====================
     async function carregar() {
-        await checkToken();
+        if (!checkToken()) return;
         const res = await fetch(`${API_BASE}/api/materiais`, {
             headers: { "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN") }
         });
@@ -234,7 +221,7 @@
     // SALVAR / ATUALIZAR
     // =====================
     async function salvar() {
-        await checkToken();
+        if (!checkToken()) return;
 
         const id = document.getElementById("material_id").value;
         const nome = document.getElementById("nome").value;
@@ -292,7 +279,7 @@
     // EXCLUIR
     // =====================
     async function excluir(id) {
-        await checkToken();
+        if (!checkToken()) return;
         if(!confirm("Excluir este material?")) return;
         await fetch(`${API_BASE}/api/materiais/${id}`, {
             method: "DELETE",
