@@ -45,6 +45,10 @@ window.App3D = window.App3D || {};
   let originalDirection = null;
   let editingAxis = null;
 
+  // helpers
+  const EPS = 1e-6;
+  const samePoint = (a, b) => a.distanceTo(b) < EPS;
+
   App3D.renderer.domElement.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     const rect = App3D.renderer.domElement.getBoundingClientRect();
@@ -62,7 +66,6 @@ window.App3D = window.App3D || {};
     const axis = state.history[index].axis;
     editingAxis = axis;
 
-    // === MENU DE OPÇÕES ===
     const action = prompt(
       "Você selecionou uma linha. Escolha uma ação:\n" +
       "1 - Alterar eixo\n" +
@@ -71,62 +74,87 @@ window.App3D = window.App3D || {};
     );
     if (action === null) {
       editingAxis = null;
-      return; // cancelou
+      return;
     }
 
     switch (action) {
-      case "1":
-        // Alterar eixo da linha (mantendo lógica original)
+      case "1": {
+        // =======================
+        // ALTERAR COMPRIMENTO NO EIXO (com deslocamento correto das linhas conectadas)
+        // =======================
         const geometry = selectedLine.geometry;
         const currentLen = geometry.parameters.height;
 
-        // Salva direção original
+        // direção da linha selecionada (pra mover o ponto atual)
         originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
-        const inputLen = prompt(`Digite o novo comprimento da linha no eixo ${axis}:`, currentLen.toFixed(2));
-        if (inputLen === null) break; // cancelou
+        const inputLen = prompt(
+          `Digite o novo comprimento da linha no eixo ${axis}:`,
+          currentLen.toFixed(2)
+        );
+        if (inputLen === null) break;
         const newLen = parseFloat(inputLen);
         if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
-        const diff = newLen - currentLen;
 
-        // Determina o comprimento total do eixo selecionado (espaço ocupado)
-        let axisMin = Infinity;
-        let axisMax = -Infinity;
+        const diff = newLen - currentLen; // pode ser + ou -
+        const axisLower = axis.toLowerCase();
+
+        // 1) Primeiro, calcula TODOS os "pontos movidos" das linhas do eixo selecionado:
+        //    - qual endpoint era o mais distante de 0 no eixo
+        //    - quanto ele vai andar (delta = diff * sign)
+        //    - isso cria um "mapa" para arrastar as linhas conectadas naquele endpoint
+        const movedPoints = []; // [{ oldPoint: Vector3, deltaVec: Vector3 }]
+
         state.history.forEach((h) => {
-          if (h.axis === axis) {
-            axisMin = Math.min(axisMin, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
-            axisMax = Math.max(axisMax, h.from[axis.toLowerCase()], h.to[axis.toLowerCase()]);
-          }
-        });
-        const totalAxisLen = axisMax - axisMin;
+          if (h.axis !== axis) return;
 
+          const fromVal = h.from[axisLower];
+          const toVal = h.to[axisLower];
+
+          // endpoint mais distante de 0 no eixo
+          const maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
+
+          // se maxPointVal for 0 (linha em cima do zero), não tem pra onde "esticar"
+          const sign = Math.sign(maxPointVal) || 1;
+
+          // quanto o endpoint distante vai mudar (isso é o "deslocamento real" no eixo)
+          const delta = diff * sign; // <- aqui está a lógica correta (+ aumenta, - reduz)
+          const deltaVec = new THREE.Vector3(0, 0, 0);
+          deltaVec[axisLower] = delta;
+
+          // qual endpoint é o "moved" nessa linha
+          const oldMovedPoint = (toVal === maxPointVal) ? h.to.clone() : h.from.clone();
+
+          movedPoints.push({ oldPoint: oldMovedPoint, deltaVec });
+        });
+
+        // 2) Agora percorre TODAS as linhas:
+        //    - se for do eixo escolhido: atualiza comprimento (movendo o endpoint distante)
+        //    - se for de outros eixos: se algum endpoint coincide com um oldPoint, arrasta ele pelo deltaVec
         state.history.forEach((h, i) => {
           const line = state.lines[i];
-          const dirVec = new THREE.Vector3().subVectors(h.to, h.from).normalize();
 
           if (h.axis === axis) {
-            const fromVal = h.from[axis.toLowerCase()];
-            const toVal = h.to[axis.toLowerCase()];
+            const fromVal = h.from[axisLower];
+            const toVal = h.to[axisLower];
 
-            // Ponto mais distante de 0
-            let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
-            const sign = Math.sign(maxPointVal);
+            const maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
+            const sign = Math.sign(maxPointVal) || 1;
+            const newMaxVal = maxPointVal + diff * sign; // <- aumenta/diminui corretamente
 
-            // Calcula nova posição proporcional ao comprimento total do eixo
-            const newMaxVal = maxPointVal + diff * sign;
+            const newFrom = h.from.clone();
+            const newTo = h.to.clone();
 
-            let newFrom = h.from.clone();
-            let newTo = h.to.clone();
-            if (toVal === maxPointVal) {
-              newTo[axis.toLowerCase()] = newMaxVal;
-            } else {
-              newFrom[axis.toLowerCase()] = newMaxVal;
-            }
+            // move só o endpoint mais distante
+            if (toVal === maxPointVal) newTo[axisLower] = newMaxVal;
+            else newFrom[axisLower] = newMaxVal;
 
-            // Mantém a espessura original da linha
+            // atualiza mesh mantendo espessura
             const oldGeom = line.geometry.parameters;
             const width = oldGeom.width || 0.08;
             const depth = oldGeom.depth || 0.08;
+
+            const dirVec = new THREE.Vector3().subVectors(newTo, newFrom).normalize();
             const height = newFrom.distanceTo(newTo);
 
             line.geometry.dispose();
@@ -136,34 +164,42 @@ window.App3D = window.App3D || {};
 
             h.from.copy(newFrom);
             h.to.copy(newTo);
-          } else {
-            // Linhas de outros eixos: deslocamento sempre em direção a 0
-            const axisLower = axis.toLowerCase();
-            if (h.from[axisLower] !== 0 || h.to[axisLower] !== 0) {
-              const moveVec = new THREE.Vector3(0, 0, 0);
-              const referenceValue = h.from[axisLower] !== 0 ? h.from[axisLower] : h.to[axisLower];
-              moveVec[axisLower] = Math.sign(referenceValue) * diff;
-              h.from.add(moveVec);
-              h.to.add(moveVec);
-            }
-
-            const center = h.from.clone().add(h.to).multiplyScalar(0.5);
-            const direction = new THREE.Vector3().subVectors(h.to, h.from);
-
-            // Mantém a espessura original da linha
-            const oldGeom = line.geometry.parameters;
-            const width = oldGeom.width || 0.08;
-            const depth = oldGeom.depth || 0.08;
-            const height = direction.length();
-
-            line.geometry.dispose();
-            line.geometry = new THREE.BoxGeometry(width, height, depth);
-            line.position.copy(center);
-            line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+            return;
           }
+
+          // === OUTROS EIXOS: arrasta apenas SE estiver conectado no endpoint que se moveu ===
+          const newFrom = h.from.clone();
+          const newTo = h.to.clone();
+
+          for (const mp of movedPoints) {
+            if (samePoint(newFrom, mp.oldPoint)) newFrom.add(mp.deltaVec);
+            if (samePoint(newTo, mp.oldPoint)) newTo.add(mp.deltaVec);
+          }
+
+          // se não mudou nada, não recria geometria
+          const changed = !samePoint(newFrom, h.from) || !samePoint(newTo, h.to);
+          if (!changed) return;
+
+          // atualiza histórico
+          h.from.copy(newFrom);
+          h.to.copy(newTo);
+
+          // atualiza mesh mantendo espessura
+          const center = newFrom.clone().add(newTo).multiplyScalar(0.5);
+          const direction = new THREE.Vector3().subVectors(newTo, newFrom);
+
+          const oldGeom = line.geometry.parameters;
+          const width = oldGeom.width || 0.08;
+          const depth = oldGeom.depth || 0.08;
+          const height = direction.length();
+
+          line.geometry.dispose();
+          line.geometry = new THREE.BoxGeometry(width, height, depth);
+          line.position.copy(center);
+          line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
         });
 
-        // Atualiza ponto atual
+        // 3) Atualiza ponto atual (cursor) na direção original da linha selecionada
         const inputs = App3D.getInputs();
         const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
         const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
@@ -172,6 +208,7 @@ window.App3D = window.App3D || {};
         App3D.updateMetrics();
         refreshTotals();
         break;
+      }
 
       case "2":
         editSelectedLine(selectedLine, index);
@@ -179,11 +216,10 @@ window.App3D = window.App3D || {};
         break;
 
       case "3":
-        // Deletar linha
         if (confirm("Tem certeza que deseja deletar esta linha?")) {
-          state.history.splice(index, 1); // remove do histórico
-          App3D.scene.remove(selectedLine); // remove do 3D
-          state.lines.splice(index, 1); // remove do array de linhas
+          state.history.splice(index, 1);
+          App3D.scene.remove(selectedLine);
+          state.lines.splice(index, 1);
           App3D.updateMetrics();
           refreshTotals();
         }
@@ -257,37 +293,31 @@ window.App3D = window.App3D || {};
     const h = state.history[index];
     const axis = h.axis;
 
-    // Pergunta pelo novo comprimento
     const oldGeom = selectedLine.geometry.parameters;
-    const width = oldGeom.width || 0.08; // mantém largura original
-    const depth = oldGeom.depth || 0.08; // mantém profundidade original
-    const currentLen = oldGeom.height || 1; // comprimento atual
+    const width = oldGeom.width || 0.08;
+    const depth = oldGeom.depth || 0.08;
+    const currentLen = oldGeom.height || 1;
+
     const inputLen = prompt(`Digite o novo comprimento da linha no eixo ${axis}:`, currentLen.toFixed(2));
-    if (inputLen === null) return; // cancelou
+    if (inputLen === null) return;
     const newLen = parseFloat(inputLen);
     if (isNaN(newLen) || newLen <= 0) return alert("Valor inválido!");
     const diff = newLen - currentLen;
 
-    // Salva direção original da linha
     const originalDirection = new THREE.Vector3(0, 1, 0).applyQuaternion(selectedLine.quaternion);
 
-    // Ponto mais distante de 0 no eixo selecionado
     const axisLower = axis.toLowerCase();
     const fromVal = h.from[axisLower];
     const toVal = h.to[axisLower];
-    let maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
-    const sign = Math.sign(maxPointVal);
+    const maxPointVal = Math.abs(fromVal) > Math.abs(toVal) ? fromVal : toVal;
+    const sign = Math.sign(maxPointVal) || 1;
     const newPos = maxPointVal + diff * sign;
 
-    let newFrom = h.from.clone();
-    let newTo = h.to.clone();
-    if (toVal === maxPointVal) {
-      newTo[axisLower] = newPos;
-    } else {
-      newFrom[axisLower] = newPos;
-    }
+    const newFrom = h.from.clone();
+    const newTo = h.to.clone();
+    if (toVal === maxPointVal) newTo[axisLower] = newPos;
+    else newFrom[axisLower] = newPos;
 
-    // Atualiza geometria e posição mantendo a espessura original
     const height = newFrom.distanceTo(newTo);
     selectedLine.geometry.dispose();
     selectedLine.geometry = new THREE.BoxGeometry(width, height, depth);
@@ -297,17 +327,14 @@ window.App3D = window.App3D || {};
       new THREE.Vector3().subVectors(newTo, newFrom).normalize()
     );
 
-    // Atualiza histórico
     h.from.copy(newFrom);
     h.to.copy(newTo);
 
-    // Atualiza ponto atual na direção da linha
     const inputs = App3D.getInputs();
     const moveVector = originalDirection.clone().normalize().multiplyScalar(diff);
     const newPoint = new THREE.Vector3(inputs.x, inputs.y, inputs.z).add(moveVector);
     App3D.setInputs(newPoint.x, newPoint.y, newPoint.z);
 
-    // Recalcula totalLength e fixadores
     state.totalLength = 0;
     state.vertexMap.clear();
     state.history.forEach((lineHistory) => {
@@ -329,7 +356,7 @@ window.App3D = window.App3D || {};
     raycasterClick.setFromCamera({ x: mouseX, y: mouseY }, App3D.camera);
     const intersects = raycasterClick.intersectObjects(state.lines);
 
-    if (intersects.length === 0) return; // Nenhuma linha clicada
+    if (intersects.length === 0) return;
 
     const clickedLine = intersects[0].object;
     const index = state.lines.indexOf(clickedLine);
@@ -339,19 +366,18 @@ window.App3D = window.App3D || {};
     const axis = h.axis;
     const axisLower = axis.toLowerCase();
 
-    // Valores mínimo e máximo da linha no eixo
     const minVal = Math.min(h.from[axisLower], h.to[axisLower]);
     const maxVal = Math.max(h.from[axisLower], h.to[axisLower]);
 
-    // Pergunta onde posicionar o ponto atual
-    const input = prompt(`Linha eixo ${axis} de ${minVal.toFixed(2)} -> ${maxVal.toFixed(2)}\nDigite a posição desejada:`);
-    if (input === null) return; // Cancelou
-    let newVal = parseFloat(input);
+    const input = prompt(
+      `Linha eixo ${axis} de ${minVal.toFixed(2)} -> ${maxVal.toFixed(2)}\nDigite a posição desejada:`
+    );
+    if (input === null) return;
+    const newVal = parseFloat(input);
     if (isNaN(newVal) || newVal < minVal || newVal > maxVal) {
       return alert(`Valor inválido! Deve estar entre ${minVal.toFixed(2)} e ${maxVal.toFixed(2)}.`);
     }
 
-    // Mantém os outros eixos iguais ao ponto inicial da linha
     let newX = h.from.x;
     let newY = h.from.y;
     let newZ = h.from.z;
@@ -360,11 +386,11 @@ window.App3D = window.App3D || {};
     else if (axisLower === "y") newY = newVal;
     else if (axisLower === "z") newZ = newVal;
 
-    // Atualiza ponto atual
     App3D.setInputs(newX, newY, newZ);
   });
 
   /* ... bloco de preview comentado ... */
 })();
+
 
 
