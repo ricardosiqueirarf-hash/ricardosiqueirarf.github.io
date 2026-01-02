@@ -69,6 +69,14 @@
     hr { border: none; border-top:1px solid #333; margin: 12px 0; }
     .row { display:flex; gap:10px; }
     .row > * { flex:1; }
+
+    /* preview simples das cores no select (texto) */
+    .hint {
+      font-size: 12px;
+      margin-top: 6px;
+      color: #bdbdbd;
+      line-height: 1.35;
+    }
   </style>
 </head>
 
@@ -79,9 +87,9 @@
     <label>Modelo</label>
     <select id="modeloSelect"></select>
 
-    <!-- ✅ DROPLIST DE CORES -->
-    <label>Cor do Perfil</label>
+    <label>Cor do perfil</label>
     <select id="corSelect"></select>
+    <div class="hint">Dica: isso recolore o material do modelo (baseColor). Se o GLB tiver textura, a cor pode “misturar”.</div>
 
     <div class="row">
       <button id="resetCamera">Resetar câmera</button>
@@ -181,13 +189,35 @@
     renderer.setPixelRatio(window.devicePixelRatio || 1);
     container.appendChild(renderer.domElement);
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    // =========================
+    // LIGHTS (MELHORADAS / MAIS FORTES)
+    // =========================
+    // Ambiente bem mais forte pra não ficar escuro
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
+    scene.add(ambientLight);
+
+    // Direcional principal bem mais forte
+    const dir = new THREE.DirectionalLight(0xffffff, 3.5);
     dir.position.set(10, 20, 10);
     scene.add(dir);
 
+    // Fill lights (luz de preenchimento) pra acabar com sombras duras
+    const dirFill1 = new THREE.DirectionalLight(0xffffff, 2.2);
+    dirFill1.position.set(-18, 12, 6);
+    scene.add(dirFill1);
+
+    const dirFill2 = new THREE.DirectionalLight(0xffffff, 1.8);
+    dirFill2.position.set(6, 10, -18);
+    scene.add(dirFill2);
+
+    // Hemisférica ajuda MUITO em modelos metálicos/escuros
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x222233, 1.6);
+    hemi.position.set(0, 50, 0);
+    scene.add(hemi);
+
+    // =========================
     // Helpers
+    // =========================
     const grid = new THREE.GridHelper(10, 20);
     grid.material.opacity = 0.20;
     grid.material.transparent = true;
@@ -234,11 +264,10 @@
       ];
     }
 
-    // ✅ ADICIONADO: 3545.glb (Perfil Slim) e 3446.glb (Perfil Invisível)
     const modelos = [
       { label: "Perfil 1036", filename: "1036.glb" },
-      { label: "Perfil Slim (3545)", filename: "3545.glb" },
-      { label: "Perfil Invisível (3446)", filename: "3446.glb" }
+      { label: "Perfil Slim", filename: "3545.glb" },
+      { label: "Perfil Invisível", filename: "3446.glb" },
     ].map(m => ({ label: m.label, urls: makeUrlCandidates(m.filename) }));
 
     const modeloSelect = document.getElementById("modeloSelect");
@@ -252,55 +281,56 @@
     // =========================
     // CORES (DROPLIST)
     // =========================
-    const corSelect = document.getElementById("corSelect");
-
     const CORES = [
-      { label: "Preto",      value: "preto",      hex: "#000000" },
-      { label: "Prata",      value: "prata",      hex: "#c6c7c9" },
-      { label: "Bronze 1001",value: "bronze1001", hex: "#716859" },
-      { label: "Dourado",    value: "dourado",    hex: "#B89C5D" },
-      { label: "Inox",       value: "inox",       hex: "#918B82" }
+      { key: "preto", label: "Preto", hex: "#000000" },
+      { key: "prata", label: "Prata", hex: "#c6c7c9" },
+      { key: "bronze1001", label: "Bronze 1001", hex: "#716859" },
+      { key: "dourado", label: "Dourado", hex: "#B89C5D" },
+      { key: "inox", label: "Inox", hex: "#918B82" },
     ];
 
-    CORES.forEach(c => {
+    const corSelect = document.getElementById("corSelect");
+    CORES.forEach((c) => {
       const opt = document.createElement("option");
-      opt.value = c.value;
+      opt.value = c.key;
       opt.textContent = c.label;
       corSelect.appendChild(opt);
     });
+    corSelect.value = "preto"; // padrão
 
-    function applyColorToModel(root, hex) {
+    // Cor atual aplicada ao modelo
+    let currentColor = new THREE.Color(CORES.find(c => c.key === corSelect.value).hex);
+
+    function applyColorToModel(root, color) {
       if (!root) return;
-      const color = new THREE.Color(hex);
 
       root.traverse((n) => {
-        if (!n.isMesh) return;
+        if (!n.isMesh || !n.material) return;
 
         const mats = Array.isArray(n.material) ? n.material : [n.material];
         mats.forEach((m) => {
           if (!m) return;
 
-          // Se o material não tiver "color" (ex: alguns shaders), tenta trocar por MeshStandardMaterial mantendo mapa
-          if (!("color" in m)) {
-            const next = new THREE.MeshStandardMaterial({
-              color,
-              map: m.map || null,
-              metalness: 0.6,
-              roughness: 0.35
-            });
-            next.side = THREE.DoubleSide;
-            next.needsUpdate = true;
-            n.material = next;
-            return;
+          // tenta aplicar em materiais comuns
+          if ("color" in m && m.color) {
+            m.color.set(color);
           }
+          // melhora leitura do material sob luz forte
+          if ("metalness" in m) m.metalness = Math.max(0.4, m.metalness ?? 0.6);
+          if ("roughness" in m) m.roughness = Math.min(0.55, m.roughness ?? 0.45);
 
-          m.color.copy(color);
           m.needsUpdate = true;
         });
       });
 
-      logLine(`🎨 Cor aplicada: ${hex}`, "ok");
+      logLine(`🎨 Cor aplicada: ${color.getStyle ? color.getStyle() : color}`, "ok");
     }
+
+    corSelect.addEventListener("change", () => {
+      const c = CORES.find(x => x.key === corSelect.value) || CORES[0];
+      currentColor = new THREE.Color(c.hex);
+      if (currentModel) applyColorToModel(currentModel, currentColor);
+    });
 
     // =========================
     // CAMERA CONTROLS (orbital simples)
@@ -515,9 +545,8 @@
           // materiais sempre visíveis
           forceVisibleMaterials(currentModel);
 
-          // aplica cor selecionada (mesmas opções para todos os modelos)
-          const corAtual = CORES.find(c => c.value === corSelect.value) || CORES[0];
-          applyColorToModel(currentModel, corAtual.hex);
+          // aplica cor selecionada (mesma para todos os modelos)
+          applyColorToModel(currentModel, currentColor);
 
           // BoxHelper pra você VER, mesmo se material estiver zoado
           boxHelper = new THREE.BoxHelper(currentModel, 0x00ff88);
@@ -552,13 +581,6 @@
     modeloSelect.addEventListener("change", async (e) => {
       const m = modelos.find(x => x.label === e.target.value) || modelos[0];
       await carregarModelo(m.label, m.urls);
-    });
-
-    // ✅ quando muda a cor, recolore o modelo atual (sem recarregar)
-    corSelect.addEventListener("change", () => {
-      const c = CORES.find(x => x.value === corSelect.value) || CORES[0];
-      if (!currentModel) return logLine("⚠️ Sem modelo carregado pra aplicar cor.", "warn");
-      applyColorToModel(currentModel, c.hex);
     });
 
     document.getElementById("btnTestGLB").addEventListener("click", async () => {
@@ -624,9 +646,6 @@
     // =========================
     // START
     // =========================
-    // default: primeira cor da lista
-    corSelect.value = CORES[0].value;
-
     modeloSelect.value = modelos[0].label;
     await carregarModelo(modelos[0].label, modelos[0].urls);
   </script>
