@@ -5,45 +5,191 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Corte de Vidro | ColorGlass</title>
 <style>
-body { font-family: Arial, sans-serif; background: #f2f2f2; margin:0; padding:0;}
-.container { padding: 20px; max-width: 900px; margin:auto; }
-h1 { text-align:center; }
-label { display:block; margin:10px 0 5px; }
-input { padding:5px; width: 100px; margin-right:10px; }
-button { padding:7px 14px; margin-top:10px; cursor:pointer; }
-#cortesLista div { background:#fff; padding:10px; margin-bottom:10px; border-radius:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-#resultado { margin-top:20px; padding:10px; background:#fff; border-radius:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-svg { border:1px solid #333; margin-top:10px; }
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #f5f7fa; color: #333; }
+
+.app { display:flex; min-height:100vh; }
+
+.sidebar {
+    width: 220px;
+    background: #1079ba;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 25px 20px;
+    gap: 12px;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+    border-radius: 0 10px 10px 0;
+}
+
+.sidebar h3 { font-size: 1.4rem; margin-bottom: 15px; }
+.sidebar button {
+    background: #0d5d8c;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 500;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+.sidebar button:hover { background: #0a4a6b; transform: translateX(5px); }
+
+.content {
+    flex: 1;
+    padding: 35px;
+    background: #f9f9f9;
+    overflow-y: auto;
+}
+
+h1 { color: #1079ba; margin-bottom: 10px; }
+
+.section-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+label { font-size: 0.95rem; display: flex; flex-direction: column; gap: 6px; }
+input, select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: all 0.2s ease;
+}
+input:focus, select:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 4px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #1079ba;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn:hover { background: #0d5d8c; transform: translateY(-2px); }
+.btn-secondary { background: #e1e8f0; color: #333; }
+.btn-secondary:hover { background: #d2dbe6; }
+.btn-danger { background: #e84118; }
+.btn-danger:hover { background: #c23616; }
+
+.list-item {
+    border: 1px solid #dcdde1;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.list-item span { font-size: 0.95rem; }
+
+#resultado {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #eef4fb;
+    color: #0d5d8c;
+    font-weight: 600;
+}
+
+#resultado p { color: #333; font-weight: 400; margin-top: 6px; }
+
+#svgCorte { border: 1px solid #dcdde1; margin-top: 10px; background: #fff; border-radius: 8px; width: 100%; height: auto; }
+
+.helper-text { color: #666; font-size: 0.85rem; margin-top: 6px; }
+
+@media(max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-radius: 0; }
+}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>Corte de Vidro</h1>
+<div class="app">
+    <div class="sidebar">
+        <h3>COLOR GLASS</h3>
+        <button onclick="window.location.href='/'">Orçamentos</button>
+        <button onclick="window.location.href='perfis.html'">Perfis</button>
+        <button onclick="window.location.href='vidros.html'">Vidros</button>
+        <button onclick="window.location.href='insumos.html'">Insumos</button>
+        <button onclick="window.location.href='catalogo.html'">Catálogo</button>
+        <button onclick="window.location.href='3dteste.html'">3D</button>
+    </div>
 
-<h2>Adicionar Corte</h2>
-<label>Largura (mm) <input type="number" id="largura"></label>
-<label>Altura (mm) <input type="number" id="altura"></label>
-<label>Espessura (mm) <input type="number" id="espessura" value="8"></label>
-<label>Tipo de Vidro 
-<select id="tipoVidro">
-    <option value="comum">Comum</option>
-    <option value="temperado">Temperado</option>
-    <option value="laminado">Laminado</option>
-</select>
-</label>
-<button onclick="adicionarCorte()">Adicionar Corte</button>
+    <div class="content">
+        <h1>Corte de Vidro</h1>
 
-<h2>Cortes Adicionados</h2>
-<div id="cortesLista"></div>
+        <div class="section-card">
+            <h2>Adicionar Corte</h2>
+            <div class="form-grid">
+                <label>Largura (mm)
+                    <input type="number" id="largura" placeholder="Ex: 800">
+                </label>
+                <label>Altura (mm)
+                    <input type="number" id="altura" placeholder="Ex: 2100">
+                </label>
+                <label>Espessura (mm)
+                    <input type="number" id="espessura" value="8">
+                </label>
+                <label>Tipo de Vidro
+                    <select id="tipoVidro">
+                        <option value="comum">Comum</option>
+                        <option value="temperado">Temperado</option>
+                        <option value="laminado">Laminado</option>
+                    </select>
+                </label>
+            </div>
+            <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn" onclick="adicionarCorte()">Adicionar Corte</button>
+                <button class="btn btn-secondary" onclick="limparFormulario()">Limpar</button>
+            </div>
+            <p class="helper-text">Adicione os cortes necessários antes de calcular a melhor distribuição.</p>
+        </div>
 
-<button onclick="calcularCortes()">Calcular Melhor Distribuição</button>
+        <div class="section-card">
+            <h2>Cortes Adicionados</h2>
+            <div id="cortesLista"></div>
+            <button class="btn" onclick="calcularCortes()">Calcular Melhor Distribuição</button>
+        </div>
 
-<div id="resultado"></div>
-<svg id="svgCorte" width="800" height="1000"></svg>
+        <div class="section-card">
+            <h2>Resultado</h2>
+            <div id="resultado">Ainda não calculado.</div>
+            <svg id="svgCorte" width="800" height="1000"></svg>
+        </div>
+    </div>
 </div>
 
 <script>
 const cortes = [];
+
+function limparFormulario() {
+    document.getElementById('largura').value = '';
+    document.getElementById('altura').value = '';
+    document.getElementById('espessura').value = '8';
+    document.getElementById('tipoVidro').value = 'comum';
+}
 
 function adicionarCorte(){
     const largura = +document.getElementById('largura').value;
@@ -55,16 +201,25 @@ function adicionarCorte(){
 
     cortes.push({largura, altura, espessura, tipoVidro});
     renderCortes();
+    limparFormulario();
 }
 
 function renderCortes(){
     const container = document.getElementById('cortesLista');
     container.innerHTML = '';
+    if (cortes.length === 0) {
+        container.innerHTML = '<p class="helper-text">Nenhum corte adicionado ainda.</p>';
+        return;
+    }
+
     cortes.forEach((c, idx)=>{
-        container.innerHTML += `<div>
-            Corte ${idx+1}: ${c.largura}x${c.altura} mm - ${c.tipoVidro} 
-            <button onclick="removerCorte(${idx})">Remover</button>
-        </div>`;
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+            <span><strong>Corte ${idx+1}</strong> — ${c.largura}x${c.altura} mm | ${c.tipoVidro} | ${c.espessura} mm</span>
+            <button class="btn btn-danger" onclick="removerCorte(${idx})">Remover</button>
+        `;
+        container.appendChild(item);
     });
 }
 
@@ -122,7 +277,7 @@ function desenharSVG(cortesCalculados){
     const scale = Math.min(800/chapaWidth, 1000/chapaHeight);
 
     // Desenhar a chapa
-    svg.innerHTML = `<rect x="0" y="0" width="${chapaWidth*scale}" height="${chapaHeight*scale}" fill="#ddd" stroke="#000" stroke-width="2"/>`;
+    svg.innerHTML = `<rect x="0" y="0" width="${chapaWidth*scale}" height="${chapaHeight*scale}" fill="#dde6f5" stroke="#1079ba" stroke-width="2"/>`;
 
     cortesCalculados.forEach(c=>{
         const x = c.x * scale;
@@ -130,9 +285,11 @@ function desenharSVG(cortesCalculados){
         const w = c.largura * scale;
         const h = c.altura * scale;
 
-        svg.innerHTML += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#9cf" stroke="#000" stroke-width="1"/>`;
+        svg.innerHTML += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#9cc9ff" stroke="#0d5d8c" stroke-width="1"/>`;
     });
 }
+
+renderCortes();
 </script>
 </body>
 </html>
