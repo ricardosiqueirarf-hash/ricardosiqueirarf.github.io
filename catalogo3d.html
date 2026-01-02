@@ -110,13 +110,23 @@ const loader = new THREE.GLTFLoader();
 let currentModel = null;
 
 const modelos = [
-  { label: "Perfil Classico", url: "1036.glb" }
+  {
+    label: "Perfil Classico",
+    urls: [
+      "1036.glb",
+      "/1036.glb",
+      "assets/1036.glb",
+      "/assets/1036.glb",
+      "models/1036.glb",
+      "/models/1036.glb"
+    ]
+  }
 ];
 
 const modeloSelect = document.getElementById("modeloSelect");
 modelos.forEach((modelo) => {
   const option = document.createElement("option");
-  option.value = modelo.url;
+  option.value = modelo.label;
   option.textContent = modelo.label;
   modeloSelect.appendChild(option);
 });
@@ -157,27 +167,39 @@ function centralizarModelo(model) {
   cameraState.pitch = Math.PI / 6;
 }
 
-function carregarModelo(url) {
-  setStatus("Carregando modelo...");
+function carregarModeloComFallback(urls, label) {
+  if (!urls || urls.length === 0) {
+    setStatus("Nenhuma URL configurada para o modelo.");
+    return;
+  }
+
+  const [urlAtual, ...resto] = urls;
+  setStatus(`Carregando modelo... (${urlAtual})`);
   limparModelo();
   loader.load(
-    url,
+    urlAtual,
     (gltf) => {
       currentModel = gltf.scene;
       scene.add(currentModel);
       centralizarModelo(currentModel);
-      setStatus("Modelo carregado.");
+      setStatus(`Modelo carregado: ${label}`);
     },
     undefined,
     (err) => {
       console.error(err);
-      setStatus("Erro ao carregar modelo.");
+      if (resto.length > 0) {
+        carregarModeloComFallback(resto, label);
+        return;
+      }
+      setStatus("Erro ao carregar modelo. Verifique o caminho do arquivo.");
     }
   );
 }
 
 modeloSelect.addEventListener("change", (event) => {
-  carregarModelo(event.target.value);
+  const modelo = modelos.find((item) => item.label === event.target.value);
+  if (!modelo) return;
+  carregarModeloComFallback(modelo.urls, modelo.label);
 });
 
 // CONTROLES DE CÂMERA SIMPLES
@@ -251,8 +273,9 @@ function animate() {
 }
 
 atualizarCamera();
-carregarModelo(modelos[0].url);
+carregarModeloComFallback(modelos[0].urls, modelos[0].label);
 animate();
 </script>
 </body>
 </html>
+
