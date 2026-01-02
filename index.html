@@ -160,6 +160,32 @@ th, td { border:1px solid #dcdde1; padding:10px; text-align:left; }
 th { background: #e6f0fa; }
 tr:hover { background: #f0f8ff; }
 
+.orcamentos-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.orcamentos-toolbar input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: all 0.2s ease;
+}
+
+.orcamentos-toolbar input:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 5px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+.status-text {
+    font-size: 0.9rem;
+    color: #555;
+}
+
 /* SCROLLBARS CUSTOM */
 .content::-webkit-scrollbar { width: 10px; }
 .content::-webkit-scrollbar-thumb { background: #1079ba; border-radius: 5px; }
@@ -193,6 +219,10 @@ tr:hover { background: #f0f8ff; }
         </div>
 
         <h2>Orçamentos Existentes</h2>
+        <div class="orcamentos-toolbar">
+            <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
+            <span id="orcamentosStatus" class="status-text">Carregando...</span>
+        </div>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
 
         <div id="portasSalvas"></div>
@@ -230,34 +260,85 @@ const BACKEND_URL = "https://colorglass.onrender.com";
 // =====================
 // CARREGAR ORÇAMENTOS
 // =====================
+let orcamentosCache = [];
+
+function atualizarStatusOrcamentos(mensagem) {
+    const status = document.getElementById("orcamentosStatus");
+    status.textContent = mensagem;
+}
+
+function renderizarOrcamentos(orcamentos) {
+    const container = document.getElementById("orcamentosExistentes");
+    container.innerHTML = "";
+
+    if(orcamentos.length === 0){
+        container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
+        atualizarStatusOrcamentos("Nenhum resultado");
+        return;
+    }
+
+    const table = document.createElement("table");
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th># Pedido</th>
+                <th>Cliente</th>
+                <th>Data Criação</th>
+                <th>Qtd Total</th>
+                <th>Valor Total (R$)</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+    const tbody = table.querySelector("tbody");
+
+    orcamentos.forEach((o) => {
+        const tr = document.createElement("tr");
+        const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
+        tr.innerHTML = `
+            <td>${o.numero_pedido}</td>
+            <td>${o.cliente_nome}</td>
+            <td>${dataCriacao}</td>
+            <td>${o.quantidade_total ?? 0}</td>
+            <td>${Number(o.valor_total ?? 0).toFixed(2)}</td>
+            <td>
+                <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    container.appendChild(table);
+    atualizarStatusOrcamentos(`${orcamentos.length} orçamento(s)`);
+}
+
+function aplicarFiltroOrcamentos() {
+    const filtro = document.getElementById("orcamentoFiltro").value.trim().toLowerCase();
+    if (!filtro) {
+        renderizarOrcamentos(orcamentosCache);
+        return;
+    }
+
+    const filtrados = orcamentosCache.filter((o) => {
+        const cliente = (o.cliente_nome || "").toLowerCase();
+        const pedido = String(o.numero_pedido || "");
+        return cliente.includes(filtro) || pedido.includes(filtro);
+    });
+    renderizarOrcamentos(filtrados);
+}
+
 async function carregarOrcamentos() {
     try {
+        atualizarStatusOrcamentos("Carregando...");
         const res = await fetch(`${BACKEND_URL}/api/orcamentos`);
         const data = await res.json();
-        const container = document.getElementById("orcamentosExistentes");
-        container.innerHTML = "";
         const orcamentos = data.orcamentos || [];
 
         if(orcamentos.length === 0){
-            container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
+            renderizarOrcamentos([]);
             return;
         }
-
-        const table = document.createElement("table");
-        table.innerHTML = `
-            <thead>
-                <tr>
-                    <th># Pedido</th>
-                    <th>Cliente</th>
-                    <th>Data Criação</th>
-                    <th>Qtd Total</th>
-                    <th>Valor Total (R$)</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        `;
-        const tbody = table.querySelector("tbody");
 
         for(const o of orcamentos){
             try {
@@ -276,30 +357,20 @@ async function carregarOrcamentos() {
 
                 qtdTotal = o.quantidade_total ?? qtdTotal;
                 valorTotal = o.valor_total ?? valorTotal;
-
-                const tr = document.createElement("tr");
-                const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
-                tr.innerHTML = `
-                    <td>${o.numero_pedido}</td>
-                    <td>${o.cliente_nome}</td>
-                    <td>${dataCriacao}</td>
-                    <td>${qtdTotal}</td>
-                    <td>${valorTotal.toFixed(2)}</td>
-                    <td>
-                        <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+                o.quantidade_total = qtdTotal;
+                o.valor_total = valorTotal;
             } catch(err) {
                 console.error("Erro ao carregar portas do orçamento:", err);
             }
         }
 
-        container.appendChild(table);
+        orcamentosCache = orcamentos;
+        renderizarOrcamentos(orcamentosCache);
 
     } catch(err){
         console.error("Erro ao carregar orçamentos:", err);
         document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
+        atualizarStatusOrcamentos("Erro ao carregar");
     }
 }
 
@@ -340,9 +411,11 @@ async function criarFichaCliente(){
 
 // Carrega orçamentos automaticamente ao abrir a página
 carregarOrcamentos();
+document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
 </script>
 </body>
 </html>
+
 
 
 
