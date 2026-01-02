@@ -79,9 +79,10 @@
 
 <div id="canvas-container"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
-<script>
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+
 const container = document.getElementById("canvas-container");
 const statusText = document.getElementById("statusText");
 
@@ -106,7 +107,7 @@ const directional = new THREE.DirectionalLight(0xffffff, 0.8);
 directional.position.set(10, 20, 10);
 scene.add(directional);
 
-const loader = new THREE.GLTFLoader();
+const loader = new GLTFLoader();
 let currentModel = null;
 
 const modelos = [
