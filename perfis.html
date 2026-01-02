@@ -65,6 +65,17 @@ h1 { color: #1079ba; margin-bottom: 10px; }
     outline: none;
 }
 
+.preco-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef4fb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #0d5d8c;
+}
+
 /* BOTÕES DO FORMULÁRIO */
 .form-perfil button {
     padding: 6px 12px;
@@ -162,6 +173,7 @@ tr:hover { background: #e6f0fa; }
         <input id="custo" type="number" step="0.01" placeholder="Custo">
         <input id="margem" type="number" step="0.01" placeholder="Margem %">
         <input id="perda" type="number" step="0.01" placeholder="Perda %">
+        <div class="preco-preview" id="precoPreview">Preço final: R$ 0,00</div>
         
         <div class="tipologias-container">
             <h4>Tipologias</h4>
@@ -193,7 +205,7 @@ tr:hover { background: #e6f0fa; }
                     <th>Custo</th>
                     <th>Margem</th>
                     <th>Perda</th>
-                    <th>Preço Final</th>
+                    <th>Preo Final</th>
                     <th>Tipologias</th>
                     <th>Insumos</th>
                     <th>Ações</th>
@@ -299,6 +311,15 @@ const custoInput = document.getElementById("custo");
 const margemInput = document.getElementById("margem");
 const perdaInput = document.getElementById("perda");
 const perfil_id = document.getElementById("perfil_id");
+const precoPreview = document.getElementById("precoPreview");
+
+function atualizarPrecoPreview() {
+    const custo = parseFloat(custoInput.value) || 0;
+    const margem = parseFloat(margemInput.value) || 0;
+    const perda = parseFloat(perdaInput.value) || 0;
+    const preco = custo * (1 + perda / 100) * (1 + margem / 100);
+    precoPreview.textContent = `Preço final: R$ ${preco.toFixed(2)}`;
+}
 
 async function salvar() {
     const id = perfil_id.value;
@@ -334,6 +355,7 @@ function editar(p) {
     custoInput.value = p.custo;
     margemInput.value = p.margem;
     perdaInput.value = p.perda;
+    atualizarPrecoPreview();
 
     document.querySelectorAll(".tipologias input")
         .forEach(c => c.checked = p.tipologias?.includes(c.value));
@@ -368,6 +390,7 @@ function cancelar() {
     custoInput.value = "";
     margemInput.value = "";
     perdaInput.value = "";
+    atualizarPrecoPreview();
     document.querySelectorAll(".tipologias input").forEach(c => c.checked = false);
 
     document.getElementById("insumos-container").innerHTML = `
@@ -383,10 +406,17 @@ function cancelar() {
 // INIT
 // =====================
 window.addEventListener("DOMContentLoaded", () => {
+    ["input", "change"].forEach((eventType) => {
+        custoInput.addEventListener(eventType, atualizarPrecoPreview);
+        margemInput.addEventListener(eventType, atualizarPrecoPreview);
+        perdaInput.addEventListener(eventType, atualizarPrecoPreview);
+    });
+    atualizarPrecoPreview();
     carregarInsumos();
     carregar();
 });
 </script>
 </body>
 </html>
+
 
