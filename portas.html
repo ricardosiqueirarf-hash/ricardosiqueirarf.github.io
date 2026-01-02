@@ -68,6 +68,38 @@ th { background:#ddd; }
     border-radius: 6px;
 }
 
+.cost-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.cost-details {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    font-size: 0.9rem;
+}
+
+.cost-details table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.cost-details th,
+.cost-details td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: left;
+}
+
+.cost-details th {
+    background: #f0f4fb;
+}
+
 @media (max-width: 1024px) {
     .app { grid-template-columns: 1fr; }
     .sidebar { flex-direction: row; flex-wrap: wrap; }
@@ -120,6 +152,11 @@ if(localStorage.getItem("darkmode") === "true"){
 
                 <div id="campos"></div>
                 <div class="price-preview" id="precoPorta">Preço estimado: R$ 0,00</div>
+                <label class="cost-toggle">
+                    <input type="checkbox" id="toggleCustos" onchange="toggleDetalhesCustos()">
+                    Mostrar custos e preços detalhados
+                </label>
+                <div class="cost-details" id="detalhesCustos" style="display: none;"></div>
                 <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
             </div>
 
@@ -176,6 +213,7 @@ const TIPOLOGIAS = {
 // =====================
 let todosPerfis = []
 let todosVidros = []
+let todosInsumos = []
 
 async function carregarPerfis() {
     const res = await fetch(`${API_BASE}/api/perfis`)
@@ -187,6 +225,12 @@ async function carregarVidros() {
     const res = await fetch(`${API_BASE}/api/vidros`)
     todosVidros = await res.json()
     atualizarVidrosSelect()
+}
+
+async function carregarInsumos() {
+    const res = await fetch(`${API_BASE}/api/materiais`)
+    todosInsumos = await res.json()
+    atualizarDetalhesCusto()
 }
 
 function atualizarPerfisSelect() {
@@ -232,6 +276,130 @@ function atualizarPrecoPorta(){
     if (precoEl) {
         precoEl.textContent = `Preço estimado: R$ ${preco.toFixed(2)}`
     }
+    atualizarDetalhesCusto()
+}
+
+function toggleDetalhesCustos() {
+    const detalhes = document.getElementById("detalhesCustos")
+    const toggle = document.getElementById("toggleCustos")
+    if (!detalhes || !toggle) return
+    detalhes.style.display = toggle.checked ? "block" : "none"
+    if (toggle.checked) {
+        atualizarDetalhesCusto()
+    }
+}
+
+function formatarMoeda(valor) {
+    return `R$ ${Number(valor).toFixed(2)}`
+}
+
+function atualizarDetalhesCusto() {
+    const detalhes = document.getElementById("detalhesCustos")
+    const toggle = document.getElementById("toggleCustos")
+    if (!detalhes || !toggle || !toggle.checked) return
+
+    const largura = (+document.getElementById("largura")?.value || 0) / 1000
+    const altura = (+document.getElementById("altura")?.value || 0) / 1000
+    const quantidade = +document.getElementById("quantidade")?.value || 1
+    const perimetro = 2 * (largura + altura)
+
+    const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value)
+    const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value)
+    const insumos = (perfil?.insumos || [])
+        .map((nome) => todosInsumos.find((insumo) => insumo.nome === nome))
+        .filter(Boolean)
+
+    if (!perfil && !vidro && insumos.length === 0) {
+        detalhes.innerHTML = "<em>Selecione perfil, vidro e tipologia para ver os custos.</em>"
+        return
+    }
+
+    const linhas = []
+    let custoTotal = 0
+    let precoTotal = 0
+
+    if (perfil) {
+        const custoPerfil = (perfil.custo || 0) * perimetro
+        const precoPerfil = (perfil.preco || 0) * perimetro
+        custoTotal += custoPerfil
+        precoTotal += precoPerfil
+        linhas.push({
+            item: `Perfil (${perfil.nome})`,
+            quantidade: `${perimetro.toFixed(2)} m`,
+            custo: custoPerfil,
+            preco: precoPerfil
+        })
+    }
+
+    if (vidro) {
+        const area = largura * altura
+        const custoVidro = (vidro.custo || 0) * area
+        const precoVidro = (vidro.preco || 0) * area
+        custoTotal += custoVidro
+        precoTotal += precoVidro
+        linhas.push({
+            item: `Vidro (${vidro.tipo})`,
+            quantidade: `${area.toFixed(2)} m²`,
+            custo: custoVidro,
+            preco: precoVidro
+        })
+    }
+
+    insumos.forEach((insumo) => {
+        const tipo = insumo.tipo_medida
+        let quantidadeInsumo = 0
+        if (tipo === "metro_linear") {
+            quantidadeInsumo = perimetro
+        } else if (tipo === "unidade") {
+            quantidadeInsumo = quantidade
+        } else {
+            return
+        }
+
+        const custoInsumo = (insumo.custo || 0) * quantidadeInsumo
+        const precoInsumo = (insumo.preco || 0) * quantidadeInsumo
+        custoTotal += custoInsumo
+        precoTotal += precoInsumo
+        linhas.push({
+            item: `Insumo (${insumo.nome})`,
+            quantidade: tipo === "metro_linear"
+                ? `${quantidadeInsumo.toFixed(2)} m`
+                : `${quantidadeInsumo} un`,
+            custo: custoInsumo,
+            preco: precoInsumo
+        })
+    })
+
+    detalhes.innerHTML = `
+        <strong>Detalhamento de custos e preços</strong>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Custo</th>
+                    <th>Preço</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${linhas.map((linha) => `
+                    <tr>
+                        <td>${linha.item}</td>
+                        <td>${linha.quantidade}</td>
+                        <td>${formatarMoeda(linha.custo)}</td>
+                        <td>${formatarMoeda(linha.preco)}</td>
+                    </tr>
+                `).join("")}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Totais</th>
+                    <th>${formatarMoeda(custoTotal)}</th>
+                    <th>${formatarMoeda(precoTotal)}</th>
+                </tr>
+            </tfoot>
+        </table>
+    `
 }
 
 // =====================
@@ -465,12 +633,14 @@ function verEstrutura3D(idx) {
 // =====================
 carregarPerfis()
 carregarVidros()
+carregarInsumos()
 carregarRascunho()
 carregarPortas()
 carregarEstruturas3D()
 </script>
 </body>
 </html>
+
 
 
 
