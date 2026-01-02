@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catálogo 3D</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Catálogo 3D (DEBUG)</title>
 <style>
   body {
     margin: 0;
@@ -16,194 +16,211 @@
   }
 
   #ui {
-    width: 300px;
+    width: 320px;
     padding: 15px;
     background: #1c1c1c;
     box-sizing: border-box;
+    overflow: auto;
   }
 
-  label {
-    display: block;
-    margin-top: 10px;
-    font-size: 14px;
-  }
-
-  input, select, button {
+  label { display: block; margin-top: 10px; font-size: 14px; }
+  select, button {
     width: 100%;
-    margin-top: 5px;
-    padding: 6px;
+    margin-top: 6px;
+    padding: 8px;
     font-size: 14px;
   }
-
   button {
-    margin-top: 8px;
     cursor: pointer;
     background: #2a2a2a;
     color: #fff;
     border: none;
   }
+  button:hover { background: #444; }
 
-  button:hover {
-    background: #444;
-  }
-
-  #canvas-container {
-    flex: 1;
-    position: relative;
-  }
+  #canvas-container { flex: 1; position: relative; }
 
   #status {
     margin-top: 12px;
     padding: 10px;
     background: #141414;
     font-size: 13px;
-    line-height: 1.6;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
   }
+  .row { margin-top: 8px; padding: 8px; background:#101010; border:1px solid #2a2a2a; border-radius:8px; }
+  .small { font-size: 12px; opacity: 0.9; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
 </style>
 </head>
 <body>
 
 <div id="ui">
-  <h3>Catálogo 3D</h3>
+  <h3>Catálogo 3D <span class="small">(DEBUG)</span></h3>
+
+  <div class="row">
+    <div class="small"><b>URL atual:</b></div>
+    <div id="dbg_url" class="mono small"></div>
+  </div>
+
+  <div class="row">
+    <div class="small"><b>Base Path detectado:</b></div>
+    <div id="dbg_base" class="mono small"></div>
+  </div>
 
   <label>Modelo</label>
   <select id="modeloSelect"></select>
 
   <button id="resetCamera">Resetar câmera</button>
+  <button id="retest">Retestar fetch do GLB</button>
 
-  <div id="status">
-    <strong>Status</strong>
-    <div id="statusText">Carregando modelo...</div>
-  </div>
+  <div id="status"><b>Status</b>\nCarregando...</div>
 </div>
 
 <div id="canvas-container"></div>
 
 <script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+/**
+ * ✅ OBJETIVO: debug total
+ * - Descobrir quem está importando "three"
+ * - Confirmar se 1036.glb está acessível (fetch HEAD/GET)
+ * - Logar erros detalhados do GLTFLoader
+ */
 
+const statusEl = document.getElementById("status");
+const dbgUrlEl = document.getElementById("dbg_url");
+const dbgBaseEl = document.getElementById("dbg_base");
+
+function logStatus(...args) {
+  const msg = args.map(a => (typeof a === "string" ? a : JSON.stringify(a, null, 2))).join(" ");
+  console.log("[STATUS]", ...args);
+  statusEl.textContent = statusEl.textContent.replace(/\s*$/, "") + "\n" + msg;
+}
+
+function resetStatus() {
+  statusEl.textContent = "Status\n";
+}
+
+dbgUrlEl.textContent = location.href;
+
+// Detecta base path do GitHub Pages (repo pages vs root domain)
+function detectBasePath() {
+  // Ex: https://usuario.github.io/repo/  -> base = /repo/
+  // Ex: https://usuario.github.io/       -> base = /
+  const parts = location.pathname.split("/").filter(Boolean);
+  // Se estiver num repo pages, geralmente a primeira parte é o nome do repo
+  // MAS se você estiver usando domínio customizado, pode ser diferente.
+  // Então a heurística: se tiver mais de 0 parte e NÃO terminar com .html,
+  // e você sabe que está em repo pages, use "/"+parts[0]+"/"
+  // Aqui fazemos algo robusto:
+  if (parts.length === 0) return "/";
+  const last = parts[parts.length - 1];
+  const looksLikeFile = last.includes("."); // index.html, alguma.html
+  if (looksLikeFile) {
+    // /repo/index.html -> base /repo/
+    return "/" + parts.slice(0, -1).join("/") + "/";
+  }
+  // /repo/ -> base /repo/
+  return "/" + parts.join("/") + "/";
+}
+
+const BASE = detectBasePath();
+dbgBaseEl.textContent = BASE;
+
+// ============================
+// CAPTURA DE ERROS GLOBAL
+// ============================
+window.addEventListener("error", (e) => {
+  console.error("[window.error]", e.error || e.message, e);
+  logStatus("❌ window.error:", e.message);
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("[unhandledrejection]", e.reason);
+  logStatus("❌ unhandledrejection:", (e.reason && e.reason.message) ? e.reason.message : String(e.reason));
+});
+
+// ============================
+// IMPORTS: CDN ABSOLUTO (SEM "three")
+// ============================
+async function importDeps() {
+  // Use URLs absolutas para evitar qualquer bundler/importmap tentar "three"
+  const THREE_URL = "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+  const GLTF_URL  = "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+
+  logStatus("🔧 Importando Three:", THREE_URL);
+  const THREE = await import(THREE_URL);
+
+  logStatus("🔧 Importando GLTFLoader:", GLTF_URL);
+  const { GLTFLoader } = await import(GLTF_URL);
+
+  return { THREE, GLTFLoader };
+}
+
+// ============================
+// DEBUG FETCH DO ARQUIVO GLB
+// ============================
+async function debugFetch(url) {
+  try {
+    logStatus(`🧪 Testando acesso ao GLB: ${url}`);
+    // HEAD nem sempre permitido no Pages, então fazemos GET com range pequeno quando possível.
+    const r = await fetch(url, { cache: "no-store" });
+    logStatus(`✅ fetch() status: ${r.status} ${r.statusText}`);
+    const ct = r.headers.get("content-type");
+    const cl = r.headers.get("content-length");
+    logStatus(`ℹ️ content-type: ${ct || "(vazio)"}`);
+    logStatus(`ℹ️ content-length: ${cl || "(vazio)"}`);
+
+    // lê só um pedacinho para validar que veio binário (sem estourar memória)
+    const buf = await r.arrayBuffer();
+    logStatus(`✅ arrayBuffer bytes: ${buf.byteLength}`);
+    // GLB começa com "glTF" (ASCII) nos primeiros 4 bytes
+    const header = new Uint8Array(buf.slice(0, 4));
+    const text = String.fromCharCode(...header);
+    logStatus(`ℹ️ header[0..4]: "${text}" (esperado: "glTF")`);
+    return true;
+  } catch (err) {
+    console.error(err);
+    logStatus("❌ Falha no fetch do GLB:", err.message || String(err));
+    return false;
+  }
+}
+
+// ============================
+// APP 3D
+// ============================
 const container = document.getElementById("canvas-container");
-const statusText = document.getElementById("statusText");
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111111);
-
-const camera = new THREE.PerspectiveCamera(
-  60,
-  container.clientWidth / container.clientHeight,
-  0.1,
-  10000
-);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(window.devicePixelRatio || 1);
-container.appendChild(renderer.domElement);
-
-const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-scene.add(ambient);
-const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-directional.position.set(10, 20, 10);
-scene.add(directional);
-
-const loader = new GLTFLoader();
-let currentModel = null;
+const modeloSelect = document.getElementById("modeloSelect");
 
 const modelos = [
   {
-    label: "Perfil Classico",
+    label: "Perfil 1036 (root)",
+    // ✅ Melhor prática no GitHub Pages: usar BASE + filename
+    // Assim funciona tanto em / quanto em /repo/
     urls: [
-      "1036.glb",
-      "/1036.glb",
-      "assets/1036.glb",
-      "/assets/1036.glb",
-      "models/1036.glb",
-      "/models/1036.glb"
+      `${BASE}1036.glb`,
+      `./1036.glb`,
+      `/1036.glb`,
+      `${BASE}assets/1036.glb`,
+      `${BASE}models/1036.glb`,
     ]
   }
 ];
 
-const modeloSelect = document.getElementById("modeloSelect");
-modelos.forEach((modelo) => {
-  const option = document.createElement("option");
-  option.value = modelo.label;
-  option.textContent = modelo.label;
-  modeloSelect.appendChild(option);
-});
-
-function setStatus(texto) {
-  statusText.textContent = texto;
+for (const m of modelos) {
+  const opt = document.createElement("option");
+  opt.value = m.label;
+  opt.textContent = m.label;
+  modeloSelect.appendChild(opt);
 }
 
-function limparModelo() {
-  if (!currentModel) return;
-  scene.remove(currentModel);
-  currentModel.traverse((node) => {
-    if (node.geometry) node.geometry.dispose();
-    if (node.material) {
-      if (Array.isArray(node.material)) {
-        node.material.forEach((m) => m.dispose());
-      } else {
-        node.material.dispose();
-      }
-    }
-  });
-  currentModel = null;
-}
+let THREE, GLTFLoader;
+let scene, camera, renderer, loader;
+let currentModel = null;
 
-function centralizarModelo(model) {
-  const box = new THREE.Box3().setFromObject(model);
-  const center = box.getCenter(new THREE.Vector3());
-  model.position.sub(center);
-
-  const size = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const distance = maxDim * 2.2 || 200;
-
-  camera.position.set(distance, distance, distance);
-  camera.lookAt(0, 0, 0);
-  cameraState.radius = distance;
-  cameraState.yaw = Math.PI / 4;
-  cameraState.pitch = Math.PI / 6;
-}
-
-function carregarModeloComFallback(urls, label) {
-  if (!urls || urls.length === 0) {
-    setStatus("Nenhuma URL configurada para o modelo.");
-    return;
-  }
-
-  const [urlAtual, ...resto] = urls;
-  setStatus(`Carregando modelo... (${urlAtual})`);
-  limparModelo();
-  loader.load(
-    urlAtual,
-    (gltf) => {
-      currentModel = gltf.scene;
-      scene.add(currentModel);
-      centralizarModelo(currentModel);
-      setStatus(`Modelo carregado: ${label}`);
-    },
-    undefined,
-    (err) => {
-      console.error(err);
-      if (resto.length > 0) {
-        carregarModeloComFallback(resto, label);
-        return;
-      }
-      setStatus("Erro ao carregar modelo. Verifique o caminho do arquivo.");
-    }
-  );
-}
-
-modeloSelect.addEventListener("change", (event) => {
-  const modelo = modelos.find((item) => item.label === event.target.value);
-  if (!modelo) return;
-  carregarModeloComFallback(modelo.urls, modelo.label);
-});
-
-// CONTROLES DE CÂMERA SIMPLES
+// CONTROLES DE CÂMERA
 const cameraState = {
   isDragging: false,
   lastX: 0,
@@ -226,57 +243,211 @@ function atualizarCamera() {
   camera.lookAt(0, 0, 0);
 }
 
-renderer.domElement.addEventListener("mousedown", (event) => {
-  cameraState.isDragging = true;
-  cameraState.lastX = event.clientX;
-  cameraState.lastY = event.clientY;
-});
+function limparModelo() {
+  if (!currentModel) return;
+  scene.remove(currentModel);
+  currentModel.traverse((node) => {
+    if (node.geometry) node.geometry.dispose();
+    if (node.material) {
+      if (Array.isArray(node.material)) node.material.forEach((m) => m.dispose());
+      else node.material.dispose();
+    }
+  });
+  currentModel = null;
+}
 
-window.addEventListener("mouseup", () => {
-  cameraState.isDragging = false;
-});
+function centralizarModelo(model) {
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  model.position.sub(center);
 
-window.addEventListener("mousemove", (event) => {
-  if (!cameraState.isDragging) return;
-  const deltaX = event.clientX - cameraState.lastX;
-  const deltaY = event.clientY - cameraState.lastY;
-  cameraState.lastX = event.clientX;
-  cameraState.lastY = event.clientY;
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const distance = (maxDim * 2.2) || 200;
 
-  const sensitivity = 0.005;
-  cameraState.yaw += deltaX * sensitivity;
-  cameraState.pitch += deltaY * sensitivity;
-  atualizarCamera();
-});
-
-renderer.domElement.addEventListener("wheel", (event) => {
-  event.preventDefault();
-  const zoomFactor = 1 + event.deltaY * 0.001;
-  cameraState.radius = Math.max(50, Math.min(5000, cameraState.radius * zoomFactor));
-  atualizarCamera();
-}, { passive: false });
-
-document.getElementById("resetCamera").addEventListener("click", () => {
+  cameraState.radius = distance;
   cameraState.yaw = Math.PI / 4;
   cameraState.pitch = Math.PI / 6;
   atualizarCamera();
-});
 
-window.addEventListener("resize", () => {
-  camera.aspect = container.clientWidth / container.clientHeight;
-  camera.updateProjectionMatrix();
+  logStatus(`📦 Bounding box size: x=${size.x.toFixed(2)} y=${size.y.toFixed(2)} z=${size.z.toFixed(2)} | max=${maxDim.toFixed(2)}`);
+}
+
+function carregarModeloComFallback(urls, label) {
+  if (!urls || urls.length === 0) {
+    logStatus("❌ Nenhuma URL configurada para o modelo.");
+    return;
+  }
+
+  const [urlAtual, ...resto] = urls;
+
+  logStatus(`🚚 Tentando carregar (${label}): ${urlAtual}`);
+  limparModelo();
+
+  // Debug: tenta fetch antes do loader pra garantir que vem binário e não HTML
+  debugFetch(urlAtual).then((ok) => {
+    if (!ok) {
+      if (resto.length > 0) return carregarModeloComFallback(resto, label);
+      logStatus("❌ Todas as URLs falharam no fetch.");
+      return;
+    }
+
+    loader.load(
+      urlAtual,
+      (gltf) => {
+        currentModel = gltf.scene;
+        scene.add(currentModel);
+        centralizarModelo(currentModel);
+
+        // Extra debug: lista materiais/meshes
+        let meshCount = 0;
+        currentModel.traverse((n) => { if (n.isMesh) meshCount++; });
+        logStatus(`✅ Modelo carregado: ${label} | Meshes: ${meshCount}`);
+      },
+      (xhr) => {
+        if (xhr && xhr.total) {
+          const pct = (xhr.loaded / xhr.total) * 100;
+          logStatus(`⬇️ Progresso: ${pct.toFixed(1)}% (${xhr.loaded}/${xhr.total})`);
+        } else if (xhr) {
+          logStatus(`⬇️ Carregando: ${xhr.loaded} bytes`);
+        }
+      },
+      (err) => {
+        console.error("GLTFLoader error:", err);
+        // Erros comuns:
+        // - CORS
+        // - Servindo HTML em vez de GLB
+        // - caminho errado em repo pages
+        logStatus("❌ GLTFLoader falhou:", (err && err.message) ? err.message : String(err));
+        if (resto.length > 0) {
+          logStatus("↪️ Tentando próxima URL...");
+          return carregarModeloComFallback(resto, label);
+        }
+        logStatus("🧨 Sem mais fallbacks. O modelo NÃO carregou.");
+      }
+    );
+  });
+}
+
+function setupScene() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111111);
+
+  camera = new THREE.PerspectiveCamera(
+    60,
+    container.clientWidth / container.clientHeight,
+    0.1,
+    10000
+  );
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
-});
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  container.appendChild(renderer.domElement);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+  scene.add(ambient);
+
+  const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+  directional.position.set(10, 20, 10);
+  scene.add(directional);
+
+  loader = new GLTFLoader();
+
+  // Eventos de câmera
+  renderer.domElement.addEventListener("mousedown", (event) => {
+    cameraState.isDragging = true;
+    cameraState.lastX = event.clientX;
+    cameraState.lastY = event.clientY;
+  });
+
+  window.addEventListener("mouseup", () => {
+    cameraState.isDragging = false;
+  });
+
+  window.addEventListener("mousemove", (event) => {
+    if (!cameraState.isDragging) return;
+    const deltaX = event.clientX - cameraState.lastX;
+    const deltaY = event.clientY - cameraState.lastY;
+    cameraState.lastX = event.clientX;
+    cameraState.lastY = event.clientY;
+
+    const sensitivity = 0.005;
+    cameraState.yaw += deltaX * sensitivity;
+    cameraState.pitch += deltaY * sensitivity;
+    atualizarCamera();
+  });
+
+  renderer.domElement.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const zoomFactor = 1 + event.deltaY * 0.001;
+    cameraState.radius = Math.max(50, Math.min(5000, cameraState.radius * zoomFactor));
+    atualizarCamera();
+  }, { passive: false });
+
+  window.addEventListener("resize", () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+
+  document.getElementById("resetCamera").addEventListener("click", () => {
+    cameraState.yaw = Math.PI / 4;
+    cameraState.pitch = Math.PI / 6;
+    atualizarCamera();
+    logStatus("🎥 Câmera resetada.");
+  });
+
+  document.getElementById("retest").addEventListener("click", async () => {
+    resetStatus();
+    logStatus("🔁 Reteste manual do GLB...");
+    const m = modelos.find(x => x.label === modeloSelect.value) || modelos[0];
+    for (const u of m.urls) await debugFetch(u);
+    logStatus("✅ Reteste concluído.");
+  });
+
+  modeloSelect.addEventListener("change", (event) => {
+    resetStatus();
+    const modelo = modelos.find((item) => item.label === event.target.value);
+    if (!modelo) return;
+    carregarModeloComFallback(modelo.urls, modelo.label);
+  });
+}
 
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
 
-atualizarCamera();
-carregarModeloComFallback(modelos[0].urls, modelos[0].label);
-animate();
+// ============================
+// BOOTSTRAP
+// ============================
+(async function main() {
+  resetStatus();
+  logStatus("🚀 Iniciando app...");
+  logStatus("ℹ️ BASE detectado:", BASE);
+  logStatus("ℹ️ path:", location.pathname);
+
+  try {
+    ({ THREE, GLTFLoader } = await importDeps());
+  } catch (err) {
+    console.error(err);
+    logStatus("❌ Falha importando dependências.", err.message || String(err));
+    logStatus("👉 Se aparecer 'three', tem algum arquivo seu importando `from \"three\"`.");
+    return;
+  }
+
+  setupScene();
+  atualizarCamera();
+
+  // Carrega o primeiro modelo
+  const m0 = modelos[0];
+  carregarModeloComFallback(m0.urls, m0.label);
+
+  animate();
+})();
 </script>
 </body>
 </html>
+
 
