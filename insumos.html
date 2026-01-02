@@ -2,64 +2,161 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Materiais / Insumos</title>
 
     <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-        h1 { margin-bottom: 10px; }
-        .menu { margin-bottom: 20px; }
-        button { padding: 8px 14px; margin: 4px; cursor: pointer; }
-        input, select, div#precoFinal { padding: 6px; margin: 4px; width: 150px; }
-        div#precoFinal { background:#eee; border-radius:4px; }
-        table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background: #eee; }
+        /* RESET BÁSICO */
+        * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f5f7fa; color: #333; padding: 20px; }
+
+        /* LAYOUT PRINCIPAL */
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 20px; }
+        h1 { color: #1079ba; margin-bottom: 10px; }
+
+        /* MENU SUPERIOR */
+        .menu {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .menu button {
+            padding: 10px 16px;
+            background: #1079ba;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .menu button:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+        /* FORMULÁRIO */
+        .form-perfil {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        /* INPUTS E SELECTS */
+        .form-perfil input,
+        .form-perfil select {
+            padding: 6px 10px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .form-perfil input:focus,
+        .form-perfil select:focus {
+            border-color: #1079ba;
+            box-shadow: 0 0 4px rgba(16,121,186,0.4);
+            outline: none;
+        }
+
+        .preco-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef4fb;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: 600;
+            color: #0d5d8c;
+        }
+
+        /* BOTÕES GERAIS */
+        button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            background: #1079ba;
+            color: #fff;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        button:hover { background: #0d5d8c; transform: translateY(-2px); }
+        .btn-danger { background: #e84118; }
+        .btn-danger:hover { background: #c23616; transform: translateY(-2px); }
+
+        /* TABELA */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        th, td { padding: 12px; text-align: center; border: 1px solid #dcdde1; }
+        th { background: #1079ba; color: #fff; }
+        tr:nth-child(even) { background: #f7f9fc; }
+        tr:hover { background: #e6f0fa; }
+
+        /* RESPONSIVO */
+        @media(max-width: 768px) {
+            .form-perfil { grid-template-columns: 1fr; }
+            .menu { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
-<h1>Materiais / Insumos</h1>
+<div class="container">
+    <header>
+        <h1>Materiais / Insumos</h1>
+        <div class="menu">
+            <button onclick="window.location.href='/'">Voltar</button>
+            <button onclick="salvar()">Salvar</button>
+            <button onclick="cancelar()">Cancelar</button>
+        </div>
+    </header>
 
-<div class="menu">
-    <button onclick="window.location.href='/'">Voltar</button>
+    <section class="form-perfil">
+        <input type="hidden" id="material_id">
+        <input id="nome" placeholder="Nome do material">
+        <input id="custo" type="number" step="0.01" placeholder="Custo">
+
+        <select id="tipo_medida">
+            <option value="">Tipo de medida</option>
+            <option value="unidade">Unidade</option>
+            <option value="metro_linear">Metro Linear</option>
+            <option value="metro_quadrado">Metro Quadrado</option>
+        </select>
+
+        <input id="margem" type="number" step="0.01" placeholder="Margem %">
+        <input id="perda" type="number" step="0.01" placeholder="Perda %">
+        <div id="precoFinal" class="preco-preview">Preço final: R$ 0,00</div>
+    </section>
+
+    <section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Custo</th>
+                    <th>Tipo de Medida</th>
+                    <th>Margem</th>
+                    <th>Preço Final</th>
+                    <th>Perda</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+        </table>
+    </section>
 </div>
-
-<h3>Novo / Editar Material</h3>
-
-<input type="hidden" id="material_id">
-<input id="nome" placeholder="Nome do material">
-<input id="custo" type="number" step="0.01" placeholder="Custo">
-
-<select id="tipo_medida">
-    <option value="">Tipo de medida</option>
-    <option value="unidade">Unidade</option>
-    <option value="metro_linear">Metro Linear</option>
-    <option value="metro_quadrado">Metro Quadrado</option>
-</select>
-
-<input id="margem" type="number" step="0.01" placeholder="Margem %">
-<div id="precoFinal">R$ 0,00</div>
-<input id="perda" type="number" step="0.01" placeholder="Perda %">
-
-<br>
-
-<button onclick="salvar()">Salvar</button>
-<button onclick="cancelar()">Cancelar</button>
-
-<table>
-    <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Custo</th>
-            <th>Tipo de Medida</th>
-            <th>Margem</th>
-            <th>Preço Final</th>
-            <th>Perda</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody id="tabela"></tbody>
-</table>
 
 <script>
     const API_BASE = "https://colorglass.onrender.com";
@@ -94,7 +191,7 @@
         const margem = parseFloat(document.getElementById("margem").value) || 0;
         const perda = parseFloat(document.getElementById("perda").value) || 0;
         const preco = custo * (1 + perda/100) * (1 + margem/100);
-        document.getElementById("precoFinal").textContent = `R$ ${preco.toFixed(2)}`;
+        document.getElementById("precoFinal").textContent = `Preço final: R$ ${preco.toFixed(2)}`;
         return preco;
     }
 
@@ -157,7 +254,7 @@
         if (id) {
             await fetch(`${API_BASE}/api/materiais/${id}`, {
                 method: "PUT",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
                     "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN")
                 },
@@ -166,7 +263,7 @@
         } else {
             await fetch(`${API_BASE}/api/materiais`, {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
                     "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN")
                 },
@@ -214,7 +311,7 @@
         document.getElementById("tipo_medida").value = "";
         document.getElementById("margem").value = "";
         document.getElementById("perda").value = "";
-        document.getElementById("precoFinal").textContent = "R$ 0,00";
+        document.getElementById("precoFinal").textContent = "Preço final: R$ 0,00";
     }
 
     // =====================
