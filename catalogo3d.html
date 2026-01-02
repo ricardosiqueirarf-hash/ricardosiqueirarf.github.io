@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo 3D</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #ui {
+    width: 300px;
+    padding: 15px;
+    background: #1c1c1c;
+    box-sizing: border-box;
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  input, select, button {
+    width: 100%;
+    margin-top: 5px;
+    padding: 6px;
+    font-size: 14px;
+  }
+
+  button {
+    margin-top: 8px;
+    cursor: pointer;
+    background: #2a2a2a;
+    color: #fff;
+    border: none;
+  }
+
+  button:hover {
+    background: #444;
+  }
+
+  #canvas-container {
+    flex: 1;
+    position: relative;
+  }
+
+  #status {
+    margin-top: 12px;
+    padding: 10px;
+    background: #141414;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h3>Catálogo 3D</h3>
+
+  <label>Modelo</label>
+  <select id="modeloSelect"></select>
+
+  <button id="resetCamera">Resetar câmera</button>
+
+  <div id="status">
+    <strong>Status</strong>
+    <div id="statusText">Carregando modelo...</div>
+  </div>
+</div>
+
+<div id="canvas-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+const container = document.getElementById("canvas-container");
+const statusText = document.getElementById("statusText");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+
+const camera = new THREE.PerspectiveCamera(
+  60,
+  container.clientWidth / container.clientHeight,
+  0.1,
+  10000
+);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio || 1);
+container.appendChild(renderer.domElement);
+
+const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambient);
+const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+directional.position.set(10, 20, 10);
+scene.add(directional);
+
+const loader = new THREE.GLTFLoader();
+let currentModel = null;
+
+const modelos = [
+  { label: "Perfil Classico", url: "1036.GLB" }
+];
+
+const modeloSelect = document.getElementById("modeloSelect");
+modelos.forEach((modelo) => {
+  const option = document.createElement("option");
+  option.value = modelo.url;
+  option.textContent = modelo.label;
+  modeloSelect.appendChild(option);
+});
+
+function setStatus(texto) {
+  statusText.textContent = texto;
+}
+
+function limparModelo() {
+  if (!currentModel) return;
+  scene.remove(currentModel);
+  currentModel.traverse((node) => {
+    if (node.geometry) node.geometry.dispose();
+    if (node.material) {
+      if (Array.isArray(node.material)) {
+        node.material.forEach((m) => m.dispose());
+      } else {
+        node.material.dispose();
+      }
+    }
+  });
+  currentModel = null;
+}
+
+function centralizarModelo(model) {
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  model.position.sub(center);
+
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const distance = maxDim * 2.2 || 200;
+
+  camera.position.set(distance, distance, distance);
+  camera.lookAt(0, 0, 0);
+  cameraState.radius = distance;
+  cameraState.yaw = Math.PI / 4;
+  cameraState.pitch = Math.PI / 6;
+}
+
+function carregarModelo(url) {
+  setStatus("Carregando modelo...");
+  limparModelo();
+  loader.load(
+    url,
+    (gltf) => {
+      currentModel = gltf.scene;
+      scene.add(currentModel);
+      centralizarModelo(currentModel);
+      setStatus("Modelo carregado.");
+    },
+    undefined,
+    (err) => {
+      console.error(err);
+      setStatus("Erro ao carregar modelo.");
+    }
+  );
+}
+
+modeloSelect.addEventListener("change", (event) => {
+  carregarModelo(event.target.value);
+});
+
+// CONTROLES DE CÂMERA SIMPLES
+const cameraState = {
+  isDragging: false,
+  lastX: 0,
+  lastY: 0,
+  yaw: Math.PI / 4,
+  pitch: Math.PI / 6,
+  radius: 400
+};
+
+function atualizarCamera() {
+  const maxPitch = Math.PI / 2 - 0.05;
+  const minPitch = -maxPitch;
+  cameraState.pitch = Math.max(minPitch, Math.min(maxPitch, cameraState.pitch));
+
+  const x = cameraState.radius * Math.cos(cameraState.pitch) * Math.cos(cameraState.yaw);
+  const y = cameraState.radius * Math.sin(cameraState.pitch);
+  const z = cameraState.radius * Math.cos(cameraState.pitch) * Math.sin(cameraState.yaw);
+
+  camera.position.set(x, y, z);
+  camera.lookAt(0, 0, 0);
+}
+
+renderer.domElement.addEventListener("mousedown", (event) => {
+  cameraState.isDragging = true;
+  cameraState.lastX = event.clientX;
+  cameraState.lastY = event.clientY;
+});
+
+window.addEventListener("mouseup", () => {
+  cameraState.isDragging = false;
+});
+
+window.addEventListener("mousemove", (event) => {
+  if (!cameraState.isDragging) return;
+  const deltaX = event.clientX - cameraState.lastX;
+  const deltaY = event.clientY - cameraState.lastY;
+  cameraState.lastX = event.clientX;
+  cameraState.lastY = event.clientY;
+
+  const sensitivity = 0.005;
+  cameraState.yaw += deltaX * sensitivity;
+  cameraState.pitch += deltaY * sensitivity;
+  atualizarCamera();
+});
+
+renderer.domElement.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  const zoomFactor = 1 + event.deltaY * 0.001;
+  cameraState.radius = Math.max(50, Math.min(5000, cameraState.radius * zoomFactor));
+  atualizarCamera();
+}, { passive: false });
+
+document.getElementById("resetCamera").addEventListener("click", () => {
+  cameraState.yaw = Math.PI / 4;
+  cameraState.pitch = Math.PI / 6;
+  atualizarCamera();
+});
+
+window.addEventListener("resize", () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+
+atualizarCamera();
+carregarModelo(modelos[0].url);
+animate();
+</script>
+</body>
+</html>
