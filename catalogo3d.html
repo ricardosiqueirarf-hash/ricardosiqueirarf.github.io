@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Catálogo 3D</title>
+  <title>Catálogo 3D (Debug PRO)</title>
 
-  <!-- ✅ IMPORTMAP (mantém seu setup que funciona) -->
+  <!-- ✅ IMPORTMAP: resolve "three" e "three/addons/" no browser -->
   <script type="importmap">
   {
     "imports": {
@@ -25,17 +25,14 @@
       height: 100vh;
       overflow: hidden;
     }
-
     #ui {
-      width: 320px;
+      width: 340px;
       padding: 15px;
       background: #1c1c1c;
       box-sizing: border-box;
       overflow: auto;
     }
-
     label { display:block; margin-top:10px; font-size:14px; }
-
     input, select, button {
       width:100%;
       margin-top:5px;
@@ -43,70 +40,79 @@
       font-size:14px;
       box-sizing:border-box;
     }
-
     button {
       margin-top: 10px;
       cursor: pointer;
       background: #2a2a2a;
       color: #fff;
       border: none;
+      border-radius: 8px;
     }
     button:hover { background:#444; }
-
     #canvas-container { flex:1; position:relative; }
-
     #status {
       margin-top: 12px;
       padding: 10px;
       background: #141414;
       font-size: 12px;
       line-height: 1.5;
-      border-radius: 8px;
+      border-radius: 10px;
       white-space: pre-wrap;
       word-break: break-word;
+      max-height: 55vh;
+      overflow: auto;
     }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .swatch {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      flex: 0 0 auto;
-    }
-
-    /* ✅ Suas cores (classes) */
-    .cor.preto { background:#000; }
-    .cor.prata { background:#c6c7c9; }
-    .cor.bronze1001 { background:#716859; }
-    .cor.dourado { background:#B89C5D; }
-    .cor.inox { background:#918B82; }
-
-    .muted { color:#bdbdbd; }
     .ok { color:#7CFC90; }
     .warn { color:#FFD27C; }
     .err { color:#FF7C7C; }
+    .muted { color:#bdbdbd; }
+    hr { border: none; border-top:1px solid #333; margin: 12px 0; }
+    .row { display:flex; gap:10px; }
+    .row > * { flex:1; }
+
+    /* ====== PREVIEW DE COR ====== */
+    .colorRow { display:flex; gap:10px; align-items:center; }
+    .swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: #000;
+      flex: 0 0 auto;
+    }
   </style>
 </head>
 
 <body>
   <div id="ui">
-    <h3 style="margin:0 0 10px 0;">Catálogo 3D</h3>
+    <h3 style="margin:0 0 10px 0;">Catálogo 3D <span class="muted">(Debug PRO)</span></h3>
 
     <label>Modelo</label>
     <select id="modeloSelect"></select>
 
-    <label>Cor</label>
-    <div class="row" style="margin-top:6px;">
-      <div id="corSwatch" class="swatch cor prata" title="preview"></div>
-      <select id="corSelect"></select>
+    <!-- ✅ DROPLIST DE CORES (NOVO) -->
+    <label>Cor do perfil</label>
+    <div class="colorRow">
+      <select id="corSelect" style="flex:1;"></select>
+      <div id="corSwatch" class="swatch" title="Preview"></div>
     </div>
 
-    <button id="resetCamera">Resetar câmera</button>
+    <div class="row">
+      <button id="resetCamera">Resetar câmera</button>
+      <button id="btnFrame">Enquadrar</button>
+    </div>
+
+    <div class="row">
+      <button id="btnTestGLB">Testar GLB (fetch)</button>
+      <button id="btnToggleWire">Wireframe</button>
+    </div>
+
+    <div class="row">
+      <button id="btnToggleBox">BoxHelper</button>
+      <button id="btnToggleGrid">Grid</button>
+    </div>
+
+    <hr />
 
     <div id="status">🚀 Iniciando app...</div>
   </div>
@@ -114,24 +120,121 @@
   <div id="canvas-container"></div>
 
   <script type="module">
+    // =========================
+    // DEBUG HELPERS
+    // =========================
     const statusEl = document.getElementById("status");
-    function log(msg) {
-      statusEl.textContent = msg;
+    function logLine(msg, cls="muted") {
+      const line = document.createElement("div");
+      line.className = cls;
+      line.textContent = msg;
+      statusEl.appendChild(line);
+      statusEl.scrollTop = statusEl.scrollHeight;
+      console.log(msg);
+    }
+    function setStatusHeader(msg) {
+      statusEl.textContent = msg + "\n";
       console.log(msg);
     }
 
-    // ===== Imports
-    const THREE = await import("three");
-    const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
-
-    // ===== Base dir (mantém robusto)
+    // =========================
+    // BASE PATH
+    // =========================
     function computeBaseDir() {
       const path = window.location.pathname;
       if (path.endsWith("/")) return path;
-      return path.slice(0, path.lastIndexOf("/") + 1);
+      const lastSlash = path.lastIndexOf("/");
+      return path.slice(0, lastSlash + 1);
     }
     const BASE_DIR = computeBaseDir();
+    const ORIGIN = window.location.origin;
+    const FULL_BASE = ORIGIN + BASE_DIR;
 
+    setStatusHeader("🚀 Iniciando app...");
+    logLine(`ℹ️ origin: ${ORIGIN}`, "muted");
+    logLine(`ℹ️ pathname: ${window.location.pathname}`, "muted");
+    logLine(`ℹ️ BASE_DIR detectado: ${BASE_DIR}`, "muted");
+    logLine(`ℹ️ FULL_BASE: ${FULL_BASE}`, "muted");
+
+    // =========================
+    // IMPORTS
+    // =========================
+    let THREE, GLTFLoader;
+    try {
+      logLine(`🔧 Importando Three: "three"`, "muted");
+      THREE = await import("three");
+
+      logLine(`🔧 Importando GLTFLoader: "three/addons/loaders/GLTFLoader.js"`, "muted");
+      ({ GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js"));
+
+      logLine("✅ Dependências importadas com sucesso.", "ok");
+      logLine(`ℹ️ THREE.REVISION: ${THREE.REVISION}`, "muted");
+    } catch (e) {
+      logLine("❌ Falha importando dependências.", "err");
+      logLine(String(e?.message || e), "err");
+      throw e;
+    }
+
+    // =========================
+    // THREE SETUP
+    // =========================
+    const container = document.getElementById("canvas-container");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111111);
+
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      container.clientWidth / container.clientHeight,
+      0.001,
+      1000000
+    );
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    container.appendChild(renderer.domElement);
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    dir.position.set(10, 20, 10);
+    scene.add(dir);
+
+    // Helpers
+    const grid = new THREE.GridHelper(10, 20);
+    grid.material.opacity = 0.20;
+    grid.material.transparent = true;
+    scene.add(grid);
+
+    const axes = new THREE.AxesHelper(2);
+    axes.material.opacity = 0.45;
+    axes.material.transparent = true;
+    scene.add(axes);
+
+    let boxHelper = null;
+    let wireframeEnabled = false;
+    let gridEnabled = true;
+    let boxEnabled = true;
+
+    // =========================
+    // LOADING MANAGER (DEBUG)
+    // =========================
+    const manager = new THREE.LoadingManager();
+    manager.onStart = (url, itemsLoaded, itemsTotal) => {
+      logLine(`📦 Manager start: ${url} (${itemsLoaded}/${itemsTotal})`, "muted");
+    };
+    manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+      logLine(`⬇️ Manager progress: ${url} (${itemsLoaded}/${itemsTotal})`, "muted");
+    };
+    manager.onLoad = () => logLine("✅ Manager load: terminou tudo", "ok");
+    manager.onError = (url) => logLine(`❌ Manager error em: ${url}`, "err");
+
+    const loader = new GLTFLoader(manager);
+
+    // =========================
+    // MODELOS
+    // =========================
     function makeUrlCandidates(filename) {
       return [
         filename,
@@ -145,104 +248,100 @@
       ];
     }
 
-    // ===== UI modelos
     const modelos = [
-      { label: "Perfil 1036", filename: "1036.glb" },
+      { label: "Perfil 1036", filename: "1036.glb" }
     ].map(m => ({ label: m.label, urls: makeUrlCandidates(m.filename) }));
 
     const modeloSelect = document.getElementById("modeloSelect");
-    modelos.forEach(m => {
+    modelos.forEach((m) => {
       const opt = document.createElement("option");
       opt.value = m.label;
       opt.textContent = m.label;
       modeloSelect.appendChild(opt);
     });
 
-    // ===== UI cores (suas classes)
+    // =========================
+    // ✅ CORES (NOVO)
+    // =========================
     const cores = [
-      { key: "preto", label: "Preto", hex: "#000000" },
-      { key: "prata", label: "Prata", hex: "#c6c7c9" },
-      { key: "bronze1001", label: "Bronze 1001", hex: "#716859" },
-      { key: "dourado", label: "Dourado", hex: "#B89C5D" },
-      { key: "inox", label: "Inox", hex: "#918B82" },
+      { label: "Preto",   key: "preto",      hex: "#000000" },
+      { label: "Prata",   key: "prata",      hex: "#c6c7c9" },
+      { label: "Bronze 1001", key: "bronze1001", hex: "#716859" },
+      { label: "Dourado", key: "dourado",    hex: "#B89C5D" },
+      { label: "Inox",    key: "inox",       hex: "#918B82" },
     ];
 
     const corSelect = document.getElementById("corSelect");
     const corSwatch = document.getElementById("corSwatch");
 
-    cores.forEach(c => {
+    cores.forEach((c) => {
       const opt = document.createElement("option");
       opt.value = c.key;
       opt.textContent = c.label;
       corSelect.appendChild(opt);
     });
 
-    function updateSwatch(key) {
-      corSwatch.className = "swatch cor " + key;
+    function getSelectedColorHex() {
+      const key = corSelect.value;
+      const c = cores.find(x => x.key === key) || cores[0];
+      return c.hex;
     }
 
-    // ===== Three setup
-    const container = document.getElementById("canvas-container");
+    function updateSwatch() {
+      corSwatch.style.background = getSelectedColorHex();
+    }
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111111);
+    function applyColorToModel(root, hex) {
+      if (!root) return;
 
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      100000
-    );
+      const color = new THREE.Color(hex);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio || 1);
+      // pinta só materiais "comuns" (Standard/Physical/Lambert/Phong/Basic) sem quebrar textures.
+      // Se tiver textura, a cor vira multiplicador (tint).
+      root.traverse((n) => {
+        if (!n.isMesh || !n.material) return;
+        const mats = Array.isArray(n.material) ? n.material : [n.material];
 
-    // ✅ Melhor visibilidade
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+        mats.forEach((m) => {
+          if (!m) return;
 
-    container.appendChild(renderer.domElement);
+          // garante compatibilidade
+          if (m.color && m.color.isColor) {
+            m.color.copy(color);
+            m.needsUpdate = true;
+          } else {
+            // se vier um material sem .color (raro), troca por MeshStandardMaterial
+            const newMat = new THREE.MeshStandardMaterial({ color });
+            // preserva wireframe
+            newMat.wireframe = !!m.wireframe;
+            n.material = Array.isArray(n.material)
+              ? mats.map(mm => (mm === m ? newMat : mm))
+              : newMat;
+          }
+        });
+      });
 
-    // ===== Iluminação melhor (sem depender de HDRI)
-    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
-    scene.add(ambient);
+      logLine(`🎨 Cor aplicada: ${hex}`, "ok");
+    }
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x202020, 0.65);
-    scene.add(hemi);
+    corSelect.addEventListener("change", () => {
+      updateSwatch();
+      if (currentModel) applyColorToModel(currentModel, getSelectedColorHex());
+    });
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
-    keyLight.position.set(8, 12, 8);
-    scene.add(keyLight);
+    updateSwatch();
 
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.55);
-    fillLight.position.set(-10, 6, -6);
-    scene.add(fillLight);
-
-    // chão “invisível” pra dar referência
-    const grid = new THREE.GridHelper(500, 50);
-    grid.material.opacity = 0.12;
-    grid.material.transparent = true;
-    scene.add(grid);
-
-    const axes = new THREE.AxesHelper(120);
-    axes.material.opacity = 0.25;
-    axes.material.transparent = true;
-    scene.add(axes);
-
-    // ===== Loader
-    const loader = new GLTFLoader();
-    let currentModel = null;
-
-    // ===== Camera controls (volta pro “de antes”: raio 400 e sem mexer com distância automática agressiva)
+    // =========================
+    // CAMERA CONTROLS (orbital simples)
+    // =========================
     const cameraState = {
       isDragging: false,
       lastX: 0,
       lastY: 0,
       yaw: Math.PI / 4,
-      pitch: Math.PI / 7,
-      radius: 400
+      pitch: Math.PI / 8,
+      radius: 2.5,
+      target: new THREE.Vector3(0, 0, 0)
     };
 
     function atualizarCamera() {
@@ -254,180 +353,305 @@
       const y = cameraState.radius * Math.sin(cameraState.pitch);
       const z = cameraState.radius * Math.cos(cameraState.pitch) * Math.sin(cameraState.yaw);
 
-      camera.position.set(x, y, z);
-      camera.lookAt(0, 0, 0);
+      camera.position.set(
+        cameraState.target.x + x,
+        cameraState.target.y + y,
+        cameraState.target.z + z
+      );
+      camera.lookAt(cameraState.target);
     }
 
-    renderer.domElement.addEventListener("mousedown", (event) => {
+    renderer.domElement.addEventListener("mousedown", (e) => {
       cameraState.isDragging = true;
-      cameraState.lastX = event.clientX;
-      cameraState.lastY = event.clientY;
+      cameraState.lastX = e.clientX;
+      cameraState.lastY = e.clientY;
     });
-
-    window.addEventListener("mouseup", () => {
-      cameraState.isDragging = false;
-    });
-
-    window.addEventListener("mousemove", (event) => {
+    window.addEventListener("mouseup", () => cameraState.isDragging = false);
+    window.addEventListener("mousemove", (e) => {
       if (!cameraState.isDragging) return;
-
-      const deltaX = event.clientX - cameraState.lastX;
-      const deltaY = event.clientY - cameraState.lastY;
-
-      cameraState.lastX = event.clientX;
-      cameraState.lastY = event.clientY;
-
-      const sensitivity = 0.005;
-      cameraState.yaw += deltaX * sensitivity;
-      cameraState.pitch += deltaY * sensitivity;
-
+      const dx = e.clientX - cameraState.lastX;
+      const dy = e.clientY - cameraState.lastY;
+      cameraState.lastX = e.clientX;
+      cameraState.lastY = e.clientY;
+      const s = 0.005;
+      cameraState.yaw += dx * s;
+      cameraState.pitch += dy * s;
       atualizarCamera();
     });
-
-    renderer.domElement.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      const zoomFactor = 1 + event.deltaY * 0.001;
-      cameraState.radius = Math.max(30, Math.min(5000, cameraState.radius * zoomFactor));
+    renderer.domElement.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoom = 1 + e.deltaY * 0.001;
+      cameraState.radius = Math.max(0.05, Math.min(5000, cameraState.radius * zoom));
       atualizarCamera();
     }, { passive: false });
 
+    // =========================
+    // MODEL LOAD + DEBUG VISUAL
+    // =========================
+    let currentModel = null;
+
+    function limparModelo() {
+      if (!currentModel) return;
+      scene.remove(currentModel);
+
+      currentModel.traverse((node) => {
+        if (node.geometry) node.geometry.dispose();
+        if (node.material) {
+          if (Array.isArray(node.material)) node.material.forEach(m => m.dispose());
+          else node.material.dispose();
+        }
+      });
+
+      currentModel = null;
+
+      if (boxHelper) {
+        scene.remove(boxHelper);
+        boxHelper.geometry.dispose();
+        boxHelper.material.dispose();
+        boxHelper = null;
+      }
+
+      logLine("🧹 Modelo anterior removido e recursos liberados.", "muted");
+    }
+
+    function countMeshes(root) {
+      let meshes = 0;
+      let mats = 0;
+      root.traverse((n) => {
+        if (n.isMesh) {
+          meshes++;
+          if (n.material) mats += Array.isArray(n.material) ? n.material.length : 1;
+        }
+      });
+      return { meshes, mats };
+    }
+
+    function forceVisibleMaterials(root) {
+      root.traverse((n) => {
+        if (!n.isMesh) return;
+        const mats = Array.isArray(n.material) ? n.material : [n.material];
+        mats.forEach((m) => {
+          if (!m) return;
+          // garante que vai renderizar mesmo com doubleSide / transparency
+          m.side = THREE.DoubleSide;
+          m.transparent = !!m.transparent;
+          m.depthWrite = true;
+          m.needsUpdate = true;
+          if (wireframeEnabled) m.wireframe = true;
+        });
+      });
+    }
+
+    function applyWireframe(root, enabled) {
+      root.traverse((n) => {
+        if (!n.isMesh) return;
+        const mats = Array.isArray(n.material) ? n.material : [n.material];
+        mats.forEach((m) => {
+          if (!m) return;
+          m.wireframe = enabled;
+          m.needsUpdate = true;
+        });
+      });
+    }
+
+    // 🔥 Enquadramento real baseado em FOV + bounding box
+    function frameObject(obj, fitOffset = 1.25) {
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+
+      cameraState.target.copy(center);
+
+      const maxSize = Math.max(size.x, size.y, size.z);
+      const fov = THREE.MathUtils.degToRad(camera.fov);
+      let distance = (maxSize / (2 * Math.tan(fov / 2))) * fitOffset;
+
+      // evita camera colada
+      if (!isFinite(distance) || distance <= 0) distance = 2.5;
+
+      cameraState.radius = distance;
+
+      logLine(`📐 BoundingBox size: x=${size.x.toFixed(6)} y=${size.y.toFixed(6)} z=${size.z.toFixed(6)}`, "muted");
+      logLine(`🎯 Center: x=${center.x.toFixed(6)} y=${center.y.toFixed(6)} z=${center.z.toFixed(6)}`, "muted");
+      logLine(`🎥 Distance (frame): ${distance.toFixed(6)}`, "ok");
+
+      atualizarCamera();
+    }
+
+    // 🔥 Auto-scale: faz o modelo ocupar "targetSize" unidades
+    function autoScaleToTarget(obj, targetSize = 2.0) {
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+
+      if (!isFinite(maxDim) || maxDim <= 0) {
+        logLine("⚠️ Não consegui medir o tamanho do modelo (maxDim inválido).", "warn");
+        return;
+      }
+
+      const scale = targetSize / maxDim;
+      obj.scale.multiplyScalar(scale);
+
+      logLine(`🧷 Auto-scale aplicado. maxDim=${maxDim.toFixed(6)} -> scale=${scale.toFixed(6)}`, "ok");
+    }
+
+    async function testFetch(url) {
+      try {
+        const abs = new URL(url, window.location.href).toString();
+        logLine(`🧪 Fetch test: ${url}  ->  ${abs}`, "muted");
+        const r = await fetch(abs, { cache: "no-store" });
+        logLine(`   ↳ status: ${r.status} ${r.statusText}`, r.ok ? "ok" : "err");
+        const buf = await r.arrayBuffer();
+        logLine(`   ↳ bytes: ${buf.byteLength}`, r.ok ? "ok" : "err");
+        return r.ok ? abs : null;
+      } catch (e) {
+        logLine(`   ↳ fetch falhou: ${String(e?.message || e)}`, "err");
+        return null;
+      }
+    }
+
+    async function carregarModelo(label, urls) {
+      limparModelo();
+
+      logLine(`🔎 Testando URLs do modelo: ${label}`, "muted");
+      let firstGoodAbs = null;
+
+      for (const u of urls) {
+        const abs = await testFetch(u);
+        if (abs && !firstGoodAbs) firstGoodAbs = abs;
+      }
+
+      if (!firstGoodAbs) {
+        logLine("❌ Nenhuma URL respondeu OK. Isso é caminho/hosting.", "err");
+        return;
+      }
+
+      logLine(`✅ Vou carregar pelo primeiro OK: ${firstGoodAbs}`, "ok");
+      logLine(`⏳ loader.load(${firstGoodAbs})`, "muted");
+
+      loader.load(
+        firstGoodAbs,
+        (gltf) => {
+          currentModel = gltf.scene;
+          scene.add(currentModel);
+
+          const { meshes, mats } = countMeshes(currentModel);
+          logLine(`🧩 Model stats: meshes=${meshes}, materials=${mats}`, "muted");
+
+          // Se vier com escala minúscula, explode pra um tamanho bom
+          autoScaleToTarget(currentModel, 2.0);
+
+          // materiais sempre visíveis
+          forceVisibleMaterials(currentModel);
+
+          // ✅ aplica cor selecionada logo que carrega
+          applyColorToModel(currentModel, getSelectedColorHex());
+
+          // BoxHelper pra você VER, mesmo se material estiver zoado
+          boxHelper = new THREE.BoxHelper(currentModel, 0x00ff88);
+          boxHelper.visible = boxEnabled;
+          scene.add(boxHelper);
+
+          // enquadra certinho
+          frameObject(currentModel, 1.35);
+
+          logLine(`✅ Modelo carregado: ${label}`, "ok");
+          logLine(`ℹ️ Scene children: ${scene.children.length}`, "muted");
+        },
+        (xhr) => {
+          if (!xhr || !xhr.total) {
+            logLine("⬇️ Progresso: carregando (sem total disponível)...", "muted");
+            return;
+          }
+          const pct = (xhr.loaded / xhr.total) * 100;
+          logLine(`⬇️ Progresso: ${pct.toFixed(1)}% (${xhr.loaded}/${xhr.total})`, "muted");
+        },
+        (err) => {
+          logLine("❌ Erro no loader.load().", "err");
+          logLine(String(err?.message || err), "err");
+          console.error(err);
+        }
+      );
+    }
+
+    // =========================
+    // UI EVENTS
+    // =========================
+    modeloSelect.addEventListener("change", async (e) => {
+      const m = modelos.find(x => x.label === e.target.value) || modelos[0];
+      await carregarModelo(m.label, m.urls);
+    });
+
+    document.getElementById("btnTestGLB").addEventListener("click", async () => {
+      const m = modelos.find(x => x.label === modeloSelect.value) || modelos[0];
+      logLine("🧪 Teste manual de fetch nas URLs...", "warn");
+      for (const u of m.urls) await testFetch(u);
+      logLine("🧪 Fim do teste manual.", "warn");
+    });
+
     document.getElementById("resetCamera").addEventListener("click", () => {
       cameraState.yaw = Math.PI / 4;
-      cameraState.pitch = Math.PI / 7;
-      cameraState.radius = 400;
+      cameraState.pitch = Math.PI / 8;
+      cameraState.radius = 2.5;
+      cameraState.target.set(0, 0, 0);
       atualizarCamera();
-      log("🎥 Câmera resetada.");
+      logLine("🎥 Câmera resetada.", "ok");
+    });
+
+    document.getElementById("btnFrame").addEventListener("click", () => {
+      if (!currentModel) return logLine("⚠️ Sem modelo pra enquadrar.", "warn");
+      frameObject(currentModel, 1.35);
+      logLine("📌 Enquadrado.", "ok");
+    });
+
+    document.getElementById("btnToggleWire").addEventListener("click", () => {
+      wireframeEnabled = !wireframeEnabled;
+      if (currentModel) applyWireframe(currentModel, wireframeEnabled);
+      logLine(`🧱 Wireframe: ${wireframeEnabled ? "ON" : "OFF"}`, wireframeEnabled ? "ok" : "muted");
+    });
+
+    document.getElementById("btnToggleBox").addEventListener("click", () => {
+      boxEnabled = !boxEnabled;
+      if (boxHelper) boxHelper.visible = boxEnabled;
+      logLine(`📦 BoxHelper: ${boxEnabled ? "ON" : "OFF"}`, boxEnabled ? "ok" : "muted");
+    });
+
+    document.getElementById("btnToggleGrid").addEventListener("click", () => {
+      gridEnabled = !gridEnabled;
+      grid.visible = gridEnabled;
+      axes.visible = gridEnabled;
+      logLine(`🧭 Grid/Axes: ${gridEnabled ? "ON" : "OFF"}`, gridEnabled ? "ok" : "muted");
     });
 
     window.addEventListener("resize", () => {
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
+      logLine("📐 Resize OK.", "muted");
     });
 
-    // ===== Helpers
-    function limparModelo() {
-      if (!currentModel) return;
-      scene.remove(currentModel);
-      currentModel.traverse((node) => {
-        if (node.geometry) node.geometry.dispose();
-        if (node.material) {
-          if (Array.isArray(node.material)) node.material.forEach((m) => m.dispose());
-          else node.material.dispose();
-        }
-      });
-      currentModel = null;
-    }
-
-    function centralizarModelo(model) {
-      // centraliza no 0,0,0 (não mexe no raio da câmera)
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-      model.position.sub(center);
-
-      // dica visual no log
-      const size = box.getSize(new THREE.Vector3());
-      log(`✅ Modelo centralizado. Size: x=${size.x.toFixed(3)} y=${size.y.toFixed(3)} z=${size.z.toFixed(3)}`);
-    }
-
-    function aplicarCorNoModelo(hex) {
-      if (!currentModel) return;
-
-      const color = new THREE.Color(hex);
-
-      currentModel.traverse((node) => {
-        if (!node.isMesh) return;
-
-        // garante que pega material "separado" (sem contaminar cache)
-        const mats = Array.isArray(node.material) ? node.material : [node.material];
-
-        mats.forEach((mat) => {
-          if (!mat) return;
-
-          // muitos GLBs usam MeshStandardMaterial (PBR)
-          if ("color" in mat) mat.color = color;
-
-          // pra ficar com “cara” de alumínio/metal
-          if ("metalness" in mat) mat.metalness = 0.75;
-          if ("roughness" in mat) mat.roughness = 0.35;
-
-          // se tiver textura, não some
-          mat.needsUpdate = true;
-        });
-      });
-
-      log(`🎨 Cor aplicada: ${hex}`);
-    }
-
-    async function pickFirstOkUrl(urls) {
-      for (const u of urls) {
-        const abs = new URL(u, window.location.href).toString();
-        try {
-          const r = await fetch(abs, { cache: "no-store" });
-          if (r.ok) return u;
-        } catch {}
-      }
-      return null;
-    }
-
-    async function carregarModelo(modelo) {
-      limparModelo();
-      log("⏳ Carregando modelo...");
-
-      const urlOk = await pickFirstOkUrl(modelo.urls);
-      if (!urlOk) {
-        log("❌ Nenhuma URL do modelo respondeu 200. Caminho/hosting errado.");
-        return;
-      }
-
-      loader.load(
-        urlOk,
-        (gltf) => {
-          currentModel = gltf.scene;
-          scene.add(currentModel);
-
-          centralizarModelo(currentModel);
-
-          // aplica cor atual do dropdown
-          const selected = cores.find(c => c.key === corSelect.value) || cores[0];
-          aplicarCorNoModelo(selected.hex);
-
-          log(`✅ Modelo carregado: ${modelo.label} (${urlOk})`);
-        },
-        undefined,
-        (err) => {
-          console.error(err);
-          log("❌ Erro ao carregar GLB (veja console).");
-        }
-      );
-    }
-
-    // ===== Eventos UI
-    modeloSelect.addEventListener("change", async (e) => {
-      const modelo = modelos.find(m => m.label === e.target.value) || modelos[0];
-      await carregarModelo(modelo);
-    });
-
-    corSelect.addEventListener("change", () => {
-      const c = cores.find(x => x.key === corSelect.value) || cores[0];
-      updateSwatch(c.key);
-      aplicarCorNoModelo(c.hex);
-    });
-
-    // ===== Loop
+    // =========================
+    // RENDER LOOP
+    // =========================
     function animate() {
       requestAnimationFrame(animate);
+      if (boxHelper && currentModel) boxHelper.update();
       renderer.render(scene, camera);
     }
 
-    // ===== Start
-    modeloSelect.value = modelos[0].label;
-    corSelect.value = "prata";
-    updateSwatch("prata");
-
     atualizarCamera();
     animate();
-    await carregarModelo(modelos[0]);
+
+    // =========================
+    // START
+    // =========================
+    modeloSelect.value = modelos[0].label;
+
+    // cor padrão
+    corSelect.value = cores[0].key;
+    updateSwatch();
+
+    await carregarModelo(modelos[0].label, modelos[0].urls);
   </script>
 </body>
 </html>
