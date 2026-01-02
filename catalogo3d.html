@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Catálogo 3D (Cores + Debug)</title>
+  <title>Catálogo 3D</title>
 
-  <!-- ✅ IMPORTMAP: resolve "three" e "three/addons/" no browser -->
+  <!-- ✅ IMPORTMAP (mantém seu setup que funciona) -->
   <script type="importmap">
   {
     "imports": {
@@ -25,21 +25,25 @@
       height: 100vh;
       overflow: hidden;
     }
+
     #ui {
-      width: 340px;
+      width: 320px;
       padding: 15px;
       background: #1c1c1c;
       box-sizing: border-box;
       overflow: auto;
     }
+
     label { display:block; margin-top:10px; font-size:14px; }
-    select, button {
+
+    input, select, button {
       width:100%;
       margin-top:5px;
       padding:8px;
       font-size:14px;
       box-sizing:border-box;
     }
+
     button {
       margin-top: 10px;
       cursor: pointer;
@@ -48,20 +52,6 @@
       border: none;
     }
     button:hover { background:#444; }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-top: 8px;
-    }
-    .swatch {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      flex: 0 0 auto;
-    }
 
     #canvas-container { flex:1; position:relative; }
 
@@ -75,31 +65,48 @@
       white-space: pre-wrap;
       word-break: break-word;
     }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      flex: 0 0 auto;
+    }
+
+    /* ✅ Suas cores (classes) */
+    .cor.preto { background:#000; }
+    .cor.prata { background:#c6c7c9; }
+    .cor.bronze1001 { background:#716859; }
+    .cor.dourado { background:#B89C5D; }
+    .cor.inox { background:#918B82; }
+
+    .muted { color:#bdbdbd; }
     .ok { color:#7CFC90; }
     .warn { color:#FFD27C; }
     .err { color:#FF7C7C; }
-    .muted { color:#bdbdbd; }
-    hr { border: none; border-top:1px solid #333; margin: 12px 0; }
   </style>
 </head>
 
 <body>
   <div id="ui">
-    <h3 style="margin:0 0 10px 0;">Catálogo 3D <span class="muted">(Cores)</span></h3>
+    <h3 style="margin:0 0 10px 0;">Catálogo 3D</h3>
 
     <label>Modelo</label>
     <select id="modeloSelect"></select>
 
-    <label>Cor do Perfil</label>
-    <div class="row">
-      <div id="corSwatch" class="swatch" title="Preview da cor"></div>
-      <select id="corSelect" style="flex:1;"></select>
+    <label>Cor</label>
+    <div class="row" style="margin-top:6px;">
+      <div id="corSwatch" class="swatch cor prata" title="preview"></div>
+      <select id="corSelect"></select>
     </div>
 
     <button id="resetCamera">Resetar câmera</button>
-    <button id="btnTestGLB">Testar GLB (fetch)</button>
-
-    <hr />
 
     <div id="status">🚀 Iniciando app...</div>
   </div>
@@ -107,64 +114,74 @@
   <div id="canvas-container"></div>
 
   <script type="module">
-    // =========================
-    // DEBUG HELPERS
-    // =========================
     const statusEl = document.getElementById("status");
-    function logLine(msg, cls="muted") {
-      const line = document.createElement("div");
-      line.className = cls;
-      line.textContent = msg;
-      statusEl.appendChild(line);
-      statusEl.scrollTop = statusEl.scrollHeight;
-      console.log(msg);
-    }
-    function setStatusHeader(msg) {
-      statusEl.textContent = msg + "\n";
+    function log(msg) {
+      statusEl.textContent = msg;
       console.log(msg);
     }
 
-    // =========================
-    // BASE PATH (GitHub Pages safe)
-    // =========================
+    // ===== Imports
+    const THREE = await import("three");
+    const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+
+    // ===== Base dir (mantém robusto)
     function computeBaseDir() {
       const path = window.location.pathname;
       if (path.endsWith("/")) return path;
-      const lastSlash = path.lastIndexOf("/");
-      return path.slice(0, lastSlash + 1);
+      return path.slice(0, path.lastIndexOf("/") + 1);
     }
     const BASE_DIR = computeBaseDir();
-    const ORIGIN = window.location.origin;
-    const FULL_BASE = ORIGIN + BASE_DIR;
 
-    setStatusHeader("🚀 Iniciando app...");
-    logLine(`ℹ️ origin: ${ORIGIN}`, "muted");
-    logLine(`ℹ️ pathname: ${window.location.pathname}`, "muted");
-    logLine(`ℹ️ BASE_DIR detectado: ${BASE_DIR}`, "muted");
-    logLine(`ℹ️ FULL_BASE: ${FULL_BASE}`, "muted");
-
-    // =========================
-    // IMPORTS
-    // =========================
-    let THREE, GLTFLoader;
-    try {
-      logLine(`🔧 Importando Three: "three"`, "muted");
-      THREE = await import("three");
-
-      logLine(`🔧 Importando GLTFLoader: "three/addons/loaders/GLTFLoader.js"`, "muted");
-      ({ GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js"));
-
-      logLine("✅ Dependências importadas com sucesso.", "ok");
-      logLine(`ℹ️ THREE.REVISION: ${THREE.REVISION}`, "muted");
-    } catch (e) {
-      logLine("❌ Falha importando dependências.", "err");
-      logLine(String(e?.message || e), "err");
-      throw e;
+    function makeUrlCandidates(filename) {
+      return [
+        filename,
+        "./" + filename,
+        BASE_DIR + filename,
+        "/" + filename,
+        BASE_DIR + "assets/" + filename,
+        "/assets/" + filename,
+        BASE_DIR + "models/" + filename,
+        "/models/" + filename,
+      ];
     }
 
-    // =========================
-    // THREE SETUP
-    // =========================
+    // ===== UI modelos
+    const modelos = [
+      { label: "Perfil 1036", filename: "1036.glb" },
+    ].map(m => ({ label: m.label, urls: makeUrlCandidates(m.filename) }));
+
+    const modeloSelect = document.getElementById("modeloSelect");
+    modelos.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m.label;
+      opt.textContent = m.label;
+      modeloSelect.appendChild(opt);
+    });
+
+    // ===== UI cores (suas classes)
+    const cores = [
+      { key: "preto", label: "Preto", hex: "#000000" },
+      { key: "prata", label: "Prata", hex: "#c6c7c9" },
+      { key: "bronze1001", label: "Bronze 1001", hex: "#716859" },
+      { key: "dourado", label: "Dourado", hex: "#B89C5D" },
+      { key: "inox", label: "Inox", hex: "#918B82" },
+    ];
+
+    const corSelect = document.getElementById("corSelect");
+    const corSwatch = document.getElementById("corSwatch");
+
+    cores.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.key;
+      opt.textContent = c.label;
+      corSelect.appendChild(opt);
+    });
+
+    function updateSwatch(key) {
+      corSwatch.className = "swatch cor " + key;
+    }
+
+    // ===== Three setup
     const container = document.getElementById("canvas-container");
 
     const scene = new THREE.Scene();
@@ -180,260 +197,52 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+    // ✅ Melhor visibilidade
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
     container.appendChild(renderer.domElement);
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    // ===== Iluminação melhor (sem depender de HDRI)
+    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
     scene.add(ambient);
 
-    const directional = new THREE.DirectionalLight(0xffffff, 0.9);
-    directional.position.set(10, 20, 10);
-    scene.add(directional);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x202020, 0.65);
+    scene.add(hemi);
 
-    // referência visual
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    keyLight.position.set(8, 12, 8);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    fillLight.position.set(-10, 6, -6);
+    scene.add(fillLight);
+
+    // chão “invisível” pra dar referência
     const grid = new THREE.GridHelper(500, 50);
-    grid.material.opacity = 0.15;
+    grid.material.opacity = 0.12;
     grid.material.transparent = true;
     scene.add(grid);
 
-    const axes = new THREE.AxesHelper(200);
-    axes.material.opacity = 0.35;
+    const axes = new THREE.AxesHelper(120);
+    axes.material.opacity = 0.25;
     axes.material.transparent = true;
     scene.add(axes);
 
-    // =========================
-    // LOADING MANAGER (DEBUG)
-    // =========================
-    const manager = new THREE.LoadingManager();
-    manager.onStart = (url, itemsLoaded, itemsTotal) => {
-      logLine(`📦 Manager start: ${url} (${itemsLoaded}/${itemsTotal})`, "muted");
-    };
-    manager.onProgress = (url, itemsLoaded, itemsTotal) => {
-      logLine(`⬇️ Manager progress: ${url} (${itemsLoaded}/${itemsTotal})`, "muted");
-    };
-    manager.onLoad = () => {
-      logLine("✅ Manager load: terminou tudo", "ok");
-    };
-    manager.onError = (url) => {
-      logLine(`❌ Manager error em: ${url}`, "err");
-    };
-
-    const loader = new GLTFLoader(manager);
-
+    // ===== Loader
+    const loader = new GLTFLoader();
     let currentModel = null;
 
-    // =========================
-    // CORES (do seu CSS -> HEX)
-    // =========================
-    const CORES = [
-      { key: "preto",      label: "Preto",       hex: "#000000" },
-      { key: "prata",      label: "Prata",       hex: "#c6c7c9" },
-      { key: "bronze1001", label: "Bronze 1001", hex: "#716859" },
-      { key: "dourado",    label: "Dourado",     hex: "#B89C5D" },
-      { key: "inox",       label: "Inox",        hex: "#918B82" }
-    ];
-
-    const corSelect = document.getElementById("corSelect");
-    const corSwatch = document.getElementById("corSwatch");
-
-    CORES.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c.key;
-      opt.textContent = c.label;
-      corSelect.appendChild(opt);
-    });
-
-    function getCorAtualHex() {
-      const key = corSelect.value;
-      const cor = CORES.find(c => c.key === key) || CORES[0];
-      return cor.hex;
-    }
-
-    function atualizarSwatch() {
-      const hex = getCorAtualHex();
-      corSwatch.style.background = hex;
-      corSwatch.title = hex;
-    }
-
-    // =========================
-    // MODELOS + URLS
-    // =========================
-    function makeUrlCandidates(filename) {
-      return [
-        filename,
-        "./" + filename,
-        BASE_DIR + filename,
-        "/" + filename,
-        BASE_DIR + "assets/" + filename,
-        "/assets/" + filename,
-        BASE_DIR + "models/" + filename,
-        "/models/" + filename
-      ];
-    }
-
-    const modelos = [
-      { label: "Perfil 1036", filename: "1036.glb" }
-    ].map(m => ({
-      label: m.label,
-      urls: makeUrlCandidates(m.filename)
-    }));
-
-    const modeloSelect = document.getElementById("modeloSelect");
-    modelos.forEach((modelo) => {
-      const option = document.createElement("option");
-      option.value = modelo.label;
-      option.textContent = modelo.label;
-      modeloSelect.appendChild(option);
-    });
-
-    // =========================
-    // UTILS
-    // =========================
-    function limparModelo() {
-      if (!currentModel) return;
-      scene.remove(currentModel);
-      currentModel.traverse((node) => {
-        if (node.geometry) node.geometry.dispose();
-        if (node.material) {
-          if (Array.isArray(node.material)) node.material.forEach((m) => m.dispose());
-          else node.material.dispose();
-        }
-      });
-      currentModel = null;
-      logLine("🧹 Modelo anterior removido e recursos liberados.", "muted");
-    }
-
-    function centralizarModelo(model) {
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-      model.position.sub(center);
-
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-
-      // ⚠️ Se o modelo for MUITO pequeno (tipo 0.05), a câmera fica colada e some fácil.
-      // Então a gente força um mínimo decente.
-      const distance = Math.max(maxDim * 2.2, 2.0);
-
-      cameraState.radius = distance;
-      cameraState.yaw = Math.PI / 4;
-      cameraState.pitch = Math.PI / 7;
-      atualizarCamera();
-
-      logLine(`📐 BoundingBox size: x=${size.x.toFixed(4)} y=${size.y.toFixed(4)} z=${size.z.toFixed(4)}`, "muted");
-      logLine(`🎯 Camera distance: ${distance.toFixed(3)}`, "muted");
-    }
-
-    async function testFetch(url) {
-      try {
-        const abs = new URL(url, window.location.href).toString();
-        logLine(`🧪 Fetch test: ${url}  ->  ${abs}`, "muted");
-        const r = await fetch(abs, { cache: "no-store" });
-        logLine(`   ↳ status: ${r.status} ${r.statusText}`, r.ok ? "ok" : "err");
-        const buf = await r.arrayBuffer();
-        logLine(`   ↳ bytes: ${buf.byteLength}`, r.ok ? "ok" : "err");
-        return r.ok;
-      } catch (e) {
-        logLine(`   ↳ fetch falhou: ${String(e?.message || e)}`, "err");
-        return false;
-      }
-    }
-
-    // =========================
-    // APLICAR COR NO MODELO (tint)
-    // =========================
-    function aplicarCorNoModelo(model, hex) {
-      if (!model) return;
-
-      const tint = new THREE.Color(hex);
-      let count = 0;
-
-      model.traverse((node) => {
-        if (!node.isMesh) return;
-
-        const applyToMat = (mat) => {
-          if (!mat) return;
-          // Se tem propriedade "color", dá pra tingir
-          if (mat.color) {
-            mat.color.copy(tint);
-            mat.needsUpdate = true;
-            count++;
-          }
-        };
-
-        if (Array.isArray(node.material)) node.material.forEach(applyToMat);
-        else applyToMat(node.material);
-      });
-
-      logLine(`🎨 Cor aplicada (${hex}) em ${count} material(is).`, count ? "ok" : "warn");
-    }
-
-    // =========================
-    // LOAD COM FALLBACK
-    // =========================
-    async function carregarModeloComFallback(urls, label) {
-      if (!urls || urls.length === 0) {
-        logLine("❌ Nenhuma URL configurada para o modelo.", "err");
-        return;
-      }
-
-      limparModelo();
-
-      logLine(`🔎 Testando URLs do modelo: ${label}`, "muted");
-      let firstGood = null;
-
-      for (const u of urls) {
-        const ok = await testFetch(u);
-        if (ok && !firstGood) firstGood = u;
-      }
-
-      if (!firstGood) {
-        logLine("❌ Nenhuma URL respondeu OK no fetch. Então é caminho/hosting.", "err");
-        return;
-      }
-
-      logLine(`✅ Vou carregar pelo primeiro OK: ${firstGood}`, "ok");
-      logLine(`⏳ loader.load(${firstGood})`, "muted");
-
-      loader.load(
-        firstGood,
-        (gltf) => {
-          currentModel = gltf.scene;
-          scene.add(currentModel);
-
-          centralizarModelo(currentModel);
-
-          // aplica a cor selecionada assim que carregar
-          aplicarCorNoModelo(currentModel, getCorAtualHex());
-
-          logLine(`✅ Modelo carregado: ${label}`, "ok");
-          logLine(`ℹ️ Scene children: ${scene.children.length}`, "muted");
-        },
-        (xhr) => {
-          if (!xhr || !xhr.total) {
-            logLine("⬇️ Progresso: carregando (sem total disponível)...", "muted");
-            return;
-          }
-          const pct = (xhr.loaded / xhr.total) * 100;
-          logLine(`⬇️ Progresso: ${pct.toFixed(1)}% (${xhr.loaded}/${xhr.total})`, "muted");
-        },
-        (err) => {
-          logLine("❌ Erro ao carregar GLB no loader.load().", "err");
-          logLine(String(err?.message || err), "err");
-          console.error(err);
-        }
-      );
-    }
-
-    // =========================
-    // CAMERA CONTROLS (fix: impedir sumir)
-    // =========================
+    // ===== Camera controls (volta pro “de antes”: raio 400 e sem mexer com distância automática agressiva)
     const cameraState = {
       isDragging: false,
       lastX: 0,
       lastY: 0,
       yaw: Math.PI / 4,
       pitch: Math.PI / 7,
-      radius: 4
+      radius: 400
     };
 
     function atualizarCamera() {
@@ -441,20 +250,12 @@
       const minPitch = -maxPitch;
       cameraState.pitch = Math.max(minPitch, Math.min(maxPitch, cameraState.pitch));
 
-      // 🔒 clamp radius (evita atravessar o objeto e “sumir”)
-      cameraState.radius = Math.max(0.5, Math.min(5000, cameraState.radius));
-
       const x = cameraState.radius * Math.cos(cameraState.pitch) * Math.cos(cameraState.yaw);
       const y = cameraState.radius * Math.sin(cameraState.pitch);
       const z = cameraState.radius * Math.cos(cameraState.pitch) * Math.sin(cameraState.yaw);
 
       camera.position.set(x, y, z);
       camera.lookAt(0, 0, 0);
-
-      // Near/Far adaptativo (evita clip quando modelo é pequeno)
-      camera.near = Math.max(0.001, cameraState.radius / 2000);
-      camera.far  = Math.max(1000,  cameraState.radius * 2000);
-      camera.updateProjectionMatrix();
     }
 
     renderer.domElement.addEventListener("mousedown", (event) => {
@@ -486,66 +287,147 @@
     renderer.domElement.addEventListener("wheel", (event) => {
       event.preventDefault();
       const zoomFactor = 1 + event.deltaY * 0.001;
-      cameraState.radius = cameraState.radius * zoomFactor;
+      cameraState.radius = Math.max(30, Math.min(5000, cameraState.radius * zoomFactor));
       atualizarCamera();
     }, { passive: false });
 
     document.getElementById("resetCamera").addEventListener("click", () => {
       cameraState.yaw = Math.PI / 4;
       cameraState.pitch = Math.PI / 7;
-      // um valor seguro
-      cameraState.radius = Math.max(cameraState.radius, 2.0);
+      cameraState.radius = 400;
       atualizarCamera();
-      logLine("🎥 Câmera resetada.", "ok");
+      log("🎥 Câmera resetada.");
     });
 
     window.addEventListener("resize", () => {
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
-      logLine("📐 Resize OK.", "muted");
     });
 
-    // =========================
-    // UI EVENTS
-    // =========================
-    modeloSelect.addEventListener("change", async (event) => {
-      const modelo = modelos.find((item) => item.label === event.target.value);
-      if (!modelo) return;
-      await carregarModeloComFallback(modelo.urls, modelo.label);
+    // ===== Helpers
+    function limparModelo() {
+      if (!currentModel) return;
+      scene.remove(currentModel);
+      currentModel.traverse((node) => {
+        if (node.geometry) node.geometry.dispose();
+        if (node.material) {
+          if (Array.isArray(node.material)) node.material.forEach((m) => m.dispose());
+          else node.material.dispose();
+        }
+      });
+      currentModel = null;
+    }
+
+    function centralizarModelo(model) {
+      // centraliza no 0,0,0 (não mexe no raio da câmera)
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      model.position.sub(center);
+
+      // dica visual no log
+      const size = box.getSize(new THREE.Vector3());
+      log(`✅ Modelo centralizado. Size: x=${size.x.toFixed(3)} y=${size.y.toFixed(3)} z=${size.z.toFixed(3)}`);
+    }
+
+    function aplicarCorNoModelo(hex) {
+      if (!currentModel) return;
+
+      const color = new THREE.Color(hex);
+
+      currentModel.traverse((node) => {
+        if (!node.isMesh) return;
+
+        // garante que pega material "separado" (sem contaminar cache)
+        const mats = Array.isArray(node.material) ? node.material : [node.material];
+
+        mats.forEach((mat) => {
+          if (!mat) return;
+
+          // muitos GLBs usam MeshStandardMaterial (PBR)
+          if ("color" in mat) mat.color = color;
+
+          // pra ficar com “cara” de alumínio/metal
+          if ("metalness" in mat) mat.metalness = 0.75;
+          if ("roughness" in mat) mat.roughness = 0.35;
+
+          // se tiver textura, não some
+          mat.needsUpdate = true;
+        });
+      });
+
+      log(`🎨 Cor aplicada: ${hex}`);
+    }
+
+    async function pickFirstOkUrl(urls) {
+      for (const u of urls) {
+        const abs = new URL(u, window.location.href).toString();
+        try {
+          const r = await fetch(abs, { cache: "no-store" });
+          if (r.ok) return u;
+        } catch {}
+      }
+      return null;
+    }
+
+    async function carregarModelo(modelo) {
+      limparModelo();
+      log("⏳ Carregando modelo...");
+
+      const urlOk = await pickFirstOkUrl(modelo.urls);
+      if (!urlOk) {
+        log("❌ Nenhuma URL do modelo respondeu 200. Caminho/hosting errado.");
+        return;
+      }
+
+      loader.load(
+        urlOk,
+        (gltf) => {
+          currentModel = gltf.scene;
+          scene.add(currentModel);
+
+          centralizarModelo(currentModel);
+
+          // aplica cor atual do dropdown
+          const selected = cores.find(c => c.key === corSelect.value) || cores[0];
+          aplicarCorNoModelo(selected.hex);
+
+          log(`✅ Modelo carregado: ${modelo.label} (${urlOk})`);
+        },
+        undefined,
+        (err) => {
+          console.error(err);
+          log("❌ Erro ao carregar GLB (veja console).");
+        }
+      );
+    }
+
+    // ===== Eventos UI
+    modeloSelect.addEventListener("change", async (e) => {
+      const modelo = modelos.find(m => m.label === e.target.value) || modelos[0];
+      await carregarModelo(modelo);
     });
 
-    document.getElementById("btnTestGLB").addEventListener("click", async () => {
-      const modelo = modelos.find((m) => m.label === modeloSelect.value) || modelos[0];
-      logLine("🧪 Rodando teste manual de fetch nas URLs do modelo...", "warn");
-      for (const u of modelo.urls) await testFetch(u);
-      logLine("🧪 Teste finalizado.", "warn");
-    });
-
-    // ✅ muda a cor em tempo real
     corSelect.addEventListener("change", () => {
-      atualizarSwatch();
-      const hex = getCorAtualHex();
-      aplicarCorNoModelo(currentModel, hex);
+      const c = cores.find(x => x.key === corSelect.value) || cores[0];
+      updateSwatch(c.key);
+      aplicarCorNoModelo(c.hex);
     });
 
-    // =========================
-    // RENDER LOOP
-    // =========================
+    // ===== Loop
     function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     }
 
-    // Start
-    atualizarSwatch();
+    // ===== Start
+    modeloSelect.value = modelos[0].label;
+    corSelect.value = "prata";
+    updateSwatch("prata");
+
     atualizarCamera();
     animate();
-
-    modeloSelect.value = modelos[0].label;
-    corSelect.value = CORES[0].key;
-
-    await carregarModeloComFallback(modelos[0].urls, modelos[0].label);
+    await carregarModelo(modelos[0]);
   </script>
 </body>
 </html>
