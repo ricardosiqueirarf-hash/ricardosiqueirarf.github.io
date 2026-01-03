@@ -181,12 +181,31 @@ input:focus, select:focus, textarea:focus {
 .helper-text { color: #666; font-size: 0.8rem; }
 
 .op-svg { border: 1px solid #dcdde1; border-radius: 8px; background: #fff; width: 100%; height: auto; margin-top: 10px; }
+.op-page {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.op-info {
+    font-size: 20px;
+    line-height: 1.6;
+}
+.op-quantity {
+    font-size: 28px;
+    font-weight: 700;
+    fill: #0d5d8c;
+}
 
 @media print {
     body { background: #fff; }
     .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
     .print-area.active { display: block; }
     .content { padding: 0; }
+    .op-page {
+        page-break-after: always;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -934,11 +953,13 @@ function gerarSvgOrdemProducao(porta) {
     const handleCenter = offsetY + doorHeight - (handlePos * scale)
     const handleY = handleCenter - handleScaled / 2
     const handleX = offsetX + doorWidth - 12
+    const quantidadeTexto = `${porta.quantidade || 1}x`
 
     return `
     <svg class="op-svg" width="520" height="720" viewBox="0 0 520 720" xmlns="http://www.w3.org/2000/svg">
       <rect x="${offsetX}" y="${offsetY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
       <rect x="${handleX}" y="${handleY}" width="8" height="${handleScaled}" fill="#d48400"/>
+      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight / 2}" text-anchor="middle" dominant-baseline="middle" class="op-quantity">${quantidadeTexto}</text>
 
       <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetY}" x2="${offsetX}" y2="${offsetY}" stroke="#333"/>
@@ -949,10 +970,6 @@ function gerarSvgOrdemProducao(porta) {
       <line x1="${offsetX}" y1="${offsetY + doorHeight + 16}" x2="${offsetX}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
       <line x1="${offsetX + doorWidth}" y1="${offsetY + doorHeight + 16}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
       <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight + 38}" font-size="12" fill="#333" text-anchor="middle">${largura} mm</text>
-
-      <text x="${offsetX + doorWidth + 20}" y="${offsetY + 20}" font-size="12" fill="#333">Recuo topo: ${recuos.recuoTopo ?? "-"} mm</text>
-      <text x="${offsetX + doorWidth + 20}" y="${offsetY + 40}" font-size="12" fill="#333">Recuo base: ${recuos.recuoBase ?? "-"} mm</text>
-      <text x="${offsetX + doorWidth + 20}" y="${offsetY + 60}" font-size="12" fill="#333">Puxador: ${handleLength || "-"} mm</text>
     </svg>
     `
 }
@@ -968,11 +985,20 @@ function atualizarResumoOrdem() {
     const itens = portas.map((p, index) => {
         const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-"
         const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-"
+        const puxadorNome = p.dados.puxador === "sem_puxador"
+            ? "Sem puxador"
+            : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-")
         return `
-            <div class="print-item">
-                <strong>O.P. ${index + 1} - ${p.tipo}</strong><br>
-                Perfil: ${perfilNome} | Vidro: ${vidroNome}<br>
-                ${gerarSvgOrdemProducao(p)}
+            <div class="print-item op-page">
+                <div>
+                    ${gerarSvgOrdemProducao(p)}
+                </div>
+                <div class="op-info">
+                    <div><strong>O.P. ${index + 1} - ${p.tipo}</strong></div>
+                    <div>Perfil: ${perfilNome}</div>
+                    <div>Vidro: ${vidroNome}</div>
+                    <div>Puxador: ${puxadorNome}</div>
+                </div>
             </div>
         `
     }).join("")
