@@ -371,6 +371,7 @@ function atualizarPuxadoresSelect() {
     const puxadorSelect = document.getElementById("puxador")
     if(!puxadorSelect) return
     puxadorSelect.innerHTML = "<option value=''>Selecione</option>"
+    puxadorSelect.innerHTML += "<option value='sem_puxador'>Sem puxador</option>"
     todosPuxadores.forEach(p => {
         const unidade = p.tipo_medida === "metro_linear" ? "m" : "un"
         puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/${unidade}</option>`
@@ -382,6 +383,7 @@ function atualizarPuxadoresSelect() {
 // =====================
 function obterDadosPuxador() {
     const puxadorId = document.getElementById("puxador")?.value
+    if (puxadorId === "sem_puxador") return null
     const puxador = todosPuxadores.find(p => p.id == puxadorId)
     if (!puxador) return null
 
@@ -612,9 +614,14 @@ function renderCampos(){
 
 function atualizarPuxadorTipo() {
     const puxadorId = document.getElementById("puxador")?.value
-    const puxador = todosPuxadores.find(p => p.id == puxadorId)
     const medidaInput = document.getElementById("medida_puxador")
     if (!medidaInput) return
+    if (puxadorId === "sem_puxador") {
+        medidaInput.disabled = true
+        medidaInput.value = "0"
+        return
+    }
+    const puxador = todosPuxadores.find(p => p.id == puxadorId)
     if (!puxador) {
         medidaInput.disabled = true
         medidaInput.value = "0"
@@ -692,6 +699,7 @@ function desenharPorta(){
     })
 
     const puxadorId = document.getElementById("puxador")?.value
+    if (puxadorId === "sem_puxador") return
     const puxador = todosPuxadores.find(p => p.id == puxadorId)
     const alturaPuxador = +document.getElementById("altura_puxador")?.value || 0
     const medidaPuxadorMm = +document.getElementById("medida_puxador")?.value || 0
@@ -717,14 +725,38 @@ function salvarPorta(){
     const tipo = document.getElementById("tipologia").value
     if(!tipo) return alert("Selecione a tipologia")
 
+    const largura = +document.getElementById("largura")?.value || 0
+    const altura = +document.getElementById("altura")?.value || 0
+    const quantidade = +document.getElementById("quantidade")?.value || 0
+    const perfilSelecionado = document.getElementById("perfil")?.value
+    const vidroSelecionado = document.getElementById("vidro")?.value
+    const puxadorSelecionado = document.getElementById("puxador")?.value
+    const dobradicasQtd = parseInt(document.getElementById("dobradicas")?.value || "0", 10) || 0
+    const alturasDobradicas = obterAlturasDobradicas()
+
+    const pendencias = []
+    if (!largura) pendencias.push("Largura")
+    if (!altura) pendencias.push("Altura")
+    if (!quantidade) pendencias.push("Quantidade")
+    if (!perfilSelecionado) pendencias.push("Perfil")
+    if (!vidroSelecionado) pendencias.push("Vidro")
+    if (!puxadorSelecionado) pendencias.push("Puxador")
+    if (tipo === "giro" && dobradicasQtd < 2) pendencias.push("Dobradiças (mínimo 2)")
+    if (dobradicasQtd > 0 && alturasDobradicas.length !== dobradicasQtd) {
+        pendencias.push("Alturas das dobradiças")
+    }
+
+    if (pendencias.length > 0) {
+        alert(`Preencha os campos obrigatórios: ${pendencias.join(", ")}`)
+        return
+    }
+
     const dados = {}
     TIPOLOGIAS[tipo].forEach(c=>{
         const el = document.getElementById(c)
         if(el) dados[c] = el.value
     })
     dados.dobradicas_alturas = obterAlturasDobradicas()
-
-    const quantidade = +document.getElementById("quantidade")?.value || 1
 
     const porta = {
         id: editando ?? idCounter++,
@@ -745,7 +777,9 @@ function renderPortas(){
     portas.forEach((p, idx)=>{
         const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "Perfil não definido"
         const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "Vidro não definido"
-        const puxadorNome = todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido"
+        const puxadorNome = p.dados.puxador === "sem_puxador"
+            ? "Sem puxador"
+            : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido")
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
         c.innerHTML += `
             <div>
@@ -840,8 +874,10 @@ function atualizarResumoImpressao() {
         const altura = p.dados.altura || "-"
         const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-"
         const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-"
-        const puxador = todosPuxadores.find(pux => pux.id == p.dados.puxador)
-        const puxadorNome = puxador ? puxador.nome : "-"
+        const puxador = p.dados.puxador === "sem_puxador"
+            ? null
+            : todosPuxadores.find(pux => pux.id == p.dados.puxador)
+        const puxadorNome = puxador ? puxador.nome : "Sem puxador"
         const medidaPuxador = p.dados.medida_puxador ? `${p.dados.medida_puxador} mm` : "-"
         const alturaPuxador = p.dados.altura_puxador ? `${p.dados.altura_puxador} mm` : "-"
         const acessorio = p.dados.acessorio || "-"
@@ -1069,6 +1105,7 @@ carregarEstruturas3D()
 </script>
 </body>
 </html>
+
 
 
 
