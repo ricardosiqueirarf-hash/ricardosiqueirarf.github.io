@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login e Cadastro | ColorGlass</title>
+<meta name="description" content="Login e cadastro de usuários ColorGlass.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #f5f7fa; color: #333; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.container { width: 100%; max-width: 980px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.card h2 { color: #1079ba; margin-bottom: 12px; }
+label { font-size: 0.95rem; display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+input { padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 0.95rem; }
+input:focus { outline: none; border-color: #1079ba; box-shadow: 0 0 4px rgba(16,121,186,0.3); }
+.btn { background: #1079ba; color: #fff; border: none; border-radius: 8px; padding: 12px; font-weight: 600; cursor: pointer; width: 100%; transition: all 0.2s ease; }
+.btn:hover { background: #0d5d8c; transform: translateY(-1px); }
+.status { margin-top: 10px; font-size: 0.9rem; color: #555; min-height: 20px; }
+.status.ok { color: #0c7c3c; }
+.status.erro { color: #c23616; }
+.hint { font-size: 0.85rem; color: #666; line-height: 1.4; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>Cadastro</h2>
+        <label>Usuário
+            <input type="text" id="cadastroUser" placeholder="Digite seu usuário">
+        </label>
+        <label>Senha
+            <input type="password" id="cadastroPass" placeholder="Digite sua senha">
+        </label>
+        <button class="btn" onclick="cadastrar()">Cadastrar</button>
+        <div id="cadastroStatus" class="status"></div>
+        <p class="hint">Após o cadastro, aguarde o admin aprovar seu usuário (token no Supabase).</p>
+    </div>
+
+    <div class="card">
+        <h2>Login</h2>
+        <label>Usuário
+            <input type="text" id="loginUser" placeholder="Digite seu usuário">
+        </label>
+        <label>Senha
+            <input type="password" id="loginPass" placeholder="Digite sua senha">
+        </label>
+        <button class="btn" onclick="logar()">Entrar</button>
+        <div id="loginStatus" class="status"></div>
+        <p class="hint">O login só funciona após o token do admin ser igual ao valor do Render.</p>
+    </div>
+</div>
+
+<script>
+const API_BASE = "https://colorglass.onrender.com";
+
+function setStatus(elementId, message, tipo) {
+    const el = document.getElementById(elementId);
+    el.textContent = message;
+    el.classList.remove("ok", "erro");
+    if (tipo) el.classList.add(tipo);
+}
+
+async function cadastrar() {
+    const user = document.getElementById("cadastroUser").value.trim();
+    const pass = document.getElementById("cadastroPass").value.trim();
+    if (!user || !pass) {
+        setStatus("cadastroStatus", "Preencha usuário e senha.", "erro");
+        return;
+    }
+
+    try {
+        setStatus("cadastroStatus", "Cadastrando...");
+        const res = await fetch(`${API_BASE}/api/usuarios/cadastro`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user, pass })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            setStatus("cadastroStatus", data.error || "Erro ao cadastrar.", "erro");
+            return;
+        }
+
+        setStatus("cadastroStatus", data.message || "Cadastro realizado.", "ok");
+        document.getElementById("cadastroUser").value = "";
+        document.getElementById("cadastroPass").value = "";
+    } catch (err) {
+        console.error(err);
+        setStatus("cadastroStatus", "Erro ao cadastrar. Verifique o console.", "erro");
+    }
+}
+
+async function logar() {
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value.trim();
+    if (!user || !pass) {
+        setStatus("loginStatus", "Preencha usuário e senha.", "erro");
+        return;
+    }
+
+    try {
+        setStatus("loginStatus", "Verificando...");
+        const res = await fetch(`${API_BASE}/api/usuarios/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user, pass })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            setStatus("loginStatus", data.error || "Login inválido.", "erro");
+            return;
+        }
+
+        setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
+        setTimeout(() => {
+            window.location.href = "index_loja.html";
+        }, 800);
+    } catch (err) {
+        console.error(err);
+        setStatus("loginStatus", "Erro ao entrar. Verifique o console.", "erro");
+    }
+}
+</script>
+</body>
+</html>
