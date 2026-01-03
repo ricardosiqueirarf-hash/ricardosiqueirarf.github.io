@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamentos | ColorGlass</title>
+<meta name="description" content="Orçamentos e pedidos da ColorGlass.">
+<meta name="robots" content="index, follow">
+
+<style>
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #ffffff; color: #333; display: flex; min-height: 100vh; }
+
+/* APP WRAPPER */
+.app { display: flex; width: 100%; }
+
+/* SIDEBAR */
+.sidebar {
+    width: 220px;
+    background: #1079ba;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 25px 20px;
+    gap: 12px;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+    border-radius: 0 10px 10px 0;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.sidebar h3 {
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+.sidebar h3:hover { color: #fffbe6; transform: scale(1.05); }
+
+/* BOTÕES SIDEBAR */
+.sidebar button {
+    background: #0d5d8c;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    color: #fff;
+}
+.sidebar button:hover {
+    background: #0a4a6b;
+    transform: translateX(5px);
+}
+
+/* CONTENT */
+.content {
+    flex: 1;
+    padding: 35px;
+    overflow-y: auto;
+    background: #f9f9f9;
+    border-radius: 0 10px 10px 0;
+    transition: all 0.3s ease;
+}
+
+/* FORMULÁRIOS */
+#formCliente {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+#formCliente:hover { transform: translateY(-2px); }
+
+#formCliente label {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+#formCliente input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+    transition: all 0.2s ease;
+}
+#formCliente input:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 5px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+/* BOTÕES */
+.btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #1079ba;
+    color: #fff;
+    font-weight: 600;
+    margin-top: 12px;
+    transition: all 0.3s ease;
+}
+.btn:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+/* TABELAS */
+table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    margin-top: 18px; 
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+th, td { border:1px solid #dcdde1; padding:10px; text-align:left; }
+th { background: #e6f0fa; }
+tr:hover { background: #f0f8ff; }
+
+.orcamentos-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.orcamentos-toolbar input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: all 0.2s ease;
+}
+
+.orcamentos-toolbar input:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 5px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+.status-text {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* SCROLLBARS CUSTOM */
+.content::-webkit-scrollbar { width: 10px; }
+.content::-webkit-scrollbar-thumb { background: #1079ba; border-radius: 5px; }
+.content::-webkit-scrollbar-track { background: #f9f9f9; }
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="sidebar">
+        <h3>COLOR GLASS</h3>
+        <button onclick="go('index_loja.html')">Orçamentos</button>
+    </div>
+
+    <div class="content">
+        <h1>Orçamento de Portas</h1>
+
+        <div id="formCliente">
+            <label>Nome do Cliente<input type="text" id="clienteNome"></label>
+            <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
+        </div>
+
+        <h2>Orçamentos Existentes</h2>
+        <div class="orcamentos-toolbar">
+            <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
+            <span id="orcamentosStatus" class="status-text">Carregando...</span>
+        </div>
+        <div id="orcamentosExistentes"><em>Carregando...</em></div>
+    </div>
+</div>
+
+<script>
+// Navegação
+function go(url){
+    window.location.href = url;
+}
+
+// =====================
+// URL do backend
+// =====================
+const BACKEND_URL = "https://colorglass.onrender.com";
+
+// =====================
+// CARREGAR ORÇAMENTOS
+// =====================
+let orcamentosCache = [];
+
+function atualizarStatusOrcamentos(mensagem) {
+    const status = document.getElementById("orcamentosStatus");
+    status.textContent = mensagem;
+}
+
+function renderizarOrcamentos(orcamentos) {
+    const container = document.getElementById("orcamentosExistentes");
+    container.innerHTML = "";
+
+    if(orcamentos.length === 0){
+        container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
+        atualizarStatusOrcamentos("Nenhum resultado");
+        return;
+    }
+
+    const table = document.createElement("table");
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th># Pedido</th>
+                <th>Cliente</th>
+                <th>Data Criação</th>
+                <th>Qtd Total</th>
+                <th>Valor Total (R$)</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+    const tbody = table.querySelector("tbody");
+
+    orcamentos.forEach((o) => {
+        const tr = document.createElement("tr");
+        const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
+        const qtdTotal = o.quantidade_total ?? "--";
+        const valorTotal = o.valor_total ?? "--";
+        tr.innerHTML = `
+            <td>${o.numero_pedido}</td>
+            <td>${o.cliente_nome}</td>
+            <td>${dataCriacao}</td>
+            <td data-field="quantidade_total">${qtdTotal}</td>
+            <td data-field="valor_total">${valorTotal === "--" ? "--" : Number(valorTotal).toFixed(2)}</td>
+            <td>
+                <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
+            </td>
+        `;
+        tr.dataset.orcamentoId = o.id;
+        tbody.appendChild(tr);
+    });
+
+    container.appendChild(table);
+    atualizarStatusOrcamentos(`${orcamentos.length} orçamento(s)`);
+}
+
+function aplicarFiltroOrcamentos() {
+    const filtro = document.getElementById("orcamentoFiltro").value.trim().toLowerCase();
+    if (!filtro) {
+        renderizarOrcamentos(orcamentosCache);
+        return;
+    }
+
+    const filtrados = orcamentosCache.filter((o) => {
+        const cliente = (o.cliente_nome || "").toLowerCase();
+        const pedido = String(o.numero_pedido || "");
+        return cliente.includes(filtro) || pedido.includes(filtro);
+    });
+    renderizarOrcamentos(filtrados);
+}
+
+async function carregarOrcamentos() {
+    try {
+        atualizarStatusOrcamentos("Carregando...");
+        const res = await fetch(`${BACKEND_URL}/api/orcamentos`);
+        const data = await res.json();
+        const orcamentos = data.orcamentos || [];
+
+        if(orcamentos.length === 0){
+            renderizarOrcamentos([]);
+            return;
+        }
+
+        orcamentosCache = orcamentos;
+        renderizarOrcamentos(orcamentosCache);
+        atualizarTotaisOrcamentos();
+
+    } catch(err){
+        console.error("Erro ao carregar orçamentos:", err);
+        document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
+        atualizarStatusOrcamentos("Erro ao carregar");
+    }
+}
+
+async function atualizarTotaisOrcamentos() {
+    const tabela = document.querySelector("#orcamentosExistentes table");
+    if (!tabela) return;
+
+    const rows = Array.from(tabela.querySelectorAll("tbody tr"));
+    await Promise.allSettled(rows.map(async (row) => {
+        const orcamentoId = row.dataset.orcamentoId;
+        if (!orcamentoId) return;
+        const qtdCell = row.querySelector('[data-field="quantidade_total"]');
+        const valorCell = row.querySelector('[data-field="valor_total"]');
+
+        try {
+            const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`);
+            const dataPortas = await resPortas.json();
+
+            if (!dataPortas.success || !Array.isArray(dataPortas.portas)) {
+                return;
+            }
+
+            let qtdTotal = 0;
+            let valorTotal = 0;
+            dataPortas.portas.forEach(p => {
+                const quantidade = +p.quantidade || 1;
+                qtdTotal += quantidade;
+                valorTotal += (p.preco || 0) * quantidade;
+            });
+
+            if (qtdCell) qtdCell.textContent = qtdTotal;
+            if (valorCell) valorCell.textContent = valorTotal.toFixed(2);
+        } catch (err) {
+            console.error("Erro ao carregar portas do orçamento:", err);
+        }
+    }));
+}
+
+// 🔥 EDITAR ORÇAMENTO
+function editarOrcamento(uuid){
+    window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+}
+
+// =====================
+// FICHA CLIENTE
+// =====================
+let cliente = {nome:"", id:null};
+async function criarFichaCliente(){
+    const nome = document.getElementById("clienteNome").value.trim();
+    if(!nome){ alert("Digite o nome do cliente"); return; }
+    cliente.nome = nome;
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body:JSON.stringify({cliente_nome: cliente.nome})
+        });
+        const data = await res.json();
+        if(data.success){
+            cliente.id = data.id;
+            alert("Ficha criada com sucesso! ID: " + data.id);
+            document.getElementById("formCliente").style.display="none";
+            carregarOrcamentos();
+        } else {
+            alert("Erro ao criar ficha: " + data.error);
+        }
+    } catch(err) {
+        console.error("Erro criarFichaCliente:", err);
+        alert("Erro ao criar ficha, veja o console.");
+    }
+}
+
+// Carrega orçamentos automaticamente ao abrir a página
+carregarOrcamentos();
+document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
+</script>
+</body>
+</html>
+
+
+
+
+
