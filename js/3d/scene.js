@@ -44,6 +44,12 @@ window.App3D = window.App3D || {};
     }
 
     App3D.lineModelPromise = new Promise((resolve, reject) => {
+      if (!THREE.GLTFLoader) {
+        const error = new Error("GLTFLoader indisponível. Verifique o script do loader.");
+        console.error(error);
+        reject(error);
+        return;
+      }
       const loader = new THREE.GLTFLoader();
       loader.load(
         "/thin.glb",
@@ -89,4 +95,5 @@ window.App3D = window.App3D || {};
 
   App3D.animate = animate;
 })();
+
 
