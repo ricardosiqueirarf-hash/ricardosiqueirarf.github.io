@@ -37,8 +37,39 @@ window.App3D = window.App3D || {};
   function createLineMesh(start, end) {
     const direction = new THREE.Vector3().subVectors(end, start);
     const length = direction.length();
-    const thickness = 5;
+    const model = App3D.lineModel;
+    const baseLength = App3D.lineModelLength;
 
+    if (model && baseLength > EPS) {
+      const clone = model.clone(true);
+      const baseScale = App3D.lineModelScale || new THREE.Vector3(1, 1, 1);
+      clone.scale.copy(baseScale);
+
+      const baseRotation = App3D.lineModelRotation;
+      const baseQuaternion = new THREE.Quaternion();
+      if (baseRotation) {
+        baseQuaternion.setFromEuler(baseRotation);
+      }
+
+      const alignQuaternion = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.clone().normalize()
+      );
+
+      clone.quaternion.copy(baseQuaternion);
+      clone.quaternion.multiply(alignQuaternion);
+
+      const lengthScale = length / baseLength;
+      if (Number.isFinite(lengthScale) && lengthScale > 0) {
+        clone.scale.y *= lengthScale;
+      }
+
+      clone.position.copy(start).add(direction.clone().multiplyScalar(0.5));
+
+      return clone;
+    }
+
+    const thickness = 5;
     const geometry = new THREE.BoxGeometry(thickness, length, thickness);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
     const tube = new THREE.Mesh(geometry, material);
@@ -136,4 +167,5 @@ window.App3D = window.App3D || {};
   window.undoLast = App3D.undoLast;
   window.clearScene = App3D.clearScene;
 })();
+
 
