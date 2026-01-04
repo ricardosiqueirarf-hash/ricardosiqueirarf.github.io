@@ -12,6 +12,9 @@ window.App3D = window.App3D || {};
   App3D.ORCAMENTO_UUID = orcamentoUuid;
 
   App3D.animate();
+  App3D.loadLineModel().catch((error) => {
+    console.error("Falha ao carregar o modelo de linha:", error);
+  });
   App3D.carregarPerfisEstruturais();
 
   window.salvarEstruturaSupabase = async function salvarEstruturaSupabase() {
