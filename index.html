@@ -375,7 +375,7 @@ async function atualizarTotaisOrcamentos() {
                 dataPortas.portas.forEach(p => {
                     const quantidade = +p.quantidade || 1;
                     qtdTotal += quantidade;
-                    valorTotal += (p.preco || 0) * quantidade;
+                    valorTotal += (p.preco || 0);
                 });
             }
 
@@ -428,6 +428,7 @@ document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFilt
 </script>
 </body>
 </html>
+
 
 
 
