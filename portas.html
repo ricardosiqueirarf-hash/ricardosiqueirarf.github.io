@@ -962,10 +962,24 @@ function gerarSvgOrdemProducao(porta) {
     const handleY = handleCenter - handleScaled / 2
     const handleX = offsetX + doorWidth - 12
     const quantidadeTexto = `${porta.quantidade || 1}x`
+    const alturasDobradicas = Array.isArray(porta.dados.dobradicas_alturas)
+        ? porta.dados.dobradicas_alturas
+        : []
+    const dobradicasSvg = alturasDobradicas.map((posicaoMm) => {
+        const posicao = parseFloat(posicaoMm || 0)
+        if (!posicao) return ""
+        const y = offsetY + doorHeight - (posicao * scale)
+        const x = offsetX + 6
+        return `
+          <line x1="${x}" y1="${y}" x2="${x + 20}" y2="${y}" stroke="#000" stroke-width="3"/>
+          <circle cx="${x}" cy="${y}" r="4" fill="#000"/>
+        `
+    }).join("")
 
     return `
     <svg class="op-svg" width="520" height="720" viewBox="0 0 520 720" xmlns="http://www.w3.org/2000/svg">
       <rect x="${offsetX}" y="${offsetY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
+      ${dobradicasSvg}
       <rect x="${handleX}" y="${handleY}" width="8" height="${handleScaled}" fill="#d48400"/>
       <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight / 2}" text-anchor="middle" dominant-baseline="middle" class="op-quantity">${quantidadeTexto}</text>
 
