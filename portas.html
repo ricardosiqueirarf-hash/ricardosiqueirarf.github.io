@@ -328,10 +328,10 @@ document.getElementById("infoOrcamento").innerHTML =
 // TIPOLOGIAS
 // =====================
 const TIPOLOGIAS = {
-    giro: ["largura","altura","perfil","vidro","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","puxadores","acessorio"],
-    deslizante: ["largura","altura","perfil","vidro","trilho","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","puxadores","acessorio"],
-    correr: ["largura","altura","perfil","vidro","trilho","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","puxadores","acessorio"],
-    pivotante: ["largura","altura","perfil","vidro","pivo","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","puxadores","acessorio"]
+    giro: ["largura","altura","perfil","vidro","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"],
+    deslizante: ["largura","altura","perfil","vidro","trilho","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"],
+    correr: ["largura","altura","perfil","vidro","trilho","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"],
+    pivotante: ["largura","altura","perfil","vidro","pivo","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"]
 }
 
 // =====================
@@ -431,6 +431,7 @@ function calcularPrecoPorta(){
     const perfil = todosPerfis.find(p=>p.id==document.getElementById("perfil")?.value)
     const vidro = todosVidros.find(v=>v.id==document.getElementById("vidro")?.value)
     const quantidadePortas = +document.getElementById("quantidade")?.value || 1
+    const valorAdicional = +document.getElementById("valor_adicional")?.value || 0
 
     let total = 0
     if(perfil) total += perfil.preco * 2 * (largura + altura)
@@ -441,6 +442,7 @@ function calcularPrecoPorta(){
         total += (puxadorInfo.puxador.preco || 0) * puxadorInfo.quantidade
     }
 
+    total += valorAdicional
     return total * quantidadePortas
 }
 
@@ -476,6 +478,7 @@ function atualizarDetalhesCusto() {
     const largura = (+document.getElementById("largura")?.value || 0) / 1000
     const altura = (+document.getElementById("altura")?.value || 0) / 1000
     const quantidadePortas = +document.getElementById("quantidade")?.value || 1
+    const valorAdicional = +document.getElementById("valor_adicional")?.value || 0
     const perimetro = 2 * (largura + altura)
 
     const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value)
@@ -486,7 +489,7 @@ function atualizarDetalhesCusto() {
 
     const puxadorInfo = obterDadosPuxador()
 
-    if (!perfil && !vidro && insumos.length === 0 && !puxadorInfo) {
+    if (!perfil && !vidro && insumos.length === 0 && !puxadorInfo && valorAdicional <= 0) {
         detalhes.innerHTML = "<em>Selecione perfil, vidro e tipologia para ver os custos.</em>"
         return
     }
@@ -562,6 +565,17 @@ function atualizarDetalhesCusto() {
         })
     }
 
+    if (valorAdicional > 0) {
+        custoTotal += valorAdicional
+        precoTotal += valorAdicional
+        linhas.push({
+            item: "Valor adicional",
+            quantidade: "1 un",
+            custo: valorAdicional,
+            preco: valorAdicional
+        })
+    }
+
     detalhes.innerHTML = `
         <strong>Detalhamento de custos e preços</strong>
         <table>
@@ -614,8 +628,11 @@ function renderCampos(){
             puxador:`Puxador<select id="puxador" onchange="atualizarPuxadorTipo(); atualizarPrecoPorta()"></select>`,
             altura_puxador:`Altura do puxador (mm)<input id="altura_puxador" type="number" value="1000" min="0" oninput="desenharPorta()">`,
             medida_puxador:`Tamanho do puxador (mm)<input id="medida_puxador" type="number" value="0" min="0" oninput="atualizarPrecoPorta(); desenharPorta()">`,
+            valor_adicional:`Valor adicional (R$)<input id="valor_adicional" type="number" value="0" min="0" step="0.01" oninput="atualizarPrecoPorta()">`,
             puxadores:`Descrição do puxador<input id="puxadores" type="text" placeholder="Ex: puxador 60cm">`,
             acessorio:`Acessório<textarea id="acessorio" rows="2"></textarea>`,
+            observacao_venda:`Observação de venda<textarea id="observacao_venda" rows="2"></textarea>`,
+            observacao_producao:`Observação de produção<textarea id="observacao_producao" rows="2"></textarea>`,
             trilho:`Trilho<textarea id="trilho" rows="2"></textarea>`,
             pivo:`Pivo<textarea id="pivo" rows="2"></textarea>`
         }
@@ -800,6 +817,7 @@ function renderPortas(){
         const puxadorNome = p.dados.puxador === "sem_puxador"
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido")
+        const valorAdicional = Number(p.dados.valor_adicional || 0)
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
         c.innerHTML += `
             <div>
@@ -808,6 +826,7 @@ function renderPortas(){
                 Perfil: ${perfilNome}<br>
                 Vidro: ${vidroNome}<br>
                 Puxador: ${puxadorNome}<br>
+                Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
                 Dobradiças: ${quantidadeDobradicas}<br>
                 Preço: R$ ${p.preco.toFixed(2)}<br>
                 ${p.svg}<br>
@@ -930,6 +949,9 @@ function atualizarResumoImpressao() {
         const medidaPuxador = p.dados.medida_puxador ? `${p.dados.medida_puxador} mm` : "-"
         const alturaPuxador = p.dados.altura_puxador ? `${p.dados.altura_puxador} mm` : "-"
         const acessorio = p.dados.acessorio || "-"
+        const valorAdicional = Number(p.dados.valor_adicional || 0)
+        const observacaoVenda = p.dados.observacao_venda || "-"
+        const observacaoProducao = p.dados.observacao_producao || "-"
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
         const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
             ? p.dados.dobradicas_alturas.join(" mm, ") + " mm"
@@ -946,6 +968,9 @@ function atualizarResumoImpressao() {
                 Vidro: ${vidroNome}<br>
                 Puxador: ${puxadorNome} (altura ${alturaPuxador}, tamanho ${medidaPuxador})<br>
                 Acessório: ${acessorio}<br>
+                Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
+                Observação de venda: ${observacaoVenda}<br>
+                Observação de produção: ${observacaoProducao}<br>
                 Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})<br>
                 Preço total: R$ ${precoTotal.toFixed(2)}
                 <div>${p.svg}</div>
@@ -975,8 +1000,10 @@ function gerarSvgOrdemProducao(porta) {
     const offsetX = 90
     const offsetY = 30
 
-    const handleLength = parseFloat(porta.dados.medida_puxador || 0)
-    const handlePos = parseFloat(porta.dados.altura_puxador || 0)
+    const puxadorId = porta.dados.puxador
+    const deveDesenharPuxador = puxadorId && puxadorId !== "sem_puxador"
+    const handleLength = deveDesenharPuxador ? parseFloat(porta.dados.medida_puxador || 0) : 0
+    const handlePos = deveDesenharPuxador ? parseFloat(porta.dados.altura_puxador || 0) : 0
     const recuos = obterRecuosPuxador(altura, handlePos, handleLength)
 
     const handleScaled = handleLength > 0 ? handleLength * scale : doorHeight * 0.4
@@ -1002,7 +1029,7 @@ function gerarSvgOrdemProducao(porta) {
     <svg class="op-svg" width="520" height="720" viewBox="0 0 520 720" xmlns="http://www.w3.org/2000/svg">
       <rect x="${offsetX}" y="${offsetY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
       ${dobradicasSvg}
-      <rect x="${handleX}" y="${handleY}" width="8" height="${handleScaled}" fill="#d48400"/>
+      ${deveDesenharPuxador ? `<rect x="${handleX}" y="${handleY}" width="8" height="${handleScaled}" fill="#d48400"/>` : ""}
       <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight / 2}" text-anchor="middle" dominant-baseline="middle" class="op-quantity">${quantidadeTexto}</text>
 
       <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
@@ -1032,6 +1059,9 @@ function atualizarResumoOrdem() {
         const puxadorNome = p.dados.puxador === "sem_puxador"
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-")
+        const valorAdicional = Number(p.dados.valor_adicional || 0)
+        const observacaoVenda = p.dados.observacao_venda || "-"
+        const observacaoProducao = p.dados.observacao_producao || "-"
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
         const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
             ? `${p.dados.dobradicas_alturas.join(" mm, ")} mm`
@@ -1053,6 +1083,9 @@ function atualizarResumoOrdem() {
                     <div>Perfil: ${perfilNome}</div>
                     <div>Vidro: ${vidroNome}</div>
                     <div>Puxador: ${puxadorNome}</div>
+                    <div>Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</div>
+                    <div>Observação de venda: ${observacaoVenda}</div>
+                    <div>Observação de produção: ${observacaoProducao}</div>
                     <div>Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})</div>
                     <div>Vão do puxador: ${vaoPuxador}</div>
                 </div>
