@@ -177,6 +177,8 @@ input:focus, select:focus, textarea:focus {
 
 .print-area { display: none; }
 .print-area.active { display: block; }
+.thermal-area { display: none; }
+.thermal-area.active { display: block; }
 
 .helper-text { color: #666; font-size: 0.8rem; }
 
@@ -202,13 +204,58 @@ input:focus, select:focus, textarea:focus {
     fill: #333;
 }
 
+.thermal-label {
+    width: 80mm;
+    height: 80mm;
+    padding: 6mm;
+    border: 1px solid #333;
+    box-sizing: border-box;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.thermal-header {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.thermal-header strong {
+    font-size: 13px;
+}
+
+.thermal-divider {
+    border-top: 1px solid #333;
+    margin: 4px 0;
+}
+
+.thermal-body {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.thermal-footer {
+    text-align: center;
+    font-size: 11px;
+}
+
 @media print {
     body { background: #fff; }
     .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
-    .print-area.active { display: block; }
+    .print-area.active,
+    .thermal-area.active {
+        display: block;
+    }
     .content { padding: 0; }
     .op-page {
         page-break-after: always;
+    }
+
+    .thermal-label {
+        page-break-after: always;
+        border: none;
     }
 }
 
@@ -231,7 +278,12 @@ if(localStorage.getItem("darkmode") === "true"){
 <div class="app">
     <div class="sidebar">
         <h3>ColorGlass</h3>
-        <button onclick="go('index.html')">Voltar</button>
+        <button onclick="go('perfis.html')">Perfis</button>
+        <button onclick="go('vidros.html')">Vidros</button>
+        <button onclick="go('producao.html')">Produção</button>
+        <button onclick="go('insumos.html')">Insumos</button>
+        <button onclick="go('catalogo.html')">Catálogo</button>
+        <button onclick="go('ajustes.html')">Ajustes</button>
     </div>
 
     <div class="content">
@@ -280,6 +332,7 @@ if(localStorage.getItem("darkmode") === "true"){
             <div style="display:flex; gap:10px; flex-wrap: wrap;">
                 <button class="btn" onclick="imprimirOrcamento()">Imprimir Orçamento</button>
                 <button class="btn" onclick="imprimirOrdemProducao()">Imprimir Ordem de Produção</button>
+                <button class="btn" onclick="imprimirEtiquetaTermica()">Etiqueta térmica</button>
             </div>
         </div>
 
@@ -294,6 +347,7 @@ if(localStorage.getItem("darkmode") === "true"){
 
         <div id="printResumo" class="print-area"></div>
         <div id="printOrdem" class="print-area"></div>
+        <div id="printEtiqueta" class="thermal-area"></div>
     </div>
 </div>
 
@@ -928,6 +982,14 @@ function obterIdentificacaoOrcamento() {
     return `Cliente: ${nome} | Pedido: ${numero}`
 }
 
+function obterCidadeCliente() {
+    return orcamentoInfo?.cliente_cidade || "-"
+}
+
+function obterDataHoje() {
+    return new Date().toLocaleDateString("pt-BR")
+}
+
 function atualizarResumoImpressao() {
     const resumo = document.getElementById("printResumo")
     if (!resumo) return
@@ -1100,10 +1162,59 @@ function atualizarResumoOrdem() {
     `
 }
 
+function atualizarEtiquetasTermicas() {
+    const container = document.getElementById("printEtiqueta")
+    if (!container) return
+    if (portas.length === 0) {
+        container.innerHTML = ""
+        return
+    }
+
+    const dataHoje = obterDataHoje()
+    const clienteNome = orcamentoInfo?.cliente_nome || "-"
+    const pedidoNumero = orcamentoInfo?.numero_pedido ?? "-"
+    const cidadeCliente = obterCidadeCliente()
+
+    const etiquetas = []
+    portas.forEach((porta, index) => {
+        const quantidade = parseInt(porta.quantidade || "1", 10) || 1
+        const largura = porta.dados.largura || "-"
+        const altura = porta.dados.altura || "-"
+        const perfilNome = todosPerfis.find(perfil => perfil.id == porta.dados.perfil)?.nome || "-"
+        const vidroNome = todosVidros.find(vidro => vidro.id == porta.dados.vidro)?.tipo || "-"
+        const descricao = `${index + 1} Porta - ${largura} x ${altura} mm`
+
+        for (let i = 1; i <= quantidade; i += 1) {
+            etiquetas.push(`
+                <div class="thermal-label">
+                    <div class="thermal-header">
+                        <div><strong>Pedido:</strong> ${pedidoNumero}</div>
+                        <div><strong>Data:</strong> ${dataHoje}</div>
+                        <div><strong>Volume:</strong> ${i}/${quantidade}</div>
+                        <div><strong>Cliente:</strong> ${clienteNome}</div>
+                        <div><strong>Cidade:</strong> ${cidadeCliente}</div>
+                    </div>
+                    <div class="thermal-divider"></div>
+                    <div class="thermal-body">
+                        <div><strong>${descricao}</strong></div>
+                        <div>${perfilNome}</div>
+                        <div>${vidroNome}</div>
+                    </div>
+                    <div class="thermal-divider"></div>
+                    <div class="thermal-footer">colorglassfortaleza.com.br</div>
+                </div>
+            `)
+        }
+    })
+
+    container.innerHTML = etiquetas.join("")
+}
+
 function imprimirOrcamento() {
     atualizarResumoImpressao()
     document.getElementById("printResumo").classList.add("active")
     document.getElementById("printOrdem").classList.remove("active")
+    document.getElementById("printEtiqueta").classList.remove("active")
     window.print()
 }
 
@@ -1111,6 +1222,15 @@ function imprimirOrdemProducao() {
     atualizarResumoOrdem()
     document.getElementById("printOrdem").classList.add("active")
     document.getElementById("printResumo").classList.remove("active")
+    document.getElementById("printEtiqueta").classList.remove("active")
+    window.print()
+}
+
+function imprimirEtiquetaTermica() {
+    atualizarEtiquetasTermicas()
+    document.getElementById("printEtiqueta").classList.add("active")
+    document.getElementById("printResumo").classList.remove("active")
+    document.getElementById("printOrdem").classList.remove("active")
     window.print()
 }
 
@@ -1170,7 +1290,8 @@ async function carregarOrcamentoInfo() {
             if (encontrado) {
                 orcamentoInfo = {
                     cliente_nome: encontrado.cliente_nome || "-",
-                    numero_pedido: encontrado.numero_pedido ?? "-"
+                    numero_pedido: encontrado.numero_pedido ?? "-",
+                    cliente_cidade: encontrado.cliente_cidade || "-"
                 }
             }
         }
@@ -1240,6 +1361,7 @@ carregarOrcamentoInfo()
 </script>
 </body>
 </html>
+
 
 
 
