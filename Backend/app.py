@@ -41,8 +41,7 @@ def health():
     return jsonify({"status": "ok", "service": "ColorGlass API"})
 
 
-@app.route("/logincadastro")
-@app.route("/logincadastro.html")
+@app.route("/")
 def login_cadastro_page():
     return send_from_directory(BASE_DIR, "logincadastro.html")
 
