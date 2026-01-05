@@ -197,6 +197,10 @@ input:focus, select:focus, textarea:focus {
     font-weight: 700;
     fill: #0d5d8c;
 }
+.op-measure {
+    font-size: 20px;
+    fill: #333;
+}
 
 @media print {
     body { background: #fff; }
@@ -714,9 +718,12 @@ function desenharPorta(){
     const alturasDobradicas = obterAlturasDobradicas()
     alturasDobradicas.forEach((posicaoMm) => {
         const y = offsetY + doorHeight - (posicaoMm * scale)
-        const x = offsetX + 6
-        svg.innerHTML += `<line x1="${x}" y1="${y}" x2="${x + 18}" y2="${y}" stroke="#000" stroke-width="3"/>`
-        svg.innerHTML += `<circle cx="${x}" cy="${y}" r="4" fill="#000"/>`
+        const hingeHeight = 20
+        const hingeWidth = 5
+        const x = offsetX + 2
+        const yTop = y - hingeHeight / 2
+        svg.innerHTML += `<rect x="${x}" y="${yTop}" width="${hingeWidth}" height="${hingeHeight}" fill="#000" rx="2"/>`
+        svg.innerHTML += `<circle cx="${x + hingeWidth / 2}" cy="${y}" r="3" fill="#000"/>`
     })
 
     const puxadorId = document.getElementById("puxador")?.value
@@ -969,10 +976,13 @@ function gerarSvgOrdemProducao(porta) {
         const posicao = parseFloat(posicaoMm || 0)
         if (!posicao) return ""
         const y = offsetY + doorHeight - (posicao * scale)
-        const x = offsetX + 6
+        const hingeHeight = 28
+        const hingeWidth = 7
+        const x = offsetX + 2
+        const yTop = y - hingeHeight / 2
         return `
-          <line x1="${x}" y1="${y}" x2="${x + 20}" y2="${y}" stroke="#000" stroke-width="3"/>
-          <circle cx="${x}" cy="${y}" r="4" fill="#000"/>
+          <rect x="${x}" y="${yTop}" width="${hingeWidth}" height="${hingeHeight}" fill="#000" rx="2"/>
+          <circle cx="${x + hingeWidth / 2}" cy="${y}" r="4" fill="#000"/>
         `
     }).join("")
 
@@ -986,12 +996,12 @@ function gerarSvgOrdemProducao(porta) {
       <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetY}" x2="${offsetX}" y2="${offsetY}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetY + doorHeight}" x2="${offsetX}" y2="${offsetY + doorHeight}" stroke="#333"/>
-      <text x="${offsetX - 45}" y="${offsetY + doorHeight / 2}" font-size="12" fill="#333" transform="rotate(-90 ${offsetX - 45} ${offsetY + doorHeight / 2})">${altura} mm</text>
+      <text x="${offsetX - 50}" y="${offsetY + doorHeight / 2}" class="op-measure" transform="rotate(-90 ${offsetX - 50} ${offsetY + doorHeight / 2})">${altura} mm</text>
 
       <line x1="${offsetX}" y1="${offsetY + doorHeight + 20}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 20}" stroke="#333"/>
       <line x1="${offsetX}" y1="${offsetY + doorHeight + 16}" x2="${offsetX}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
       <line x1="${offsetX + doorWidth}" y1="${offsetY + doorHeight + 16}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
-      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight + 38}" font-size="12" fill="#333" text-anchor="middle">${largura} mm</text>
+      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight + 48}" class="op-measure" text-anchor="middle">${largura} mm</text>
     </svg>
     `
 }
