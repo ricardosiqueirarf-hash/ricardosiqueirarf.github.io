@@ -30,7 +30,6 @@ HEADERS = {
 app = Flask(__name__)
 CORS(app)  # aceita requisições de qualquer origem, pode restringir se quiser
 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # =====================
@@ -45,6 +44,10 @@ def health():
 def login_cadastro_page():
     return send_from_directory(BASE_DIR, "logincadastro.html")
 
+# ✅ ADICIONADO: rota para a loja
+@app.route("/loja")
+def index_loja_page():
+    return send_from_directory(BASE_DIR, "index_loja.html")
 
 # =====================
 # REGISTRO DE BLUEPRINTS
@@ -54,10 +57,10 @@ from api_perfis import perfis_bp
 from api_vidros import vidros_bp
 from api_insumos import insumos_bp
 from api_orcamentos import orcamentos_bp
-from api_portas import portas_bp 
-from api_orc import orc_bp  
-from api_corte import corte_bp  
-from api_puxadores import puxadores_bp  
+from api_portas import portas_bp
+from api_orc import orc_bp
+from api_corte import corte_bp
+from api_puxadores import puxadores_bp
 from api_estruturas3d import estruturas3d_bp
 from api_cadastroelogin import cadastro_login_bp
 
@@ -65,8 +68,8 @@ app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
 app.register_blueprint(insumos_bp)
 app.register_blueprint(orcamentos_bp)
-app.register_blueprint(portas_bp) 
-app.register_blueprint(orc_bp)  
+app.register_blueprint(portas_bp)
+app.register_blueprint(orc_bp)
 app.register_blueprint(corte_bp)
 app.register_blueprint(puxadores_bp)
 app.register_blueprint(estruturas3d_bp)
@@ -78,5 +81,6 @@ app.register_blueprint(cadastro_login_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
