@@ -718,12 +718,9 @@ function desenharPorta(){
     const alturasDobradicas = obterAlturasDobradicas()
     alturasDobradicas.forEach((posicaoMm) => {
         const y = offsetY + doorHeight - (posicaoMm * scale)
-        const hingeHeight = 20
-        const hingeWidth = 5
-        const x = offsetX + 2
-        const yTop = y - hingeHeight / 2
-        svg.innerHTML += `<rect x="${x}" y="${yTop}" width="${hingeWidth}" height="${hingeHeight}" fill="#000" rx="2"/>`
-        svg.innerHTML += `<circle cx="${x + hingeWidth / 2}" cy="${y}" r="3" fill="#000"/>`
+        const x = offsetX + 6
+        svg.innerHTML += `<line x1="${x}" y1="${y}" x2="${x + 18}" y2="${y}" stroke="#000" stroke-width="3"/>`
+        svg.innerHTML += `<circle cx="${x}" cy="${y}" r="4" fill="#000"/>`
     })
 
     const puxadorId = document.getElementById("puxador")?.value
@@ -819,6 +816,7 @@ function renderPortas(){
                 Dobradiças: ${quantidadeDobradicas}<br>
                 Preço: R$ ${p.preco.toFixed(2)}<br>
                 ${p.svg}<br>
+                <button class="btn" onclick="copiarPorta(${p.id})">Copiar</button>
                 <button class="btn" onclick="editarPorta(${p.id})">Editar</button>
                 <button class="btn btn-danger" onclick="apagarPorta(${p.id})">Apagar</button>
             </div>
@@ -833,6 +831,28 @@ function editarPorta(id){
     const porta = portas.find(p=>p.id===id)
     if(!porta) return
     editando = id
+    document.getElementById("tipologia").value = porta.tipo
+    document.getElementById("quantidade").value = porta.quantidade
+    renderCampos()
+    for(const k in porta.dados){
+        const el=document.getElementById(k)
+        if(el) el.value = porta.dados[k]
+    }
+    if (Array.isArray(porta.dados.dobradicas_alturas)) {
+        const inputs = document.querySelectorAll(".dobradica-altura")
+        porta.dados.dobradicas_alturas.forEach((altura, idx) => {
+            if (inputs[idx]) inputs[idx].value = altura
+        })
+    }
+    atualizarPuxadorTipo()
+    atualizarPrecoPorta()
+    desenharPorta()
+}
+
+function copiarPorta(id){
+    const porta = portas.find(p=>p.id===id)
+    if(!porta) return
+    editando = null
     document.getElementById("tipologia").value = porta.tipo
     document.getElementById("quantidade").value = porta.quantidade
     renderCampos()
@@ -957,7 +977,7 @@ function gerarSvgOrdemProducao(porta) {
 
     const doorWidth = largura * scale
     const doorHeight = altura * scale
-    const offsetX = 60
+    const offsetX = 90
     const offsetY = 30
 
     const handleLength = parseFloat(porta.dados.medida_puxador || 0)
@@ -976,13 +996,10 @@ function gerarSvgOrdemProducao(porta) {
         const posicao = parseFloat(posicaoMm || 0)
         if (!posicao) return ""
         const y = offsetY + doorHeight - (posicao * scale)
-        const hingeHeight = 28
-        const hingeWidth = 7
-        const x = offsetX + 2
-        const yTop = y - hingeHeight / 2
+        const x = offsetX + 6
         return `
-          <rect x="${x}" y="${yTop}" width="${hingeWidth}" height="${hingeHeight}" fill="#000" rx="2"/>
-          <circle cx="${x + hingeWidth / 2}" cy="${y}" r="4" fill="#000"/>
+          <line x1="${x}" y1="${y}" x2="${x + 20}" y2="${y}" stroke="#000" stroke-width="3"/>
+          <circle cx="${x}" cy="${y}" r="4" fill="#000"/>
         `
     }).join("")
 
@@ -1195,8 +1212,5 @@ carregarOrcamentoInfo()
 </script>
 </body>
 </html>
-
-
-
 
 
