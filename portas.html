@@ -316,6 +316,7 @@ function authHeader() {
 // =====================
 const params = new URLSearchParams(window.location.search)
 const ORCAMENTO_UUID = params.get("orcamento_uuid")
+let orcamentoInfo = { cliente_nome: null, numero_pedido: null }
 if(!ORCAMENTO_UUID){
     document.getElementById("infoOrcamento").innerHTML =
         "<strong style='color:red'>UUID do orçamento não encontrado</strong>"
@@ -609,43 +610,45 @@ function renderCampos(){
             altura:`Altura (mm)<input id="altura" type="number" value="2000" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas()">`,
             perfil:`Perfil<select id="perfil" onchange="atualizarPrecoPorta()"></select>`,
             vidro:`Vidro<select id="vidro" onchange="atualizarPrecoPorta()"></select>`,
-            trilho:`Trilho<select><option>Padrão</option></select>`,
-            pivo:`Pivô<select><option>Superior</option></select>`,
             dobradicas:`Quantidade de dobradiças<input id="dobradicas" type="number" value="0" min="0" oninput="atualizarDobradicasInputs(); atualizarPrecoPorta()">`,
             dobradicas_alturas:`Alturas das dobradiças<div id="dobradicasContainer" class="helper-text">Defina a quantidade para gerar os campos.</div>`,
             puxador:`Puxador<select id="puxador" onchange="atualizarPuxadorTipo(); atualizarPrecoPorta()"></select>`,
             altura_puxador:`Altura do puxador (mm)<input id="altura_puxador" type="number" value="1000" min="0" oninput="desenharPorta()">`,
             medida_puxador:`Tamanho do puxador (mm)<input id="medida_puxador" type="number" value="0" min="0" oninput="atualizarPrecoPorta(); desenharPorta()">`,
             puxadores:`Descrição do puxador<input id="puxadores" type="text" placeholder="Ex: puxador 60cm">`,
-            acessorio:`Acessório<input id="acessorio" type="text" placeholder="Ex: batente, fechadura">`
+            acessorio:`Acessório<textarea id="acessorio" rows="2"></textarea>`,
+            trilho:`Trilho<textarea id="trilho" rows="2"></textarea>`,
+            pivo:`Pivo<textarea id="pivo" rows="2"></textarea>`
         }
-        container.innerHTML += `<label>${map[c]}</label>`
+        if(map[c]) container.innerHTML+=`<label>${map[c]}</label>`
     })
-
-    desenharPorta()
     atualizarPerfisSelect()
     atualizarVidrosSelect()
     atualizarPuxadoresSelect()
     atualizarPuxadorTipo()
     atualizarDobradicasInputs()
     atualizarPrecoPorta()
+    desenharPorta()
 }
 
 function atualizarPuxadorTipo() {
     const puxadorId = document.getElementById("puxador")?.value
     const medidaInput = document.getElementById("medida_puxador")
     if (!medidaInput) return
+
     if (puxadorId === "sem_puxador") {
         medidaInput.disabled = true
         medidaInput.value = "0"
         return
     }
+
     const puxador = todosPuxadores.find(p => p.id == puxadorId)
     if (!puxador) {
         medidaInput.disabled = true
         medidaInput.value = "0"
         return
     }
+
     medidaInput.disabled = puxador.tipo_medida !== "metro_linear"
     if (puxador.tipo_medida !== "metro_linear") {
         medidaInput.value = "0"
@@ -657,7 +660,6 @@ function atualizarLimiteDobradicas() {
     const dobradicasInput = document.getElementById("dobradicas")
     if (!dobradicasInput) return
     dobradicasInput.max = Math.max(0, Math.floor(altura))
-    atualizarDobradicasInputs()
 }
 
 function atualizarDobradicasInputs() {
@@ -879,6 +881,12 @@ function obterRecuosPuxador(alturaPorta, alturaPuxador, tamanhoPuxador) {
     }
 }
 
+function obterIdentificacaoOrcamento() {
+    const nome = orcamentoInfo?.cliente_nome || "-"
+    const numero = orcamentoInfo?.numero_pedido ?? "-"
+    return `Cliente: ${nome} | Pedido: ${numero}`
+}
+
 function atualizarResumoImpressao() {
     const resumo = document.getElementById("printResumo")
     if (!resumo) return
@@ -925,7 +933,7 @@ function atualizarResumoImpressao() {
 
     resumo.innerHTML = `
         <h2>Resumo do Orçamento</h2>
-        <p>Orçamento: ${ORCAMENTO_UUID}</p>
+        <p>${obterIdentificacaoOrcamento()}</p>
         ${itens}
         <h3>Total geral: R$ ${totalGeral.toFixed(2)}</h3>
     `
@@ -988,6 +996,17 @@ function atualizarResumoOrdem() {
         const puxadorNome = p.dados.puxador === "sem_puxador"
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-")
+        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
+        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
+            ? `${p.dados.dobradicas_alturas.join(" mm, ")} mm`
+            : "-"
+        const alturaPorta = parseFloat(p.dados.altura || 0)
+        const alturaPuxador = parseFloat(p.dados.altura_puxador || 0)
+        const medidaPuxador = parseFloat(p.dados.medida_puxador || 0)
+        const recuos = obterRecuosPuxador(alturaPorta, alturaPuxador, medidaPuxador)
+        const vaoPuxador = recuos.recuoBase === null
+            ? "-"
+            : `Base ${Math.round(recuos.recuoBase)} mm | Topo ${Math.round(recuos.recuoTopo)} mm`
         return `
             <div class="print-item op-page">
                 <div>
@@ -998,6 +1017,8 @@ function atualizarResumoOrdem() {
                     <div>Perfil: ${perfilNome}</div>
                     <div>Vidro: ${vidroNome}</div>
                     <div>Puxador: ${puxadorNome}</div>
+                    <div>Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})</div>
+                    <div>Vão do puxador: ${vaoPuxador}</div>
                 </div>
             </div>
         `
@@ -1005,7 +1026,7 @@ function atualizarResumoOrdem() {
 
     container.innerHTML = `
         <h2>Ordem de Produção</h2>
-        <p>Orçamento: ${ORCAMENTO_UUID}</p>
+        <p>${obterIdentificacaoOrcamento()}</p>
         ${itens}
     `
 }
@@ -1071,6 +1092,24 @@ async function carregarPortas(){
     }
 }
 
+async function carregarOrcamentoInfo() {
+    try {
+        const res = await fetch(`${API_BASE}/api/orcamentos`)
+        const data = await res.json()
+        if (data.success && Array.isArray(data.orcamentos)) {
+            const encontrado = data.orcamentos.find((orcamento) => orcamento.id == ORCAMENTO_UUID)
+            if (encontrado) {
+                orcamentoInfo = {
+                    cliente_nome: encontrado.cliente_nome || "-",
+                    numero_pedido: encontrado.numero_pedido ?? "-"
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao carregar informações do orçamento:", err)
+    }
+}
+
 // =====================
 // LINK ESTRUTURAS 3D
 // =====================    
@@ -1128,6 +1167,7 @@ carregarPuxadores()
 carregarRascunho()
 carregarPortas()
 carregarEstruturas3D()
+carregarOrcamentoInfo()
 </script>
 </body>
 </html>
