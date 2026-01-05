@@ -30,7 +30,8 @@ HEADERS = {
 app = Flask(__name__)
 CORS(app)  # aceita requisições de qualquer origem, pode restringir se quiser
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # =====================
 # HEALTH CHECK
@@ -40,10 +41,10 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 def health():
     return jsonify({"status": "ok", "service": "ColorGlass API"})
 
-
 @app.route("/")
 def login_cadastro_page():
     return send_from_directory(BASE_DIR, "logincadastro.html")
+
 
 # =====================
 # REGISTRO DE BLUEPRINTS
