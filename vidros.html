@@ -1,4 +1,3 @@
-<!-- vidros.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -217,7 +216,10 @@
             perda: parseFloat(perdaInput.value)
         };
 
-        if (Object.values(payload).some(v => v === "" || isNaN(v))) {
+        const hasInvalidNumber = [payload.espessura, payload.custo, payload.margem, payload.perda]
+            .some(value => Number.isNaN(value));
+
+        if (!payload.tipo || hasInvalidNumber) {
             alert("Preencha tudo corretamente");
             return;
         }
@@ -280,4 +282,5 @@
 
 </body>
 </html>
+
 
