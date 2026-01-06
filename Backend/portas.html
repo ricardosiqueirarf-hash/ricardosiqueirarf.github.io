@@ -494,10 +494,24 @@ function calcularPrecoPorta(){
     const vidro = todosVidros.find(v=>v.id==document.getElementById("vidro")?.value)
     const quantidadePortas = +document.getElementById("quantidade")?.value || 1
     const valorAdicional = +document.getElementById("valor_adicional")?.value || 0
+    const perimetro = 2 * (largura + altura)
+    const insumos = (perfil?.insumos || [])
+        .map((nome) => todosInsumos.find((insumo) => insumo.nome === nome))
+        .filter(Boolean)
 
     let total = 0
     if(perfil) total += perfil.preco * 2 * (largura + altura)
     if(vidro) total += vidro.preco * largura * altura
+    insumos.forEach((insumo) => {
+        const tipo = insumo.tipo_medida
+        let quantidadeInsumo = 0
+        if (tipo === "metro_linear") {
+            quantidadeInsumo = perimetro
+        } else if (tipo === "unidade") {
+            quantidadeInsumo = quantidadePortas
+        }
+        total += (insumo.preco || 0) * quantidadeInsumo
+    })
 
     const puxadorInfo = obterDadosPuxador()
     if (puxadorInfo) {
