@@ -189,6 +189,38 @@ function go(url){
 // URL do backend
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
+const USER_TOKEN = localStorage.getItem("USER_TOKEN");
+
+async function validarSessao() {
+    if (!USER_TOKEN) {
+        window.location.href = "logincadastro.html";
+        return false;
+    }
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${USER_TOKEN}`
+            }
+        });
+        const data = await res.json();
+        if (!data.success) {
+            window.location.href = "logincadastro.html";
+            return false;
+        }
+        if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
+            window.location.href = data.redirect;
+            return false;
+        }
+        return true;
+    } catch (err) {
+        console.error("Erro ao validar sessão:", err);
+        window.location.href = "logincadastro.html";
+        return false;
+    }
+}
 
 // =====================
 // CARREGAR ORÇAMENTOS
@@ -267,7 +299,11 @@ function aplicarFiltroOrcamentos() {
 async function carregarOrcamentos() {
     try {
         atualizarStatusOrcamentos("Carregando...");
-        const res = await fetch(`${BACKEND_URL}/api/orcamentos`);
+        const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
+            headers: {
+                "Authorization": `Bearer ${USER_TOKEN}`
+            }
+        });
         const data = await res.json();
         const orcamentos = data.orcamentos || [];
 
@@ -299,7 +335,11 @@ async function atualizarTotaisOrcamentos() {
         const valorCell = row.querySelector('[data-field="valor_total"]');
 
         try {
-            const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`);
+            const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
+                headers: {
+                    "Authorization": `Bearer ${USER_TOKEN}`
+                }
+            });
             const dataPortas = await resPortas.json();
 
             if (!dataPortas.success || !Array.isArray(dataPortas.portas)) {
@@ -339,7 +379,10 @@ async function criarFichaCliente(){
     try {
         const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
             method:'POST',
-            headers:{ 'Content-Type':'application/json' },
+            headers:{
+                'Content-Type':'application/json',
+                "Authorization": `Bearer ${USER_TOKEN}`
+            },
             body:JSON.stringify({cliente_nome: cliente.nome})
         });
         const data = await res.json();
@@ -358,11 +401,16 @@ async function criarFichaCliente(){
 }
 
 // Carrega orçamentos automaticamente ao abrir a página
-carregarOrcamentos();
-document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
+validarSessao().then((ok) => {
+    if (ok) {
+        carregarOrcamentos();
+        document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
+    }
+});
 </script>
 </body>
 </html>
+
 
 
 
