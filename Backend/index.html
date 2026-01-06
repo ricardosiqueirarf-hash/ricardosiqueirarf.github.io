@@ -224,6 +224,9 @@ tr:hover { background: #f0f8ff; }
             <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
             <span id="orcamentosStatus" class="status-text">Carregando...</span>
         </div>
+        <div id="debugPanel" style="display: block; margin: 10px 0; padding: 10px; background: #fffbe6; border: 1px solid #f1c40f; border-radius: 8px; font-size: 0.85rem; max-height: 160px; overflow-y: auto;">
+            <strong>Debug:</strong>
+        </div>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
 
         <div id="portasSalvas"></div>
@@ -258,6 +261,7 @@ function go(url){
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
 const DEBUG_MODE = true;
+const DEBUG_PANEL_ID = "debugPanel";
 
 function getAdminToken() {
     return localStorage.getItem("ADMIN_TOKEN");
@@ -265,6 +269,15 @@ function getAdminToken() {
 
 function logDebug(message, data) {
     if (!DEBUG_MODE) return;
+    const panel = document.getElementById(DEBUG_PANEL_ID);
+    const time = new Date().toLocaleTimeString();
+    const payload = data !== undefined ? ` ${JSON.stringify(data)}` : "";
+    const line = `[${time}] ${message}${payload}`;
+    if (panel) {
+        const entry = document.createElement("div");
+        entry.textContent = line;
+        panel.appendChild(entry);
+    }
     if (data !== undefined) {
         console.log(`[index debug] ${message}`, data);
     } else {
@@ -493,11 +506,16 @@ async function criarFichaCliente(){
 }
 
 // Carrega orçamentos automaticamente ao abrir a página
+document.addEventListener("DOMContentLoaded", () => {
+    logDebug("index.html carregado");
+    logDebug("ADMIN_TOKEN inicial", { tokenPresente: !!getAdminToken() });
+});
 carregarOrcamentos();
 document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
 </script>
 </body>
 </html>
+
 
 
 
