@@ -224,9 +224,6 @@ tr:hover { background: #f0f8ff; }
             <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
             <span id="orcamentosStatus" class="status-text">Carregando...</span>
         </div>
-        <div id="debugPanel" style="display: block; margin: 10px 0; padding: 10px; background: #fffbe6; border: 1px solid #f1c40f; border-radius: 8px; font-size: 0.85rem; max-height: 160px; overflow-y: auto;">
-            <strong>Debug:</strong>
-        </div>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
 
         <div id="portasSalvas"></div>
@@ -260,50 +257,37 @@ function go(url){
 // URL do backend
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
-const DEBUG_MODE = true;
-const DEBUG_PANEL_ID = "debugPanel";
+const USER_TOKEN = localStorage.getItem("USER_TOKEN");
 
-function getAdminToken() {
-    return localStorage.getItem("ADMIN_TOKEN");
-}
-
-function logDebug(message, data) {
-    if (!DEBUG_MODE) return;
-    const panel = document.getElementById(DEBUG_PANEL_ID);
-    const time = new Date().toLocaleTimeString();
-    const payload = data !== undefined ? ` ${JSON.stringify(data)}` : "";
-    const line = `[${time}] ${message}${payload}`;
-    if (panel) {
-        const entry = document.createElement("div");
-        entry.textContent = line;
-        panel.appendChild(entry);
-    }
-    if (data !== undefined) {
-        console.log(`[index debug] ${message}`, data);
-    } else {
-        console.log(`[index debug] ${message}`);
-    }
-}
-
-function authHeader() {
-    const token = getAdminToken();
-    return token ? { "Authorization": "Bearer " + token } : {};
-}
-
-function redirectToLogin() {
-    logDebug("Redirecionando para login.html");
-    window.location.href = "login.html";
-}
-
-function ensureAuthToken() {
-    const token = getAdminToken();
-    if (!token) {
-        logDebug("ADMIN_TOKEN ausente no localStorage");
-        redirectToLogin();
+async function validarSessao() {
+    if (!USER_TOKEN) {
+        window.location.href = "logincadastro.html";
         return false;
     }
-    logDebug("ADMIN_TOKEN encontrado");
-    return true;
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${USER_TOKEN}`
+            }
+        });
+        const data = await res.json();
+        if (!data.success) {
+            window.location.href = "logincadastro.html";
+            return false;
+        }
+        if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
+            window.location.href = data.redirect;
+            return false;
+        }
+        return true;
+    } catch (err) {
+        console.error("Erro ao validar sessão:", err);
+        window.location.href = "logincadastro.html";
+        return false;
+    }
 }
 
 // =====================
@@ -381,21 +365,14 @@ function aplicarFiltroOrcamentos() {
 }
 
 async function carregarOrcamentos() {
-    if (!ensureAuthToken()) return;
     try {
         atualizarStatusOrcamentos("Carregando...");
-        logDebug("Iniciando fetch /api/orcamentos");
         const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
-            headers: authHeader()
+            headers: {
+                "Authorization": `Bearer ${USER_TOKEN}`
+            }
         });
-        logDebug("Resposta /api/orcamentos", { status: res.status, ok: res.ok });
-        if (res.status === 401) {
-            atualizarStatusOrcamentos("Não autorizado. Faça login novamente.");
-            redirectToLogin();
-            return;
-        }
         const data = await res.json();
-        logDebug("Payload /api/orcamentos", data);
         const orcamentos = data.orcamentos || [];
 
         if(orcamentos.length === 0){
@@ -409,7 +386,6 @@ async function carregarOrcamentos() {
 
     } catch(err){
         console.error("Erro ao carregar orçamentos:", err);
-        logDebug("Erro ao carregar orçamentos", err);
         document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
         atualizarStatusOrcamentos("Erro ao carregar");
     }
@@ -427,18 +403,12 @@ async function atualizarTotaisOrcamentos() {
         const valorCell = row.querySelector('[data-field="valor_total"]');
 
         try {
-            logDebug("Iniciando fetch portas do orçamento", { orcamentoId });
             const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
-                headers: authHeader()
+                headers: {
+                    "Authorization": `Bearer ${USER_TOKEN}`
+                }
             });
-            logDebug("Resposta /api/orcamento/:id/portas", { orcamentoId, status: resPortas.status, ok: resPortas.ok });
-            if (resPortas.status === 401) {
-                atualizarStatusOrcamentos("Não autorizado. Faça login novamente.");
-                redirectToLogin();
-                return;
-            }
             const dataPortas = await resPortas.json();
-            logDebug("Payload portas do orçamento", { orcamentoId, dataPortas });
             let qtdTotal = 0;
             let valorTotal = 0;
 
@@ -468,29 +438,20 @@ function editarOrcamento(uuid){
 // =====================
 let cliente = {nome:"", id:null};
 async function criarFichaCliente(){
-    if (!ensureAuthToken()) return;
     const nome = document.getElementById("clienteNome").value.trim();
     if(!nome){ alert("Digite o nome do cliente"); return; }
     cliente.nome = nome;
 
     try {
-        logDebug("Iniciando POST /api/orcamento", { cliente_nome: cliente.nome });
         const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
             method:'POST',
             headers:{
                 'Content-Type':'application/json',
-                ...authHeader()
+                "Authorization": `Bearer ${USER_TOKEN}`
             },
             body:JSON.stringify({cliente_nome: cliente.nome})
         });
-        logDebug("Resposta POST /api/orcamento", { status: res.status, ok: res.ok });
-        if (res.status === 401) {
-            atualizarStatusOrcamentos("Não autorizado. Faça login novamente.");
-            redirectToLogin();
-            return;
-        }
         const data = await res.json();
-        logDebug("Payload POST /api/orcamento", data);
         if(data.success){
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: " + data.id);
@@ -506,15 +467,16 @@ async function criarFichaCliente(){
 }
 
 // Carrega orçamentos automaticamente ao abrir a página
-document.addEventListener("DOMContentLoaded", () => {
-    logDebug("index.html carregado");
-    logDebug("ADMIN_TOKEN inicial", { tokenPresente: !!getAdminToken() });
+validarSessao().then((ok) => {
+    if (ok) {
+        carregarOrcamentos();
+        document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
+    }
 });
-carregarOrcamentos();
-document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
 </script>
 </body>
 </html>
+
 
 
 
