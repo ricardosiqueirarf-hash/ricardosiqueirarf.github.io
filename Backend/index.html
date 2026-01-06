@@ -257,7 +257,7 @@ function go(url){
 // URL do backend
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
-const USER_TOKEN = localStorage.getItem("USER_TOKEN");
+const USER_TOKEN = localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN");
 
 async function validarSessao() {
     if (!USER_TOKEN) {
@@ -476,9 +476,6 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
-
-
-
 
 
 
