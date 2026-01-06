@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfis Estruturais | Orçamento</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f5f7fa; color: #333; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header { margin-bottom: 20px; }
+    h1 { color: #1079ba; margin-bottom: 8px; }
+    p { color: #4b5563; }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      padding: 20px;
+    }
+
+    .inputs-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #0d5d8c;
+    }
+
+    .rows { display: flex; flex-direction: column; gap: 10px; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      width: 100%;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #1079ba;
+      box-shadow: 0 0 4px rgba(16,121,186,0.35);
+      outline: none;
+    }
+
+    .row .total-row {
+      font-weight: 600;
+      color: #0f5132;
+      background: #e9f7ef;
+      padding: 8px 10px;
+      border-radius: 8px;
+      text-align: right;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      background: #1079ba;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn:hover { background: #0d5d8c; transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #1f2937;
+    }
+    .btn-secondary:hover { background: #cbd5e1; }
+
+    .summary {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .summary .box {
+      background: #f1f5f9;
+      padding: 12px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .summary .value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0d5d8c;
+    }
+
+    .hint {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    @media (max-width: 720px) {
+      .inputs-header,
+      .row {
+        grid-template-columns: 1fr;
+      }
+      .row .total-row { justify-content: flex-start; }
+      .summary { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Orçamento de Perfis Estruturais</h1>
+      <p>Preencha o tamanho em milímetros e a quantidade. Cada linha calcula os metros lineares e o total.</p>
+    </header>
+
+    <section class="card">
+      <div class="inputs-header">
+        <span>Tamanho (mm)</span>
+        <span>Quantidade (x)</span>
+        <span>Total (R$)</span>
+      </div>
+
+      <div class="rows" id="rows"></div>
+
+      <div class="actions">
+        <button class="btn" id="addRow">+ Adicionar linha</button>
+        <button class="btn btn-secondary" id="clearAll" type="button">Limpar</button>
+      </div>
+
+      <div class="summary">
+        <div class="box">
+          <label for="perfilSelect">Perfil estrutural</label>
+          <select id="perfilSelect">
+            <option value="">Carregando...</option>
+          </select>
+          <span class="hint" id="perfilPreco">R$ 0,00 / metro</span>
+        </div>
+        <div class="box">
+          <span>Total de metros lineares</span>
+          <span class="value" id="totalMetros">0,00 m</span>
+        </div>
+        <div class="box">
+          <span>Valor total</span>
+          <span class="value" id="totalValor">R$ 0,00</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const rowsContainer = document.getElementById("rows");
+    const addRowButton = document.getElementById("addRow");
+    const clearAllButton = document.getElementById("clearAll");
+    const perfilSelect = document.getElementById("perfilSelect");
+    const perfilPreco = document.getElementById("perfilPreco");
+    const totalMetrosEl = document.getElementById("totalMetros");
+    const totalValorEl = document.getElementById("totalValor");
+    const API_BASE = "https://colorglass.onrender.com";
+
+    const formatNumber = (value) => value.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    const parseMm = (raw) => {
+      if (!raw) return 0;
+      const cleaned = String(raw).toLowerCase().replace(/mm/g, "").replace(/[^0-9,\.]/g, "");
+      const normalized = cleaned.replace(/\./g, "").replace(/,/g, ".");
+      const value = Number(normalized);
+      if (Number.isNaN(value)) return 0;
+      return value;
+    };
+
+    const tipologiaEhEstrutural = (valor) => {
+      const normalizado = String(valor || "").toLowerCase().trim();
+      return normalizado === "estrutural" || normalizado === "estruturais";
+    };
+
+    const extrairTipologias = (perfil) => {
+      if (Array.isArray(perfil.tipologias)) {
+        return perfil.tipologias;
+      }
+      if (typeof perfil.tipologias === "string") {
+        const normalized = perfil.tipologias.trim();
+        try {
+          const parsed = JSON.parse(normalized);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        } catch (err) {
+          // ignora erro de parse e continua com string
+        }
+        return normalized.split(",").map((item) => item.trim());
+      }
+      if (perfil.tipologia) {
+        return [perfil.tipologia];
+      }
+      return [];
+    };
+
+    const getValorMetro = () => {
+      const selectedOption = perfilSelect.options[perfilSelect.selectedIndex];
+      const valor = Number(selectedOption?.dataset?.preco || 0);
+      return Number.isNaN(valor) ? 0 : valor;
+    };
+
+    const updatePerfilPreco = () => {
+      const valor = getValorMetro();
+      perfilPreco.textContent = `R$ ${formatNumber(valor)} / metro`;
+    };
+
+    const updateRowTotals = (row) => {
+      const inputs = row.querySelectorAll("input");
+      const mmValue = parseMm(inputs[0].value);
+      const qtyValue = Number(inputs[1].value) || 0;
+      const metros = (mmValue / 1000) * qtyValue;
+      const valorMetro = getValorMetro();
+      const total = metros * valorMetro;
+      const totalRowEl = row.querySelector(".total-row");
+      totalRowEl.textContent = `R$ ${formatNumber(total)}`;
+    };
+
+    const updateAllRows = () => {
+      rowsContainer.querySelectorAll(".row").forEach((row) => {
+        updateRowTotals(row);
+      });
+      updateTotals();
+    };
+
+    const createRow = () => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <input type="text" inputmode="numeric" placeholder="Ex.: 1000mm">
+        <input type="number" min="0" step="1" placeholder="Ex.: 3">
+        <div class="total-row">R$ 0,00</div>
+      `;
+
+      const [sizeInput, qtyInput] = row.querySelectorAll("input");
+
+      const updateRow = () => {
+        updateRowTotals(row);
+        updateTotals();
+      };
+
+      sizeInput.addEventListener("input", updateRow);
+      qtyInput.addEventListener("input", updateRow);
+
+      rowsContainer.appendChild(row);
+    };
+
+    const updateTotals = () => {
+      let totalMetros = 0;
+      const valorMetro = getValorMetro();
+
+      rowsContainer.querySelectorAll(".row").forEach((row) => {
+        const inputs = row.querySelectorAll("input");
+        const mmValue = parseMm(inputs[0].value);
+        const qtyValue = Number(inputs[1].value) || 0;
+        totalMetros += (mmValue / 1000) * qtyValue;
+      });
+
+      const totalValor = totalMetros * valorMetro;
+      totalMetrosEl.textContent = `${formatNumber(totalMetros)} m`;
+      totalValorEl.textContent = `R$ ${formatNumber(totalValor)}`;
+    };
+
+    const clearAll = () => {
+      rowsContainer.innerHTML = "";
+      totalMetrosEl.textContent = "0,00 m";
+      totalValorEl.textContent = "R$ 0,00";
+      createRow();
+    };
+
+    addRowButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      createRow();
+    });
+
+    clearAllButton.addEventListener("click", clearAll);
+
+    perfilSelect.addEventListener("change", () => {
+      updatePerfilPreco();
+      updateAllRows();
+    });
+
+    const carregarPerfisEstruturais = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/perfis`);
+        const perfis = await res.json();
+        const perfisEstruturais = perfis.filter((perfil) => {
+          const tipologias = extrairTipologias(perfil);
+          return tipologias.some((t) => tipologiaEhEstrutural(t));
+        });
+
+        perfilSelect.innerHTML = "<option value=\"\">Selecione um perfil</option>";
+        perfisEstruturais.forEach((perfil) => {
+          const preco = Number(perfil.preco ?? perfil.custo ?? 0);
+          const option = document.createElement("option");
+          option.value = perfil.id;
+          option.dataset.preco = Number.isNaN(preco) ? 0 : preco;
+          option.textContent = perfil.nome;
+          perfilSelect.appendChild(option);
+        });
+        updatePerfilPreco();
+      } catch (error) {
+        console.error("Erro ao carregar perfis estruturais:", error);
+        perfilSelect.innerHTML = "<option value=\"\">Erro ao carregar perfis</option>";
+      }
+    };
+
+    carregarPerfisEstruturais();
+    createRow();
+  </script>
+</body>
+</html>
