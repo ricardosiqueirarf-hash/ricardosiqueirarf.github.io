@@ -27,10 +27,11 @@ def extrair_token(request):
     if auth_header.startswith("Bearer "):
         return auth_header.replace("Bearer ", "", 1).strip()
 
+    json_body = request.get_json(silent=True) or {}
     return (
         request.headers.get("X-Auth-Token")
         or request.args.get("token")
-        or (request.json or {}).get("token")
+        or json_body.get("token")
     )
 
 
@@ -52,5 +53,6 @@ def pagina_por_nivel(level):
     if level == 1:
         return "index_loja.html"
     return "logincadastro.html"
+
 
 
