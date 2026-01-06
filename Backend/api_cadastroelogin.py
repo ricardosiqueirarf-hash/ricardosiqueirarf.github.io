@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import requests
 import uuid
 
-from auth_utils import buscar_usuario_por_token, construir_permissoes, extrair_token, pagina_por_nivel
+from auth_utils import buscar_usuario_por_token, construir_permissoes, extrair_token, gerar_token_usuario, pagina_por_nivel
 
 cadastro_login_bp = Blueprint("cadastro_login_bp", __name__)
 
@@ -85,11 +85,13 @@ def login_usuario():
                 "error": "Usuário ainda não aprovado pelo admin."
             }), 403
 
+        token_sessao = gerar_token_usuario(usuario)
+
         return jsonify({
             "success": True,
             "userid": usuario.get("userid"),
             "user": usuario.get("user"),
-            "token": token_usuario,
+            "token": token_sessao,
             "message": "Login autorizado."
         })
 
@@ -122,4 +124,5 @@ def validar_token():
         })
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
 
