@@ -1116,7 +1116,251 @@ function atualizarResumoOrdem() {
 
     const itens = portas.map((p, index) => {
         const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-"
-        const vidroNome = todosVidros.find(vidro => vidr
+        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-"
+        const puxadorNome = p.dados.puxador === "sem_puxador"
+            ? "Sem puxador"
+            : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-")
+        const valorAdicional = Number(p.dados.valor_adicional || 0)
+        const observacaoVenda = p.dados.observacao_venda || "-"
+        const observacaoProducao = p.dados.observacao_producao || "-"
+        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
+        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
+            ? `${p.dados.dobradicas_alturas.join(" mm, ")} mm`
+            : "-"
+        const alturaPorta = parseFloat(p.dados.altura || 0)
+        const alturaPuxador = parseFloat(p.dados.altura_puxador || 0)
+        const medidaPuxador = parseFloat(p.dados.medida_puxador || 0)
+        const recuos = obterRecuosPuxador(alturaPorta, alturaPuxador, medidaPuxador)
+        const vaoPuxador = recuos.recuoBase === null
+            ? "-"
+            : `Base ${Math.round(recuos.recuoBase)} mm | Topo ${Math.round(recuos.recuoTopo)} mm`
+        return `
+            <div class="print-item op-page">
+                <div>
+                    ${gerarSvgOrdemProducao(p)}
+                </div>
+                <div class="op-info">
+                    <div><strong>O.P. ${index + 1} - ${p.tipo}</strong></div>
+                    <div>Perfil: ${perfilNome}</div>
+                    <div>Vidro: ${vidroNome}</div>
+                    <div>Puxador: ${puxadorNome}</div>
+                    <div>Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</div>
+                    <div>Observação de venda: ${observacaoVenda}</div>
+                    <div>Observação de produção: ${observacaoProducao}</div>
+                    <div>Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})</div>
+                    <div>Vão do puxador: ${vaoPuxador}</div>
+                </div>
+            </div>
+        `
+    }).join("")
+
+    container.innerHTML = `
+        <h2>Ordem de Produção</h2>
+        <p>${obterIdentificacaoOrcamento()}</p>
+        ${itens}
+    `
+}
+
+function atualizarEtiquetasTermicas() {
+    const container = document.getElementById("printEtiqueta")
+    if (!container) return
+    if (portas.length === 0) {
+        container.innerHTML = ""
+        return
+    }
+
+    const dataHoje = obterDataHoje()
+    const clienteNome = orcamentoInfo?.cliente_nome || "-"
+    const pedidoNumero = orcamentoInfo?.numero_pedido ?? "-"
+    const cidadeCliente = obterCidadeCliente()
+
+    const etiquetas = []
+    portas.forEach((porta, index) => {
+        const quantidade = parseInt(porta.quantidade || "1", 10) || 1
+        const largura = porta.dados.largura || "-"
+        const altura = porta.dados.altura || "-"
+        const perfilNome = todosPerfis.find(perfil => perfil.id == porta.dados.perfil)?.nome || "-"
+        const vidroNome = todosVidros.find(vidro => vidro.id == porta.dados.vidro)?.tipo || "-"
+        const descricao = `${index + 1} Porta - ${largura} x ${altura} mm`
+
+        for (let i = 1; i <= quantidade; i += 1) {
+            etiquetas.push(`
+                <div class="thermal-label">
+                    <div class="thermal-header">
+                        <div><strong>Pedido:</strong> ${pedidoNumero}</div>
+                        <div><strong>Data:</strong> ${dataHoje}</div>
+                        <div><strong>Volume:</strong> ${i}/${quantidade}</div>
+                        <div><strong>Cliente:</strong> ${clienteNome}</div>
+                        <div><strong>Cidade:</strong> ${cidadeCliente}</div>
+                    </div>
+                    <div class="thermal-divider"></div>
+                    <div class="thermal-body">
+                        <div><strong>${descricao}</strong></div>
+                        <div>${perfilNome}</div>
+                        <div>${vidroNome}</div>
+                    </div>
+                    <div class="thermal-divider"></div>
+                    <div class="thermal-footer">colorglassfortaleza.com.br</div>
+                </div>
+            `)
+        }
+    })
+
+    container.innerHTML = etiquetas.join("")
+}
+
+function imprimirOrcamento() {
+    atualizarResumoImpressao()
+    document.getElementById("printResumo").classList.add("active")
+    document.getElementById("printOrdem").classList.remove("active")
+    document.getElementById("printEtiqueta").classList.remove("active")
+    window.print()
+}
+
+function imprimirOrdemProducao() {
+    atualizarResumoOrdem()
+    document.getElementById("printOrdem").classList.add("active")
+    document.getElementById("printResumo").classList.remove("active")
+    document.getElementById("printEtiqueta").classList.remove("active")
+    window.print()
+}
+
+function imprimirEtiquetaTermica() {
+    atualizarEtiquetasTermicas()
+    document.getElementById("printEtiqueta").classList.add("active")
+    document.getElementById("printResumo").classList.remove("active")
+    document.getElementById("printOrdem").classList.remove("active")
+    window.print()
+}
+
+// =====================
+// FINALIZAR ORÇAMENTO
+// =====================
+async function finalizarOrcamento(){
+    if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
+
+    // Preparar portas com UUID
+    const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
+
+    try{
+        // Salvar portas no Supabase
+        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+            method: "POST",
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ portas: portasComUUID })
+        });
+        const dataPortas = await resPortas.json();
+        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
+
+        alert("Portas salvas com sucesso!");
+        localStorage.removeItem(draftKey);
+        window.location.href = "/"; // ou mantem na página se quiser editar mais
+
+    } catch(err){
+        console.error(err);
+        alert("Erro ao salvar portas: " + err.message);
+    }
+}
+
+
+// =====================
+// CARREGAR PORTAS EXISTENTES
+// =====================
+async function carregarPortas(){
+    try{
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`)
+        const data = await res.json()
+        if(data.success && data.portas){
+            portas = data.portas.map((p) => ({ ...p, id: idCounter++ }))
+            renderPortas()
+            localStorage.removeItem(draftKey)
+        }
+    } catch(err){
+        console.error(err)
+    }
+}
+
+async function carregarOrcamentoInfo() {
+    try {
+        const res = await fetch(`${API_BASE}/api/orcamentos`)
+        const data = await res.json()
+        if (data.success && Array.isArray(data.orcamentos)) {
+            const encontrado = data.orcamentos.find((orcamento) => orcamento.id == ORCAMENTO_UUID)
+            if (encontrado) {
+                orcamentoInfo = {
+                    cliente_nome: encontrado.cliente_nome || "-",
+                    numero_pedido: encontrado.numero_pedido ?? "-",
+                    cliente_cidade: encontrado.cliente_cidade || "-"
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao carregar informações do orçamento:", err)
+    }
+}
+
+// =====================
+// LINK ESTRUTURAS 3D
+// =====================    
+
+function abrirEstrutura3D(){
+    const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}`;
+    window.open(url, "_blank");
+}
+
+
+// =====================
+// CARREGAR ESTRUTURAS 3D SALVAS
+// =====================
+let estruturas3D = [];
+
+function carregarEstruturas3D() {
+    try {
+        const data = localStorage.getItem(`estruturas_${ORCAMENTO_UUID}`);
+        if (!data) return;
+        estruturas3D = JSON.parse(data);
+        renderEstruturas3D();
+    } catch (err) {
+        console.error("Erro ao carregar estruturas 3D:", err);
+    }
+}
+
+function renderEstruturas3D() {
+    const container = document.getElementById("estruturas3DSalvas");
+    container.innerHTML = ""; // limpa antes de renderizar
+    estruturas3D.forEach((e, idx) => {
+        container.innerHTML += `
+            <div>
+                <strong>Estrutura 3D ${idx + 1}</strong><br>
+                Comprimento total: ${e.totalLength.toFixed(2)} mm<br>
+                Fixadores: ${e.fixadores || "Nenhum"}<br>
+                <button class="btn" onclick="verEstrutura3D(${idx})">Ver 3D</button>
+            </div>
+        `;
+    });
+}
+
+
+function verEstrutura3D(idx) {
+    // Reabrir a estrutura em 3dteste.html passando o índice
+    const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}&estrutura_idx=${idx}`;
+    window.open(url, "_blank");
+}
+
+
+// =====================
+carregarPerfis()
+carregarVidros()
+carregarInsumos()
+carregarPuxadores()
+carregarRascunho()
+carregarPortas()
+carregarEstruturas3D()
+carregarOrcamentoInfo()
+</script>
+</body>
+</html>
+
 
 
 
