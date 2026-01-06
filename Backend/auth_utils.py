@@ -39,10 +39,11 @@ def construir_permissoes(level):
 
 
 def pagina_por_nivel(level):
-    if level == 1:
-        return "loja_index.html"
     if level == 2:
         return "index_loja.html"
     if level == 3:
         return "index.html"
+    if level == 1:
+        return "index_loja.html"
     return "logincadastro.html"
+
