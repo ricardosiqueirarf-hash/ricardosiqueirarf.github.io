@@ -31,6 +31,7 @@ app = Flask(__name__)
 CORS(app)  # aceita requisições de qualquer origem, pode restringir se quiser
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
 
 # =====================
 # HEALTH CHECK
@@ -44,10 +45,26 @@ def health():
 def login_cadastro_page():
     return send_from_directory(BASE_DIR, "logincadastro.html")
 
+@app.route("/logincadastro.html")
+def login_cadastro_html_page():
+    return send_from_directory(BASE_DIR, "logincadastro.html")
+
 # ✅ ADICIONADO: rota para a loja
 @app.route("/loja")
 def index_loja_page():
     return send_from_directory(BASE_DIR, "index_loja.html")
+
+@app.route("/index_loja.html")
+def index_loja_html_page():
+    return send_from_directory(BASE_DIR, "index_loja.html")
+
+@app.route("/loja_index.html")
+def loja_index_page():
+    return send_from_directory(BASE_DIR, "loja_index.html")
+
+@app.route("/index.html")
+def index_admin_page():
+    return send_from_directory(ROOT_DIR, "index.html")
 
 # =====================
 # REGISTRO DE BLUEPRINTS
