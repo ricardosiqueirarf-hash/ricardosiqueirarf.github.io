@@ -47,6 +47,11 @@ def criar_portas(orcamento_uuid):
     if not portas or not isinstance(portas, list):
         return jsonify({"success": False, "error": "Nenhuma porta enviada"}), 400
     try:
+        r_delete = requests.delete(
+            f"{SUPABASE_URL}/rest/v1/portas?orcamento_uuid=eq.{orcamento_uuid}",
+            headers=HEADERS
+        )
+        r_delete.raise_for_status()
         payload = []
         for p in portas:
             dados_obj = p.get("dados", {})
@@ -96,6 +101,7 @@ def finalizar_orcamento(orcamento_uuid):
         return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 
