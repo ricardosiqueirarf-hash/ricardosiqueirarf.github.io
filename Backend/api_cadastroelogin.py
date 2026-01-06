@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 import requests
 import uuid
 
+from auth_utils import buscar_usuario_por_token, construir_permissoes, extrair_token, pagina_por_nivel
+
 cadastro_login_bp = Blueprint("cadastro_login_bp", __name__)
 
 
@@ -11,7 +13,7 @@ def _buscar_usuario_por_login(login):
         f"{SUPABASE_URL}/rest/v1/usuarios",
         headers=HEADERS,
         params={
-            "select": "userid,user,pass,token",
+            "select": "userid,user,pass,token,level,storeid",
             "user": f"eq.{login}"
         }
     )
@@ -60,16 +62,12 @@ def cadastrar_usuario():
 
 @cadastro_login_bp.route("/api/usuarios/login", methods=["POST"])
 def login_usuario():
-    from app import TOKEN_DO_ADMIN
     data = request.json or {}
     login = (data.get("user") or "").strip()
     senha = (data.get("pass") or "").strip()
 
     if not login or not senha:
         return jsonify({"success": False, "error": "Usuário e senha são obrigatórios."}), 400
-
-    if not TOKEN_DO_ADMIN:
-        return jsonify({"success": False, "error": "Token do admin não configurado."}), 500
 
     try:
         encontrados = _buscar_usuario_por_login(login)
@@ -81,7 +79,7 @@ def login_usuario():
             return jsonify({"success": False, "error": "Senha inválida."}), 401
 
         token_usuario = usuario.get("token") or ""
-        if token_usuario != TOKEN_DO_ADMIN:
+        if not token_usuario:
             return jsonify({
                 "success": False,
                 "error": "Usuário ainda não aprovado pelo admin."
@@ -91,8 +89,37 @@ def login_usuario():
             "success": True,
             "userid": usuario.get("userid"),
             "user": usuario.get("user"),
+            "token": token_usuario,
             "message": "Login autorizado."
         })
 
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@cadastro_login_bp.route("/api/auth/validar", methods=["POST"])
+def validar_token():
+    token = extrair_token(request)
+    if not token:
+        return jsonify({"success": False, "error": "Token não informado."}), 400
+
+    try:
+        usuario = buscar_usuario_por_token(token)
+        if not usuario:
+            return jsonify({"success": False, "error": "Token inválido."}), 401
+
+        try:
+            level = int(usuario.get("level") or 0)
+        except (TypeError, ValueError):
+            level = 0
+
+        permissions = construir_permissoes(level)
+        return jsonify({
+            "success": True,
+            "level": level,
+            "permissions": permissions,
+            "redirect": pagina_por_nivel(level)
+        })
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
