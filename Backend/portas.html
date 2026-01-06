@@ -1,1 +1,1369 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portas de Vidro e Alumínio em Fortaleza | ColorGlass</title>
+<meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
+<meta name="robots" content="index, follow">
+
+<!-- SEO LOCAL -->
+<meta name="geo.region" content="BR-CE">
+<meta name="geo.placename" content="Fortaleza">
+<meta name="geo.position" content="-3.7319;-38.5267">
+<meta name="ICBM" content="-3.7319, -38.5267">
+
+<!-- CANONICAL -->
+<link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
+
+<!-- OPEN GRAPH -->
+<meta property="og:title" content="Portas de Vidro e Alumínio em Fortaleza | ColorGlass">
+<meta property="og:description" content="Orçamento rápido em portas de vidro e alumínio sob medida em Fortaleza. Qualidade premium e instalação profissional.">
+<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
+<meta property="og:type" content="website">
+
+<style>
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #f5f7fa; color: #333; }
+
+.app { display:grid; grid-template-columns: 220px 1fr; min-height:100vh; }
+.sidebar {
+    background: #1079ba;
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.sidebar h3 { margin-bottom: 8px; }
+.sidebar button {
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: #0d5d8c;
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+.sidebar button:hover { background: #0a4a6b; transform: translateX(3px); }
+
+.content { padding: 25px; overflow-y:auto; }
+
+h1 { color: #1079ba; margin-bottom: 10px; }
+
+label { display:flex; flex-direction:column; font-size:0.9rem; gap:6px; }
+input, select, textarea {
+    padding: 6px 10px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 4px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #1079ba;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn:hover { background: #0d5d8c; transform: translateY(-2px); }
+.btn-danger { background:#e84118; }
+.btn-danger:hover { background:#c23616; }
+
+#infoOrcamento { margin-bottom: 15px; }
+
+.door-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 460px) 1fr;
+    gap: 20px;
+    align-items: start;
+    margin-top: 10px;
+}
+
+.door-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.door-preview {
+    background: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+#portaSVG { width:100%; height:400px; border:1px solid #dcdde1; background:#fff; border-radius: 8px; }
+
+.price-preview {
+    background: #eef4fb;
+    color: #0d5d8c;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.cost-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.cost-details {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    font-size: 0.9rem;
+}
+
+.cost-details table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+.cost-details th,
+.cost-details td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: left;
+}
+
+.cost-details th { background: #f0f4fb; }
+
+.section-card {
+    background: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    margin-top: 20px;
+}
+
+#portasSalvas div,
+#printResumo .print-item,
+#printOrdem .print-item {
+    margin-bottom: 12px;
+    border: 1px solid #dcdde1;
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+#estruturas3DSalvas > div {
+    margin-bottom:10px;
+    border:1px solid #dcdde1;
+    padding:10px;
+    background:#f7f9fc;
+    border-radius: 8px;
+}
+
+.print-area { display: none; }
+.print-area.active { display: block; }
+.thermal-area { display: none; }
+.thermal-area.active { display: block; }
+
+.helper-text { color: #666; font-size: 0.8rem; }
+
+.op-svg { border: 1px solid #dcdde1; border-radius: 8px; background: #fff; width: 100%; height: auto; margin-top: 10px; }
+.op-page {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.op-info {
+    font-size: 20px;
+    line-height: 1.6;
+}
+.op-quantity {
+    font-size: 28px;
+    font-weight: 700;
+    fill: #0d5d8c;
+}
+.op-measure {
+    font-size: 20px;
+    fill: #333;
+}
+
+.thermal-label {
+    width: 100mm;
+    height: 150mm;
+    padding: 6mm;
+    border: 1px solid #333;
+    box-sizing: border-box;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.thermal-header {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+.thermal-header strong {
+    font-size: 20px;
+}
+
+.thermal-divider {
+    border-top: 1px solid #333;
+    margin: 4px 0;
+}
+
+.thermal-body {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+.thermal-footer {
+    text-align: center;
+    font-size: 20px;
+}
+
+@media print {
+    body { background: #fff; }
+    .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
+    .print-area.active,
+    .thermal-area.active {
+        display: block;
+    }
+    .content { padding: 0; }
+    .op-page {
+        page-break-after: always;
+    }
+
+    .thermal-label {
+        page-break-after: always;
+        border: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; flex-wrap: wrap; }
+    .door-layout { grid-template-columns: 1fr; }
+}
+</style>
+
+<link id="tema-css" rel="stylesheet" href="">
+<script>
+if(localStorage.getItem("darkmode") === "true"){
+    document.getElementById("tema-css").href = "/static/css/indexdark.css";
+}
+</script>
+</head>
+
+<body>
+<div class="app">
+    <div class="sidebar">
+        <h3>ColorGlass</h3>
+        <button onclick="go('perfis.html')">Perfis</button>
+        <button onclick="go('vidros.html')">Vidros</button>
+        <button onclick="go('producao.html')">Produção</button>
+        <button onclick="go('insumos.html')">Insumos</button>
+        <button onclick="go('catalogo.html')">Catálogo</button>
+        <button onclick="go('ajustes.html')">Ajustes</button>
+    </div>
+
+    <div class="content">
+        <h1>Orçamento de Portas</h1>
+
+        <div id="infoOrcamento"></div>
+
+        <div class="door-layout">
+            <div class="door-form">
+                <label>Tipologia
+                    <select id="tipologia" onchange="renderCampos()">
+                        <option value="">Selecione</option>
+                        <option value="giro">Giro</option>
+                        <option value="deslizante">Deslizante</option>
+                        <option value="correr">Correr</option>
+                        <option value="pivotante">Pivotante</option>
+                    </select>
+                </label>
+
+                <button class="btn" onclick="abrirEstrutura3D()">
+                    🧱 Orçar Estrutura 3D
+                </button>
+
+                <label>Quantidade
+                    <input type="number" id="quantidade" value="1" min="1" onchange="atualizarPrecoPorta()">
+                </label>
+
+                <div id="campos"></div>
+                <div class="price-preview" id="precoPorta">Preço estimado: R$ 0,00</div>
+                <label class="cost-toggle">
+                    <input type="checkbox" id="toggleCustos" onchange="toggleDetalhesCustos()">
+                    Mostrar custos e preços detalhados
+                </label>
+                <div class="cost-details" id="detalhesCustos" style="display: none;"></div>
+                <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
+            </div>
+
+            <div class="door-preview">
+                <svg id="portaSVG"></svg>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Portas Salvas</h2>
+            <div id="portasSalvas"></div>
+            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                <button class="btn" onclick="imprimirOrcamento()">Imprimir Orçamento</button>
+                <button class="btn" onclick="imprimirOrdemProducao()">Imprimir Ordem de Produção</button>
+                <button class="btn" onclick="imprimirEtiquetaTermica()">Etiqueta térmica</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Estruturas 3D Salvas</h2>
+            <div id="estruturas3DSalvas"></div>
+        </div>
+
+        <button class="btn" onclick="finalizarOrcamento()" style="margin-top:20px;">
+            Finalizar Orçamento
+        </button>
+
+        <div id="printResumo" class="print-area"></div>
+        <div id="printOrdem" class="print-area"></div>
+        <div id="printEtiqueta" class="thermal-area"></div>
+    </div>
+</div>
+
+<script>
+function go(p){ window.location.href = p }
+
+// =====================
+// BACKEND
+// =====================
+const API_BASE = "https://colorglass.onrender.com";
+
+function authHeader() {
+    const token = localStorage.getItem("ADMIN_TOKEN");
+    return token ? { "Authorization": "Bearer " + token } : {};
+}
+
+// =====================
+// UUID DO ORÇAMENTO
+// =====================
+const params = new URLSearchParams(window.location.search)
+const ORCAMENTO_UUID = params.get("orcamento_uuid")
+let orcamentoInfo = { cliente_nome: null, numero_pedido: null }
+if(!ORCAMENTO_UUID){
+    document.getElementById("infoOrcamento").innerHTML =
+        "<strong style='color:red'>UUID do orçamento não encontrado</strong>"
+    throw new Error("orcamento_uuid ausente")
+}
+document.getElementById("infoOrcamento").innerHTML =
+    `Editando orçamento: <strong>${ORCAMENTO_UUID}</strong>`
+
+// =====================
+// TIPOLOGIAS
+// =====================
+const TIPOLOGIAS = {
+    giro: ["largura","altura","perfil","vidro","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"],
+    deslizante: ["largura","altura","perfil","vidro","trilho","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"],
+    correr: ["largura","altura","perfil","vidro","trilho","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"],
+    pivotante: ["largura","altura","perfil","vidro","pivo","dobradicas","dobradicas_alturas","puxador","altura_puxador","medida_puxador","valor_adicional","puxadores","acessorio","observacao_venda","observacao_producao"]
+}
+
+// =====================
+// DADOS
+// =====================
+let todosPerfis = []
+let todosVidros = []
+let todosInsumos = []
+let todosPuxadores = []
+
+async function carregarPerfis() {
+    const res = await fetch(`${API_BASE}/api/perfis`)
+    todosPerfis = await res.json()
+    atualizarPerfisSelect()
+}
+
+async function carregarVidros() {
+    const res = await fetch(`${API_BASE}/api/vidros`)
+    todosVidros = await res.json()
+    atualizarVidrosSelect()
+}
+
+async function carregarInsumos() {
+    const res = await fetch(`${API_BASE}/api/materiais`)
+    todosInsumos = await res.json()
+    atualizarDetalhesCusto()
+}
+
+async function carregarPuxadores() {
+    const res = await fetch(`${API_BASE}/api/puxadores`, { headers: authHeader() })
+    todosPuxadores = await res.json()
+    atualizarPuxadoresSelect()
+}
+
+function atualizarPerfisSelect() {
+    const tipo = document.getElementById("tipologia").value
+    const perfilSelect = document.getElementById("perfil")
+    if(!perfilSelect) return
+    perfilSelect.innerHTML = "<option value=''>Selecione</option>"
+    todosPerfis.filter(p => p.tipologias.includes(tipo))
+        .forEach(p => {
+            perfilSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/m</option>`
+        })
+}
+
+function atualizarVidrosSelect() {
+    const vidroSelect = document.getElementById("vidro")
+    if(!vidroSelect) return
+    vidroSelect.innerHTML = "<option value=''>Selecione</option>"
+    todosVidros.forEach(v => {
+        vidroSelect.innerHTML += `<option value="${v.id}">${v.tipo} ${v.espessura || ""}mm - R$ ${v.preco}/m²</option>`
+    })
+}
+
+function atualizarPuxadoresSelect() {
+    const puxadorSelect = document.getElementById("puxador")
+    if(!puxadorSelect) return
+    puxadorSelect.innerHTML = "<option value=''>Selecione</option>"
+    puxadorSelect.innerHTML += "<option value='sem_puxador'>Sem puxador</option>"
+    todosPuxadores.forEach(p => {
+        const unidade = p.tipo_medida === "metro_linear" ? "m" : "un"
+        puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/${unidade}</option>`
+    })
+}
+
+// =====================
+// PREÇO
+// =====================
+function obterDadosPuxador() {
+    const puxadorId = document.getElementById("puxador")?.value
+    if (puxadorId === "sem_puxador") return null
+    const puxador = todosPuxadores.find(p => p.id == puxadorId)
+    if (!puxador) return null
+
+    const tipoMedida = puxador.tipo_medida
+    const quantidadePortas = +document.getElementById("quantidade")?.value || 1
+    const medidaPuxadorMm = +document.getElementById("medida_puxador")?.value || 0
+
+    let quantidade = 0
+    if (tipoMedida === "metro_linear") {
+        quantidade = medidaPuxadorMm / 1000
+    } else {
+        quantidade = quantidadePortas
+    }
+
+    return {
+        puxador,
+        tipoMedida,
+        quantidade,
+        medidaPuxadorMm
+    }
+}
+
+function calcularPrecoPorta(){
+    const largura = (+document.getElementById("largura")?.value || 0)/1000
+    const altura = (+document.getElementById("altura")?.value || 0)/1000
+    const perfil = todosPerfis.find(p=>p.id==document.getElementById("perfil")?.value)
+    const vidro = todosVidros.find(v=>v.id==document.getElementById("vidro")?.value)
+    const quantidadePortas = +document.getElementById("quantidade")?.value || 1
+    const valorAdicional = +document.getElementById("valor_adicional")?.value || 0
+
+    let total = 0
+    if(perfil) total += perfil.preco * 2 * (largura + altura)
+    if(vidro) total += vidro.preco * largura * altura
+
+    const puxadorInfo = obterDadosPuxador()
+    if (puxadorInfo) {
+        total += (puxadorInfo.puxador.preco || 0) * puxadorInfo.quantidade
+    }
+
+    total += valorAdicional
+    return total * quantidadePortas
+}
+
+function atualizarPrecoPorta(){
+    const preco = calcularPrecoPorta()
+    const precoEl = document.getElementById("precoPorta")
+    if (precoEl) {
+        precoEl.textContent = `Preço estimado: R$ ${preco.toFixed(2)}`
+    }
+    atualizarDetalhesCusto()
+    desenharPorta()
+}
+
+function toggleDetalhesCustos() {
+    const detalhes = document.getElementById("detalhesCustos")
+    const toggle = document.getElementById("toggleCustos")
+    if (!detalhes || !toggle) return
+    detalhes.style.display = toggle.checked ? "block" : "none"
+    if (toggle.checked) {
+        atualizarDetalhesCusto()
+    }
+}
+
+function formatarMoeda(valor) {
+    return `R$ ${Number(valor).toFixed(2)}`
+}
+
+function atualizarDetalhesCusto() {
+    const detalhes = document.getElementById("detalhesCustos")
+    const toggle = document.getElementById("toggleCustos")
+    if (!detalhes || !toggle || !toggle.checked) return
+
+    const largura = (+document.getElementById("largura")?.value || 0) / 1000
+    const altura = (+document.getElementById("altura")?.value || 0) / 1000
+    const quantidadePortas = +document.getElementById("quantidade")?.value || 1
+    const valorAdicional = +document.getElementById("valor_adicional")?.value || 0
+    const perimetro = 2 * (largura + altura)
+
+    const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value)
+    const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value)
+    const insumos = (perfil?.insumos || [])
+        .map((nome) => todosInsumos.find((insumo) => insumo.nome === nome))
+        .filter(Boolean)
+
+    const puxadorInfo = obterDadosPuxador()
+
+    if (!perfil && !vidro && insumos.length === 0 && !puxadorInfo && valorAdicional <= 0) {
+        detalhes.innerHTML = "<em>Selecione perfil, vidro e tipologia para ver os custos.</em>"
+        return
+    }
+
+    const linhas = []
+    let custoTotal = 0
+    let precoTotal = 0
+
+    if (perfil) {
+        const custoPerfil = (perfil.custo || 0) * perimetro
+        const precoPerfil = (perfil.preco || 0) * perimetro
+        custoTotal += custoPerfil
+        precoTotal += precoPerfil
+        linhas.push({
+            item: `Perfil (${perfil.nome})`,
+            quantidade: `${perimetro.toFixed(2)} m`,
+            custo: custoPerfil,
+            preco: precoPerfil
+        })
+    }
+
+    if (vidro) {
+        const area = largura * altura
+        const custoVidro = (vidro.custo || 0) * area
+        const precoVidro = (vidro.preco || 0) * area
+        custoTotal += custoVidro
+        precoTotal += precoVidro
+        linhas.push({
+            item: `Vidro (${vidro.tipo})`,
+            quantidade: `${area.toFixed(2)} m²`,
+            custo: custoVidro,
+            preco: precoVidro
+        })
+    }
+
+    insumos.forEach((insumo) => {
+        const tipo = insumo.tipo_medida
+        let quantidadeInsumo = 0
+        if (tipo === "metro_linear") {
+            quantidadeInsumo = perimetro
+        } else if (tipo === "unidade") {
+            quantidadeInsumo = quantidadePortas
+        } else {
+            return
+        }
+
+        const custoInsumo = (insumo.custo || 0) * quantidadeInsumo
+        const precoInsumo = (insumo.preco || 0) * quantidadeInsumo
+        custoTotal += custoInsumo
+        precoTotal += precoInsumo
+        linhas.push({
+            item: `Insumo (${insumo.nome})`,
+            quantidade: tipo === "metro_linear"
+                ? `${quantidadeInsumo.toFixed(2)} m`
+                : `${quantidadeInsumo} un`,
+            custo: custoInsumo,
+            preco: precoInsumo
+        })
+    })
+
+    if (puxadorInfo) {
+        const custoPuxador = (puxadorInfo.puxador.custo || 0) * puxadorInfo.quantidade
+        const precoPuxador = (puxadorInfo.puxador.preco || 0) * puxadorInfo.quantidade
+        custoTotal += custoPuxador
+        precoTotal += precoPuxador
+        linhas.push({
+            item: `Puxador (${puxadorInfo.puxador.nome})`,
+            quantidade: puxadorInfo.tipoMedida === "metro_linear"
+                ? `${puxadorInfo.quantidade.toFixed(2)} m`
+                : `${puxadorInfo.quantidade} un`,
+            custo: custoPuxador,
+            preco: precoPuxador
+        })
+    }
+
+    if (valorAdicional > 0) {
+        custoTotal += valorAdicional
+        precoTotal += valorAdicional
+        linhas.push({
+            item: "Valor adicional",
+            quantidade: "1 un",
+            custo: valorAdicional,
+            preco: valorAdicional
+        })
+    }
+
+    detalhes.innerHTML = `
+        <strong>Detalhamento de custos e preços</strong>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Custo</th>
+                    <th>Preço</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${linhas.map((linha) => `
+                    <tr>
+                        <td>${linha.item}</td>
+                        <td>${linha.quantidade}</td>
+                        <td>${formatarMoeda(linha.custo)}</td>
+                        <td>${formatarMoeda(linha.preco)}</td>
+                    </tr>
+                `).join("")}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Totais</th>
+                    <th>${formatarMoeda(custoTotal)}</th>
+                    <th>${formatarMoeda(precoTotal)}</th>
+                </tr>
+            </tfoot>
+        </table>
+    `
+}
+
+// =====================
+// RENDER CAMPOS
+// =====================
+function renderCampos(){
+    const tipo = document.getElementById("tipologia").value
+    const container = document.getElementById("campos")
+    container.innerHTML=""
+    if(!TIPOLOGIAS[tipo]) return
+
+    TIPOLOGIAS[tipo].forEach(c=>{
+        const map={
+            largura:`Largura (mm)<input id="largura" type="number" value="800" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas()">`,
+            altura:`Altura (mm)<input id="altura" type="number" value="2000" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas()">`,
+            perfil:`Perfil<select id="perfil" onchange="atualizarPrecoPorta()"></select>`,
+            vidro:`Vidro<select id="vidro" onchange="atualizarPrecoPorta()"></select>`,
+            dobradicas:`Quantidade de dobradiças<input id="dobradicas" type="number" value="0" min="0" oninput="atualizarDobradicasInputs(); atualizarPrecoPorta()">`,
+            dobradicas_alturas:`Alturas das dobradiças<div id="dobradicasContainer" class="helper-text">Defina a quantidade para gerar os campos.</div>`,
+            puxador:`Puxador<select id="puxador" onchange="atualizarPuxadorTipo(); atualizarPrecoPorta()"></select>`,
+            altura_puxador:`Altura do puxador (mm)<input id="altura_puxador" type="number" value="1000" min="0" oninput="desenharPorta()">`,
+            medida_puxador:`Tamanho do puxador (mm)<input id="medida_puxador" type="number" value="0" min="0" oninput="atualizarPrecoPorta(); desenharPorta()">`,
+            valor_adicional:`Valor adicional (R$)<input id="valor_adicional" type="number" value="0" min="0" step="0.01" oninput="atualizarPrecoPorta()">`,
+            puxadores:`Descrição do puxador<input id="puxadores" type="text" placeholder="Ex: puxador 60cm">`,
+            acessorio:`Acessório<textarea id="acessorio" rows="2"></textarea>`,
+            observacao_venda:`Observação de venda<textarea id="observacao_venda" rows="2"></textarea>`,
+            observacao_producao:`Observação de produção<textarea id="observacao_producao" rows="2"></textarea>`,
+            trilho:`Trilho<textarea id="trilho" rows="2"></textarea>`,
+            pivo:`Pivo<textarea id="pivo" rows="2"></textarea>`
+        }
+        if(map[c]) container.innerHTML+=`<label>${map[c]}</label>`
+    })
+    atualizarPerfisSelect()
+    atualizarVidrosSelect()
+    atualizarPuxadoresSelect()
+    atualizarPuxadorTipo()
+    atualizarDobradicasInputs()
+    atualizarPrecoPorta()
+    desenharPorta()
+}
+
+function atualizarPuxadorTipo() {
+    const puxadorId = document.getElementById("puxador")?.value
+    const medidaInput = document.getElementById("medida_puxador")
+    if (!medidaInput) return
+
+    if (puxadorId === "sem_puxador") {
+        medidaInput.disabled = true
+        medidaInput.value = "0"
+        return
+    }
+
+    const puxador = todosPuxadores.find(p => p.id == puxadorId)
+    if (!puxador) {
+        medidaInput.disabled = true
+        medidaInput.value = "0"
+        return
+    }
+
+    medidaInput.disabled = puxador.tipo_medida !== "metro_linear"
+    if (puxador.tipo_medida !== "metro_linear") {
+        medidaInput.value = "0"
+    }
+}
+
+function atualizarLimiteDobradicas() {
+    const altura = +document.getElementById("altura")?.value || 0
+    const dobradicasInput = document.getElementById("dobradicas")
+    if (!dobradicasInput) return
+    dobradicasInput.max = Math.max(0, Math.floor(altura))
+}
+
+function atualizarDobradicasInputs() {
+    const quantidade = parseInt(document.getElementById("dobradicas")?.value || "0", 10) || 0
+    const container = document.getElementById("dobradicasContainer")
+    if (!container) return
+    container.innerHTML = ""
+
+    if (quantidade <= 0) {
+        container.innerHTML = "<span class=\"helper-text\">Nenhuma dobradiça definida.</span>"
+        desenharPorta()
+        return
+    }
+
+    const altura = +document.getElementById("altura")?.value || 0
+    for (let i = 0; i < quantidade; i += 1) {
+        const input = document.createElement("input")
+        input.type = "number"
+        input.min = "0"
+        input.max = String(altura)
+        input.placeholder = `Altura da dobradiça ${i + 1} (mm)`
+        input.className = "dobradica-altura"
+        input.addEventListener("input", desenharPorta)
+        container.appendChild(input)
+    }
+    desenharPorta()
+}
+
+function obterAlturasDobradicas() {
+    return Array.from(document.querySelectorAll(".dobradica-altura"))
+        .map((el) => parseInt(el.value || "0", 10))
+        .filter((valor) => !Number.isNaN(valor) && valor > 0)
+}
+
+// =====================
+// SVG
+// =====================
+function desenharPorta(){
+    const svg = document.getElementById("portaSVG")
+    const w = +document.getElementById("largura")?.value
+    const h = +document.getElementById("altura")?.value
+    if(!w||!h) return
+    svg.innerHTML=""
+    const scale = Math.min(200/w, 380/h)
+    const doorWidth = w * scale
+    const doorHeight = h * scale
+    const offsetX = 10
+    const offsetY = 10
+
+    svg.innerHTML = `<rect x="${offsetX}" y="${offsetY}" width="${doorWidth}" height="${doorHeight}" fill="#dfe9f5" stroke="#1079ba" stroke-width="6"/>`
+
+    const alturasDobradicas = obterAlturasDobradicas()
+    alturasDobradicas.forEach((posicaoMm) => {
+        const y = offsetY + doorHeight - (posicaoMm * scale)
+        const x = offsetX + 6
+        svg.innerHTML += `<line x1="${x}" y1="${y}" x2="${x + 18}" y2="${y}" stroke="#000" stroke-width="3"/>`
+        svg.innerHTML += `<circle cx="${x}" cy="${y}" r="4" fill="#000"/>`
+    })
+
+    const puxadorId = document.getElementById("puxador")?.value
+    if (puxadorId === "sem_puxador") return
+    const puxador = todosPuxadores.find(p => p.id == puxadorId)
+    const alturaPuxador = +document.getElementById("altura_puxador")?.value || 0
+    const medidaPuxadorMm = +document.getElementById("medida_puxador")?.value || 0
+    if (puxador && alturaPuxador > 0) {
+        const puxadorColor = "#d48400"
+        const puxadorAltura = medidaPuxadorMm > 0 ? medidaPuxadorMm * scale : doorHeight * 0.4
+        const yCenter = offsetY + doorHeight - (alturaPuxador * scale)
+        const y = yCenter - puxadorAltura / 2
+        const x = offsetX + doorWidth - 10
+        svg.innerHTML += `<rect x="${x}" y="${y}" width="6" height="${puxadorAltura}" fill="${puxadorColor}"/>`
+        svg.innerHTML += `<circle cx="${x + 3}" cy="${y}" r="4" fill="${puxadorColor}"/>`
+        svg.innerHTML += `<circle cx="${x + 3}" cy="${y + puxadorAltura}" r="4" fill="${puxadorColor}"/>`
+    }
+}
+
+// =====================
+// PORTAS LOCAL
+// =====================
+let portas=[], editando=null, idCounter=0
+const draftKey = `portas_draft_${ORCAMENTO_UUID}`
+
+function salvarPorta(){
+    const tipo = document.getElementById("tipologia").value
+    if(!tipo) return alert("Selecione a tipologia")
+
+    const largura = +document.getElementById("largura")?.value || 0
+    const altura = +document.getElementById("altura")?.value || 0
+    const quantidade = +document.getElementById("quantidade")?.value || 0
+    const perfilSelecionado = document.getElementById("perfil")?.value
+    const vidroSelecionado = document.getElementById("vidro")?.value
+    const puxadorSelecionado = document.getElementById("puxador")?.value
+    const dobradicasQtd = parseInt(document.getElementById("dobradicas")?.value || "0", 10) || 0
+    const alturasDobradicas = obterAlturasDobradicas()
+
+    const pendencias = []
+    if (!largura) pendencias.push("Largura")
+    if (!altura) pendencias.push("Altura")
+    if (!quantidade) pendencias.push("Quantidade")
+    if (!perfilSelecionado) pendencias.push("Perfil")
+    if (!vidroSelecionado) pendencias.push("Vidro")
+    if (!puxadorSelecionado) pendencias.push("Puxador")
+    if (tipo === "giro" && dobradicasQtd < 2) pendencias.push("Dobradiças (mínimo 2)")
+    if (dobradicasQtd > 0 && alturasDobradicas.length !== dobradicasQtd) {
+        pendencias.push("Alturas das dobradiças")
+    }
+
+    if (pendencias.length > 0) {
+        alert(`Preencha os campos obrigatórios: ${pendencias.join(", ")}`)
+        return
+    }
+
+    const dados = {}
+    TIPOLOGIAS[tipo].forEach(c=>{
+        const el = document.getElementById(c)
+        if(el) dados[c] = el.value
+    })
+    dados.dobradicas_alturas = obterAlturasDobradicas()
+
+    const porta = {
+        id: editando ?? idCounter++,
+        tipo,
+        dados,
+        quantidade,
+        preco: calcularPrecoPorta(),
+        svg: portaSVG.outerHTML
+    }
+    editando === null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando), porta)
+    editando = null
+    renderPortas()
+}
+
+function renderPortas(){
+    const c = document.getElementById("portasSalvas")
+    c.innerHTML = ""
+    portas.forEach((p, idx)=>{
+        const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "Perfil não definido"
+        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "Vidro não definido"
+        const puxadorNome = p.dados.puxador === "sem_puxador"
+            ? "Sem puxador"
+            : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido")
+        const valorAdicional = Number(p.dados.valor_adicional || 0)
+        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
+        c.innerHTML += `
+            <div>
+                <strong>${idx+1}. ${p.tipo}</strong><br>
+                Quantidade: ${p.quantidade}<br>
+                Perfil: ${perfilNome}<br>
+                Vidro: ${vidroNome}<br>
+                Puxador: ${puxadorNome}<br>
+                Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
+                Dobradiças: ${quantidadeDobradicas}<br>
+                Preço: R$ ${p.preco.toFixed(2)}<br>
+                ${p.svg}<br>
+                <button class="btn" onclick="copiarPorta(${p.id})">Copiar</button>
+                <button class="btn" onclick="editarPorta(${p.id})">Editar</button>
+                <button class="btn btn-danger" onclick="apagarPorta(${p.id})">Apagar</button>
+            </div>
+        `
+    })
+    salvarRascunho()
+    atualizarResumoImpressao()
+    atualizarResumoOrdem()
+}
+
+function editarPorta(id){
+    const porta = portas.find(p=>p.id===id)
+    if(!porta) return
+    editando = id
+    document.getElementById("tipologia").value = porta.tipo
+    document.getElementById("quantidade").value = porta.quantidade
+    renderCampos()
+    for(const k in porta.dados){
+        const el=document.getElementById(k)
+        if(el) el.value = porta.dados[k]
+    }
+    if (Array.isArray(porta.dados.dobradicas_alturas)) {
+        const inputs = document.querySelectorAll(".dobradica-altura")
+        porta.dados.dobradicas_alturas.forEach((altura, idx) => {
+            if (inputs[idx]) inputs[idx].value = altura
+        })
+    }
+    atualizarPuxadorTipo()
+    atualizarPrecoPorta()
+    desenharPorta()
+}
+
+function copiarPorta(id){
+    const porta = portas.find(p=>p.id===id)
+    if(!porta) return
+    editando = null
+    document.getElementById("tipologia").value = porta.tipo
+    document.getElementById("quantidade").value = porta.quantidade
+    renderCampos()
+    for(const k in porta.dados){
+        const el=document.getElementById(k)
+        if(el) el.value = porta.dados[k]
+    }
+    if (Array.isArray(porta.dados.dobradicas_alturas)) {
+        const inputs = document.querySelectorAll(".dobradica-altura")
+        porta.dados.dobradicas_alturas.forEach((altura, idx) => {
+            if (inputs[idx]) inputs[idx].value = altura
+        })
+    }
+    atualizarPuxadorTipo()
+    atualizarPrecoPorta()
+    desenharPorta()
+}
+
+function apagarPorta(id){
+    if(!confirm("Tem certeza que deseja apagar esta porta?")) return
+    portas = portas.filter(p=>p.id!==id)
+    renderPortas()
+}
+
+function salvarRascunho() {
+    localStorage.setItem(draftKey, JSON.stringify(portas))
+}
+
+function carregarRascunho() {
+    const data = localStorage.getItem(draftKey)
+    if (!data) return
+    try {
+        const parsed = JSON.parse(data)
+        if (Array.isArray(parsed)) {
+            portas = parsed.map((p) => ({ ...p, id: idCounter++ }))
+            renderPortas()
+        }
+    } catch (err) {
+        console.error("Erro ao carregar rascunho:", err)
+    }
+}
+
+// =====================
+// IMPRESSÃO
+// =====================
+function obterRecuosPuxador(alturaPorta, alturaPuxador, tamanhoPuxador) {
+    if (!alturaPorta || !alturaPuxador || !tamanhoPuxador) return { recuoTopo: null, recuoBase: null }
+    const inicio = alturaPuxador - tamanhoPuxador / 2
+    const fim = alturaPuxador + tamanhoPuxador / 2
+    return {
+        recuoBase: Math.max(0, inicio),
+        recuoTopo: Math.max(0, alturaPorta - fim)
+    }
+}
+
+function obterIdentificacaoOrcamento() {
+    const nome = orcamentoInfo?.cliente_nome || "-"
+    const numero = orcamentoInfo?.numero_pedido ?? "-"
+    return `Cliente: ${nome} | Pedido: ${numero}`
+}
+
+function obterCidadeCliente() {
+    return orcamentoInfo?.cliente_cidade || "-"
+}
+
+function obterDataHoje() {
+    return new Date().toLocaleDateString("pt-BR")
+}
+
+function atualizarResumoImpressao() {
+    const resumo = document.getElementById("printResumo")
+    if (!resumo) return
+    if (portas.length === 0) {
+        resumo.innerHTML = ""
+        return
+    }
+
+    let totalGeral = 0
+    const itens = portas.map((p, index) => {
+        const largura = p.dados.largura || "-"
+        const altura = p.dados.altura || "-"
+        const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-"
+        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-"
+        const puxador = p.dados.puxador === "sem_puxador"
+            ? null
+            : todosPuxadores.find(pux => pux.id == p.dados.puxador)
+        const puxadorNome = puxador ? puxador.nome : "Sem puxador"
+        const medidaPuxador = p.dados.medida_puxador ? `${p.dados.medida_puxador} mm` : "-"
+        const alturaPuxador = p.dados.altura_puxador ? `${p.dados.altura_puxador} mm` : "-"
+        const acessorio = p.dados.acessorio || "-"
+        const valorAdicional = Number(p.dados.valor_adicional || 0)
+        const observacaoVenda = p.dados.observacao_venda || "-"
+        const observacaoProducao = p.dados.observacao_producao || "-"
+        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
+        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
+            ? p.dados.dobradicas_alturas.join(" mm, ") + " mm"
+            : "-"
+        const precoTotal = p.preco || 0
+        totalGeral += precoTotal
+
+        return `
+            <div class="print-item">
+                <strong>${index + 1}. ${p.tipo}</strong><br>
+                Quantidade: ${p.quantidade}<br>
+                Medidas: ${largura} x ${altura} (mm)<br>
+                Perfil: ${perfilNome}<br>
+                Vidro: ${vidroNome}<br>
+                Puxador: ${puxadorNome} (altura ${alturaPuxador}, tamanho ${medidaPuxador})<br>
+                Acessório: ${acessorio}<br>
+                Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
+                Observação de venda: ${observacaoVenda}<br>
+                Observação de produção: ${observacaoProducao}<br>
+                Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})<br>
+                Preço total: R$ ${precoTotal.toFixed(2)}
+                <div>${p.svg}</div>
+            </div>
+        `
+    }).join("")
+
+    resumo.innerHTML = `
+        <h2>Resumo do Orçamento</h2>
+        <p>${obterIdentificacaoOrcamento()}</p>
+        ${itens}
+        <h3>Total geral: R$ ${totalGeral.toFixed(2)}</h3>
+    `
+}
+
+function gerarSvgOrdemProducao(porta) {
+    const largura = parseFloat(porta.dados.largura || 0)
+    const altura = parseFloat(porta.dados.altura || 0)
+    if (!largura || !altura) return ""
+
+    const w = 400
+    const h = 600
+    const scale = Math.min(w / largura, h / altura)
+
+    const doorWidth = largura * scale
+    const doorHeight = altura * scale
+    const offsetX = 90
+    const offsetY = 30
+
+    const puxadorId = porta.dados.puxador
+    const deveDesenharPuxador = puxadorId && puxadorId !== "sem_puxador"
+    const handleLength = deveDesenharPuxador ? parseFloat(porta.dados.medida_puxador || 0) : 0
+    const handlePos = deveDesenharPuxador ? parseFloat(porta.dados.altura_puxador || 0) : 0
+    const recuos = obterRecuosPuxador(altura, handlePos, handleLength)
+
+    const handleScaled = handleLength > 0 ? handleLength * scale : doorHeight * 0.4
+    const handleCenter = offsetY + doorHeight - (handlePos * scale)
+    const handleY = handleCenter - handleScaled / 2
+    const handleX = offsetX + doorWidth - 12
+    const quantidadeTexto = `${porta.quantidade || 1}x`
+    const alturasDobradicas = Array.isArray(porta.dados.dobradicas_alturas)
+        ? porta.dados.dobradicas_alturas
+        : []
+    const dobradicasSvg = alturasDobradicas.map((posicaoMm) => {
+        const posicao = parseFloat(posicaoMm || 0)
+        if (!posicao) return ""
+        const y = offsetY + doorHeight - (posicao * scale)
+        const x = offsetX + 6
+        return `
+          <line x1="${x}" y1="${y}" x2="${x + 20}" y2="${y}" stroke="#000" stroke-width="3"/>
+          <circle cx="${x}" cy="${y}" r="4" fill="#000"/>
+        `
+    }).join("")
+
+    return `
+    <svg class="op-svg" width="520" height="720" viewBox="0 0 520 720" xmlns="http://www.w3.org/2000/svg">
+      <rect x="${offsetX}" y="${offsetY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
+      ${dobradicasSvg}
+      ${deveDesenharPuxador ? `<rect x="${handleX}" y="${handleY}" width="8" height="${handleScaled}" fill="#d48400"/>` : ""}
+      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight / 2}" text-anchor="middle" dominant-baseline="middle" class="op-quantity">${quantidadeTexto}</text>
+
+      <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
+      <line x1="${offsetX - 24}" y1="${offsetY}" x2="${offsetX}" y2="${offsetY}" stroke="#333"/>
+      <line x1="${offsetX - 24}" y1="${offsetY + doorHeight}" x2="${offsetX}" y2="${offsetY + doorHeight}" stroke="#333"/>
+      <text x="${offsetX - 50}" y="${offsetY + doorHeight / 2}" class="op-measure" transform="rotate(-90 ${offsetX - 50} ${offsetY + doorHeight / 2})">${altura} mm</text>
+
+      <line x1="${offsetX}" y1="${offsetY + doorHeight + 20}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 20}" stroke="#333"/>
+      <line x1="${offsetX}" y1="${offsetY + doorHeight + 16}" x2="${offsetX}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
+      <line x1="${offsetX + doorWidth}" y1="${offsetY + doorHeight + 16}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
+      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight + 48}" class="op-measure" text-anchor="middle">${largura} mm</text>
+    </svg>
+    `
+}
+
+function atualizarResumoOrdem() {
+    const container = document.getElementById("printOrdem")
+    if (!container) return
+    if (portas.length === 0) {
+        container.innerHTML = ""
+        return
+    }
+
+    const itens = portas.map((p, index) => {
+        const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-"
+        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-"
+        const puxadorNome = p.dados.puxador === "sem_puxador"
+            ? "Sem puxador"
+            : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-")
+        const valorAdicional = Number(p.dados.valor_adicional || 0)
+        const observacaoVenda = p.dados.observacao_venda || "-"
+        const observacaoProducao = p.dados.observacao_producao || "-"
+        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
+        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
+            ? `${p.dados.dobradicas_alturas.join(" mm, ")} mm`
+            : "-"
+        const alturaPorta = parseFloat(p.dados.altura || 0)
+        const alturaPuxador = parseFloat(p.dados.altura_puxador || 0)
+        const medidaPuxador = parseFloat(p.dados.medida_puxador || 0)
+        const recuos = obterRecuosPuxador(alturaPorta, alturaPuxador, medidaPuxador)
+        const vaoPuxador = recuos.recuoBase === null
+            ? "-"
+            : `Base ${Math.round(recuos.recuoBase)} mm | Topo ${Math.round(recuos.recuoTopo)} mm`
+        return `
+            <div class="print-item op-page">
+                <div>
+                    ${gerarSvgOrdemProducao(p)}
+                </div>
+                <div class="op-info">
+                    <div><strong>O.P. ${index + 1} - ${p.tipo}</strong></div>
+                    <div>Perfil: ${perfilNome}</div>
+                    <div>Vidro: ${vidroNome}</div>
+                    <div>Puxador: ${puxadorNome}</div>
+                    <div>Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</div>
+                    <div>Observação de venda: ${observacaoVenda}</div>
+                    <div>Observação de produção: ${observacaoProducao}</div>
+                    <div>Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})</div>
+                    <div>Vão do puxador: ${vaoPuxador}</div>
+                </div>
+            </div>
+        `
+    }).join("")
+
+    container.innerHTML = `
+        <h2>Ordem de Produção</h2>
+        <p>${obterIdentificacaoOrcamento()}</p>
+        ${itens}
+    `
+}
+
+function atualizarEtiquetasTermicas() {
+    const container = document.getElementById("printEtiqueta")
+    if (!container) return
+    if (portas.length === 0) {
+        container.innerHTML = ""
+        return
+    }
+
+    const dataHoje = obterDataHoje()
+    const clienteNome = orcamentoInfo?.cliente_nome || "-"
+    const pedidoNumero = orcamentoInfo?.numero_pedido ?? "-"
+    const cidadeCliente = obterCidadeCliente()
+
+    const etiquetas = []
+    portas.forEach((porta, index) => {
+        const quantidade = parseInt(porta.quantidade || "1", 10) || 1
+        const largura = porta.dados.largura || "-"
+        const altura = porta.dados.altura || "-"
+        const perfilNome = todosPerfis.find(perfil => perfil.id == porta.dados.perfil)?.nome || "-"
+        const vidroNome = todosVidros.find(vidro => vidro.id == porta.dados.vidro)?.tipo || "-"
+        const descricao = `${index + 1} Porta - ${largura} x ${altura} mm`
+
+        for (let i = 1; i <= quantidade; i += 1) {
+            etiquetas.push(`
+                <div class="thermal-label">
+                    <div class="thermal-header">
+                        <div><strong>Pedido:</strong> ${pedidoNumero}</div>
+                        <div><strong>Data:</strong> ${dataHoje}</div>
+                        <div><strong>Volume:</strong> ${i}/${quantidade}</div>
+                        <div><strong>Cliente:</strong> ${clienteNome}</div>
+                        <div><strong>Cidade:</strong> ${cidadeCliente}</div>
+                    </div>
+                    <div class="thermal-divider"></div>
+                    <div class="thermal-body">
+                        <div><strong>${descricao}</strong></div>
+                        <div>${perfilNome}</div>
+                        <div>${vidroNome}</div>
+                    </div>
+                    <div class="thermal-divider"></div>
+                    <div class="thermal-footer">colorglassfortaleza.com.br</div>
+                </div>
+            `)
+        }
+    })
+
+    container.innerHTML = etiquetas.join("")
+}
+
+function imprimirOrcamento() {
+    atualizarResumoImpressao()
+    document.getElementById("printResumo").classList.add("active")
+    document.getElementById("printOrdem").classList.remove("active")
+    document.getElementById("printEtiqueta").classList.remove("active")
+    window.print()
+}
+
+function imprimirOrdemProducao() {
+    atualizarResumoOrdem()
+    document.getElementById("printOrdem").classList.add("active")
+    document.getElementById("printResumo").classList.remove("active")
+    document.getElementById("printEtiqueta").classList.remove("active")
+    window.print()
+}
+
+function imprimirEtiquetaTermica() {
+    atualizarEtiquetasTermicas()
+    document.getElementById("printEtiqueta").classList.add("active")
+    document.getElementById("printResumo").classList.remove("active")
+    document.getElementById("printOrdem").classList.remove("active")
+    window.print()
+}
+
+// =====================
+// FINALIZAR ORÇAMENTO
+// =====================
+async function finalizarOrcamento(){
+    if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
+
+    // Preparar portas com UUID
+    const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
+
+    try{
+        // Salvar portas no Supabase
+        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+            method: "POST",
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ portas: portasComUUID })
+        });
+        const dataPortas = await resPortas.json();
+        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
+
+        alert("Portas salvas com sucesso!");
+        localStorage.removeItem(draftKey);
+        window.location.href = "/"; // ou mantem na página se quiser editar mais
+
+    } catch(err){
+        console.error(err);
+        alert("Erro ao salvar portas: " + err.message);
+    }
+}
+
+
+// =====================
+// CARREGAR PORTAS EXISTENTES
+// =====================
+async function carregarPortas(){
+    try{
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`)
+        const data = await res.json()
+        if(data.success && data.portas){
+            portas = data.portas.map((p) => ({ ...p, id: idCounter++ }))
+            renderPortas()
+            localStorage.removeItem(draftKey)
+        }
+    } catch(err){
+        console.error(err)
+    }
+}
+
+async function carregarOrcamentoInfo() {
+    try {
+        const res = await fetch(`${API_BASE}/api/orcamentos`)
+        const data = await res.json()
+        if (data.success && Array.isArray(data.orcamentos)) {
+            const encontrado = data.orcamentos.find((orcamento) => orcamento.id == ORCAMENTO_UUID)
+            if (encontrado) {
+                orcamentoInfo = {
+                    cliente_nome: encontrado.cliente_nome || "-",
+                    numero_pedido: encontrado.numero_pedido ?? "-",
+                    cliente_cidade: encontrado.cliente_cidade || "-"
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao carregar informações do orçamento:", err)
+    }
+}
+
+// =====================
+// LINK ESTRUTURAS 3D
+// =====================    
+
+function abrirEstrutura3D(){
+    const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}`;
+    window.open(url, "_blank");
+}
+
+
+// =====================
+// CARREGAR ESTRUTURAS 3D SALVAS
+// =====================
+let estruturas3D = [];
+
+function carregarEstruturas3D() {
+    try {
+        const data = localStorage.getItem(`estruturas_${ORCAMENTO_UUID}`);
+        if (!data) return;
+        estruturas3D = JSON.parse(data);
+        renderEstruturas3D();
+    } catch (err) {
+        console.error("Erro ao carregar estruturas 3D:", err);
+    }
+}
+
+function renderEstruturas3D() {
+    const container = document.getElementById("estruturas3DSalvas");
+    container.innerHTML = ""; // limpa antes de renderizar
+    estruturas3D.forEach((e, idx) => {
+        container.innerHTML += `
+            <div>
+                <strong>Estrutura 3D ${idx + 1}</strong><br>
+                Comprimento total: ${e.totalLength.toFixed(2)} mm<br>
+                Fixadores: ${e.fixadores || "Nenhum"}<br>
+                <button class="btn" onclick="verEstrutura3D(${idx})">Ver 3D</button>
+            </div>
+        `;
+    });
+}
+
+
+function verEstrutura3D(idx) {
+    // Reabrir a estrutura em 3dteste.html passando o índice
+    const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}&estrutura_idx=${idx}`;
+    window.open(url, "_blank");
+}
+
+
+// =====================
+carregarPerfis()
+carregarVidros()
+carregarInsumos()
+carregarPuxadores()
+carregarRascunho()
+carregarPortas()
+carregarEstruturas3D()
+carregarOrcamentoInfo()
+</script>
+</body>
+</html>
+
+
+
+
+
 
