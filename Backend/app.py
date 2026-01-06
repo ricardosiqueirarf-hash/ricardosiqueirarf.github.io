@@ -58,10 +58,6 @@ def index_loja_page():
 def index_loja_html_page():
     return send_from_directory(BASE_DIR, "index_loja.html")
 
-@app.route("/loja_index.html")
-def loja_index_page():
-    return send_from_directory(BASE_DIR, "loja_index.html")
-
 @app.route("/index.html")
 def index_admin_page():
     return send_from_directory(ROOT_DIR, "index.html")
@@ -98,6 +94,7 @@ app.register_blueprint(cadastro_login_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
