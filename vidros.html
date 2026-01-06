@@ -1,3 +1,4 @@
+<!-- vidros.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -151,6 +152,8 @@
 </div>
 
 <script>
+    const API_BASE = "https://colorglass.onrender.com";
+
     const vidroIdInput = document.getElementById("vidro_id");
     const tipoInput = document.getElementById("tipo");
     const espessuraInput = document.getElementById("espessura");
@@ -171,7 +174,7 @@
     // CARREGAR
     // =====================
     async function carregar() {
-        const res = await fetch("/api/vidros");
+        const res = await fetch(`${API_BASE}/api/vidros`);
         const data = await res.json();
         const tbody = document.getElementById("tabela");
         tbody.innerHTML = "";
@@ -222,7 +225,7 @@
         const url = id ? `/api/vidros/${id}` : "/api/vidros";
         const method = id ? "PUT" : "POST";
 
-        await fetch(url, {
+        await fetch(`${API_BASE}${url}`, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -248,7 +251,7 @@
     async function excluir(id) {
         if (!confirm("Excluir este vidro?")) return;
 
-        await fetch(`/api/vidros/${id}`, {
+        await fetch(`${API_BASE}/api/vidros/${id}`, {
             method: "DELETE",
             headers: { 'Content-Type': 'application/json' }
         });
