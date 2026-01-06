@@ -1,3 +1,4 @@
+<!-- insumos.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -161,15 +162,6 @@
 <script>
     const API_BASE = "https://colorglass.onrender.com";
 
-    // 🔐 LOGIN / TOKEN
-    function checkToken() {
-        if (!localStorage.getItem("ADMIN_TOKEN")) {
-            alert("Token de admin não encontrado. Faça login novamente.");
-            return false;
-        }
-        return true;
-    }
-
     // =====================
     // CALCULO PRECO FINAL
     // =====================
@@ -190,10 +182,7 @@
     // CARREGAR MATERIAIS
     // =====================
     async function carregar() {
-        if (!checkToken()) return;
-        const res = await fetch(`${API_BASE}/api/materiais`, {
-            headers: { "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN") }
-        });
+        const res = await fetch(`${API_BASE}/api/materiais`);
         const data = await res.json();
 
         const tbody = document.getElementById("tabela");
@@ -221,8 +210,6 @@
     // SALVAR / ATUALIZAR
     // =====================
     async function salvar() {
-        if (!checkToken()) return;
-
         const id = document.getElementById("material_id").value;
         const nome = document.getElementById("nome").value;
         const custo = parseFloat(document.getElementById("custo").value);
@@ -241,19 +228,13 @@
         if (id) {
             await fetch(`${API_BASE}/api/materiais/${id}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN")
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
         } else {
             await fetch(`${API_BASE}/api/materiais`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN")
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
         }
@@ -279,11 +260,9 @@
     // EXCLUIR
     // =====================
     async function excluir(id) {
-        if (!checkToken()) return;
         if(!confirm("Excluir este material?")) return;
         await fetch(`${API_BASE}/api/materiais/${id}`, {
-            method: "DELETE",
-            headers: { "Authorization": "Bearer " + localStorage.getItem("ADMIN_TOKEN") }
+            method: "DELETE"
         });
         carregar();
     }
@@ -309,3 +288,4 @@
 
 </body>
 </html>
+
