@@ -208,6 +208,7 @@ tr:hover { background: #f0f8ff; }
         <button onclick="go('ajustes.html')">Ajustes</button>
         <button onclick="go('cortevidro.html')">Cortevidro</button>
         <button onclick="go('3dteste.html')">3D</button>
+        <button onclick="go('users.html')">admin</button>
     </div>
 
     <div class="content">
@@ -256,37 +257,26 @@ function go(url){
 // URL do backend
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
-const USER_TOKEN = localStorage.getItem("USER_TOKEN");
 
-async function validarSessao() {
-    if (!USER_TOKEN) {
-        window.location.href = "logincadastro.html";
+function getAdminToken() {
+    return localStorage.getItem("ADMIN_TOKEN");
+}
+
+function authHeader() {
+    const token = getAdminToken();
+    return token ? { "Authorization": "Bearer " + token } : {};
+}
+
+function redirectToLogin() {
+    window.location.href = "login.html";
+}
+
+function ensureAuthToken() {
+    if (!getAdminToken()) {
+        redirectToLogin();
         return false;
     }
-
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${USER_TOKEN}`
-            }
-        });
-        const data = await res.json();
-        if (!data.success) {
-            window.location.href = "logincadastro.html";
-            return false;
-        }
-        if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
-            window.location.href = data.redirect;
-            return false;
-        }
-        return true;
-    } catch (err) {
-        console.error("Erro ao validar sessão:", err);
-        window.location.href = "logincadastro.html";
-        return false;
-    }
+    return true;
 }
 
 // =====================
@@ -364,13 +354,16 @@ function aplicarFiltroOrcamentos() {
 }
 
 async function carregarOrcamentos() {
+    if (!ensureAuthToken()) return;
     try {
         atualizarStatusOrcamentos("Carregando...");
         const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
-            headers: {
-                "Authorization": `Bearer ${USER_TOKEN}`
-            }
+            headers: authHeader()
         });
+        if (res.status === 401) {
+            redirectToLogin();
+            return;
+        }
         const data = await res.json();
         const orcamentos = data.orcamentos || [];
 
@@ -403,10 +396,12 @@ async function atualizarTotaisOrcamentos() {
 
         try {
             const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
-                headers: {
-                    "Authorization": `Bearer ${USER_TOKEN}`
-                }
+                headers: authHeader()
             });
+            if (resPortas.status === 401) {
+                redirectToLogin();
+                return;
+            }
             const dataPortas = await resPortas.json();
             let qtdTotal = 0;
             let valorTotal = 0;
@@ -437,6 +432,7 @@ function editarOrcamento(uuid){
 // =====================
 let cliente = {nome:"", id:null};
 async function criarFichaCliente(){
+    if (!ensureAuthToken()) return;
     const nome = document.getElementById("clienteNome").value.trim();
     if(!nome){ alert("Digite o nome do cliente"); return; }
     cliente.nome = nome;
@@ -446,10 +442,14 @@ async function criarFichaCliente(){
             method:'POST',
             headers:{
                 'Content-Type':'application/json',
-                "Authorization": `Bearer ${USER_TOKEN}`
+                ...authHeader()
             },
             body:JSON.stringify({cliente_nome: cliente.nome})
         });
+        if (res.status === 401) {
+            redirectToLogin();
+            return;
+        }
         const data = await res.json();
         if(data.success){
             cliente.id = data.id;
@@ -466,12 +466,8 @@ async function criarFichaCliente(){
 }
 
 // Carrega orçamentos automaticamente ao abrir a página
-validarSessao().then((ok) => {
-    if (ok) {
-        carregarOrcamentos();
-        document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
-    }
-});
+carregarOrcamentos();
+document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
 </script>
 </body>
 </html>
