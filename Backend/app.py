@@ -63,6 +63,14 @@ def index_loja_html_page():
 def index_admin_page():
     return send_from_directory(ROOT_DIR, "index.html")
 
+@app.route("/portas")
+def portas_page():
+    return send_from_directory(ROOT_DIR, "portas.html")
+
+@app.route("/portas.html")
+def portas_html_page():
+    return send_from_directory(ROOT_DIR, "portas.html")
+
 # =====================
 # REGISTRO DE BLUEPRINTS
 # =====================
@@ -95,6 +103,7 @@ app.register_blueprint(cadastro_login_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
