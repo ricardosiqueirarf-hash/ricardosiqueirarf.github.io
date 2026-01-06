@@ -67,6 +67,14 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 4px rgba(16,121,186,0.4);
     outline: none;
 }
+.required-empty {
+    background: #fdeaea;
+    border-color: #f1b0b0;
+}
+.required-filled {
+    background: #e9f8ee;
+    border-color: #9fd4b1;
+}
 
 .btn {
     padding: 10px 16px;
@@ -179,6 +187,7 @@ input:focus, select:focus, textarea:focus {
 .print-area.active { display: block; }
 .thermal-area { display: none; }
 .thermal-area.active { display: block; }
+#printResumo svg { display: none; }
 
 .helper-text { color: #666; font-size: 0.8rem; }
 
@@ -257,6 +266,10 @@ input:focus, select:focus, textarea:focus {
         page-break-after: always;
         border: none;
     }
+
+    #printResumo svg {
+        display: none !important;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -303,7 +316,7 @@ if(localStorage.getItem("darkmode") === "true"){
                 </button>
 
                 <label>Quantidade
-                    <input type="number" id="quantidade" value="1" min="1" onchange="atualizarPrecoPorta()">
+                    <input type="number" id="quantidade" value="1" min="1" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()">
                 </label>
 
                 <div id="campos"></div>
@@ -668,13 +681,13 @@ function renderCampos(){
 
     TIPOLOGIAS[tipo].forEach(c=>{
         const map={
-            largura:`Largura (mm)<input id="largura" type="number" value="800" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas()">`,
-            altura:`Altura (mm)<input id="altura" type="number" value="2000" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas()">`,
-            perfil:`Perfil<select id="perfil" onchange="atualizarPrecoPorta()"></select>`,
-            vidro:`Vidro<select id="vidro" onchange="atualizarPrecoPorta()"></select>`,
-            dobradicas:`Quantidade de dobradiças<input id="dobradicas" type="number" value="0" min="0" oninput="atualizarDobradicasInputs(); atualizarPrecoPorta()">`,
+            largura:`Largura (mm)<input id="largura" type="number" value="800" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas(); atualizarCamposObrigatorios()">`,
+            altura:`Altura (mm)<input id="altura" type="number" value="2000" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas(); atualizarCamposObrigatorios()">`,
+            perfil:`Perfil<select id="perfil" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
+            vidro:`Vidro<select id="vidro" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
+            dobradicas:`Quantidade de dobradiças<input id="dobradicas" type="number" value="0" min="0" oninput="atualizarDobradicasInputs(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
             dobradicas_alturas:`Alturas das dobradiças<div id="dobradicasContainer" class="helper-text">Defina a quantidade para gerar os campos.</div>`,
-            puxador:`Puxador<select id="puxador" onchange="atualizarPuxadorTipo(); atualizarPrecoPorta()"></select>`,
+            puxador:`Puxador<select id="puxador" data-required="true" onchange="atualizarPuxadorTipo(); atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
             altura_puxador:`Altura do puxador (mm)<input id="altura_puxador" type="number" value="1000" min="0" oninput="desenharPorta()">`,
             medida_puxador:`Tamanho do puxador (mm)<input id="medida_puxador" type="number" value="0" min="0" oninput="atualizarPrecoPorta(); desenharPorta()">`,
             valor_adicional:`Valor adicional (R$)<input id="valor_adicional" type="number" value="0" min="0" step="0.01" oninput="atualizarPrecoPorta()">`,
@@ -694,6 +707,7 @@ function renderCampos(){
     atualizarDobradicasInputs()
     atualizarPrecoPorta()
     desenharPorta()
+    atualizarCamposObrigatorios()
 }
 
 function atualizarPuxadorTipo() {
@@ -757,6 +771,16 @@ function obterAlturasDobradicas() {
     return Array.from(document.querySelectorAll(".dobradica-altura"))
         .map((el) => parseInt(el.value || "0", 10))
         .filter((valor) => !Number.isNaN(valor) && valor > 0)
+}
+
+function atualizarCamposObrigatorios() {
+    const campos = document.querySelectorAll("[data-required='true']")
+    campos.forEach((campo) => {
+        const valor = campo.value?.trim()
+        const preenchido = valor !== "" && valor !== "0"
+        campo.classList.toggle("required-empty", !preenchido)
+        campo.classList.toggle("required-filled", preenchido)
+    })
 }
 
 // =====================
@@ -994,7 +1018,7 @@ function atualizarResumoImpressao() {
     }
 
     let totalGeral = 0
-    const itens = portas.map((p) => {
+    const itens = portas.map((p, index) => {
         const largura = p.dados.largura || "-"
         const altura = p.dados.altura || "-"
         const puxador = p.dados.puxador === "sem_puxador"
@@ -1092,250 +1116,8 @@ function atualizarResumoOrdem() {
 
     const itens = portas.map((p, index) => {
         const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-"
-        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-"
-        const puxadorNome = p.dados.puxador === "sem_puxador"
-            ? "Sem puxador"
-            : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-")
-        const valorAdicional = Number(p.dados.valor_adicional || 0)
-        const observacaoVenda = p.dados.observacao_venda || "-"
-        const observacaoProducao = p.dados.observacao_producao || "-"
-        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
-        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
-            ? `${p.dados.dobradicas_alturas.join(" mm, ")} mm`
-            : "-"
-        const alturaPorta = parseFloat(p.dados.altura || 0)
-        const alturaPuxador = parseFloat(p.dados.altura_puxador || 0)
-        const medidaPuxador = parseFloat(p.dados.medida_puxador || 0)
-        const recuos = obterRecuosPuxador(alturaPorta, alturaPuxador, medidaPuxador)
-        const vaoPuxador = recuos.recuoBase === null
-            ? "-"
-            : `Base ${Math.round(recuos.recuoBase)} mm | Topo ${Math.round(recuos.recuoTopo)} mm`
-        return `
-            <div class="print-item op-page">
-                <div>
-                    ${gerarSvgOrdemProducao(p)}
-                </div>
-                <div class="op-info">
-                    <div><strong>O.P. ${index + 1} - ${p.tipo}</strong></div>
-                    <div>Perfil: ${perfilNome}</div>
-                    <div>Vidro: ${vidroNome}</div>
-                    <div>Puxador: ${puxadorNome}</div>
-                    <div>Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</div>
-                    <div>Observação de venda: ${observacaoVenda}</div>
-                    <div>Observação de produção: ${observacaoProducao}</div>
-                    <div>Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})</div>
-                    <div>Vão do puxador: ${vaoPuxador}</div>
-                </div>
-            </div>
-        `
-    }).join("")
+        const vidroNome = todosVidros.find(vidro => vidr
 
-    container.innerHTML = `
-        <h2>Ordem de Produção</h2>
-        <p>${obterIdentificacaoOrcamento()}</p>
-        ${itens}
-    `
-}
-
-function atualizarEtiquetasTermicas() {
-    const container = document.getElementById("printEtiqueta")
-    if (!container) return
-    if (portas.length === 0) {
-        container.innerHTML = ""
-        return
-    }
-
-    const dataHoje = obterDataHoje()
-    const clienteNome = orcamentoInfo?.cliente_nome || "-"
-    const pedidoNumero = orcamentoInfo?.numero_pedido ?? "-"
-    const cidadeCliente = obterCidadeCliente()
-
-    const etiquetas = []
-    portas.forEach((porta, index) => {
-        const quantidade = parseInt(porta.quantidade || "1", 10) || 1
-        const largura = porta.dados.largura || "-"
-        const altura = porta.dados.altura || "-"
-        const perfilNome = todosPerfis.find(perfil => perfil.id == porta.dados.perfil)?.nome || "-"
-        const vidroNome = todosVidros.find(vidro => vidro.id == porta.dados.vidro)?.tipo || "-"
-        const descricao = `${index + 1} Porta - ${largura} x ${altura} mm`
-
-        for (let i = 1; i <= quantidade; i += 1) {
-            etiquetas.push(`
-                <div class="thermal-label">
-                    <div class="thermal-header">
-                        <div><strong>Pedido:</strong> ${pedidoNumero}</div>
-                        <div><strong>Data:</strong> ${dataHoje}</div>
-                        <div><strong>Volume:</strong> ${i}/${quantidade}</div>
-                        <div><strong>Cliente:</strong> ${clienteNome}</div>
-                        <div><strong>Cidade:</strong> ${cidadeCliente}</div>
-                    </div>
-                    <div class="thermal-divider"></div>
-                    <div class="thermal-body">
-                        <div><strong>${descricao}</strong></div>
-                        <div>${perfilNome}</div>
-                        <div>${vidroNome}</div>
-                    </div>
-                    <div class="thermal-divider"></div>
-                    <div class="thermal-footer">colorglassfortaleza.com.br</div>
-                </div>
-            `)
-        }
-    })
-
-    container.innerHTML = etiquetas.join("")
-}
-
-function imprimirOrcamento() {
-    atualizarResumoImpressao()
-    document.getElementById("printResumo").classList.add("active")
-    document.getElementById("printOrdem").classList.remove("active")
-    document.getElementById("printEtiqueta").classList.remove("active")
-    window.print()
-}
-
-function imprimirOrdemProducao() {
-    atualizarResumoOrdem()
-    document.getElementById("printOrdem").classList.add("active")
-    document.getElementById("printResumo").classList.remove("active")
-    document.getElementById("printEtiqueta").classList.remove("active")
-    window.print()
-}
-
-function imprimirEtiquetaTermica() {
-    atualizarEtiquetasTermicas()
-    document.getElementById("printEtiqueta").classList.add("active")
-    document.getElementById("printResumo").classList.remove("active")
-    document.getElementById("printOrdem").classList.remove("active")
-    window.print()
-}
-
-// =====================
-// FINALIZAR ORÇAMENTO
-// =====================
-async function finalizarOrcamento(){
-    if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
-
-    // Preparar portas com UUID
-    const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
-
-    try{
-        // Salvar portas no Supabase
-        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
-            method: "POST",
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ portas: portasComUUID })
-        });
-        const dataPortas = await resPortas.json();
-        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
-
-        alert("Portas salvas com sucesso!");
-        localStorage.removeItem(draftKey);
-        window.location.href = "/"; // ou mantem na página se quiser editar mais
-
-    } catch(err){
-        console.error(err);
-        alert("Erro ao salvar portas: " + err.message);
-    }
-}
-
-
-// =====================
-// CARREGAR PORTAS EXISTENTES
-// =====================
-async function carregarPortas(){
-    try{
-        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`)
-        const data = await res.json()
-        if(data.success && data.portas){
-            portas = data.portas.map((p) => ({ ...p, id: idCounter++ }))
-            renderPortas()
-            localStorage.removeItem(draftKey)
-        }
-    } catch(err){
-        console.error(err)
-    }
-}
-
-async function carregarOrcamentoInfo() {
-    try {
-        const res = await fetch(`${API_BASE}/api/orcamentos`)
-        const data = await res.json()
-        if (data.success && Array.isArray(data.orcamentos)) {
-            const encontrado = data.orcamentos.find((orcamento) => orcamento.id == ORCAMENTO_UUID)
-            if (encontrado) {
-                orcamentoInfo = {
-                    cliente_nome: encontrado.cliente_nome || "-",
-                    numero_pedido: encontrado.numero_pedido ?? "-",
-                    cliente_cidade: encontrado.cliente_cidade || "-"
-                }
-            }
-        }
-    } catch (err) {
-        console.error("Erro ao carregar informações do orçamento:", err)
-    }
-}
-
-// =====================
-// LINK ESTRUTURAS 3D
-// =====================    
-
-function abrirEstrutura3D(){
-    const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}`;
-    window.open(url, "_blank");
-}
-
-
-// =====================
-// CARREGAR ESTRUTURAS 3D SALVAS
-// =====================
-let estruturas3D = [];
-
-function carregarEstruturas3D() {
-    try {
-        const data = localStorage.getItem(`estruturas_${ORCAMENTO_UUID}`);
-        if (!data) return;
-        estruturas3D = JSON.parse(data);
-        renderEstruturas3D();
-    } catch (err) {
-        console.error("Erro ao carregar estruturas 3D:", err);
-    }
-}
-
-function renderEstruturas3D() {
-    const container = document.getElementById("estruturas3DSalvas");
-    container.innerHTML = ""; // limpa antes de renderizar
-    estruturas3D.forEach((e, idx) => {
-        container.innerHTML += `
-            <div>
-                <strong>Estrutura 3D ${idx + 1}</strong><br>
-                Comprimento total: ${e.totalLength.toFixed(2)} mm<br>
-                Fixadores: ${e.fixadores || "Nenhum"}<br>
-                <button class="btn" onclick="verEstrutura3D(${idx})">Ver 3D</button>
-            </div>
-        `;
-    });
-}
-
-
-function verEstrutura3D(idx) {
-    // Reabrir a estrutura em 3dteste.html passando o índice
-    const url = `3dteste.html?orcamento_uuid=${ORCAMENTO_UUID}&estrutura_idx=${idx}`;
-    window.open(url, "_blank");
-}
-
-
-// =====================
-carregarPerfis()
-carregarVidros()
-carregarInsumos()
-carregarPuxadores()
-carregarRascunho()
-carregarPortas()
-carregarEstruturas3D()
-carregarOrcamentoInfo()
-</script>
-</body>
-</html> 
 
 
 
