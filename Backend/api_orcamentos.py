@@ -13,21 +13,19 @@ orcamentos_bp = Blueprint("orcamentos_bp", __name__)
 def criar_orcamento():
     from app import SUPABASE_URL, HEADERS
     token = extrair_token(request)
-    if not token:
-        return jsonify({"success": False, "error": "Token não informado."}), 401
+
+    usuario = None
+    if token:
+        try:
+            usuario = buscar_usuario_por_token(token)
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
 
     try:
-        usuario = buscar_usuario_por_token(token)
-        if not usuario:
-            return jsonify({"success": False, "error": "Token inválido."}), 401
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-    try:
-        level = int(usuario.get("level") or 0)
+        level = int((usuario or {}).get("level") or 0)
     except (TypeError, ValueError):
         level = 0
-    storeid = usuario.get("storeid")
+    storeid = (usuario or {}).get("storeid")
 
     data = request.json
     cliente_nome = data.get("cliente_nome")
@@ -78,21 +76,19 @@ def criar_orcamento():
 def listar_orcamentos():
     from app import SUPABASE_URL, HEADERS
     token = extrair_token(request)
-    if not token:
-        return jsonify({"success": False, "error": "Token não informado."}), 401
+
+    usuario = None
+    if token:
+        try:
+            usuario = buscar_usuario_por_token(token)
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
 
     try:
-        usuario = buscar_usuario_por_token(token)
-        if not usuario:
-            return jsonify({"success": False, "error": "Token inválido."}), 401
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-    try:
-        level = int(usuario.get("level") or 0)
+        level = int((usuario or {}).get("level") or 0)
     except (TypeError, ValueError):
         level = 0
-    storeid = usuario.get("storeid")
+    storeid = (usuario or {}).get("storeid")
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
@@ -139,6 +135,7 @@ def finalizar_orcamento(uuid):
         return jsonify({"success": True, "quantidade_total": quantidade_total, "valor_total": valor_total})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 
