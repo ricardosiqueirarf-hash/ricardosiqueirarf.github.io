@@ -257,9 +257,19 @@ function go(url){
 // URL do backend
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
+const DEBUG_MODE = true;
 
 function getAdminToken() {
     return localStorage.getItem("ADMIN_TOKEN");
+}
+
+function logDebug(message, data) {
+    if (!DEBUG_MODE) return;
+    if (data !== undefined) {
+        console.log(`[index debug] ${message}`, data);
+    } else {
+        console.log(`[index debug] ${message}`);
+    }
 }
 
 function authHeader() {
@@ -268,14 +278,18 @@ function authHeader() {
 }
 
 function redirectToLogin() {
+    logDebug("Redirecionando para login.html");
     window.location.href = "login.html";
 }
 
 function ensureAuthToken() {
-    if (!getAdminToken()) {
+    const token = getAdminToken();
+    if (!token) {
+        logDebug("ADMIN_TOKEN ausente no localStorage");
         redirectToLogin();
         return false;
     }
+    logDebug("ADMIN_TOKEN encontrado");
     return true;
 }
 
@@ -357,14 +371,18 @@ async function carregarOrcamentos() {
     if (!ensureAuthToken()) return;
     try {
         atualizarStatusOrcamentos("Carregando...");
+        logDebug("Iniciando fetch /api/orcamentos");
         const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
             headers: authHeader()
         });
+        logDebug("Resposta /api/orcamentos", { status: res.status, ok: res.ok });
         if (res.status === 401) {
+            atualizarStatusOrcamentos("Não autorizado. Faça login novamente.");
             redirectToLogin();
             return;
         }
         const data = await res.json();
+        logDebug("Payload /api/orcamentos", data);
         const orcamentos = data.orcamentos || [];
 
         if(orcamentos.length === 0){
@@ -378,6 +396,7 @@ async function carregarOrcamentos() {
 
     } catch(err){
         console.error("Erro ao carregar orçamentos:", err);
+        logDebug("Erro ao carregar orçamentos", err);
         document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
         atualizarStatusOrcamentos("Erro ao carregar");
     }
@@ -395,14 +414,18 @@ async function atualizarTotaisOrcamentos() {
         const valorCell = row.querySelector('[data-field="valor_total"]');
 
         try {
+            logDebug("Iniciando fetch portas do orçamento", { orcamentoId });
             const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
                 headers: authHeader()
             });
+            logDebug("Resposta /api/orcamento/:id/portas", { orcamentoId, status: resPortas.status, ok: resPortas.ok });
             if (resPortas.status === 401) {
+                atualizarStatusOrcamentos("Não autorizado. Faça login novamente.");
                 redirectToLogin();
                 return;
             }
             const dataPortas = await resPortas.json();
+            logDebug("Payload portas do orçamento", { orcamentoId, dataPortas });
             let qtdTotal = 0;
             let valorTotal = 0;
 
@@ -438,6 +461,7 @@ async function criarFichaCliente(){
     cliente.nome = nome;
 
     try {
+        logDebug("Iniciando POST /api/orcamento", { cliente_nome: cliente.nome });
         const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
             method:'POST',
             headers:{
@@ -446,11 +470,14 @@ async function criarFichaCliente(){
             },
             body:JSON.stringify({cliente_nome: cliente.nome})
         });
+        logDebug("Resposta POST /api/orcamento", { status: res.status, ok: res.ok });
         if (res.status === 401) {
+            atualizarStatusOrcamentos("Não autorizado. Faça login novamente.");
             redirectToLogin();
             return;
         }
         const data = await res.json();
+        logDebug("Payload POST /api/orcamento", data);
         if(data.success){
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: " + data.id);
@@ -471,6 +498,7 @@ document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFilt
 </script>
 </body>
 </html>
+
 
 
 
