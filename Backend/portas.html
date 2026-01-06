@@ -994,43 +994,23 @@ function atualizarResumoImpressao() {
     }
 
     let totalGeral = 0
-    const itens = portas.map((p, index) => {
+    const itens = portas.map((p) => {
         const largura = p.dados.largura || "-"
         const altura = p.dados.altura || "-"
-        const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-"
-        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-"
         const puxador = p.dados.puxador === "sem_puxador"
             ? null
             : todosPuxadores.find(pux => pux.id == p.dados.puxador)
         const puxadorNome = puxador ? puxador.nome : "Sem puxador"
-        const medidaPuxador = p.dados.medida_puxador ? `${p.dados.medida_puxador} mm` : "-"
-        const alturaPuxador = p.dados.altura_puxador ? `${p.dados.altura_puxador} mm` : "-"
-        const acessorio = p.dados.acessorio || "-"
-        const valorAdicional = Number(p.dados.valor_adicional || 0)
-        const observacaoVenda = p.dados.observacao_venda || "-"
-        const observacaoProducao = p.dados.observacao_producao || "-"
-        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
-        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
-            ? p.dados.dobradicas_alturas.join(" mm, ") + " mm"
-            : "-"
         const precoTotal = p.preco || 0
         totalGeral += precoTotal
 
         return `
             <div class="print-item">
-                <strong>${index + 1}. ${p.tipo}</strong><br>
                 Quantidade: ${p.quantidade}<br>
-                Medidas: ${largura} x ${altura} (mm)<br>
-                Perfil: ${perfilNome}<br>
-                Vidro: ${vidroNome}<br>
-                Puxador: ${puxadorNome} (altura ${alturaPuxador}, tamanho ${medidaPuxador})<br>
-                Acessório: ${acessorio}<br>
-                Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
-                Observação de venda: ${observacaoVenda}<br>
-                Observação de produção: ${observacaoProducao}<br>
-                Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})<br>
-                Preço total: R$ ${precoTotal.toFixed(2)}
-                <div>${p.svg}</div>
+                Altura: ${altura} mm<br>
+                Largura: ${largura} mm<br>
+                Puxador: ${puxadorNome}<br>
+                Valor do item: ${formatarMoeda(precoTotal)}
             </div>
         `
     }).join("")
@@ -1039,7 +1019,7 @@ function atualizarResumoImpressao() {
         <h2>Resumo do Orçamento</h2>
         <p>${obterIdentificacaoOrcamento()}</p>
         ${itens}
-        <h3>Total geral: R$ ${totalGeral.toFixed(2)}</h3>
+        <h3>Total geral: ${formatarMoeda(totalGeral)}</h3>
     `
 }
 
@@ -1356,6 +1336,7 @@ carregarOrcamentoInfo()
 </script>
 </body>
 </html>
+
 
 
 
