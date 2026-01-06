@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usuários | ColorGlass</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #f5f7fa; color: #333; padding: 24px; }
+h1 { color: #1079ba; margin-bottom: 12px; }
+.hint { color: #666; margin-bottom: 18px; font-size: 0.9rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.controls input { padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; min-width: 280px; }
+.btn { background: #1079ba; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+.btn:hover { background: #0d5d8c; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+th, td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: left; }
+th { background: #e6f0fa; }
+tr:last-child td { border-bottom: none; }
+.status { margin-top: 10px; font-size: 0.9rem; color: #555; }
+.level-input { width: 80px; padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+  <h1>Usuários</h1>
+  <p class="hint">
+    Preencha SUPABASE_URL e SUPABASE_KEY para consultar e atualizar a tabela <strong>usuarios</strong> diretamente.
+  </p>
+
+  <div class="controls">
+    <input type="text" id="supabaseUrl" placeholder="SUPABASE_URL (ex: https://xxxx.supabase.co)">
+    <input type="password" id="supabaseKey" placeholder="SUPABASE_KEY (service_role ou anon)">
+    <button class="btn" onclick="carregarUsuarios()">Carregar usuários</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>UserID</th>
+        <th>Usuário</th>
+        <th>Senha</th>
+        <th>Level</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="usuariosTabela">
+      <tr><td colspan="5"><em>Carregue os usuários para visualizar.</em></td></tr>
+    </tbody>
+  </table>
+
+  <div class="status" id="statusMensagem"></div>
+
+<script>
+function setStatus(msg) {
+  document.getElementById("statusMensagem").textContent = msg;
+}
+
+function obterConfig() {
+  const url = document.getElementById("supabaseUrl").value.trim();
+  const key = document.getElementById("supabaseKey").value.trim();
+  if (!url || !key) {
+    setStatus("Preencha SUPABASE_URL e SUPABASE_KEY.");
+    return null;
+  }
+  return { url, key };
+}
+
+async function carregarUsuarios() {
+  const config = obterConfig();
+  if (!config) return;
+
+  setStatus("Carregando usuários...");
+  const { url, key } = config;
+
+  try {
+    const res = await fetch(`${url}/rest/v1/usuarios?select=userid,user,pass,level&order=user.asc`, {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`
+      }
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || "Falha ao carregar usuários.");
+    }
+
+    const usuarios = await res.json();
+    renderizarUsuarios(usuarios);
+    setStatus(`${usuarios.length} usuário(s) carregados.`);
+  } catch (err) {
+    console.error(err);
+    setStatus("Erro ao carregar usuários.");
+  }
+}
+
+function renderizarUsuarios(usuarios) {
+  const tbody = document.getElementById("usuariosTabela");
+  tbody.innerHTML = "";
+
+  if (!usuarios.length) {
+    tbody.innerHTML = "<tr><td colspan='5'><em>Nenhum usuário encontrado.</em></td></tr>";
+    return;
+  }
+
+  usuarios.forEach((u) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.userid || ""}</td>
+      <td>${u.user || ""}</td>
+      <td>${u.pass || ""}</td>
+      <td><input class="level-input" type="number" min="1" max="3" value="${u.level ?? ""}" data-userid="${u.userid}"></td>
+      <td><button class="btn" onclick="salvarNivel('${u.userid}')">Salvar</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function salvarNivel(userid) {
+  const config = obterConfig();
+  if (!config) return;
+  const input = document.querySelector(`input[data-userid='${userid}']`);
+  const novoLevel = input ? input.value.trim() : "";
+  if (!novoLevel) {
+    setStatus("Informe um level válido.");
+    return;
+  }
+
+  setStatus("Salvando level...");
+  const { url, key } = config;
+
+  try {
+    const res = await fetch(`${url}/rest/v1/usuarios?userid=eq.${encodeURIComponent(userid)}`, {
+      method: "PATCH",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({ level: Number(novoLevel) })
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || "Falha ao atualizar level.");
+    }
+
+    setStatus("Level atualizado com sucesso.");
+  } catch (err) {
+    console.error(err);
+    setStatus("Erro ao atualizar level.");
+  }
+}
+</script>
+</body>
+</html>
