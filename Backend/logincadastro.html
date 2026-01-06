@@ -114,9 +114,25 @@ async function logar() {
             return;
         }
 
+        localStorage.setItem("USER_TOKEN", data.token);
         setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
+
+        const resAuth = await fetch(`${API_BASE}/api/auth/validar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${data.token}`
+            }
+        });
+        const dataAuth = await resAuth.json();
+
+        if (!dataAuth.success) {
+            setStatus("loginStatus", dataAuth.error || "Sessão inválida.", "erro");
+            return;
+        }
+
         setTimeout(() => {
-            window.location.href = "index_loja.html";
+            window.location.href = dataAuth.redirect || "index_loja.html";
         }, 800);
     } catch (err) {
         console.error(err);
@@ -126,3 +142,4 @@ async function logar() {
 </script>
 </body>
 </html>
+
