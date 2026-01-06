@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 import requests
 
+from auth_utils import buscar_usuario_por_token, extrair_token
+
 orcamentos_bp = Blueprint("orcamentos_bp", __name__)
 
 # =====================
@@ -10,10 +12,29 @@ orcamentos_bp = Blueprint("orcamentos_bp", __name__)
 @orcamentos_bp.route("/api/orcamento", methods=["POST"])
 def criar_orcamento():
     from app import SUPABASE_URL, HEADERS
+    token = extrair_token(request)
+    if not token:
+        return jsonify({"success": False, "error": "Token não informado."}), 401
+
+    try:
+        usuario = buscar_usuario_por_token(token)
+        if not usuario:
+            return jsonify({"success": False, "error": "Token inválido."}), 401
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    try:
+        level = int(usuario.get("level") or 0)
+    except (TypeError, ValueError):
+        level = 0
+    storeid = usuario.get("storeid")
+
     data = request.json
     cliente_nome = data.get("cliente_nome")
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
+    if level == 1 and not storeid:
+        return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
     try:
         # Pegar último numero_pedido
@@ -31,6 +52,8 @@ def criar_orcamento():
             "quantidade_total": 0,
             "valor_total": 0
         }
+        if level == 1:
+            payload["lojaid"] = storeid
 
         r_post = requests.post(
             f"{SUPABASE_URL}/rest/v1/orcamentos",
@@ -54,9 +77,31 @@ def criar_orcamento():
 @orcamentos_bp.route("/api/orcamentos", methods=["GET"])
 def listar_orcamentos():
     from app import SUPABASE_URL, HEADERS
+    token = extrair_token(request)
+    if not token:
+        return jsonify({"success": False, "error": "Token não informado."}), 401
+
+    try:
+        usuario = buscar_usuario_por_token(token)
+        if not usuario:
+            return jsonify({"success": False, "error": "Token inválido."}), 401
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    try:
+        level = int(usuario.get("level") or 0)
+    except (TypeError, ValueError):
+        level = 0
+    storeid = usuario.get("storeid")
+    if level == 1 and not storeid:
+        return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
+
+    filtro_loja = ""
+    if level == 1:
+        filtro_loja = f"&lojaid=eq.{storeid}"
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,data_criacao,quantidade_total,valor_total&order=numero_pedido.asc",
+            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,data_criacao,quantidade_total,valor_total,lojaid&order=numero_pedido.asc{filtro_loja}",
             headers=HEADERS
         )
         r.raise_for_status()
@@ -94,4 +139,5 @@ def finalizar_orcamento(uuid):
         return jsonify({"success": True, "quantidade_total": quantidade_total, "valor_total": valor_total})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
