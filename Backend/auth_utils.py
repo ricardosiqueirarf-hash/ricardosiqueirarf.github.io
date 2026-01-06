@@ -1,19 +1,25 @@
-import requests
+import jwt
+import datetime
+
+
+def gerar_token_usuario(usuario):
+    from app import JWT_SECRET
+    expira_em = datetime.datetime.utcnow() + datetime.timedelta(hours=12)
+    payload = {
+        "userid": usuario.get("userid"),
+        "level": usuario.get("level"),
+        "storeid": usuario.get("storeid"),
+        "exp": expira_em
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
 def buscar_usuario_por_token(token):
-    from app import SUPABASE_URL, HEADERS
-    response = requests.get(
-        f"{SUPABASE_URL}/rest/v1/usuarios",
-        headers=HEADERS,
-        params={
-            "select": "userid,level,storeid,token",
-            "token": f"eq.{token}"
-        }
-    )
-    response.raise_for_status()
-    usuarios = response.json()
-    return usuarios[0] if usuarios else None
+    from app import JWT_SECRET
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except jwt.PyJWTError:
+        return None
 
 
 def extrair_token(request):
@@ -46,4 +52,5 @@ def pagina_por_nivel(level):
     if level == 1:
         return "index_loja.html"
     return "logincadastro.html"
+
 
