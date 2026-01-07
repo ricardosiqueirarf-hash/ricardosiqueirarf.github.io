@@ -421,6 +421,7 @@ async function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
     if(!nome){ alert("Digite o nome do cliente"); return; }
     cliente.nome = nome;
+    const orcamentoUuid = (crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
 
     try {
         const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
@@ -428,7 +429,11 @@ async function criarFichaCliente(){
             headers:{
                 'Content-Type':'application/json'
             },
-            body:JSON.stringify({cliente_nome: cliente.nome})
+            body:JSON.stringify({
+                cliente_nome: cliente.nome,
+                uuid: orcamentoUuid,
+                estado: 1
+            })
         });
         const data = await res.json();
         if(data.success){
@@ -451,6 +456,7 @@ document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFilt
 </script>
 </body>
 </html>
+
 
 
 
