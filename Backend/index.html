@@ -258,6 +258,14 @@ function go(url){
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
 const USER_TOKEN = localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN");
+const ESTADOS_LABELS = {
+    0: "Cancelado",
+    1: "Orçamento",
+    2: "Aprovado",
+    3: "Produção",
+    4: "Pronto",
+    5: "Entregue"
+};
 
 // =====================
 // CARREGAR ORÇAMENTOS
@@ -267,6 +275,14 @@ let orcamentosCache = [];
 function atualizarStatusOrcamentos(mensagem) {
     const status = document.getElementById("orcamentosStatus");
     status.textContent = mensagem;
+}
+
+function formatarEstado(estado) {
+    if (estado === null || estado === undefined || estado === "") {
+        return "--";
+    }
+    const label = ESTADOS_LABELS[estado];
+    return label ? `${estado} - ${label}` : estado;
 }
 
 function renderizarOrcamentos(orcamentos) {
@@ -288,6 +304,7 @@ function renderizarOrcamentos(orcamentos) {
                 <th>Data Criação</th>
                 <th>Qtd Total</th>
                 <th>Valor Total (R$)</th>
+                <th>Estado</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -300,12 +317,14 @@ function renderizarOrcamentos(orcamentos) {
         const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
         const qtdTotal = o.quantidade_total ?? "--";
         const valorTotal = o.valor_total ?? "--";
+        const estado = formatarEstado(o.estado);
         tr.innerHTML = `
             <td>${o.numero_pedido}</td>
             <td>${o.cliente_nome}</td>
             <td>${dataCriacao}</td>
             <td data-field="quantidade_total">${qtdTotal}</td>
             <td data-field="valor_total">${valorTotal === "--" ? "--" : Number(valorTotal).toFixed(2)}</td>
+            <td>${estado}</td>
             <td>
                 <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
             </td>
