@@ -73,6 +73,15 @@ h1 { color: #1079ba; margin-bottom: 10px; }
     grid-column: 1 / -1;
 }
 
+.required-field {
+    border-color: #e84118;
+}
+
+.required-field::placeholder {
+    color: #e84118;
+    opacity: 1;
+}
+
 /* BOTÕES GERAIS */
 button, .form-cliente button {
     padding: 10px 16px;
@@ -123,22 +132,22 @@ tr:hover { background: #e6f0fa; }
 
     <section class="form-cliente">
         <input type="hidden" id="cliente_id">
-        <input id="nome" placeholder="Nome completo / Razão social">
-        <select id="tipo_pessoa">
-            <option value="">Tipo de pessoa</option>
+        <input id="nome" class="required-field" placeholder="Nome completo / Razão social *" required>
+        <select id="tipo_pessoa" class="required-field" required>
+            <option value="">Tipo de pessoa *</option>
             <option value="PF">Pessoa Física</option>
             <option value="PJ">Pessoa Jurídica</option>
         </select>
-        <input id="cpf_cnpj" placeholder="CPF/CNPJ">
+        <input id="cpf_cnpj" class="required-field" placeholder="CPF/CNPJ *" required>
         <input id="rg_ie" placeholder="RG/Inscrição Estadual">
         <input id="telefone" placeholder="Telefone">
-        <input id="celular" placeholder="Celular/WhatsApp">
+        <input id="celular" class="required-field" placeholder="Celular/WhatsApp *" required>
         <input id="email" type="email" placeholder="E-mail">
         <input id="contato" placeholder="Contato responsável">
-        <input id="cep" placeholder="CEP">
-        <input id="endereco" placeholder="Endereço">
-        <input id="numero" placeholder="Número">
-        <input id="bairro" placeholder="Bairro">
+        <input id="cep" class="required-field" placeholder="CEP *" required>
+        <input id="endereco" class="required-field" placeholder="Endereço *" required>
+        <input id="numero" class="required-field" placeholder="Número *" required>
+        <input id="bairro" class="required-field" placeholder="Bairro *" required>
         <input id="cidade" placeholder="Cidade">
         <input id="uf" placeholder="UF">
         <textarea id="observacoes" class="full-width" placeholder="Observações"></textarea>
@@ -245,27 +254,46 @@ function limparFormulario() {
 
 function salvar() {
     const nome = nomeInput.value.trim();
+    const tipoPessoa = tipoPessoaInput.value;
     const cpfCnpj = cpfCnpjInput.value.trim();
+    const celular = celularInput.value.trim();
+    const cep = cepInput.value.trim();
+    const endereco = enderecoInput.value.trim();
+    const numero = numeroInput.value.trim();
+    const bairro = bairroInput.value.trim();
 
-    if (!nome || !cpfCnpj) {
-        alert("Preencha ao menos Nome e CPF/CNPJ.");
+    const obrigatorios = [
+        { campo: nome, label: "Nome completo / Razão social" },
+        { campo: tipoPessoa, label: "Tipo de pessoa" },
+        { campo: cpfCnpj, label: "CPF/CNPJ" },
+        { campo: celular, label: "Celular/WhatsApp" },
+        { campo: cep, label: "CEP" },
+        { campo: endereco, label: "Endereço" },
+        { campo: numero, label: "Número" },
+        { campo: bairro, label: "Bairro" }
+    ];
+
+    const faltando = obrigatorios.filter(item => !item.campo).map(item => item.label);
+
+    if (faltando.length) {
+        alert(`Preencha os campos obrigatórios: ${faltando.join(", ")}.`);
         return;
     }
 
     const cliente = {
         id: clienteIdInput.value || Date.now().toString(),
         nome,
-        tipoPessoa: tipoPessoaInput.value,
+        tipoPessoa,
         cpfCnpj,
         rgIe: rgIeInput.value.trim(),
         telefone: telefoneInput.value.trim(),
-        celular: celularInput.value.trim(),
+        celular,
         email: emailInput.value.trim(),
         contato: contatoInput.value.trim(),
-        cep: cepInput.value.trim(),
-        endereco: enderecoInput.value.trim(),
-        numero: numeroInput.value.trim(),
-        bairro: bairroInput.value.trim(),
+        cep,
+        endereco,
+        numero,
+        bairro,
         cidade: cidadeInput.value.trim(),
         uf: ufInput.value.trim(),
         observacoes: observacoesInput.value.trim()
@@ -321,3 +349,4 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
