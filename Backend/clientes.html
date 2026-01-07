@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clientes | ColorGlass</title>
+<meta name="description" content="Cadastro e visualização de clientes da ColorGlass.">
+
+<style>
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #f5f7fa; color: #333; padding: 20px; }
+
+/* LAYOUT PRINCIPAL */
+.container { max-width: 1200px; margin: 0 auto; }
+header { margin-bottom: 20px; }
+h1 { color: #1079ba; margin-bottom: 10px; }
+
+/* MENU SUPERIOR */
+.menu {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.menu button {
+    padding: 10px 16px;
+    background: #1079ba;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.menu button:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+/* FORMULÁRIO CLIENTE */
+.form-cliente {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+/* INPUTS E SELECTS */
+.form-cliente input,
+.form-cliente select,
+.form-cliente textarea {
+    padding: 6px 10px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.form-cliente textarea { min-height: 80px; resize: vertical; }
+
+.form-cliente input:focus,
+.form-cliente select:focus,
+.form-cliente textarea:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 4px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+.form-cliente .full-width {
+    grid-column: 1 / -1;
+}
+
+/* BOTÕES GERAIS */
+button, .form-cliente button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #1079ba;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+button:hover, .form-cliente button:hover { background: #0d5d8c; transform: translateY(-2px); }
+.btn-danger { background: #e84118; }
+.btn-danger:hover { background: #c23616; transform: translateY(-2px); }
+
+/* TABELA */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+th, td { padding: 12px; text-align: center; border: 1px solid #dcdde1; }
+th { background: #1079ba; color: #fff; }
+tr:nth-child(even) { background: #f7f9fc; }
+tr:hover { background: #e6f0fa; }
+
+/* RESPONSIVO */
+@media(max-width: 768px) {
+    .form-cliente { grid-template-columns: 1fr; }
+    .menu { flex-direction: column; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <header>
+        <h1>Clientes</h1>
+        <div class="menu">
+            <button onclick="window.location.href='/'">Voltar</button>
+            <button onclick="salvar()">Salvar</button>
+            <button onclick="cancelar()">Cancelar</button>
+        </div>
+    </header>
+
+    <section class="form-cliente">
+        <input type="hidden" id="cliente_id">
+        <input id="nome" placeholder="Nome completo / Razão social">
+        <select id="tipo_pessoa">
+            <option value="">Tipo de pessoa</option>
+            <option value="PF">Pessoa Física</option>
+            <option value="PJ">Pessoa Jurídica</option>
+        </select>
+        <input id="cpf_cnpj" placeholder="CPF/CNPJ">
+        <input id="rg_ie" placeholder="RG/Inscrição Estadual">
+        <input id="telefone" placeholder="Telefone">
+        <input id="celular" placeholder="Celular/WhatsApp">
+        <input id="email" type="email" placeholder="E-mail">
+        <input id="contato" placeholder="Contato responsável">
+        <input id="cep" placeholder="CEP">
+        <input id="endereco" placeholder="Endereço">
+        <input id="numero" placeholder="Número">
+        <input id="bairro" placeholder="Bairro">
+        <input id="cidade" placeholder="Cidade">
+        <input id="uf" placeholder="UF">
+        <textarea id="observacoes" class="full-width" placeholder="Observações"></textarea>
+    </section>
+
+    <section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>CPF/CNPJ</th>
+                    <th>Contato</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                    <th>Endereço</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+        </table>
+    </section>
+</div>
+
+<script>
+let clientes = [];
+
+const clienteIdInput = document.getElementById("cliente_id");
+const nomeInput = document.getElementById("nome");
+const tipoPessoaInput = document.getElementById("tipo_pessoa");
+const cpfCnpjInput = document.getElementById("cpf_cnpj");
+const rgIeInput = document.getElementById("rg_ie");
+const telefoneInput = document.getElementById("telefone");
+const celularInput = document.getElementById("celular");
+const emailInput = document.getElementById("email");
+const contatoInput = document.getElementById("contato");
+const cepInput = document.getElementById("cep");
+const enderecoInput = document.getElementById("endereco");
+const numeroInput = document.getElementById("numero");
+const bairroInput = document.getElementById("bairro");
+const cidadeInput = document.getElementById("cidade");
+const ufInput = document.getElementById("uf");
+const observacoesInput = document.getElementById("observacoes");
+
+function salvarLocal() {
+    localStorage.setItem("clientes", JSON.stringify(clientes));
+}
+
+function carregarLocal() {
+    const data = localStorage.getItem("clientes");
+    clientes = data ? JSON.parse(data) : [];
+}
+
+function renderTabela() {
+    const tbody = document.getElementById("tabela");
+    tbody.innerHTML = "";
+
+    clientes.forEach(cliente => {
+        const tr = document.createElement("tr");
+        const enderecoCompleto = [
+            cliente.endereco,
+            cliente.numero,
+            cliente.bairro,
+            cliente.cidade,
+            cliente.uf,
+            cliente.cep
+        ].filter(Boolean).join(", ");
+
+        tr.innerHTML = `
+            <td>${cliente.nome}</td>
+            <td>${cliente.tipoPessoa || "-"}</td>
+            <td>${cliente.cpfCnpj}</td>
+            <td>${cliente.contato || "-"}</td>
+            <td>${cliente.telefone || cliente.celular || "-"}</td>
+            <td>${cliente.email || "-"}</td>
+            <td>${enderecoCompleto || "-"}</td>
+            <td>
+                <button onclick='editar(${JSON.stringify(cliente)})'>Editar</button>
+                <button class="btn-danger" onclick="excluir('${cliente.id}')">Excluir</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function limparFormulario() {
+    clienteIdInput.value = "";
+    nomeInput.value = "";
+    tipoPessoaInput.value = "";
+    cpfCnpjInput.value = "";
+    rgIeInput.value = "";
+    telefoneInput.value = "";
+    celularInput.value = "";
+    emailInput.value = "";
+    contatoInput.value = "";
+    cepInput.value = "";
+    enderecoInput.value = "";
+    numeroInput.value = "";
+    bairroInput.value = "";
+    cidadeInput.value = "";
+    ufInput.value = "";
+    observacoesInput.value = "";
+}
+
+function salvar() {
+    const nome = nomeInput.value.trim();
+    const cpfCnpj = cpfCnpjInput.value.trim();
+
+    if (!nome || !cpfCnpj) {
+        alert("Preencha ao menos Nome e CPF/CNPJ.");
+        return;
+    }
+
+    const cliente = {
+        id: clienteIdInput.value || Date.now().toString(),
+        nome,
+        tipoPessoa: tipoPessoaInput.value,
+        cpfCnpj,
+        rgIe: rgIeInput.value.trim(),
+        telefone: telefoneInput.value.trim(),
+        celular: celularInput.value.trim(),
+        email: emailInput.value.trim(),
+        contato: contatoInput.value.trim(),
+        cep: cepInput.value.trim(),
+        endereco: enderecoInput.value.trim(),
+        numero: numeroInput.value.trim(),
+        bairro: bairroInput.value.trim(),
+        cidade: cidadeInput.value.trim(),
+        uf: ufInput.value.trim(),
+        observacoes: observacoesInput.value.trim()
+    };
+
+    const index = clientes.findIndex(item => item.id === cliente.id);
+    if (index >= 0) {
+        clientes[index] = cliente;
+    } else {
+        clientes.push(cliente);
+    }
+
+    salvarLocal();
+    renderTabela();
+    limparFormulario();
+}
+
+function editar(cliente) {
+    clienteIdInput.value = cliente.id;
+    nomeInput.value = cliente.nome;
+    tipoPessoaInput.value = cliente.tipoPessoa || "";
+    cpfCnpjInput.value = cliente.cpfCnpj || "";
+    rgIeInput.value = cliente.rgIe || "";
+    telefoneInput.value = cliente.telefone || "";
+    celularInput.value = cliente.celular || "";
+    emailInput.value = cliente.email || "";
+    contatoInput.value = cliente.contato || "";
+    cepInput.value = cliente.cep || "";
+    enderecoInput.value = cliente.endereco || "";
+    numeroInput.value = cliente.numero || "";
+    bairroInput.value = cliente.bairro || "";
+    cidadeInput.value = cliente.cidade || "";
+    ufInput.value = cliente.uf || "";
+    observacoesInput.value = cliente.observacoes || "";
+}
+
+function excluir(id) {
+    if (!confirm("Excluir este cliente?")) return;
+    clientes = clientes.filter(cliente => cliente.id !== id);
+    salvarLocal();
+    renderTabela();
+    limparFormulario();
+}
+
+function cancelar() {
+    limparFormulario();
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    carregarLocal();
+    renderTabela();
+});
+</script>
+</body>
+</html>
