@@ -71,6 +71,33 @@ def portas_page():
 def portas_html_page():
     return send_from_directory(BASE_DIR, "portas.html")
 
+
+def exige_nivel_2_ou_3(fn):
+    from auth_utils import buscar_usuario_por_token, extrair_token
+
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        token = extrair_token(request)
+        usuario = buscar_usuario_por_token(token) if token else None
+        nivel = int((usuario or {}).get("level") or 0)
+        if nivel not in (2, 3):
+            return make_response(jsonify({"error": "Acesso negado"}), 403)
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+
+@app.route("/clientes")
+@exige_nivel_2_ou_3
+def clientes_page():
+    return send_from_directory(ROOT_DIR, "clientes.html")
+
+
+@app.route("/clientes.html")
+@exige_nivel_2_ou_3
+def clientes_html_page():
+    return send_from_directory(ROOT_DIR, "clientes.html")
+
 # =====================
 # REGISTRO DE BLUEPRINTS
 # =====================
@@ -103,6 +130,7 @@ app.register_blueprint(cadastro_login_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
