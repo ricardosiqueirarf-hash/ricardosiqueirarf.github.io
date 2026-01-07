@@ -349,10 +349,6 @@ if(localStorage.getItem("darkmode") === "true"){
             <div id="estruturas3DSalvas"></div>
         </div>
 
-        <button class="btn" onclick="finalizarOrcamento()" style="margin-top:20px;">
-            Finalizar Orçamento
-        </button>
-
         <div id="printResumo" class="print-area"></div>
         <div id="printOrdem" class="print-area"></div>
         <div id="printEtiqueta" class="thermal-area"></div>
@@ -843,9 +839,8 @@ function desenharPorta(){
 // PORTAS LOCAL
 // =====================
 let portas=[], editando=null, idCounter=0
-const draftKey = `portas_draft_${ORCAMENTO_UUID}`
 
-function salvarPorta(){
+async function salvarPorta(){
     const tipo = document.getElementById("tipologia").value
     if(!tipo) return alert("Selecione a tipologia")
 
@@ -890,9 +885,27 @@ function salvarPorta(){
         preco: calcularPrecoPorta(),
         svg: portaSVG.outerHTML
     }
-    editando === null ? portas.push(porta) : Object.assign(portas.find(p=>p.id===editando), porta)
-    editando = null
-    renderPortas()
+    const nextPortas = editando === null
+        ? [...portas, porta]
+        : portas.map(p => (p.id === editando ? porta : p))
+    const portasComUUID = nextPortas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }))
+    try {
+        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ portas: portasComUUID })
+        })
+        const dataPortas = await resPortas.json()
+        if (!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas")
+
+        alert("Porta salva com sucesso!")
+        portas = nextPortas
+        editando = null
+        renderPortas()
+    } catch (err) {
+        console.error(err)
+        alert("Erro ao salvar porta: " + err.message)
+    }
 }
 
 function renderPortas(){
@@ -923,7 +936,6 @@ function renderPortas(){
             </div>
         `
     })
-    salvarRascunho()
     atualizarResumoImpressao()
     atualizarResumoOrdem()
 }
@@ -976,24 +988,6 @@ function apagarPorta(id){
     if(!confirm("Tem certeza que deseja apagar esta porta?")) return
     portas = portas.filter(p=>p.id!==id)
     renderPortas()
-}
-
-function salvarRascunho() {
-    localStorage.setItem(draftKey, JSON.stringify(portas))
-}
-
-function carregarRascunho() {
-    const data = localStorage.getItem(draftKey)
-    if (!data) return
-    try {
-        const parsed = JSON.parse(data)
-        if (Array.isArray(parsed)) {
-            portas = parsed.map((p) => ({ ...p, id: idCounter++ }))
-            renderPortas()
-        }
-    } catch (err) {
-        console.error("Erro ao carregar rascunho:", err)
-    }
 }
 
 // =====================
@@ -1110,7 +1104,7 @@ function gerarSvgOrdemProducao(porta) {
       <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetY}" x2="${offsetX}" y2="${offsetY}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetY + doorHeight}" x2="${offsetX}" y2="${offsetY + doorHeight}" stroke="#333"/>
-      <text x="${offsetX - 50}" y="${offsetY + doorHeight / 2}" class="op-measure" transform="rotate(-90 ${offsetX - 50} ${offsetY + doorHeight / 2})">${altura} mm</text>
+      <text x="${offsetX - 50}" y="${offsetY + doorHeight / 2}" class="op-measure" transform="rotate(-90 ${offsetX - 50} ${offsetX - 50} ${offsetY + doorHeight / 2})">${altura} mm</text>
 
       <line x1="${offsetX}" y1="${offsetY + doorHeight + 20}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 20}" stroke="#333"/>
       <line x1="${offsetX}" y1="${offsetY + doorHeight + 16}" x2="${offsetX}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
@@ -1248,36 +1242,6 @@ function imprimirEtiquetaTermica() {
 }
 
 // =====================
-// FINALIZAR ORÇAMENTO
-// =====================
-async function finalizarOrcamento(){
-    if(portas.length === 0) return alert("Adicione pelo menos uma porta.");
-
-    // Preparar portas com UUID
-    const portasComUUID = portas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
-
-    try{
-        // Salvar portas no Supabase
-        const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
-            method: "POST",
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ portas: portasComUUID })
-        });
-        const dataPortas = await resPortas.json();
-        if(!dataPortas.success) throw new Error(dataPortas.error || "Erro ao salvar portas");
-
-        alert("Portas salvas com sucesso!");
-        localStorage.removeItem(draftKey);
-        window.location.href = "/"; // ou mantem na página se quiser editar mais
-
-    } catch(err){
-        console.error(err);
-        alert("Erro ao salvar portas: " + err.message);
-    }
-}
-
-
-// =====================
 // CARREGAR PORTAS EXISTENTES
 // =====================
 async function carregarPortas(){
@@ -1287,7 +1251,6 @@ async function carregarPortas(){
         if(data.success && data.portas){
             portas = data.portas.map((p) => ({ ...p, id: idCounter++ }))
             renderPortas()
-            localStorage.removeItem(draftKey)
         }
     } catch(err){
         console.error(err)
@@ -1367,7 +1330,6 @@ carregarPerfis()
 carregarVidros()
 carregarInsumos()
 carregarPuxadores()
-carregarRascunho()
 carregarPortas()
 carregarEstruturas3D()
 carregarOrcamentoInfo()
