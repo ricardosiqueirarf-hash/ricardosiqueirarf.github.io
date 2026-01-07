@@ -50,8 +50,14 @@ def criar_orcamento():
         level = 0
     storeid = (usuario or {}).get("storeid")
 
-    data = request.json
+    data = request.json or {}
     cliente_nome = data.get("cliente_nome")
+    orcamento_uuid = (data.get("uuid") or "").strip() or None
+    estado_inicial = data.get("estado", 1)
+    try:
+        estado_inicial = int(estado_inicial)
+    except (TypeError, ValueError):
+        estado_inicial = 1
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
     if level == 1 and not storeid:
@@ -73,6 +79,8 @@ def criar_orcamento():
             "quantidade_total": 0,
             "valor_total": 0
         }
+        if orcamento_uuid:
+            payload["id"] = orcamento_uuid
         if level == 1:
             payload["lojaid"] = storeid
 
@@ -84,16 +92,25 @@ def criar_orcamento():
         r_post.raise_for_status()
         new_orcamento = r_post.json()
 
-        r_estado = requests.post(
-            f"{SUPABASE_URL}/rest/v1/estados",
-            headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
-            json={"uuid": new_orcamento[0]["id"], "estado": 1},
-        )
-        r_estado.raise_for_status()
+        orcamento_id = new_orcamento[0]["id"]
+        try:
+            r_estado = requests.post(
+                f"{SUPABASE_URL}/rest/v1/estados",
+                headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
+                json={"uuid": orcamento_id, "estado": estado_inicial},
+            )
+            r_estado.raise_for_status()
+        except Exception:
+            requests.delete(
+                f"{SUPABASE_URL}/rest/v1/orcamentos?id=eq.{orcamento_id}",
+                headers=HEADERS,
+            )
+            raise
 
         return jsonify({
             "success": True,
-            "id": new_orcamento[0]['id'],
+            "id": orcamento_id,
+            "uuid": orcamento_id,
             "numero_pedido": numero_pedido,
             "cliente_nome": cliente_nome
         })
@@ -234,8 +251,6 @@ def atualizar_estado(uuid):
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
 
 
 
