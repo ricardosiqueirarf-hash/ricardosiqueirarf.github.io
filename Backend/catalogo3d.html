@@ -70,6 +70,26 @@
     .row { display:flex; gap:10px; }
     .row > * { flex:1; }
 
+    @media (max-width: 900px), (orientation: portrait) {
+      body {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+      }
+
+      #ui {
+        width: 100%;
+        max-height: 45vh;
+        border-bottom: 1px solid #2a2a2a;
+      }
+
+      #canvas-container {
+        width: 100%;
+        min-height: 55vh;
+      }
+    }
+
     /* (Opcional) referência visual das cores, se você quiser usar depois */
     .cor.preto { background:#000; }
     .cor.prata { background:#c6c7c9; }
@@ -644,6 +664,7 @@
   </script>
 </body>
 </html>
+
 
 
 
