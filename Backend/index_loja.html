@@ -149,10 +149,55 @@ tr:hover { background: #f0f8ff; }
     color: #555;
 }
 
+#orcamentosExistentes {
+    overflow-x: auto;
+}
+
 /* SCROLLBARS CUSTOM */
 .content::-webkit-scrollbar { width: 10px; }
 .content::-webkit-scrollbar-thumb { background: #1079ba; border-radius: 5px; }
 .content::-webkit-scrollbar-track { background: #f9f9f9; }
+
+@media (max-width: 900px), (orientation: portrait) {
+    body {
+        display: block;
+    }
+
+    .app {
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 100%;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 18px 16px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .sidebar button {
+        text-align: center;
+        flex: 1;
+    }
+
+    .content {
+        padding: 20px 16px 28px;
+        border-radius: 0;
+    }
+
+    .orcamentos-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
 </style>
 </head>
 <body>
@@ -410,6 +455,7 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
+
 
 
 
