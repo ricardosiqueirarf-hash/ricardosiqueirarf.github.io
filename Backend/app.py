@@ -54,8 +54,16 @@ def login_cadastro_html_page():
 def login_html_page():
     return send_from_directory(BASE_DIR, "login.html")
 
+@app.route("/login")
+def login_page():
+    return send_from_directory(BASE_DIR, "login.html")
+
 @app.route("/cadastro.html")
 def cadastro_html_page():
+    return send_from_directory(BASE_DIR, "cadastro.html")
+
+@app.route("/cadastro")
+def cadastro_page():
     return send_from_directory(BASE_DIR, "cadastro.html")
 
 # ✅ ADICIONADO: rota para a loja
@@ -146,6 +154,7 @@ app.register_blueprint(cadastro_login_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
