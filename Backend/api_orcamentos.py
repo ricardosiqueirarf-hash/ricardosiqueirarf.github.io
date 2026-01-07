@@ -148,7 +148,23 @@ def listar_orcamentos():
             headers=HEADERS
         )
         r.raise_for_status()
-        return jsonify({"success": True, "orcamentos": r.json()})
+        orcamentos = r.json()
+
+        orcamento_ids = [o.get("id") for o in orcamentos if o.get("id")]
+        estados_por_uuid = {}
+        if orcamento_ids:
+            ids_formatados = ",".join(f"\"{orcamento_id}\"" for orcamento_id in orcamento_ids)
+            r_estados = requests.get(
+                f"{SUPABASE_URL}/rest/v1/estados?select=uuid,estado&uuid=in.({ids_formatados})",
+                headers=HEADERS,
+            )
+            r_estados.raise_for_status()
+            estados_por_uuid = {e["uuid"]: e.get("estado") for e in r_estados.json()}
+
+        for orcamento in orcamentos:
+            orcamento["estado"] = estados_por_uuid.get(orcamento.get("id"))
+
+        return jsonify({"success": True, "orcamentos": orcamentos})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
