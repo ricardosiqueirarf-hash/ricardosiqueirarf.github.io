@@ -71,6 +71,14 @@ def portas_page():
 def portas_html_page():
     return send_from_directory(BASE_DIR, "portas.html")
 
+@app.route("/catalogo3d")
+def catalogo3d_page():
+    return send_from_directory(BASE_DIR, "catalogo3d.html")
+
+@app.route("/catalogo3d.html")
+def catalogo3d_html_page():
+    return send_from_directory(BASE_DIR, "catalogo3d.html")
+
 
 def exige_nivel_2_ou_3(fn):
     from auth_utils import buscar_usuario_por_token, extrair_token
