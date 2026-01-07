@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-br"> 
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login e Cadastro | ColorGlass</title>
-<meta name="description" content="Login e cadastro de usuários ColorGlass.">
+<title>Login | ColorGlass</title>
+<meta name="description" content="Login de usuários ColorGlass.">
 <style>
 :root {
     --cg-blue: #1079ba;
@@ -193,6 +193,16 @@ input:focus {
     margin-top: 8px;
 }
 
+.hint a {
+    color: var(--cg-blue);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.hint a:hover {
+    text-decoration: underline;
+}
+
 .pill {
     display: inline-flex;
     align-items: center;
@@ -243,33 +253,20 @@ input:focus {
     </header>
 
     <div class="container">
-    <div class="card">
-        <div class="pill"><span></span>Novo por aqui?</div>
-        <h2>Cadastro</h2>
-        <label>Usuário
-            <input type="text" id="cadastroUser" placeholder="Digite seu usuário">
-        </label>
-        <label>Senha
-            <input type="password" id="cadastroPass" placeholder="Digite sua senha">
-        </label>
-        <button class="btn" onclick="cadastrar()">Cadastrar</button>
-        <div id="cadastroStatus" class="status"></div>
-        <p class="hint">Após o cadastro, aguarde o admin aprovar seu usuário (token no Supabase).</p>
-    </div>
-
-    <div class="card">
-        <div class="pill"><span></span>Já possui acesso?</div>
-        <h2>Login</h2>
-        <label>Usuário
-            <input type="text" id="loginUser" placeholder="Digite seu usuário">
-        </label>
-        <label>Senha
-            <input type="password" id="loginPass" placeholder="Digite sua senha">
-        </label>
-        <button class="btn" onclick="logar()">Entrar</button>
-        <div id="loginStatus" class="status"></div>
-        <p class="hint">O login só funciona após o token do admin ser igual ao valor do Render.</p>
-    </div>
+        <div class="card">
+            <div class="pill"><span></span>Já possui acesso?</div>
+            <h2>Login</h2>
+            <label>Usuário
+                <input type="text" id="loginUser" placeholder="Digite seu usuário">
+            </label>
+            <label>Senha
+                <input type="password" id="loginPass" placeholder="Digite sua senha">
+            </label>
+            <button class="btn" onclick="logar()">Entrar</button>
+            <div id="loginStatus" class="status"></div>
+            <p class="hint">O login só funciona após o token do admin ser igual ao valor do Render.</p>
+            <p class="hint">Ainda não tem conta? <a href="cadastro.html">Crie seu cadastro</a>.</p>
+        </div>
     </div>
 </div>
 
@@ -281,37 +278,6 @@ function setStatus(elementId, message, tipo) {
     el.textContent = message;
     el.classList.remove("ok", "erro");
     if (tipo) el.classList.add(tipo);
-}
-
-async function cadastrar() {
-    const user = document.getElementById("cadastroUser").value.trim();
-    const pass = document.getElementById("cadastroPass").value.trim();
-    if (!user || !pass) {
-        setStatus("cadastroStatus", "Preencha usuário e senha.", "erro");
-        return;
-    }
-
-    try {
-        setStatus("cadastroStatus", "Cadastrando...");
-        const res = await fetch(`${API_BASE}/api/usuarios/cadastro`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user, pass })
-        });
-        const data = await res.json();
-
-        if (!data.success) {
-            setStatus("cadastroStatus", data.error || "Erro ao cadastrar.", "erro");
-            return;
-        }
-
-        setStatus("cadastroStatus", data.message || "Cadastro realizado.", "ok");
-        document.getElementById("cadastroUser").value = "";
-        document.getElementById("cadastroPass").value = "";
-    } catch (err) {
-        console.error(err);
-        setStatus("cadastroStatus", "Erro ao cadastrar. Verifique o console.", "erro");
-    }
 }
 
 async function logar() {
@@ -365,6 +331,7 @@ async function logar() {
 </script>
 </body>
 </html>
+
 
 
 
