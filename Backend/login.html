@@ -45,6 +45,11 @@ body {
     box-shadow: 0 10px 30px rgba(15, 44, 62, 0.12);
     position: relative;
     overflow: hidden;
+
+    /* ✅ AJUSTE: limita largura do topo sem fixar, mantém responsivo */
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .brand::after {
@@ -97,6 +102,10 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
+
+    /* ✅ AJUSTE: limita largura do bloco do login sem fixar, mantém responsivo */
+    max-width: 520px;
+    margin: 0 auto;
 }
 
 .card {
@@ -264,7 +273,7 @@ input:focus {
             </label>
             <button class="btn" onclick="logar()">Entrar</button>
             <div id="loginStatus" class="status"></div>
-            <p class="hint">O login só funciona após o token do admin ser igual ao valor do Render.</p>
+            <p class="hint">O login só funciona após aprovação.</p>
             <p class="hint">Ainda não tem conta? <a href="cadastro.html">Crie seu cadastro</a>.</p>
         </div>
     </div>
@@ -331,6 +340,7 @@ async function logar() {
 </script>
 </body>
 </html>
+
 
 
 
