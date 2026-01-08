@@ -108,6 +108,38 @@ body { background: #ffffff; color: #333; display: flex; min-height: 100vh; }
 }
 .btn:hover { background: #0d5d8c; transform: translateY(-2px); }
 
+/* ✅ AÇÕES (ÍCONES) */
+.actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(16,121,186,0.18);
+    background: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    box-shadow: 0 6px 14px rgba(15,44,62,0.08);
+}
+.icon-btn:hover {
+    transform: translateY(-2px);
+    background: #f3f9ff;
+    box-shadow: 0 10px 18px rgba(15,44,62,0.12);
+}
+.icon-btn:active { transform: translateY(0); }
+
+.icon-btn.edit { color: #0d5d8c; }
+.icon-btn.pay  { color: #0c7c3c; }
+
 /* TABELAS */
 table { 
     border-collapse: collapse; 
@@ -159,9 +191,7 @@ tr:hover { background: #f0f8ff; }
 .content::-webkit-scrollbar-track { background: #f9f9f9; }
 
 @media (max-width: 900px), (orientation: portrait) {
-    body {
-        display: block;
-    }
+    body { display: block; }
 
     .app {
         flex-direction: column;
@@ -194,12 +224,11 @@ tr:hover { background: #f0f8ff; }
         align-items: stretch;
     }
 
-    .btn {
-        width: 100%;
-    }
+    .btn { width: 100%; }
 }
 </style>
 </head>
+
 <body>
 <div class="app">
     <div class="sidebar">
@@ -211,7 +240,9 @@ tr:hover { background: #f0f8ff; }
         <h1>Orçamento de Portas</h1>
 
         <div id="formCliente">
-            <label>Nome do Cliente<input type="text" id="clienteNome"></label>
+            <label>Nome do Cliente
+                <input type="text" id="clienteNome">
+            </label>
             <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
         </div>
 
@@ -220,6 +251,7 @@ tr:hover { background: #f0f8ff; }
             <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
             <span id="orcamentosStatus" class="status-text">Carregando...</span>
         </div>
+
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
     </div>
 </div>
@@ -250,15 +282,19 @@ async function validarSessao() {
                 "Authorization": `Bearer ${USER_TOKEN}`
             }
         });
+
         const data = await res.json();
+
         if (!data.success) {
             window.location.href = "logincadastro.html";
             return false;
         }
+
         if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
             window.location.href = data.redirect;
             return false;
         }
+
         return true;
     } catch (err) {
         console.error("Erro ao validar sessão:", err);
@@ -273,15 +309,14 @@ async function validarSessao() {
 let orcamentosCache = [];
 
 function atualizarStatusOrcamentos(mensagem) {
-    const status = document.getElementById("orcamentosStatus");
-    status.textContent = mensagem;
+    document.getElementById("orcamentosStatus").textContent = mensagem;
 }
 
 function renderizarOrcamentos(orcamentos) {
     const container = document.getElementById("orcamentosExistentes");
     container.innerHTML = "";
 
-    if(orcamentos.length === 0){
+    if (orcamentos.length === 0) {
         container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
         atualizarStatusOrcamentos("Nenhum resultado");
         return;
@@ -301,6 +336,7 @@ function renderizarOrcamentos(orcamentos) {
         </thead>
         <tbody></tbody>
     `;
+
     const tbody = table.querySelector("tbody");
 
     orcamentos.forEach((o) => {
@@ -308,6 +344,7 @@ function renderizarOrcamentos(orcamentos) {
         const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
         const qtdTotal = o.quantidade_total ?? "--";
         const valorTotal = o.valor_total ?? "--";
+
         tr.innerHTML = `
             <td>${o.numero_pedido}</td>
             <td>${o.cliente_nome}</td>
@@ -315,9 +352,13 @@ function renderizarOrcamentos(orcamentos) {
             <td data-field="quantidade_total">${qtdTotal}</td>
             <td data-field="valor_total">${valorTotal === "--" ? "--" : Number(valorTotal).toFixed(2)}</td>
             <td>
-                <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
+                <div class="actions">
+                    <button class="icon-btn edit" title="Editar" onclick="editarOrcamento('${o.id}')">✏️</button>
+                    <button class="icon-btn pay" title="Aprovar / Boleto" onclick="aprovarPedido('${o.id}')">🪙</button>
+                </div>
             </td>
         `;
+
         tr.dataset.orcamentoId = o.id;
         tbody.appendChild(tr);
     });
@@ -338,30 +379,26 @@ function aplicarFiltroOrcamentos() {
         const pedido = String(o.numero_pedido || "");
         return cliente.includes(filtro) || pedido.includes(filtro);
     });
+
     renderizarOrcamentos(filtrados);
 }
 
 async function carregarOrcamentos() {
     try {
         atualizarStatusOrcamentos("Carregando...");
+
         const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
-            headers: {
-                "Authorization": `Bearer ${USER_TOKEN}`
-            }
+            headers: { "Authorization": `Bearer ${USER_TOKEN}` }
         });
+
         const data = await res.json();
         const orcamentos = data.orcamentos || [];
-
-        if(orcamentos.length === 0){
-            renderizarOrcamentos([]);
-            return;
-        }
 
         orcamentosCache = orcamentos;
         renderizarOrcamentos(orcamentosCache);
         atualizarTotaisOrcamentos();
 
-    } catch(err){
+    } catch (err) {
         console.error("Erro ao carregar orçamentos:", err);
         document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
         atualizarStatusOrcamentos("Erro ao carregar");
@@ -373,26 +410,26 @@ async function atualizarTotaisOrcamentos() {
     if (!tabela) return;
 
     const rows = Array.from(tabela.querySelectorAll("tbody tr"));
+
     await Promise.allSettled(rows.map(async (row) => {
         const orcamentoId = row.dataset.orcamentoId;
         if (!orcamentoId) return;
+
         const qtdCell = row.querySelector('[data-field="quantidade_total"]');
         const valorCell = row.querySelector('[data-field="valor_total"]');
 
         try {
             const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
-                headers: {
-                    "Authorization": `Bearer ${USER_TOKEN}`
-                }
+                headers: { "Authorization": `Bearer ${USER_TOKEN}` }
             });
+
             const dataPortas = await resPortas.json();
 
-            if (!dataPortas.success || !Array.isArray(dataPortas.portas)) {
-                return;
-            }
+            if (!dataPortas.success || !Array.isArray(dataPortas.portas)) return;
 
             let qtdTotal = 0;
             let valorTotal = 0;
+
             dataPortas.portas.forEach(p => {
                 const quantidade = +p.quantidade || 1;
                 qtdTotal += quantidade;
@@ -401,21 +438,28 @@ async function atualizarTotaisOrcamentos() {
 
             if (qtdCell) qtdCell.textContent = qtdTotal;
             if (valorCell) valorCell.textContent = valorTotal.toFixed(2);
+
         } catch (err) {
             console.error("Erro ao carregar portas do orçamento:", err);
         }
     }));
 }
 
-// 🔥 EDITAR ORÇAMENTO
+// ✏️ EDITAR ORÇAMENTO
 function editarOrcamento(uuid){
     window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+}
+
+// 🪙 APROVAR / BOLETO
+function aprovarPedido(uuid){
+    window.location.href = `/aprovacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
 
 // =====================
 // FICHA CLIENTE
 // =====================
 let cliente = {nome:"", id:null};
+
 async function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
     if(!nome){ alert("Digite o nome do cliente"); return; }
@@ -428,10 +472,12 @@ async function criarFichaCliente(){
                 'Content-Type':'application/json',
                 "Authorization": `Bearer ${USER_TOKEN}`
             },
-            body:JSON.stringify({cliente_nome: cliente.nome})
+            body: JSON.stringify({ cliente_nome: cliente.nome })
         });
+
         const data = await res.json();
-        if(data.success){
+
+        if (data.success) {
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: " + data.id);
             document.getElementById("formCliente").style.display="none";
@@ -439,7 +485,7 @@ async function criarFichaCliente(){
         } else {
             alert("Erro ao criar ficha: " + data.error);
         }
-    } catch(err) {
+    } catch (err) {
         console.error("Erro criarFichaCliente:", err);
         alert("Erro ao criar ficha, veja o console.");
     }
@@ -455,6 +501,7 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
+
 
 
 
