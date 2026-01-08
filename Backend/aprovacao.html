@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aprovar Pedido | ColorGlass</title>
+<meta name="description" content="Aprovação de pedido ColorGlass com emissão de boleto." />
+<meta name="robots" content="noindex, nofollow" />
+
+<style>
+:root {
+  --cg-blue: #1079ba;
+  --cg-blue-dark: #0d5d8c;
+  --cg-blue-soft: #e7f3fb;
+  --cg-gold: #f0c24c;
+  --cg-white: #ffffff;
+  --cg-text: #1f2933;
+  --cg-muted: #6b7280;
+  --cg-border: rgba(16, 121, 186, 0.10);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(16,121,186,0.15), transparent 55%),
+    linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+  color: var(--cg-text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+}
+
+.page {
+  width: min(1100px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.9s ease;
+}
+
+/* Header igual ao seu padrão */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--cg-white);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 44, 62, 0.12);
+  position: relative;
+  overflow: hidden;
+
+  /* evita "esticado" */
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.brand::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  top: -120px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(16,121,186,0.25), transparent 60%);
+}
+
+.logo-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--cg-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(16, 121, 186, 0.35);
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brand h1 {
+  font-size: 1.6rem;
+  color: var(--cg-blue-dark);
+}
+
+.brand span {
+  color: var(--cg-blue);
+  font-weight: 700;
+}
+
+.brand p {
+  margin-top: 4px;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+/* layout principal */
+.container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+
+  /* evita esticar demais */
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .container { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--cg-white);
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
+  border: 1px solid var(--cg-border);
+  position: relative;
+  overflow: hidden;
+  animation: floatIn 0.8s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(16,121,186,0.08), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.card:hover::before { opacity: 1; }
+
+.card h2 {
+  color: var(--cg-blue);
+  margin-bottom: 10px;
+  font-size: 1.25rem;
+}
+
+.sub {
+  color: var(--cg-muted);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  margin-bottom: 16px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cg-blue-soft);
+  color: var(--cg-blue-dark);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+}
+.pill span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--cg-gold);
+  box-shadow: 0 0 8px rgba(240, 194, 76, 0.6);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 520px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+label {
+  font-size: 0.93rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+input, select {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d4d9df;
+  font-size: 0.95rem;
+  background: #fdfefe;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--cg-blue);
+  box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid rgba(16,121,186,0.12);
+  margin: 14px 0;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  color: #374151;
+}
+.summary-row strong { color: var(--cg-text); }
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(16,121,186,0.10), rgba(13,93,140,0.04));
+  border: 1px solid rgba(16,121,186,0.12);
+  margin-top: 10px;
+}
+.total .big {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--cg-blue-dark);
+}
+
+.btn {
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 8px 16px rgba(16, 121, 186, 0.25);
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(16, 121, 186, 0.28); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--cg-blue-dark);
+  border: 1px solid rgba(16,121,186,0.25);
+  box-shadow: none;
+}
+.btn-outline:hover {
+  background: rgba(16,121,186,0.06);
+  transform: translateY(-2px);
+}
+
+.status {
+  margin-top: 10px;
+  font-size: 0.92rem;
+  min-height: 20px;
+  color: #555;
+}
+.status.ok { color: #0c7c3c; }
+.status.erro { color: #c23616; }
+
+.hint {
+  font-size: 0.85rem;
+  color: var(--cg-muted);
+  line-height: 1.4;
+  margin-top: 10px;
+}
+
+.badge-secure {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(16,121,186,0.12);
+  background: rgba(231, 243, 251, 0.45);
+  color: var(--cg-blue-dark);
+  margin-top: 12px;
+}
+.badge-secure b { color: var(--cg-blue-dark); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 680px) {
+  .brand { flex-direction: column; align-items: flex-start; }
+  .brand h1 { font-size: 1.35rem; }
+}
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <header class="brand">
+    <div class="logo-mark">
+      <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo.jpg" alt="Logo ColorGlass">
+    </div>
+    <div>
+      <h1>ColorGlass <span>Aprovação</span></h1>
+      <p>Aprovação de pedido com emissão de boleto via Asaas. Confirmação após pagamento.</p>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- ESQUERDA: dados + aprovação -->
+    <section class="card">
+      <div class="pill"><span></span>Aprovar pedido</div>
+      <h2>Detalhes</h2>
+      <p class="sub">Confira as informações do pedido. Ao aprovar, será emitido um boleto via Asaas.</p>
+
+      <div class="grid-2">
+        <label>Nº do pedido (opcional)
+          <input id="numero_pedido" type="text" placeholder="Ex: 1523">
+        </label>
+
+        <label>Orçamento UUID
+          <input id="orcamento_uuid" type="text" placeholder="uuid do orçamento">
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <label>Cliente (opcional)
+          <input id="cliente_nome" type="text" placeholder="Nome do cliente">
+        </label>
+
+        <label>Valor (R$)
+          <input id="valor" type="number" step="0.01" min="0" placeholder="0,00">
+        </label>
+      </div>
+
+      <div class="badge-secure">
+        <div style="font-size: 1.2rem;">🧾</div>
+        <div>
+          <b>Boleto via Asaas</b><br>
+          <span style="color:#4b5563;">Ao aprovar, o boleto será gerado e você poderá abrir/copiar o link.</span>
+        </div>
+      </div>
+
+      <hr>
+
+      <button class="btn" id="btnAprovar" onclick="aprovarPedido()">✅ Aprovar pedido</button>
+      <button class="btn btn-outline" style="margin-top:10px;" onclick="voltar()">Voltar</button>
+
+      <div id="status" class="status"></div>
+
+      <p class="hint">
+        Dica: você vai chamar essa tela a partir do botão “🧾 Pagamento” na tabela de pedidos, passando o
+        <b>orcamento_uuid</b> na URL.
+      </p>
+    </section>
+
+    <!-- DIREITA: resumo -->
+    <aside class="card">
+      <div class="pill"><span></span>Resumo</div>
+      <h2>Pedido</h2>
+      <p class="sub">Antes de aprovar, confira os dados abaixo.</p>
+
+      <div class="summary-row">
+        <span>Pedido</span>
+        <strong id="s_pedido">--</strong>
+      </div>
+      <div class="summary-row">
+        <span>Cliente</span>
+        <strong id="s_cliente">--</strong>
+      </div>
+      <div class="summary-row">
+        <span>UUID</span>
+        <strong id="s_uuid" style="font-size:0.88rem; word-break:break-all;">--</strong>
+      </div>
+      <div class="summary-row">
+        <span>Forma</span>
+        <strong>Boleto</strong>
+      </div>
+
+      <div class="total">
+        <span>Total</span>
+        <span class="big" id="s_total">R$ 0,00</span>
+      </div>
+
+      <p class="hint">
+        <b>Importante:</b> o boleto pode levar algumas horas para compensar.  
+        Você pode usar webhook do Asaas para atualizar o status automaticamente.
+      </p>
+
+      <hr>
+
+      <div class="pill"><span></span>Link do boleto</div>
+      <p class="sub" style="margin-bottom:10px;">Após aprovar, o link aparecerá aqui.</p>
+
+      <label>URL do boleto
+        <input id="boleto_url" type="text" placeholder="Ainda não gerado" readonly>
+      </label>
+
+      <button class="btn btn-outline" onclick="copiarBoleto()">📋 Copiar link</button>
+      <button class="btn btn-outline" style="margin-top:10px;" onclick="abrirBoleto()">🔗 Abrir boleto</button>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://colorglass.onrender.com";
+
+function qs(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+function moneyBR(v) {
+  const n = Number(v || 0);
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function setStatus(msg, tipo="") {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "status " + tipo;
+}
+
+function getToken() {
+  return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+}
+
+function updateResumo() {
+  const pedido = document.getElementById("numero_pedido").value.trim() || "--";
+  const cliente = document.getElementById("cliente_nome").value.trim() || "--";
+  const uuid = document.getElementById("orcamento_uuid").value.trim() || "--";
+  const valor = document.getElementById("valor").value;
+
+  document.getElementById("s_pedido").textContent = pedido;
+  document.getElementById("s_cliente").textContent = cliente;
+  document.getElementById("s_uuid").textContent = uuid;
+  document.getElementById("s_total").textContent = moneyBR(valor);
+}
+
+["numero_pedido","cliente_nome","orcamento_uuid","valor"].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener("input", updateResumo);
+  el.addEventListener("change", updateResumo);
+});
+
+function preencherDaURL() {
+  const uuid = qs("orcamento_uuid");
+  const numero = qs("numero_pedido");
+  const cliente = qs("cliente_nome");
+  const valor = qs("valor");
+
+  if (uuid) document.getElementById("orcamento_uuid").value = uuid;
+  if (numero) document.getElementById("numero_pedido").value = numero;
+  if (cliente) document.getElementById("cliente_nome").value = cliente;
+  if (valor) document.getElementById("valor").value = valor;
+
+  updateResumo();
+}
+
+/**
+ * ✅ Aprovação + emissão de boleto via Asaas (chamando o BACKEND)
+ *
+ * Você vai implementar no backend:
+ * POST /api/pagamentos/aprovar-boleto
+ * Body: { orcamento_uuid, numero_pedido, cliente_nome, valor }
+ * Header: Authorization: Bearer <token>
+ *
+ * Response esperado:
+ * { success: true, boleto_url: "https://..." }
+ *
+ * (Opcional) também retornar barcode/linhaDigitavel:
+ * { success: true, boleto_url: "...", linha_digitavel: "...", codigo_barras: "..." }
+ */
+async function aprovarPedido() {
+  const btn = document.getElementById("btnAprovar");
+  const token = getToken();
+
+  const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
+  const numero_pedido = document.getElementById("numero_pedido").value.trim();
+  const cliente_nome = document.getElementById("cliente_nome").value.trim();
+  const valor = Number(document.getElementById("valor").value || 0);
+
+  if (!token) {
+    setStatus("Sessão não encontrada. Faça login novamente.", "erro");
+    return;
+  }
+  if (!orcamento_uuid) {
+    setStatus("Informe o UUID do orçamento.", "erro");
+    return;
+  }
+  if (!valor || valor <= 0) {
+    setStatus("Informe um valor válido.", "erro");
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    setStatus("Aprovando pedido e gerando boleto...");
+
+    const res = await fetch(`${API_BASE}/api/pagamentos/aprovar-boleto`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        orcamento_uuid,
+        numero_pedido: numero_pedido || null,
+        cliente_nome: cliente_nome || null,
+        valor
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      setStatus(data.error || "Não foi possível aprovar/gerar boleto.", "erro");
+      btn.disabled = false;
+      return;
+    }
+
+    if (!data.boleto_url) {
+      setStatus("Boleto não retornou URL. Verifique o backend.", "erro");
+      btn.disabled = false;
+      return;
+    }
+
+    document.getElementById("boleto_url").value = data.boleto_url;
+    setStatus("Pedido aprovado! Boleto gerado com sucesso.", "ok");
+    btn.disabled = false;
+
+  } catch (err) {
+    console.error(err);
+    setStatus("Erro ao aprovar/gerar boleto. Verifique o console.", "erro");
+    btn.disabled = false;
+  }
+}
+
+async function copiarBoleto() {
+  const url = document.getElementById("boleto_url").value.trim();
+  if (!url) { setStatus("Nenhum link de boleto para copiar.", "erro"); return; }
+
+  try {
+    await navigator.clipboard.writeText(url);
+    setStatus("Link copiado!", "ok");
+  } catch (e) {
+    // fallback
+    const inp = document.getElementById("boleto_url");
+    inp.focus();
+    inp.select();
+    document.execCommand("copy");
+    setStatus("Link copiado!", "ok");
+  }
+}
+
+function abrirBoleto() {
+  const url = document.getElementById("boleto_url").value.trim();
+  if (!url) { setStatus("Nenhum link de boleto para abrir.", "erro"); return; }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function voltar() {
+  history.back();
+}
+
+preencherDaURL();
+</script>
+
+</body>
+</html>
+
