@@ -329,25 +329,25 @@ hr {
     <section class="card">
       <div class="pill"><span></span>Aprovar pedido</div>
       <h2>Detalhes</h2>
-      <p class="sub">Os dados abaixo serão puxados automaticamente pelo UUID. Você ainda pode ajustar o valor antes de aprovar.</p>
+      <p class="sub">Os dados abaixo serão preenchidos automaticamente pelo UUID do orçamento.</p>
 
       <div class="grid-2">
         <label>Nº do pedido
-          <input id="numero_pedido" type="text" placeholder="Ex: 1523">
+          <input id="numero_pedido" type="text" placeholder="Carregando..." readonly>
         </label>
 
         <label>Orçamento UUID
-          <input id="orcamento_uuid" type="text" placeholder="uuid do orçamento">
+          <input id="orcamento_uuid" type="text" placeholder="uuid do orçamento" readonly>
         </label>
       </div>
 
       <div class="grid-2">
         <label>Cliente
-          <input id="cliente_nome" type="text" placeholder="Nome do cliente">
+          <input id="cliente_nome" type="text" placeholder="Carregando..." readonly>
         </label>
 
         <label>Valor (R$)
-          <input id="valor" type="number" step="0.01" min="0" placeholder="0,00">
+          <input id="valor" type="number" step="0.01" min="0" placeholder="Carregando..." readonly>
         </label>
       </div>
 
@@ -367,7 +367,8 @@ hr {
       <div id="status" class="status"></div>
 
       <p class="hint">
-        Esta tela deve ser aberta como: <b>/aprovacao.html?orcamento_uuid=...</b> (vindo do ícone 🪙/🧾 na lista).
+        Esta página lê o <b>orcamento_uuid</b> da URL e busca automaticamente <b>numero_pedido</b>,
+        <b>cliente_nome</b> e <b>valor_total</b> no Supabase através do endpoint <b>/api/orcamentos</b>.
       </p>
     </section>
 
@@ -375,7 +376,7 @@ hr {
     <aside class="card">
       <div class="pill"><span></span>Resumo</div>
       <h2>Pedido</h2>
-      <p class="sub">Antes de aprovar, confira os dados abaixo.</p>
+      <p class="sub">Confira os dados carregados do orçamento.</p>
 
       <div class="summary-row">
         <span>Pedido</span>
@@ -400,7 +401,8 @@ hr {
       </div>
 
       <p class="hint">
-        <b>Importante:</b> boleto pode levar tempo para compensar. Se quiser automatizar status depois, webhook do Asaas resolve.
+        <b>Importante:</b> o boleto pode levar algumas horas para compensar.
+        Use webhook do Asaas para atualizar status automaticamente.
       </p>
 
       <hr>
@@ -441,7 +443,7 @@ function getToken() {
   return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
 }
 
-function updateResumo() {
+function updateResumoFromInputs() {
   const pedido = document.getElementById("numero_pedido").value.trim() || "--";
   const cliente = document.getElementById("cliente_nome").value.trim() || "--";
   const uuid = document.getElementById("orcamento_uuid").value.trim() || "--";
@@ -453,107 +455,62 @@ function updateResumo() {
   document.getElementById("s_total").textContent = moneyBR(valor);
 }
 
-["numero_pedido","cliente_nome","orcamento_uuid","valor"].forEach(id => {
-  const el = document.getElementById(id);
-  el.addEventListener("input", updateResumo);
-  el.addEventListener("change", updateResumo);
-});
-
-async function validarSessao() {
-  const token = getToken();
-  if (!token) {
-    window.location.href = "logincadastro.html";
-    return false;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/auth/validar`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      }
-    });
-    const data = await res.json();
-
-    if (!data.success) {
-      window.location.href = "logincadastro.html";
-      return false;
-    }
-
-    // se o backend quiser forçar página específica por nível
-    if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
-      window.location.href = data.redirect;
-      return false;
-    }
-
-    return true;
-  } catch (err) {
-    console.error("Erro ao validar sessão:", err);
-    window.location.href = "logincadastro.html";
-    return false;
-  }
-}
-
 /**
- * ✅ Puxa dados do orçamento pelo UUID usando a API que você já tem:
- * GET /api/orcamentos  (retorna lista com id, numero_pedido, cliente_nome, valor_total...)
- * Depois filtra pelo id == orcamento_uuid.
+ * ✅ BUSCA DADOS PELO UUID USANDO O ENDPOINT QUE VOCÊ JÁ TEM:
+ * GET /api/orcamentos
+ * Depois encontra o orçamento pelo id == uuid e preenche os campos.
+ *
+ * Sem redirect, sem lógica de nível, sem mexer em backend.
  */
-async function preencherPorUUID() {
+async function carregarDadosDoOrcamento(uuid) {
   const token = getToken();
-  const uuid = (document.getElementById("orcamento_uuid").value || "").trim();
+
   if (!uuid) {
-    setStatus("Informe o UUID do orçamento.", "erro");
+    setStatus("UUID não informado na URL. Use: ?orcamento_uuid=...", "erro");
     return;
   }
 
+  // UI loading
+  document.getElementById("numero_pedido").value = "Carregando...";
+  document.getElementById("cliente_nome").value = "Carregando...";
+  document.getElementById("valor").value = "";
+  updateResumoFromInputs();
+
   try {
-    setStatus("Buscando dados do pedido...");
+    setStatus("Buscando dados do orçamento...");
+
     const res = await fetch(`${API_BASE}/api/orcamentos`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: token ? { "Authorization": `Bearer ${token}` } : {}
     });
+
     const data = await res.json();
 
     if (!data.success || !Array.isArray(data.orcamentos)) {
-      setStatus(data.error || "Não foi possível carregar orçamentos.", "erro");
+      setStatus(data.error || "Não foi possível carregar a lista de orçamentos.", "erro");
       return;
     }
 
-    const found = data.orcamentos.find(o => String(o.id) === String(uuid));
-    if (!found) {
-      setStatus("Orçamento não encontrado (UUID não bate ou você não tem permissão).", "erro");
+    const orc = data.orcamentos.find(o => String(o.id) === String(uuid));
+    if (!orc) {
+      setStatus("Orçamento não encontrado para este UUID.", "erro");
       return;
     }
 
-    // Preenche campos
-    document.getElementById("numero_pedido").value = (found.numero_pedido ?? "").toString();
-    document.getElementById("cliente_nome").value = (found.cliente_nome ?? "").toString();
+    document.getElementById("numero_pedido").value = (orc.numero_pedido ?? "");
+    document.getElementById("cliente_nome").value = (orc.cliente_nome ?? "");
+    document.getElementById("valor").value = (orc.valor_total ?? 0);
 
-    // valor_total vem do supabase (pode ser null/0)
-    const vt = Number(found.valor_total || 0);
-    document.getElementById("valor").value = vt ? vt.toFixed(2) : "";
+    updateResumoFromInputs();
+    setStatus("Dados carregados. Pode aprovar.", "ok");
 
-    updateResumo();
-    setStatus("Dados carregados do Supabase.", "ok");
   } catch (err) {
     console.error(err);
-    setStatus("Erro ao buscar dados do pedido. Verifique o console.", "erro");
+    setStatus("Erro ao buscar dados do orçamento. Veja o console.", "erro");
   }
-}
-
-function preencherDaURL() {
-  const uuid = qs("orcamento_uuid");
-  if (uuid) {
-    document.getElementById("orcamento_uuid").value = uuid;
-  }
-  updateResumo();
 }
 
 /**
  * ✅ Aprovação + emissão de boleto via Asaas (chamando o BACKEND)
- * POST /api/pagamentos/aprovar-boleto
- * Body: { orcamento_uuid, numero_pedido, cliente_nome, valor }
  */
 async function aprovarPedido() {
   const btn = document.getElementById("btnAprovar");
@@ -564,18 +521,9 @@ async function aprovarPedido() {
   const cliente_nome = document.getElementById("cliente_nome").value.trim();
   const valor = Number(document.getElementById("valor").value || 0);
 
-  if (!token) {
-    setStatus("Sessão não encontrada. Faça login novamente.", "erro");
-    return;
-  }
-  if (!orcamento_uuid) {
-    setStatus("Informe o UUID do orçamento.", "erro");
-    return;
-  }
-  if (!valor || valor <= 0) {
-    setStatus("Informe um valor válido.", "erro");
-    return;
-  }
+  if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
+  if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
+  if (!valor || valor <= 0) { setStatus("Valor inválido no orçamento.", "erro"); return; }
 
   try {
     btn.disabled = true;
@@ -642,31 +590,19 @@ function abrirBoleto() {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function voltar() {
-  history.back();
-}
+function voltar() { history.back(); }
 
-// BOOT
-(async function init(){
-  const ok = await validarSessao();
-  if (!ok) return;
-
-  preencherDaURL();
-
-  // Se já vier com uuid na URL, puxa do supabase automaticamente
-  const uuid = (document.getElementById("orcamento_uuid").value || "").trim();
-  if (uuid) {
-    await preencherPorUUID();
-  } else {
-    setStatus("Informe o UUID (pela URL ou no campo) para carregar o pedido.", "");
-  }
-
-  // Se o usuário mudar o UUID manualmente, recarrega
-  document.getElementById("orcamento_uuid").addEventListener("change", preencherPorUUID);
+// ✅ init: pega uuid da URL, preenche input, puxa dados e atualiza resumo
+(function init() {
+  const uuid = qs("orcamento_uuid") || "";
+  document.getElementById("orcamento_uuid").value = uuid;
+  updateResumoFromInputs();
+  carregarDadosDoOrcamento(uuid);
 })();
 </script>
 
 </body>
 </html>
+
 
 
