@@ -95,6 +95,15 @@ def catalogo3d_page():
 def catalogo3d_html_page():
     return send_from_directory(BASE_DIR, "catalogo3d.html")
 
+@app.route("/aprovacao")
+def aprovacao_page():
+    return send_from_directory(BASE_DIR, "aprovacao.html")
+
+@app.route("/aprovacao.html")
+def aprovacao_html_page():
+    return send_from_directory(BASE_DIR, "aprovacao.html")
+
+
 
 def exige_nivel_2_ou_3(fn):
     from auth_utils import buscar_usuario_por_token, extrair_token
