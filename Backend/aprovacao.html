@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Aprovar Pedido | ColorGlass</title> 
+<title>Aprovar Pedido | ColorGlass</title>
 <meta name="description" content="Aprovação de pedido ColorGlass com emissão de boleto." />
 <meta name="robots" content="noindex, nofollow" />
 
@@ -329,10 +329,10 @@ hr {
     <section class="card">
       <div class="pill"><span></span>Aprovar pedido</div>
       <h2>Detalhes</h2>
-      <p class="sub">Confira as informações do pedido. Ao aprovar, será emitido um boleto via Asaas.</p>
+      <p class="sub">Os dados abaixo serão puxados automaticamente pelo UUID. Você ainda pode ajustar o valor antes de aprovar.</p>
 
       <div class="grid-2">
-        <label>Nº do pedido (opcional)
+        <label>Nº do pedido
           <input id="numero_pedido" type="text" placeholder="Ex: 1523">
         </label>
 
@@ -342,7 +342,7 @@ hr {
       </div>
 
       <div class="grid-2">
-        <label>Cliente (opcional)
+        <label>Cliente
           <input id="cliente_nome" type="text" placeholder="Nome do cliente">
         </label>
 
@@ -367,8 +367,7 @@ hr {
       <div id="status" class="status"></div>
 
       <p class="hint">
-        Dica: você vai chamar essa tela a partir do botão “🧾 Pagamento” na tabela de pedidos, passando o
-        <b>orcamento_uuid</b> na URL.
+        Esta tela deve ser aberta como: <b>/aprovacao.html?orcamento_uuid=...</b> (vindo do ícone 🪙/🧾 na lista).
       </p>
     </section>
 
@@ -401,8 +400,7 @@ hr {
       </div>
 
       <p class="hint">
-        <b>Importante:</b> o boleto pode levar algumas horas para compensar.  
-        Você pode usar webhook do Asaas para atualizar o status automaticamente.
+        <b>Importante:</b> boleto pode levar tempo para compensar. Se quiser automatizar status depois, webhook do Asaas resolve.
       </p>
 
       <hr>
@@ -461,33 +459,101 @@ function updateResumo() {
   el.addEventListener("change", updateResumo);
 });
 
+async function validarSessao() {
+  const token = getToken();
+  if (!token) {
+    window.location.href = "logincadastro.html";
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/validar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      window.location.href = "logincadastro.html";
+      return false;
+    }
+
+    // se o backend quiser forçar página específica por nível
+    if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
+      window.location.href = data.redirect;
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao validar sessão:", err);
+    window.location.href = "logincadastro.html";
+    return false;
+  }
+}
+
+/**
+ * ✅ Puxa dados do orçamento pelo UUID usando a API que você já tem:
+ * GET /api/orcamentos  (retorna lista com id, numero_pedido, cliente_nome, valor_total...)
+ * Depois filtra pelo id == orcamento_uuid.
+ */
+async function preencherPorUUID() {
+  const token = getToken();
+  const uuid = (document.getElementById("orcamento_uuid").value || "").trim();
+  if (!uuid) {
+    setStatus("Informe o UUID do orçamento.", "erro");
+    return;
+  }
+
+  try {
+    setStatus("Buscando dados do pedido...");
+    const res = await fetch(`${API_BASE}/api/orcamentos`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (!data.success || !Array.isArray(data.orcamentos)) {
+      setStatus(data.error || "Não foi possível carregar orçamentos.", "erro");
+      return;
+    }
+
+    const found = data.orcamentos.find(o => String(o.id) === String(uuid));
+    if (!found) {
+      setStatus("Orçamento não encontrado (UUID não bate ou você não tem permissão).", "erro");
+      return;
+    }
+
+    // Preenche campos
+    document.getElementById("numero_pedido").value = (found.numero_pedido ?? "").toString();
+    document.getElementById("cliente_nome").value = (found.cliente_nome ?? "").toString();
+
+    // valor_total vem do supabase (pode ser null/0)
+    const vt = Number(found.valor_total || 0);
+    document.getElementById("valor").value = vt ? vt.toFixed(2) : "";
+
+    updateResumo();
+    setStatus("Dados carregados do Supabase.", "ok");
+  } catch (err) {
+    console.error(err);
+    setStatus("Erro ao buscar dados do pedido. Verifique o console.", "erro");
+  }
+}
+
 function preencherDaURL() {
   const uuid = qs("orcamento_uuid");
-  const numero = qs("numero_pedido");
-  const cliente = qs("cliente_nome");
-  const valor = qs("valor");
-
-  if (uuid) document.getElementById("orcamento_uuid").value = uuid;
-  if (numero) document.getElementById("numero_pedido").value = numero;
-  if (cliente) document.getElementById("cliente_nome").value = cliente;
-  if (valor) document.getElementById("valor").value = valor;
-
+  if (uuid) {
+    document.getElementById("orcamento_uuid").value = uuid;
+  }
   updateResumo();
 }
 
 /**
  * ✅ Aprovação + emissão de boleto via Asaas (chamando o BACKEND)
- *
- * Você vai implementar no backend:
  * POST /api/pagamentos/aprovar-boleto
  * Body: { orcamento_uuid, numero_pedido, cliente_nome, valor }
- * Header: Authorization: Bearer <token>
- *
- * Response esperado:
- * { success: true, boleto_url: "https://..." }
- *
- * (Opcional) também retornar barcode/linhaDigitavel:
- * { success: true, boleto_url: "...", linha_digitavel: "...", codigo_barras: "..." }
  */
 async function aprovarPedido() {
   const btn = document.getElementById("btnAprovar");
@@ -562,7 +628,6 @@ async function copiarBoleto() {
     await navigator.clipboard.writeText(url);
     setStatus("Link copiado!", "ok");
   } catch (e) {
-    // fallback
     const inp = document.getElementById("boleto_url");
     inp.focus();
     inp.select();
@@ -581,9 +646,27 @@ function voltar() {
   history.back();
 }
 
-preencherDaURL();
+// BOOT
+(async function init(){
+  const ok = await validarSessao();
+  if (!ok) return;
+
+  preencherDaURL();
+
+  // Se já vier com uuid na URL, puxa do supabase automaticamente
+  const uuid = (document.getElementById("orcamento_uuid").value || "").trim();
+  if (uuid) {
+    await preencherPorUUID();
+  } else {
+    setStatus("Informe o UUID (pela URL ou no campo) para carregar o pedido.", "");
+  }
+
+  // Se o usuário mudar o UUID manualmente, recarrega
+  document.getElementById("orcamento_uuid").addEventListener("change", preencherPorUUID);
+})();
 </script>
 
 </body>
 </html>
+
 
