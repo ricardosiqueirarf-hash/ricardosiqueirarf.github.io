@@ -347,7 +347,7 @@ hr {
         </label>
 
         <label>Valor (R$)
-          <input id="valor" type="number" step="0.01" min="0" placeholder="Carregando..." readonly>
+          <input id="valor_total" type="number" step="0.01" min="0" placeholder="Carregando..." readonly>
         </label>
       </div>
 
@@ -447,7 +447,7 @@ function updateResumoFromInputs() {
   const pedido = document.getElementById("numero_pedido").value.trim() || "--";
   const cliente = document.getElementById("cliente_nome").value.trim() || "--";
   const uuid = document.getElementById("orcamento_uuid").value.trim() || "--";
-  const valor = document.getElementById("valor").value;
+  const valor = document.getElementById("valor_total").value.trim() || "--";
 
   document.getElementById("s_pedido").textContent = pedido;
   document.getElementById("s_cliente").textContent = cliente;
@@ -473,7 +473,7 @@ async function carregarDadosDoOrcamento(uuid) {
   // UI loading
   document.getElementById("numero_pedido").value = "Carregando...";
   document.getElementById("cliente_nome").value = "Carregando...";
-  document.getElementById("valor").value = "";
+  document.getElementById("valor_total").value = "";
   updateResumoFromInputs();
 
   try {
