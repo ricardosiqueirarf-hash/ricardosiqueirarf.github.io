@@ -473,7 +473,7 @@ async function carregarDadosDoOrcamento(uuid) {
   // UI loading
   document.getElementById("numero_pedido").value = "Carregando...";
   document.getElementById("cliente_nome").value = "Carregando...";
-  document.getElementById("valor_total").value = "";
+  document.getElementById("valor_total").value = "Carregando...";
   updateResumoFromInputs();
 
   try {
@@ -519,11 +519,11 @@ async function aprovarPedido() {
   const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
   const numero_pedido = document.getElementById("numero_pedido").value.trim();
   const cliente_nome = document.getElementById("cliente_nome").value.trim();
-  const valor = Number(document.getElementById("valor").value || 0);
+  const valor = Number(document.getElementById("valor_total").value.trim();
 
   if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
   if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
-  if (!valor || valor <= 0) { setStatus("Valor inválido no orçamento.", "erro"); return; }
+  if (!valor_total || valor_total <= 0) { setStatus("Valor inválido no orçamento.", "erro"); return; }
 
   try {
     btn.disabled = true;
@@ -539,7 +539,7 @@ async function aprovarPedido() {
         orcamento_uuid,
         numero_pedido: numero_pedido || null,
         cliente_nome: cliente_nome || null,
-        valor
+        valor_total: valor_total || null,
       })
     });
 
