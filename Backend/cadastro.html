@@ -42,6 +42,7 @@ body {
     gap: 24px;
 }
 
+/* ✅ AJUSTE: limita largura do topo (logo + título) sem fixar */
 .brand {
     display: flex;
     gap: 16px;
@@ -49,6 +50,10 @@ body {
     background: var(--cg-white);
     border-radius: 18px;
     box-shadow: 0 10px 30px rgba(15,44,62,0.12);
+
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .logo-mark {
@@ -68,6 +73,11 @@ body {
 .container {
     display: grid;
     grid-template-columns: 1fr;
+
+    /* ✅ AJUSTE: limita largura do bloco do cadastro sem fixar */
+    max-width: 680px; /* um pouco maior que login pq tem mais campos */
+    width: 100%;
+    margin: 0 auto;
 }
 
 .card {
