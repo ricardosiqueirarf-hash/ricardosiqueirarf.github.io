@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro | ColorGlass</title>
 <meta name="description" content="Cadastro de usuários ColorGlass.">
+
 <style>
 :root {
     --cg-blue: #1079ba;
@@ -15,16 +16,23 @@
     --cg-text: #1f2933;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
 body {
-    background: radial-gradient(circle at top, rgba(16,121,186,0.15), transparent 55%),
+    background:
+        radial-gradient(circle at top, rgba(16,121,186,0.15), transparent 55%),
         linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
-    color: var(--cg-text);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 32px 20px;
+    color: var(--cg-text);
 }
 
 .page {
@@ -32,111 +40,54 @@ body {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    animation: fadeIn 0.9s ease;
 }
 
 .brand {
     display: flex;
-    align-items: center;
     gap: 16px;
     padding: 20px 24px;
     background: var(--cg-white);
     border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(15, 44, 62, 0.12);
-    position: relative;
-    overflow: hidden;
-}
-
-.brand::after {
-    content: "";
-    position: absolute;
-    right: -80px;
-    top: -120px;
-    width: 240px;
-    height: 240px;
-    background: radial-gradient(circle, rgba(16,121,186,0.25), transparent 60%);
+    box-shadow: 0 10px 30px rgba(15,44,62,0.12);
 }
 
 .logo-mark {
     width: 52px;
     height: 52px;
     border-radius: 14px;
-    background: var(--cg-white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    box-shadow: 0 8px 18px rgba(16,121,186,0.35);
     overflow: hidden;
-    box-shadow: 0 8px 18px rgba(16, 121, 186, 0.35);
 }
 
 .logo-mark img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    display: block;
-}
-
-.brand h1 {
-    font-size: 1.6rem;
-    color: var(--cg-blue-dark);
-}
-
-.brand span {
-    color: var(--cg-blue);
-    font-weight: 600;
-}
-
-.brand p {
-    margin-top: 4px;
-    color: #4b5563;
-    font-size: 0.95rem;
 }
 
 .container {
-    width: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+    grid-template-columns: 1fr;
 }
 
 .card {
     background: var(--cg-white);
-    border-radius: 18px;
     padding: 28px;
-    box-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
-    border: 1px solid rgba(16, 121, 186, 0.08);
-    position: relative;
-    overflow: hidden;
-    animation: floatIn 0.8s ease;
-}
-
-.card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, rgba(16,121,186,0.08), transparent 55%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-}
-
-.card:hover::before {
-    opacity: 1;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(15,44,62,0.12);
 }
 
 .card h2 {
     color: var(--cg-blue);
-    margin-bottom: 12px;
-    font-size: 1.3rem;
+    margin-bottom: 16px;
 }
 
 label {
-    font-size: 0.95rem;
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin-bottom: 12px;
-    color: #374151;
+    font-size: 0.95rem;
 }
 
 input {
@@ -144,8 +95,6 @@ input {
     border-radius: 10px;
     border: 1px solid #d4d9df;
     font-size: 0.95rem;
-    transition: border 0.2s ease, box-shadow 0.2s ease;
-    background: #fdfefe;
 }
 
 input:focus {
@@ -154,118 +103,114 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
 }
 
+.row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 520px) {
+    .row-2 { grid-template-columns: 1fr; }
+}
+
 .btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
     background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
     color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 12px;
     font-weight: 600;
     cursor: pointer;
-    width: 100%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 8px 16px rgba(16, 121, 186, 0.25);
 }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 22px rgba(16, 121, 186, 0.28);
-}
-
-.btn:active {
-    transform: translateY(0);
+.btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .status {
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: #555;
+    margin-top: 12px;
     min-height: 20px;
+    font-size: 0.9rem;
 }
 
 .status.ok { color: #0c7c3c; }
 .status.erro { color: #c23616; }
 
 .hint {
+    margin-top: 10px;
     font-size: 0.85rem;
     color: #6b7280;
-    line-height: 1.4;
-    margin-top: 8px;
-}
-
-.hint a {
-    color: var(--cg-blue);
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.hint a:hover {
-    text-decoration: underline;
-}
-
-.pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--cg-blue-soft);
-    color: var(--cg-blue-dark);
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    margin-bottom: 16px;
-}
-
-.pill span {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--cg-gold);
-    box-shadow: 0 0 8px rgba(240, 194, 76, 0.6);
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes floatIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 680px) {
-    .brand { flex-direction: column; align-items: flex-start; }
-    .brand h1 { font-size: 1.4rem; }
 }
 </style>
 </head>
+
 <body>
 <div class="page">
+
     <header class="brand">
         <div class="logo-mark">
             <img src="logo.jpg" alt="Logo ColorGlass">
         </div>
         <div>
-            <h1>ColorGlass <span>Portal de Acesso</span></h1>
-            <p>Bem-vindo(a) ao ambiente oficial da ColorGlass. Gerencie seus orçamentos com segurança.</p>
+            <h1>ColorGlass</h1>
+            <p>Cadastro de parceiros</p>
         </div>
     </header>
 
     <div class="container">
         <div class="card">
-            <div class="pill"><span></span>Novo por aqui?</div>
             <h2>Cadastro</h2>
+
+            <!-- DADOS DO CLIENTE -->
+            <label>Nome completo
+                <input id="nome" type="text">
+            </label>
+
+            <div class="row-2">
+                <label>CPF / CNPJ
+                    <input id="cpf_cnpj" type="text">
+                </label>
+
+                <label>CEP
+                    <input id="cep" type="text">
+                </label>
+            </div>
+
+            <label>Endereço
+                <input id="endereco" type="text">
+            </label>
+
+            <div class="row-2">
+                <label>WhatsApp / Celular
+                    <input id="whatsapp" type="text">
+                </label>
+
+                <label>Email
+                    <input id="email" type="email">
+                </label>
+            </div>
+
+            <!-- CREDENCIAIS -->
             <label>Usuário
-                <input type="text" id="cadastroUser" placeholder="Digite seu usuário">
+                <input id="user" type="text">
             </label>
+
             <label>Senha
-                <input type="password" id="cadastroPass" placeholder="Digite sua senha">
+                <input id="pass" type="password">
             </label>
-            <button class="btn" onclick="cadastrar()">Cadastrar</button>
-            <div id="cadastroStatus" class="status"></div>
-            <p class="hint">Após o cadastro, aguarde o admin aprovar seu usuário (token no Supabase).</p>
-            <p class="hint">Já tem acesso? <a href="login.html">Entrar na conta</a>.</p>
+
+            <button class="btn" id="btnCadastrar" onclick="cadastrar()" disabled>
+                Cadastrar
+            </button>
+
+            <div id="status" class="status"></div>
+
+            <p class="hint">
+                Após o cadastro, aguarde a aprovação do administrador.
+            </p>
         </div>
     </div>
 </div>
@@ -273,43 +218,88 @@ input:focus {
 <script>
 const API_BASE = "https://colorglass.onrender.com";
 
-function setStatus(elementId, message, tipo) {
-    const el = document.getElementById(elementId);
-    el.textContent = message;
-    el.classList.remove("ok", "erro");
-    if (tipo) el.classList.add(tipo);
+const campos = [
+    "nome","cpf_cnpj","cep","endereco",
+    "whatsapp","email","user","pass"
+];
+
+function getData() {
+    const d = {};
+    campos.forEach(id => d[id] = document.getElementById(id).value.trim());
+    return d;
+}
+
+function validarTudo() {
+    const d = getData();
+    return campos.every(k => d[k]);
+}
+
+function setStatus(msg, tipo="") {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = "status " + tipo;
+}
+
+function updateBtn() {
+    document.getElementById("btnCadastrar").disabled = !validarTudo();
+}
+
+campos.forEach(id => {
+    document.getElementById(id).addEventListener("input", updateBtn);
+});
+
+async function post(url, body) {
+    const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    return r.json();
 }
 
 async function cadastrar() {
-    const user = document.getElementById("cadastroUser").value.trim();
-    const pass = document.getElementById("cadastroPass").value.trim();
-    if (!user || !pass) {
-        setStatus("cadastroStatus", "Preencha usuário e senha.", "erro");
+    if (!validarTudo()) return;
+
+    const d = getData();
+    setStatus("Cadastrando usuário...");
+
+    // 1) cria usuário
+    const rUser = await post(`${API_BASE}/api/usuarios/cadastro`, {
+        user: d.user,
+        pass: d.pass
+    });
+
+    if (!rUser.success) {
+        setStatus(rUser.error || "Erro ao criar usuário", "erro");
         return;
     }
 
-    try {
-        setStatus("cadastroStatus", "Cadastrando...");
-        const res = await fetch(`${API_BASE}/api/usuarios/cadastro`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user, pass })
-        });
-        const data = await res.json();
-
-        if (!data.success) {
-            setStatus("cadastroStatus", data.error || "Erro ao cadastrar.", "erro");
-            return;
+    // 2) cria cliente
+    setStatus("Salvando dados do cliente...");
+    const rCliente = await post(`${API_BASE}/api/clientes/cadastro`, {
+        nome: d.nome,
+        dados: {
+            cpf_cnpj: d.cpf_cnpj,
+            endereco: d.endereco,
+            cep: d.cep,
+            whatsapp: d.whatsapp,
+            email: d.email
         }
+    });
 
-        setStatus("cadastroStatus", data.message || "Cadastro realizado.", "ok");
-        document.getElementById("cadastroUser").value = "";
-        document.getElementById("cadastroPass").value = "";
-    } catch (err) {
-        console.error(err);
-        setStatus("cadastroStatus", "Erro ao cadastrar. Verifique o console.", "erro");
+    if (!rCliente.success) {
+        setStatus(
+            "Usuário criado, mas erro ao salvar cliente. Avise o admin.",
+            "erro"
+        );
+        return;
     }
+
+    setStatus("Cadastro realizado com sucesso!", "ok");
+    campos.forEach(id => document.getElementById(id).value = "");
+    updateBtn();
 }
 </script>
 </body>
 </html>
+
