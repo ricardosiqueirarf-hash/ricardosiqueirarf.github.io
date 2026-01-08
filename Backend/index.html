@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
@@ -7,11 +7,56 @@
 <meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
 <meta name="robots" content="index, follow">
 
+<!-- ✅ GUARD DE AUTENTICAÇÃO (SUBSTITUI O REDIRECT FIXO PRA /login) -->
 <script>
-    window.location.replace("/login");
+(async () => {
+  const API_BASE = "https://colorglass.onrender.com";
+  const token = localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN");
+
+  // Sem token -> login
+  if (!token) {
+    window.location.replace("login.html");
+    return;
+  }
+
+  try {
+    const resAuth = await fetch(`${API_BASE}/api/auth/validar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    const dataAuth = await resAuth.json();
+
+    if (!dataAuth.success) {
+      localStorage.removeItem("USER_TOKEN");
+      localStorage.removeItem("ADMIN_TOKEN");
+      window.location.replace("login.html");
+      return;
+    }
+
+    const redirect = dataAuth.redirect || "index_loja.html";
+
+    // Anti-loop: só redireciona se o alvo for diferente da página atual
+    const atual = (location.pathname.split("/").pop() || "").toLowerCase();
+    const alvo = (redirect || "").toLowerCase();
+
+    if (alvo && atual !== alvo) {
+      window.location.replace(redirect);
+      return;
+    }
+    // se chegou aqui: está autorizado a ficar nessa página
+  } catch (e) {
+    console.error("Falha no validar:", e);
+    window.location.replace("login.html");
+  }
+})();
 </script>
+
 <noscript>
-    <meta http-equiv="refresh" content="0; url=/login">
+  <meta http-equiv="refresh" content="0; url=login.html">
 </noscript>
 
 <style>
@@ -217,7 +262,6 @@ tr:hover { background: #f0f8ff; }
         <button onclick="go('3dteste.html')">3D</button>
         <button onclick="go('users.html')">admin</button>
         <button onclick="go('clientes.html')">clientes</button>
-        
     </div>
 
     <div class="content">
@@ -267,6 +311,14 @@ function go(url){
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
 const USER_TOKEN = localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN");
+
+// Helper: headers com auth (quando token existir)
+function authHeaders(extra = {}) {
+    const h = { ...extra };
+    if (USER_TOKEN) h["Authorization"] = `Bearer ${USER_TOKEN}`;
+    return h;
+}
+
 const ESTADOS_LABELS = {
     0: "Cancelado",
     1: "Orçamento",
@@ -364,7 +416,9 @@ function aplicarFiltroOrcamentos() {
 async function carregarOrcamentos() {
     try {
         atualizarStatusOrcamentos("Carregando...");
-        const res = await fetch(`${BACKEND_URL}/api/orcamentos`);
+        const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
+            headers: authHeaders()
+        });
         const data = await res.json();
         const orcamentos = data.orcamentos || [];
 
@@ -396,7 +450,9 @@ async function atualizarTotaisOrcamentos() {
         const valorCell = row.querySelector('[data-field="valor_total"]');
 
         try {
-            const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`);
+            const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
+                headers: authHeaders()
+            });
             const dataPortas = await resPortas.json();
             let qtdTotal = 0;
             let valorTotal = 0;
@@ -426,6 +482,7 @@ function editarOrcamento(uuid){
 // FICHA CLIENTE
 // =====================
 let cliente = {nome:"", id:null};
+
 async function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
     if(!nome){ alert("Digite o nome do cliente"); return; }
@@ -435,15 +492,16 @@ async function criarFichaCliente(){
     try {
         const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
             method:'POST',
-            headers:{
+            headers: authHeaders({
                 'Content-Type':'application/json'
-            },
+            }),
             body:JSON.stringify({
                 cliente_nome: cliente.nome,
                 uuid: orcamentoUuid,
                 estado: 1
             })
         });
+
         const data = await res.json();
         if(data.success){
             cliente.id = data.id;
