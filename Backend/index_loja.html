@@ -412,6 +412,39 @@ function go(url){
 const BACKEND_URL = "https://colorglass.onrender.com";
 const USER_TOKEN = localStorage.getItem("USER_TOKEN");
 
+async function validarSessao() {
+    if (!USER_TOKEN) {
+        window.location.href = "logincadastro.html";
+        return false;
+    }
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${USER_TOKEN}`
+            }
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            window.location.href = "logincadastro.html";
+            return false;
+        }
+
+        if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
+            window.location.href = data.redirect;
+            return false;
+        }
+
+        return true;
+    } catch (err) {
+        console.error("Erro ao validar sessão:", err);
+        window.location.href = "logincadastro.html";
+        return false;
+    }
+}
 
 // =====================
 // CARREGAR ORÇAMENTOS
@@ -615,6 +648,7 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
+
 
 
 
