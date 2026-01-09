@@ -10,6 +10,25 @@ orcamentos_bp = Blueprint("orcamentos_bp", __name__)
 # =====================
 STATUS_VALIDOS = {0, 1, 2, 3, 4, 5}
 
+# ✅ Mapa de tradução do status (backend)
+STATUS_LABELS = {
+    0: "Cancelado",
+    1: "Orçamento",
+    2: "Aprovado",
+    3: "Em Produção",
+    4: "Separado",
+    5: "Entregue",
+}
+
+
+def status_label(valor):
+    """Converte status numérico em texto amigável."""
+    try:
+        v = int(valor)
+    except (TypeError, ValueError):
+        return "Desconhecido"
+    return STATUS_LABELS.get(v, "Desconhecido")
+
 
 @orcamentos_bp.route("/api/orcamento", methods=["POST"])
 def criar_orcamento():
@@ -36,7 +55,7 @@ def criar_orcamento():
     # Se quiser permitir criar com UUID fixo (ex: vindo do front)
     orcamento_uuid = (data.get("uuid") or "").strip() or None
 
-    # STATUS inicial (substitui totalmente o "estado")
+    # STATUS inicial
     status_inicial = data.get("status", 1)
     try:
         status_inicial = int(status_inicial)
@@ -92,6 +111,7 @@ def criar_orcamento():
             "uuid": orcamento_id,
             "numero_pedido": numero_pedido,
             "status": status_inicial,
+            "status_label": status_label(status_inicial),  # ✅ traduzido no backend
             "cliente_nome": cliente_nome
         })
 
@@ -133,6 +153,10 @@ def listar_orcamentos():
         r.raise_for_status()
         orcamentos = r.json()
 
+        # ✅ injeta status_label em cada item
+        for o in orcamentos:
+            o["status_label"] = status_label(o.get("status"))
+
         return jsonify({"success": True, "orcamentos": orcamentos})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -171,7 +195,7 @@ def finalizar_orcamento(uuid):
 
 
 # =====================
-# ATUALIZAR STATUS DO ORÇAMENTO (substitui /estado)
+# ATUALIZAR STATUS DO ORÇAMENTO
 # =====================
 @orcamentos_bp.route("/api/orcamento/<uuid>/status", methods=["POST"])
 def atualizar_status(uuid):
@@ -219,7 +243,7 @@ def atualizar_status(uuid):
 
         status_atual = atual[0].get("status")
 
-        # Regra: só pode ir para status 2 se estiver em 1 (mesma lógica que você tinha)
+        # Regra: só pode ir para status 2 se estiver em 1
         if novo_status == 2:
             try:
                 if int(status_atual) != 1:
@@ -227,7 +251,7 @@ def atualizar_status(uuid):
             except (TypeError, ValueError):
                 return jsonify({"success": False, "error": "Status atual inválido."}), 400
 
-            # Exigir dados do cliente (seu comportamento original)
+            # Exigir dados do cliente
             nome = data.get("nome")
             email = data.get("email")
             celular = data.get("celular")
@@ -262,7 +286,13 @@ def atualizar_status(uuid):
         r_patch.raise_for_status()
         atualizado = r_patch.json()
 
-        return jsonify({"success": True, "status": novo_status, "registro": atualizado})
+        return jsonify({
+            "success": True,
+            "status": novo_status,
+            "status_label": status_label(novo_status),  # ✅ traduzido no backend
+            "registro": atualizado
+        })
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
