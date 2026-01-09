@@ -105,11 +105,12 @@ def aprovacao_html_page():
 
 @app.route("/tags")
 def tags_page():
-    return send_from_directory(ROOT_DIR, "tags.html")
+    return send_from_directory(BASE_DIR, "tags.html")
 
 @app.route("/tags.html")
 def tags_html_page():
-    return send_from_directory(ROOT_DIR, "tags.html")
+    return send_from_directory(BASE_DIR, "tags.html")
+
 
 
 
