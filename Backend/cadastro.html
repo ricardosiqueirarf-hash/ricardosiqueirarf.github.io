@@ -273,22 +273,11 @@ async function cadastrar() {
     const d = getData();
     setStatus("Cadastrando usuário...");
 
-    // 1) cria usuário
     const rUser = await post(`${API_BASE}/api/usuarios/cadastro`, {
         user: d.user,
-        pass: d.pass
-    });
-
-    if (!rUser.success) {
-        setStatus(rUser.error || "Erro ao criar usuário", "erro");
-        return;
-    }
-
-    // 2) cria cliente
-    setStatus("Salvando dados do cliente...");
-    const rCliente = await post(`${API_BASE}/api/clientes/cadastro`, {
-        nome: d.nome,
+        pass: d.pass,
         dados: {
+            nome: d.nome,
             cpf_cnpj: d.cpf_cnpj,
             endereco: d.endereco,
             cep: d.cep,
@@ -297,11 +286,8 @@ async function cadastrar() {
         }
     });
 
-    if (!rCliente.success) {
-        setStatus(
-            "Usuário criado, mas erro ao salvar cliente. Avise o admin.",
-            "erro"
-        );
+    if (!rUser.success) {
+        setStatus(rUser.error || "Erro ao criar usuário", "erro");
         return;
     }
 
@@ -312,4 +298,5 @@ async function cadastrar() {
 </script>
 </body>
 </html>
+
 
