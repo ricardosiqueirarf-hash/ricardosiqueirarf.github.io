@@ -27,6 +27,7 @@ def cadastrar_usuario():
     data = request.json or {}
     login = (data.get("user") or "").strip()
     senha = (data.get("pass") or "").strip()
+    dados = data.get("dados") or {}
 
     if not login or not senha:
         return jsonify({"success": False, "error": "Usuário e senha são obrigatórios."}), 400
@@ -39,7 +40,8 @@ def cadastrar_usuario():
         payload = {
             "userid": str(uuid.uuid4()),
             "user": login,
-            "pass": senha
+            "pass": senha,
+            "dados": dados
         }
 
         response = requests.post(
@@ -124,5 +126,6 @@ def validar_token():
         })
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
 
 
