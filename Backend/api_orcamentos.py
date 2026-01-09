@@ -77,6 +77,7 @@ def criar_orcamento():
             "cliente_nome": cliente_nome,
             "numero_pedido": numero_pedido,
             "quantidade_total": 0,
+            "status": 0,
             "valor_total": 0
         }
         if orcamento_uuid:
@@ -112,6 +113,7 @@ def criar_orcamento():
             "id": orcamento_id,
             "uuid": orcamento_id,
             "numero_pedido": numero_pedido,
+            "status": status,
             "cliente_nome": cliente_nome
         })
 
@@ -144,7 +146,7 @@ def listar_orcamentos():
         filtro_loja = f"&lojaid=eq.{storeid}"
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,data_criacao,quantidade_total,valor_total,lojaid&order=numero_pedido.asc{filtro_loja}",
+            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,data_criacao,quantidade_total,status,valor_total,lojaid&order=numero_pedido.asc{filtro_loja}",
             headers=HEADERS
         )
         r.raise_for_status()
