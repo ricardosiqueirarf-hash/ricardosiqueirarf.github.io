@@ -105,13 +105,11 @@ def aprovacao_html_page():
 
 @app.route("/tags")
 def tags_page():
-    return send_from_directory(BASE_DIR, "tags.html")
+    return send_from_directory(ROOT_DIR, "tags.html")
 
 @app.route("/tags.html")
 def tags_html_page():
-    return send_from_directory(BASE_DIR, "tags.html")
-
-
+    return send_from_directory(ROOT_DIR, "tags.html")
 
 
 
@@ -155,6 +153,7 @@ from api_corte import corte_bp
 from api_puxadores import puxadores_bp
 from api_estruturas3d import estruturas3d_bp
 from api_cadastroelogin import cadastro_login_bp
+from api_tags import tags_bp
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
@@ -166,6 +165,7 @@ app.register_blueprint(corte_bp)
 app.register_blueprint(puxadores_bp)
 app.register_blueprint(estruturas3d_bp)
 app.register_blueprint(cadastro_login_bp)
+app.register_blueprint(tags_bp)
 
 # =====================
 # START
@@ -173,13 +173,3 @@ app.register_blueprint(cadastro_login_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
-
-
-
-
-
-
