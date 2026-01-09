@@ -678,45 +678,59 @@ function normalizarTagValor(valor) {
 
 function obterTagCorrespondente() {
     const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value)
-    const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value)
+    const vidro  = todosVidros.find(v => v.id == document.getElementById("vidro")?.value)
 
     if (!perfil || !vidro || !Array.isArray(todasTags) || todasTags.length === 0) return null
 
-    // 🔥 AGORA usamos o ID real do perfil
-    const perfilKey = String(perfil.id)
+    const perfilIdKey = String(perfil.id)
+    const vidroIdKey  = String(vidro.id)
 
     const espessura = String(vidro.espessura || "").trim()
-
-    const vidroDescricaoTraco  = [vidro.tipo, espessura].filter(Boolean).join(" - ")
-    const vidroDescricaoEspaco = [vidro.tipo, espessura].filter(Boolean).join(" ")
-    const vidroDescricaoMm     = [vidro.tipo, espessura ? `${espessura}mm` : ""].filter(Boolean).join(" ")
-
     const vidroKeys = [
-        vidroDescricaoTraco,
-        vidroDescricaoEspaco,
-        vidroDescricaoMm,
+        [vidro.tipo, espessura].filter(Boolean).join(" - "),
+        [vidro.tipo, espessura].filter(Boolean).join(" "),
+        [vidro.tipo, espessura ? `${espessura}mm` : ""].filter(Boolean).join(" "),
         vidro.tipo
     ].filter(Boolean).map(normalizarTagValor)
 
-    return todasTags.find((tag) => {
-        const tags = Array.isArray(tag.tags) ? tag.tags.map(normalizarTagValor) : []
+    // DEBUG opcional
+    console.group("🔍 TAG MATCHING (fix)")
+    console.log("Perfil:", perfilIdKey, perfil.nome)
+    console.log("Vidro:", vidroIdKey, vidro.tipo, vidro.espessura)
+    console.log("VidroKeys:", vidroKeys)
 
-        // 🔥 Aqui também garantimos que o perfil vindo da tag seja tratado como ID
-        const perfisTag = tag.perfis != null ? String(tag.perfis) : ""
-        const vidrosTag = normalizarTagValor(tag.vidros || "")
+    const match = todasTags.find((tag) => {
+        const perfisTagRaw = tag.perfis != null ? String(tag.perfis) : ""
+        const vidrosTagRaw = tag.vidros != null ? String(tag.vidros) : ""
+        const tagsArr      = Array.isArray(tag.tags) ? tag.tags.map(normalizarTagValor) : []
 
-        const matchesPerfis = perfisTag ? perfisTag === perfilKey : true
-        const matchesVidros = vidrosTag ? vidroKeys.includes(vidrosTag) : true
+        // 1) Match forte (por colunas perfis/vidros)
+        const matchesPerfis = perfisTagRaw ? perfisTagRaw === perfilIdKey : true
 
-        if (tags.length) {
-            const matchesTagsPerfis = tags.includes(perfilKey)
-            const matchesTagsVidros = vidroKeys.some(key => tags.includes(key))
-            return matchesTagsPerfis && matchesTagsVidros && matchesPerfis && matchesVidros
-        }
+        const vidrosTagNorm = normalizarTagValor(vidrosTagRaw)
+        const matchesVidros = vidrosTagRaw
+            ? (vidrosTagRaw === vidroIdKey || vidroKeys.includes(vidrosTagNorm))
+            : true
 
-        return (perfisTag || vidrosTag) && matchesPerfis && matchesVidros
+        const strongMatch = (perfisTagRaw || vidrosTagRaw) && matchesPerfis && matchesVidros
+
+        // 2) Match fraco (apenas pelo array tags[]), NÃO bloqueia o forte
+        const weakMatch =
+            tagsArr.includes(perfilIdKey) &&
+            (tagsArr.includes(vidroIdKey) || vidroKeys.some(k => tagsArr.includes(k)))
+
+        const ok = strongMatch || weakMatch
+
+        if (ok) console.log("✅ MATCH:", tag)
+        else console.log("❌ NO MATCH:", { tag, perfisTagRaw, vidrosTagRaw, tagsArr, matchesPerfis, matchesVidros, strongMatch, weakMatch })
+
+        return ok
     }) || null
+
+    console.groupEnd()
+    return match
 }
+
 
 
 function calcularMedidasPorta() {
@@ -1633,7 +1647,6 @@ carregarOrcamentoInfo()
 </script>
 </body>
 </html>
-
 
 
 
