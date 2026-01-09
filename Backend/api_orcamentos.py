@@ -251,31 +251,32 @@ def atualizar_status(uuid):
             except (TypeError, ValueError):
                 return jsonify({"success": False, "error": "Status atual inválido."}), 400
 
-            # Exigir dados do cliente
+            # Exigir dados do cliente apenas quando informados
             nome = data.get("nome")
             email = data.get("email")
             celular = data.get("celular")
             cpf_cnpj = data.get("cpf_cnpj")
 
-            faltando = [campo for campo, valor in {
-                "nome": nome,
-                "email": email,
-                "celular": celular,
-                "cpf_cnpj": cpf_cnpj,
-            }.items() if not valor]
-
-            if faltando:
-                return jsonify({"success": False, "error": f"Campos obrigatórios faltando: {', '.join(faltando)}"}), 400
-
-            r_cliente = requests.post(
-                f"{SUPABASE_URL}/rest/v1/clientes",
-                headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
-                json={
+            if any([nome, email, celular, cpf_cnpj]):
+                faltando = [campo for campo, valor in {
                     "nome": nome,
-                    "dados": [{"email": email, "celular": celular, "cpf_cnpj": cpf_cnpj}],
-                },
-            )
-            r_cliente.raise_for_status()
+                    "email": email,
+                    "celular": celular,
+                    "cpf_cnpj": cpf_cnpj,
+                }.items() if not valor]
+
+                if faltando:
+                    return jsonify({"success": False, "error": f"Campos obrigatórios faltando: {', '.join(faltando)}"}), 400
+
+                r_cliente = requests.post(
+                    f"{SUPABASE_URL}/rest/v1/clientes",
+                    headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
+                    json={
+                        "nome": nome,
+                        "dados": [{"email": email, "celular": celular, "cpf_cnpj": cpf_cnpj}],
+                    },
+                )
+                r_cliente.raise_for_status()
 
         # Atualiza status no próprio orçamento
         r_patch = requests.patch(
@@ -295,4 +296,5 @@ def atualizar_status(uuid):
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
