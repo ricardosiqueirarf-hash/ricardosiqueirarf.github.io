@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tags</title>
+
+    <style>
+        /* RESET BÁSICO */
+        * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f5f7fa; color: #333; padding: 20px; }
+
+        /* LAYOUT PRINCIPAL */
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 20px; }
+        h1 { color: #1079ba; margin-bottom: 10px; }
+
+        /* MENU SUPERIOR */
+        .menu {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .menu button {
+            padding: 10px 16px;
+            background: #1079ba;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .menu button:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+        /* FORMULÁRIO */
+        .form-perfil {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        /* INPUTS */
+        .form-perfil input {
+            padding: 6px 10px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .form-perfil input:focus {
+            border-color: #1079ba;
+            box-shadow: 0 0 4px rgba(16,121,186,0.4);
+            outline: none;
+        }
+
+        /* BOTÕES GERAIS */
+        button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            background: #1079ba;
+            color: #fff;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        button:hover { background: #0d5d8c; transform: translateY(-2px); }
+        .btn-danger { background: #e84118; }
+        .btn-danger:hover { background: #c23616; transform: translateY(-2px); }
+
+        /* TABELA */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        th, td { padding: 12px; text-align: center; border: 1px solid #dcdde1; }
+        th { background: #1079ba; color: #fff; }
+        tr:nth-child(even) { background: #f7f9fc; }
+        tr:hover { background: #e6f0fa; }
+
+        /* RESPONSIVO */
+        @media(max-width: 768px) {
+            .form-perfil { grid-template-columns: 1fr; }
+            .menu { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Tags</h1>
+        <div class="menu">
+            <button onclick="window.location.href='/'">Voltar</button>
+            <button onclick="salvar()">Salvar</button>
+            <button onclick="cancelar()">Cancelar</button>
+        </div>
+    </header>
+
+    <section class="form-perfil">
+        <input type="hidden" id="tag_id">
+        <input id="tags" placeholder="Tags (separadas por vírgula)">
+    </section>
+
+    <section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tags</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+        </table>
+    </section>
+</div>
+
+<script>
+    const API_BASE = "https://colorglass.onrender.com";
+
+    function normalizarTags(valor) {
+        return valor
+            .split(",")
+            .map(tag => tag.trim())
+            .filter(tag => tag);
+    }
+
+    // =====================
+    // CARREGAR TAGS
+    // =====================
+    async function carregar() {
+        const res = await fetch(`${API_BASE}/api/tags`);
+        const data = await res.json();
+
+        const tbody = document.getElementById("tabela");
+        tbody.innerHTML = "";
+
+        data.forEach(tag => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${(tag.tags || []).join(", ")}</td>
+                <td>
+                    <button onclick='editar(${JSON.stringify(tag)})'>Editar</button>
+                    <button onclick="excluir('${tag.id}')">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // =====================
+    // SALVAR / ATUALIZAR
+    // =====================
+    async function salvar() {
+        const id = document.getElementById("tag_id").value;
+        const tagsValue = document.getElementById("tags").value;
+        const tags = normalizarTags(tagsValue);
+
+        if (!tags.length) {
+            alert("Informe ao menos uma tag");
+            return;
+        }
+
+        const payload = { tags };
+        const url = id ? `${API_BASE}/api/tags/${id}` : `${API_BASE}/api/tags`;
+        const method = id ? "PUT" : "POST";
+
+        await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        cancelar();
+        carregar();
+    }
+
+    // =====================
+    // EDITAR
+    // =====================
+    function editar(tag) {
+        document.getElementById("tag_id").value = tag.id;
+        document.getElementById("tags").value = (tag.tags || []).join(", ");
+    }
+
+    // =====================
+    // EXCLUIR
+    // =====================
+    async function excluir(id) {
+        if (!confirm("Excluir esta tag?")) return;
+        await fetch(`${API_BASE}/api/tags/${id}`, {
+            method: "DELETE"
+        });
+        carregar();
+    }
+
+    // =====================
+    // CANCELAR
+    // =====================
+    function cancelar() {
+        document.getElementById("tag_id").value = "";
+        document.getElementById("tags").value = "";
+    }
+
+    // =====================
+    // INIT
+    // =====================
+    carregar();
+</script>
+
+</body>
+</html>
