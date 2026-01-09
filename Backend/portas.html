@@ -616,7 +616,7 @@ function atualizarPerfisSelect() {
     perfilSelect.innerHTML = "<option value=''>Selecione</option>"
     todosPerfis.filter(p => p.tipologias.includes(tipo))
         .forEach(p => {
-            perfilSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/m</option>`
+            perfilSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`
         })
 }
 
@@ -625,7 +625,8 @@ function atualizarVidrosSelect() {
     if(!vidroSelect) return
     vidroSelect.innerHTML = "<option value=''>Selecione</option>"
     todosVidros.forEach(v => {
-        vidroSelect.innerHTML += `<option value="${v.id}">${v.tipo} ${v.espessura || ""}mm - R$ ${v.preco}/m²</option>`
+        const espessura = v.espessura ? `${v.espessura}mm` : ""
+        vidroSelect.innerHTML += `<option value="${v.id}">${[v.tipo, espessura].filter(Boolean).join(" ")}</option>`
     })
 }
 
@@ -1624,7 +1625,6 @@ carregarOrcamentoInfo()
 </script>
 </body>
 </html>
-
 
 
 
