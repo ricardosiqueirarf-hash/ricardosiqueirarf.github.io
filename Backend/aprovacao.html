@@ -577,13 +577,42 @@ async function aprovarPedido() {
     }
 
     document.getElementById("boleto_url").value = data.boleto_url;
-    setStatus("Pedido aprovado! Boleto gerado com sucesso.", "ok");
+    const statusAtualizado = await atualizarStatusOrcamento(orcamento_uuid, token);
+    if (statusAtualizado) {
+      setStatus("Pedido aprovado! Boleto gerado e status atualizado.", "ok");
+    } else {
+      setStatus("Pedido aprovado! Boleto gerado, mas não foi possível atualizar o status.", "erro");
+    }
     btn.disabled = false;
 
   } catch (err) {
     console.error(err);
     setStatus("Erro ao aprovar/gerar boleto. Verifique o console.", "erro");
     btn.disabled = false;
+  }
+}
+
+async function atualizarStatusOrcamento(uuid, token) {
+  try {
+    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(uuid)}/status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ status: 2 })
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      console.warn("Falha ao atualizar status do orçamento:", data.error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao atualizar status do orçamento:", err);
+    return false;
   }
 }
 
