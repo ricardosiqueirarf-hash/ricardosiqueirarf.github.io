@@ -626,7 +626,7 @@ function atualizarVidrosSelect() {
     vidroSelect.innerHTML = "<option value=''>Selecione</option>"
     todosVidros.forEach(v => {
         const espessura = v.espessura ? `${v.espessura}mm` : ""
-        vidroSelect.innerHTML += `<option value="${v.id}">${[v.tipo, espessura].filter(Boolean).join(" ")}</option>`
+        vidroSelect.innerHTML += `<option value="${v.id}">${formatarNomeVidro(v)}</option>`
     })
 }
 
