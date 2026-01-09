@@ -289,15 +289,17 @@ function setStatus(elementId, message, tipo) {
     if (tipo) el.classList.add(tipo);
 }
 
-async function logar() {
-    const user = document.getElementById("loginUser").value.trim();
-    const pass = document.getElementById("loginPass").value.trim();
-    if (!user || !pass) {
+// ==================== LOGIN ====================
+
+async function logar() { 
+    const user = document.getElementById("loginUser").value.trim(); // INPUT USER, TRIM REVOME ESPACOS
+    const pass = document.getElementById("loginPass").value.trim(); // INPUT PASS, TRIM REMOVE ESPACOS
+    if (!user || !pass) { // CONDICIONAL DE ERRO PARA QUANDO USER OU PASS ESTIVER VAZIO
         setStatus("loginStatus", "Preencha usuário e senha.", "erro");
         return;
     }
 
-    try {
+    try { // SE TANTO USER COMO PASS ESTIVER PREENCHIDOS TENTA VERIFICAR COM API
         setStatus("loginStatus", "Verificando...");
         const res = await fetch(`${API_BASE}/api/usuarios/login`, {
             method: "POST",
@@ -306,16 +308,16 @@ async function logar() {
         });
         const data = await res.json();
 
-        if (!data.success) {
+        if (!data.success) { // SE API NEGAR MOSTRA ERRO
             setStatus("loginStatus", data.error || "Login inválido.", "erro");
             return;
         }
-
+// SALVAR TOKEN LOCALMENTE, VERIFICAR A REAL NECESSIDADE DISSO
         localStorage.setItem("USER_TOKEN", data.token);
         localStorage.setItem("ADMIN_TOKEN", data.token);
         setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
 
-        const resAuth = await fetch(`${API_BASE}/api/auth/validar`, {
+        const resAuth = await fetch(`${API_BASE}/api/auth/validar`, { //VERIFICA SE USUARIO POSSUI PERMISSAO
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -324,17 +326,17 @@ async function logar() {
         });
         const dataAuth = await resAuth.json();
 
-        if (!dataAuth.success) {
+        if (!dataAuth.success) { // SE NAO TIVER PERMISSAO NEGA 
             setStatus("loginStatus", dataAuth.error || "Sessão inválida.", "erro");
             return;
         }
 
         setTimeout(() => {
-            window.location.href = dataAuth.redirect || "index_loja.html";
-        }, 800);
+            window.location.href = dataAuth.redirect || "index_loja.html"; // DECIDE SE MANDA PRO INDEX OU INDEX_LOJA
+        }, 400); // TEMPO DE ESPERA PARA O REDIRECIONAMENTO EM MILISEGUNDOS
     } catch (err) {
         console.error(err);
-        setStatus("loginStatus", "Erro ao entrar. Verifique o console.", "erro");
+        setStatus("loginStatus", "Erro ao entrar. Verifique o console.", "erro"); //DEBUG CASO DE ALGUM ERRO IMPREVISTO
     }
 }
 </script>
