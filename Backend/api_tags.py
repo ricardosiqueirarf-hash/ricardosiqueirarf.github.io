@@ -46,7 +46,11 @@ def criar_tag():
     try:
         data = request.json or {}
         payload = {
-            "tags": data.get("tags", [])
+            "tags": data.get("tags", []),
+            "perfis": data.get("perfis"),
+            "vidros": data.get("vidros"),
+            "valor": data.get("valor"),
+            "medida": data.get("medida")
         }
 
         r = requests.post(
@@ -65,7 +69,11 @@ def editar_tag(id):
     try:
         data = request.json or {}
         payload = {
-            "tags": data.get("tags", [])
+            "tags": data.get("tags", []),
+            "perfis": data.get("perfis"),
+            "vidros": data.get("vidros"),
+            "valor": data.get("valor"),
+            "medida": data.get("medida")
         }
 
         r = requests.patch(
