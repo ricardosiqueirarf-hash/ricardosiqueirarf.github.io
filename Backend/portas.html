@@ -679,13 +679,18 @@ function normalizarTagValor(valor) {
 function obterTagCorrespondente() {
     const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value)
     const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value)
+
     if (!perfil || !vidro || !Array.isArray(todasTags) || todasTags.length === 0) return null
 
-    const perfilKey = normalizarTagValor(perfil.nome)
+    // 🔥 AGORA usamos o ID real do perfil
+    const perfilKey = String(perfil.id)
+
     const espessura = String(vidro.espessura || "").trim()
-    const vidroDescricaoTraco = [vidro.tipo, espessura].filter(Boolean).join(" - ")
+
+    const vidroDescricaoTraco  = [vidro.tipo, espessura].filter(Boolean).join(" - ")
     const vidroDescricaoEspaco = [vidro.tipo, espessura].filter(Boolean).join(" ")
-    const vidroDescricaoMm = [vidro.tipo, espessura ? `${espessura}mm` : ""].filter(Boolean).join(" ")
+    const vidroDescricaoMm     = [vidro.tipo, espessura ? `${espessura}mm` : ""].filter(Boolean).join(" ")
+
     const vidroKeys = [
         vidroDescricaoTraco,
         vidroDescricaoEspaco,
@@ -695,8 +700,11 @@ function obterTagCorrespondente() {
 
     return todasTags.find((tag) => {
         const tags = Array.isArray(tag.tags) ? tag.tags.map(normalizarTagValor) : []
-        const perfisTag = normalizarTagValor(tag.perfis)
-        const vidrosTag = normalizarTagValor(tag.vidros)
+
+        // 🔥 Aqui também garantimos que o perfil vindo da tag seja tratado como ID
+        const perfisTag = tag.perfis != null ? String(tag.perfis) : ""
+        const vidrosTag = normalizarTagValor(tag.vidros || "")
+
         const matchesPerfis = perfisTag ? perfisTag === perfilKey : true
         const matchesVidros = vidrosTag ? vidroKeys.includes(vidrosTag) : true
 
@@ -709,6 +717,7 @@ function obterTagCorrespondente() {
         return (perfisTag || vidrosTag) && matchesPerfis && matchesVidros
     }) || null
 }
+
 
 function calcularMedidasPorta() {
     const larguraMm = +document.getElementById("largura")?.value || 0
