@@ -577,6 +577,7 @@ let todosPerfis = []
 let todosVidros = []
 let todosInsumos = []
 let todosPuxadores = []
+let todasTags = []
 
 async function carregarPerfis() {
     const res = await fetch(`${API_BASE}/api/perfis`)
@@ -600,6 +601,12 @@ async function carregarPuxadores() {
     const res = await fetch(`${API_BASE}/api/puxadores`, { headers: authHeader() })
     todosPuxadores = await res.json()
     atualizarPuxadoresSelect()
+}
+
+async function carregarTags() {
+    const res = await fetch(`${API_BASE}/api/tags`)
+    todasTags = await res.json()
+    atualizarPrecoPorta()
 }
 
 function atualizarPerfisSelect() {
@@ -661,14 +668,79 @@ function obterDadosPuxador() {
     }
 }
 
+function normalizarTagValor(valor) {
+    return String(valor || "").trim().toLowerCase()
+}
+
+function obterTagCorrespondente() {
+    const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value)
+    const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value)
+    if (!perfil || !vidro || !Array.isArray(todasTags) || todasTags.length === 0) return null
+
+    const perfilKey = normalizarTagValor(perfil.nome)
+    const vidroDescricao = [vidro.tipo, vidro.espessura].filter(Boolean).join(" - ")
+    const vidroKeys = [vidroDescricao, vidro.tipo].filter(Boolean).map(normalizarTagValor)
+
+    return todasTags.find((tag) => {
+        const tags = Array.isArray(tag.tags) ? tag.tags.map(normalizarTagValor) : []
+        const perfisTag = normalizarTagValor(tag.perfis)
+        const vidrosTag = normalizarTagValor(tag.vidros)
+        const matchesPerfis = perfisTag ? perfisTag === perfilKey : true
+        const matchesVidros = vidrosTag ? vidroKeys.includes(vidrosTag) : true
+
+        if (tags.length) {
+            const matchesTagsPerfis = tags.includes(perfilKey)
+            const matchesTagsVidros = vidroKeys.some(key => tags.includes(key))
+            return matchesTagsPerfis && matchesTagsVidros && matchesPerfis && matchesVidros
+        }
+
+        return (perfisTag || vidrosTag) && matchesPerfis && matchesVidros
+    }) || null
+}
+
+function calcularMedidasPorta() {
+    const larguraMm = +document.getElementById("largura")?.value || 0
+    const alturaMm = +document.getElementById("altura")?.value || 0
+    const larguraM = larguraMm / 1000
+    const alturaM = alturaMm / 1000
+    return {
+        larguraMm,
+        alturaMm,
+        larguraM,
+        alturaM,
+        area: larguraM * alturaM,
+        perimetro: 2 * (larguraM + alturaM)
+    }
+}
+
+function calcularTagAplicada(tag, medidas) {
+    if (!tag || !tag.valor || !medidas) return null
+    let quantidade = 0
+    if (tag.medida === "m2") {
+        quantidade = medidas.area
+    } else if (tag.medida === "perimetro") {
+        quantidade = medidas.perimetro
+    } else if (tag.medida === "unidade") {
+        quantidade = 1
+    }
+    if (!quantidade) return null
+    const valorUnitario = Number(tag.valor) || 0
+    return {
+        tag,
+        quantidade,
+        total: valorUnitario * quantidade
+    }
+}
+
 function calcularPrecoPorta(){
-    const largura = (+document.getElementById("largura")?.value || 0)/1000
-    const altura = (+document.getElementById("altura")?.value || 0)/1000
+    const medidas = calcularMedidasPorta()
+    const largura = medidas.larguraM
+    const altura = medidas.alturaM
     const perfil = todosPerfis.find(p=>p.id==document.getElementById("perfil")?.value)
     const vidro = todosVidros.find(v=>v.id==document.getElementById("vidro")?.value)
     const quantidadePortas = +document.getElementById("quantidade")?.value || 1
     const valorAdicional = +document.getElementById("valor_adicional")?.value || 0
-    const perimetro = 2 * (largura + altura)
+    const perimetro = medidas.perimetro
     const insumos = (perfil?.insumos || [])
         .map((nome) => todosInsumos.find((insumo) => insumo.nome === nome))
         .filter(Boolean)
@@ -690,6 +762,11 @@ function calcularPrecoPorta(){
     const puxadorInfo = obterDadosPuxador()
     if (puxadorInfo) {
         total += (puxadorInfo.puxador.preco || 0) * puxadorInfo.quantidade
+    }
+
+    const tagAplicada = calcularTagAplicada(obterTagCorrespondente(), medidas)
+    if (tagAplicada) {
+        total += tagAplicada.total
     }
 
     total += valorAdicional
@@ -738,6 +815,8 @@ function atualizarDetalhesCusto() {
         .filter(Boolean)
 
     const puxadorInfo = obterDadosPuxador()
+    const medidas = calcularMedidasPorta()
+    const tagAplicada = calcularTagAplicada(obterTagCorrespondente(), medidas)
 
     if (!perfil && !vidro && insumos.length === 0 && !puxadorInfo && valorAdicional <= 0) {
         detalhes.innerHTML = "<em>Selecione perfil, vidro e tipologia para ver os custos.</em>"
@@ -823,6 +902,22 @@ function atualizarDetalhesCusto() {
             quantidade: "1 un",
             custo: valorAdicional,
             preco: valorAdicional
+        })
+    }
+
+    if (tagAplicada) {
+        custoTotal += tagAplicada.total
+        precoTotal += tagAplicada.total
+        const unidadeTexto = tagAplicada.tag.medida === "m2"
+            ? "m²"
+            : tagAplicada.tag.medida === "perimetro"
+                ? "m"
+                : "un"
+        linhas.push({
+            item: `Tag (${(tagAplicada.tag.tags || []).join(", ") || "Tag aplicada"})`,
+            quantidade: `${tagAplicada.quantidade.toFixed(2)} ${unidadeTexto}`,
+            custo: tagAplicada.total,
+            preco: tagAplicada.total
         })
     }
 
@@ -1022,8 +1117,9 @@ async function salvarPorta(){
     const tipo = document.getElementById("tipologia").value
     if(!tipo) return alert("Selecione a tipologia")
 
-    const largura = +document.getElementById("largura")?.value || 0
-    const altura = +document.getElementById("altura")?.value || 0
+    const medidas = calcularMedidasPorta()
+    const largura = medidas.larguraMm
+    const altura = medidas.alturaMm
     const quantidade = +document.getElementById("quantidade")?.value || 0
     const perfilSelecionado = document.getElementById("perfil")?.value
     const vidroSelecionado = document.getElementById("vidro")?.value
@@ -1060,6 +1156,9 @@ async function salvarPorta(){
         tipo,
         dados,
         quantidade,
+        m2: Number(medidas.area.toFixed(4)),
+        metro_linear: Number(medidas.perimetro.toFixed(4)),
+        tag_aplicada: calcularTagAplicada(obterTagCorrespondente(), medidas),
         preco: calcularPrecoPorta(),
         svg: portaSVG.outerHTML
     }
@@ -1281,13 +1380,13 @@ function gerarSvgOrdemProducao(porta) {
 
       <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetY}" x2="${offsetX}" y2="${offsetY}" stroke="#333"/>
-      <line x1="${offsetX - 24}" y1="${offsetY + doorHeight}" x2="${offsetX}" y2="${offsetY + doorHeight}" stroke="#333"/>
+      <line x1="${offsetX - 24}" y1="${offsetX + doorHeight}" x2="${offsetX}" y2="${offsetX + doorHeight}" stroke="#333"/>
       <text x="${offsetX - 50}" y="${offsetY + doorHeight / 2}" class="op-measure" transform="rotate(-90 ${offsetX - 50} ${offsetX - 50} ${offsetY + doorHeight / 2})">${altura} mm</text>
 
       <line x1="${offsetX}" y1="${offsetY + doorHeight + 20}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 20}" stroke="#333"/>
-      <line x1="${offsetX}" y1="${offsetY + doorHeight + 16}" x2="${offsetX}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
-      <line x1="${offsetX + doorWidth}" y1="${offsetY + doorHeight + 16}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
-      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight + 48}" class="op-measure" text-anchor="middle">${largura} mm</text>
+      <line x1="${offsetX}" y1="${offsetY + doorHeight + 16}" x2="${offsetX}" y2="${offsetX + doorHeight + 24}" stroke="#333"/>
+      <line x1="${offsetX + doorWidth}" y1="${offsetX + doorHeight + 16}" x2="${offsetX + doorWidth}" y2="${offsetX + doorHeight + 24}" stroke="#333"/>
+      <text x="${offsetX + doorWidth / 2}" y="${offsetX + doorHeight + 48}" class="op-measure" text-anchor="middle">${largura} mm</text>
     </svg>
     `
 }
@@ -1503,12 +1602,14 @@ carregarPerfis()
 carregarVidros()
 carregarInsumos()
 carregarPuxadores()
+carregarTags()
 carregarPortas()
 carregarEstruturas3D()
 carregarOrcamentoInfo()
 </script>
 </body>
 </html>
+
 
 
 
