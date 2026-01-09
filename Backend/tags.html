@@ -149,6 +149,8 @@
 
 <script>
     const API_BASE = "https://colorglass.onrender.com";
+    const perfisMap = new Map();
+    const vidrosMap = new Map();
 
     function normalizarTags(valor) {
         return valor
@@ -162,6 +164,11 @@
         return valor.split(" - ")[0].trim();
     }
 
+    function obterNomePorId(mapa, valor) {
+        if (!valor) return "";
+        return mapa.get(String(valor)) || limparNomeMaterial(valor);
+    }
+
     // =====================
     // CARREGAR LISTAS
     // =====================
@@ -170,12 +177,14 @@
         const data = await res.json();
         const select = document.getElementById("perfis");
         select.innerHTML = `<option value="">Selecione o perfil</option>`;
+        perfisMap.clear();
 
         data.forEach(perfil => {
             const option = document.createElement("option");
-            option.value = perfil.nome;
+            option.value = perfil.id;
             option.textContent = perfil.nome;
             select.appendChild(option);
+            perfisMap.set(String(perfil.id), perfil.nome);
         });
     }
 
@@ -184,23 +193,25 @@
         const data = await res.json();
         const select = document.getElementById("vidros");
         select.innerHTML = `<option value="">Selecione o vidro</option>`;
+        vidrosMap.clear();
 
         data.forEach(vidro => {
             const option = document.createElement("option");
             const nome = vidro.tipo || "Vidro";
-            option.value = nome;
+            option.value = vidro.id;
             option.textContent = nome;
             select.appendChild(option);
+            vidrosMap.set(String(vidro.id), nome);
         });
     }
 
-    function garantirOpcao(selectElement, valor) {
+    function garantirOpcao(selectElement, valor, texto = valor) {
         if (!valor) return;
         const existe = Array.from(selectElement.options).some(option => option.value === valor);
         if (!existe) {
             const option = document.createElement("option");
             option.value = valor;
-            option.textContent = valor;
+            option.textContent = texto;
             selectElement.appendChild(option);
         }
     }
@@ -216,8 +227,8 @@
         tbody.innerHTML = "";
 
         data.forEach(tag => {
-            const perfilNome = limparNomeMaterial(tag.perfis);
-            const vidroNome = limparNomeMaterial(tag.vidros);
+            const perfilNome = obterNomePorId(perfisMap, tag.perfis);
+            const vidroNome = obterNomePorId(vidrosMap, tag.vidros);
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${(tag.tags || []).join(", ")}</td>
@@ -279,12 +290,12 @@
         document.getElementById("tags").value = (tag.tags || []).join(", ");
         const perfisSelect = document.getElementById("perfis");
         const vidrosSelect = document.getElementById("vidros");
-        const perfilNome = limparNomeMaterial(tag.perfis);
-        const vidroNome = limparNomeMaterial(tag.vidros);
-        garantirOpcao(perfisSelect, perfilNome);
-        garantirOpcao(vidrosSelect, vidroNome);
-        perfisSelect.value = perfilNome;
-        vidrosSelect.value = vidroNome;
+        const perfilNome = obterNomePorId(perfisMap, tag.perfis);
+        const vidroNome = obterNomePorId(vidrosMap, tag.vidros);
+        garantirOpcao(perfisSelect, tag.perfis, perfilNome);
+        garantirOpcao(vidrosSelect, tag.vidros, vidroNome);
+        perfisSelect.value = tag.perfis || "";
+        vidrosSelect.value = tag.vidros || "";
         document.getElementById("valor").value = tag.valor ?? "";
         document.getElementById("medida").value = tag.medida || "";
     }
@@ -326,3 +337,4 @@
 
 </body>
 </html>
+
