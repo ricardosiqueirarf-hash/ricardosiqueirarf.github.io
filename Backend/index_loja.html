@@ -412,9 +412,9 @@ function go(url){
 const BACKEND_URL = "https://colorglass.onrender.com";
 const USER_TOKEN = localStorage.getItem("USER_TOKEN");
 
-async function validarSessao() {
+async function validarSessao() { // redireciona para login se nao tiver user_token
     if (!USER_TOKEN) {
-        window.location.href = "logincadastro.html";
+        window.location.href = "login.html";
         return false;
     }
 
@@ -428,8 +428,8 @@ async function validarSessao() {
         });
         const data = await res.json();
 
-        if (!data.success) {
-            window.location.href = "logincadastro.html";
+        if (!data.success) { // se user token estiver errado redireciona pra login
+            window.location.href = "login.html";
             return false;
         }
 
@@ -439,10 +439,10 @@ async function validarSessao() {
         }
 
         return true;
-    } catch (err) {
+    } catch (err) { // erro inesperado retorna pra login
         console.error("Erro ao validar sessão:", err);
-        window.location.href = "logincadastro.html";
-        return false;
+        window.location.href = "login.html";
+        return false; 
     }
 }
 
@@ -474,6 +474,7 @@ function renderizarOrcamentos(orcamentos) {
                 <th>Cliente</th>
                 <th>Data Criação</th>
                 <th>Qtd Total</th>
+                <th>Status do pedido</th>
                 <th>Valor Total (R$)</th>
                 <th>Ações</th>
             </tr>
@@ -493,6 +494,7 @@ function renderizarOrcamentos(orcamentos) {
             <td>${o.cliente_nome}</td>
             <td>${dataCriacao}</td>
             <td data-field="quantidade_total">${qtdTotal}</td>
+            <td>${o.status}</td>
             <td data-field="valor_total">${valorTotal === "--" ? "--" : Number(valorTotal).toFixed(2)}</td>
             <td>
                 <div class="actions">
