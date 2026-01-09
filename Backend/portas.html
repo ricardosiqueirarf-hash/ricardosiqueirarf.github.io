@@ -338,7 +338,7 @@ input:hover, select:hover, textarea:hover{
   text-align: left;
 }
 
-.cost-details th{
+cost-details th{
   background: rgba(231,243,251,0.9);
 }
 
@@ -669,7 +669,11 @@ function obterDadosPuxador() {
 }
 
 function normalizarTagValor(valor) {
-    return String(valor || "").trim().toLowerCase()
+    return String(valor || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
 }
 
 function obterTagCorrespondente() {
@@ -678,8 +682,16 @@ function obterTagCorrespondente() {
     if (!perfil || !vidro || !Array.isArray(todasTags) || todasTags.length === 0) return null
 
     const perfilKey = normalizarTagValor(perfil.nome)
-    const vidroDescricao = [vidro.tipo, vidro.espessura].filter(Boolean).join(" - ")
-    const vidroKeys = [vidroDescricao, vidro.tipo].filter(Boolean).map(normalizarTagValor)
+    const espessura = String(vidro.espessura || "").trim()
+    const vidroDescricaoTraco = [vidro.tipo, espessura].filter(Boolean).join(" - ")
+    const vidroDescricaoEspaco = [vidro.tipo, espessura].filter(Boolean).join(" ")
+    const vidroDescricaoMm = [vidro.tipo, espessura ? `${espessura}mm` : ""].filter(Boolean).join(" ")
+    const vidroKeys = [
+        vidroDescricaoTraco,
+        vidroDescricaoEspaco,
+        vidroDescricaoMm,
+        vidro.tipo
+    ].filter(Boolean).map(normalizarTagValor)
 
     return todasTags.find((tag) => {
         const tags = Array.isArray(tag.tags) ? tag.tags.map(normalizarTagValor) : []
@@ -913,8 +925,11 @@ function atualizarDetalhesCusto() {
             : tagAplicada.tag.medida === "perimetro"
                 ? "m"
                 : "un"
+        const tagNome = Array.isArray(tagAplicada.tag.tags) && tagAplicada.tag.tags.length
+            ? tagAplicada.tag.tags.join(", ")
+            : [tagAplicada.tag.perfis, tagAplicada.tag.vidros].filter(Boolean).join(" - ") || "Tag aplicada"
         linhas.push({
-            item: `Tag (${(tagAplicada.tag.tags || []).join(", ") || "Tag aplicada"})`,
+            item: `Tag (${tagNome})`,
             quantidade: `${tagAplicada.quantidade.toFixed(2)} ${unidadeTexto}`,
             custo: tagAplicada.total,
             preco: tagAplicada.total
@@ -1609,6 +1624,7 @@ carregarOrcamentoInfo()
 </script>
 </body>
 </html>
+
 
 
 
