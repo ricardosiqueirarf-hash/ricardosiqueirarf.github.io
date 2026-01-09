@@ -399,51 +399,70 @@ tr:hover{
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
     </div>
 </div>
-
 <script>
+// =====================
 // Navegação
+// =====================
 function go(url){
-    window.location.href = url;
+  window.location.href = url;
 }
 
 // =====================
 // URL do backend
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
-const USER_TOKEN = localStorage.getItem("USER_TOKEN");
 
-async function validarSessao() { // redireciona para login se nao tiver user_token
-    if (!USER_TOKEN) {
-        window.location.href = "login.html";
-        return false;
+function getUserToken() {
+  return localStorage.getItem("USER_TOKEN");
+}
+
+// =====================
+// Sessão
+// =====================
+async function validarSessao() {
+  const USER_TOKEN = getUserToken();
+
+  // redireciona para login se nao tiver user_token
+  if (!USER_TOKEN) {
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      }
+    });
+
+    // Se backend cair e devolver HTML/erro, evita quebrar
+    if (!res.ok) {
+      window.location.href = "login.html";
+      return false;
     }
 
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${USER_TOKEN}`
-            }
-        });
-        const data = await res.json();
+    const data = await res.json();
 
-        if (!data.success) { // se user token estiver errado redireciona pra login
-            window.location.href = "login.html";
-            return false;
-        }
-
-        if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
-            window.location.href = data.redirect;
-            return false;
-        }
-
-        return true;
-    } catch (err) { // erro inesperado retorna pra login
-        console.error("Erro ao validar sessão:", err);
-        window.location.href = "login.html";
-        return false; 
+    // se user token estiver errado redireciona pra login
+    if (!data.success) {
+      window.location.href = "login.html";
+      return false;
     }
+
+    // Se backend mandar redirect, obedece (ex: admin vs user)
+    if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
+      window.location.href = data.redirect;
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao validar sessão:", err);
+    window.location.href = "login.html";
+    return false;
+  }
 }
 
 // =====================
@@ -452,200 +471,270 @@ async function validarSessao() { // redireciona para login se nao tiver user_tok
 let orcamentosCache = [];
 
 function atualizarStatusOrcamentos(mensagem) {
-    const status = document.getElementById("orcamentosStatus");
-    status.textContent = mensagem;
+  const status = document.getElementById("orcamentosStatus");
+  if (status) status.textContent = mensagem;
+}
+
+function formatarDinheiroBR(valor) {
+  if (valor === null || valor === undefined || valor === "--") return "--";
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return "--";
+  return n.toFixed(2);
+}
+
+function formatarDataLocal(dataISO) {
+  if (!dataISO) return "";
+  const d = new Date(dataISO);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString();
 }
 
 function renderizarOrcamentos(orcamentos) {
-    const container = document.getElementById("orcamentosExistentes");
-    container.innerHTML = "";
+  const container = document.getElementById("orcamentosExistentes");
+  container.innerHTML = "";
 
-    if(orcamentos.length === 0){
-        container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
-        atualizarStatusOrcamentos("Nenhum resultado");
-        return;
-    }
+  if (!orcamentos || orcamentos.length === 0) {
+    container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
+    atualizarStatusOrcamentos("Nenhum resultado");
+    return;
+  }
 
-    const table = document.createElement("table");
-    table.innerHTML = `
-        <thead>
-            <tr>
-                <th># Pedido</th>
-                <th>Cliente</th>
-                <th>Data Criação</th>
-                <th>Qtd Total</th>
-                <th>Status do pedido</th>
-                <th>Valor Total (R$)</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
+  const table = document.createElement("table");
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th># Pedido</th>
+        <th>Cliente</th>
+        <th>Data Criação</th>
+        <th>Qtd Total</th>
+        <th>Status do pedido</th>
+        <th>Valor Total (R$)</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+  const tbody = table.querySelector("tbody");
+
+  orcamentos.forEach((o) => {
+    const tr = document.createElement("tr");
+
+    const dataCriacao = formatarDataLocal(o.data_criacao);
+    const qtdTotal = (o.quantidade_total ?? "--");
+    const valorTotal = (o.valor_total ?? "--");
+
+    // ✅ Exibição do status: usa status_label (backend)
+    // ✅ Mantém número em dataset pra lógica/estilo
+    const statusLabel = o.status_label ?? String(o.status ?? "Desconhecido");
+    const statusNumero = (o.status ?? "");
+
+    tr.dataset.orcamentoId = o.id;
+    tr.dataset.status = statusNumero;
+
+    tr.innerHTML = `
+      <td>${o.numero_pedido ?? ""}</td>
+      <td>${o.cliente_nome ?? ""}</td>
+      <td>${dataCriacao}</td>
+      <td data-field="quantidade_total">${qtdTotal}</td>
+
+      <!-- ✅ Aqui: mostra o texto amigável -->
+      <td data-field="status_label">${statusLabel}</td>
+
+      <td data-field="valor_total">${valorTotal === "--" ? "--" : formatarDinheiroBR(valorTotal)}</td>
+      <td>
+        <div class="actions">
+          <button class="icon-btn edit" title="Editar"
+            onclick="editarOrcamento('${o.id}')">✏️</button>
+
+          <button class="icon-btn pay" title="Aprovar / Boleto"
+            onclick="aprovarPedido('${o.id}')">🪙</button>
+        </div>
+      </td>
     `;
-    const tbody = table.querySelector("tbody");
 
-    orcamentos.forEach((o) => {
-        const tr = document.createElement("tr");
-        const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
-        const qtdTotal = o.quantidade_total ?? "--";
-        const valorTotal = o.valor_total ?? "--";
+    tbody.appendChild(tr);
+  });
 
-        tr.innerHTML = `
-            <td>${o.numero_pedido}</td>
-            <td>${o.cliente_nome}</td>
-            <td>${dataCriacao}</td>
-            <td data-field="quantidade_total">${qtdTotal}</td>
-            <td>${o.status}</td>
-            <td data-field="valor_total">${valorTotal === "--" ? "--" : Number(valorTotal).toFixed(2)}</td>
-            <td>
-                <div class="actions">
-                    <button class="icon-btn edit" title="Editar"
-                        onclick="editarOrcamento('${o.id}')">✏️</button>
-
-                    <button class="icon-btn pay" title="Aprovar / Boleto"
-                        onclick="aprovarPedido('${o.id}')">🪙</button>
-                </div>
-            </td>
-        `;
-
-        tr.dataset.orcamentoId = o.id;
-        tbody.appendChild(tr);
-    });
-
-    container.appendChild(table);
-    atualizarStatusOrcamentos(`${orcamentos.length} orçamento(s)`);
+  container.appendChild(table);
+  atualizarStatusOrcamentos(`${orcamentos.length} orçamento(s)`);
 }
 
 function aplicarFiltroOrcamentos() {
-    const filtro = document.getElementById("orcamentoFiltro").value.trim().toLowerCase();
-    if (!filtro) {
-        renderizarOrcamentos(orcamentosCache);
-        return;
-    }
+  const filtroEl = document.getElementById("orcamentoFiltro");
+  const filtro = (filtroEl?.value || "").trim().toLowerCase();
 
-    const filtrados = orcamentosCache.filter((o) => {
-        const cliente = (o.cliente_nome || "").toLowerCase();
-        const pedido = String(o.numero_pedido || "");
-        return cliente.includes(filtro) || pedido.includes(filtro);
-    });
-    renderizarOrcamentos(filtrados);
+  if (!filtro) {
+    renderizarOrcamentos(orcamentosCache);
+    return;
+  }
+
+  const filtrados = orcamentosCache.filter((o) => {
+    const cliente = (o.cliente_nome || "").toLowerCase();
+    const pedido = String(o.numero_pedido || "");
+    const statusLabel = (o.status_label || "").toLowerCase();
+    return cliente.includes(filtro) || pedido.includes(filtro) || statusLabel.includes(filtro);
+  });
+
+  renderizarOrcamentos(filtrados);
 }
 
 async function carregarOrcamentos() {
-    try {
-        atualizarStatusOrcamentos("Carregando...");
-        const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
-            headers: {
-                "Authorization": `Bearer ${USER_TOKEN}`
-            }
-        });
-        const data = await res.json();
-        const orcamentos = data.orcamentos || [];
+  const USER_TOKEN = getUserToken();
 
-        if(orcamentos.length === 0){
-            renderizarOrcamentos([]);
-            return;
-        }
+  try {
+    atualizarStatusOrcamentos("Carregando...");
 
-        orcamentosCache = orcamentos;
-        renderizarOrcamentos(orcamentosCache);
-        atualizarTotaisOrcamentos();
+    const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
+      headers: {
+        "Authorization": `Bearer ${USER_TOKEN}`
+      }
+    });
 
-    } catch(err){
-        console.error("Erro ao carregar orçamentos:", err);
-        document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
-        atualizarStatusOrcamentos("Erro ao carregar");
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
     }
+
+    const data = await res.json();
+    const orcamentos = data.orcamentos || [];
+
+    orcamentosCache = orcamentos;
+    renderizarOrcamentos(orcamentosCache);
+
+    // Atualiza totais calculando pelas portas
+    await atualizarTotaisOrcamentos();
+
+  } catch (err) {
+    console.error("Erro ao carregar orçamentos:", err);
+    const cont = document.getElementById("orcamentosExistentes");
+    if (cont) cont.innerHTML = "<em>Erro ao carregar orçamentos.</em>";
+    atualizarStatusOrcamentos("Erro ao carregar");
+  }
 }
 
 async function atualizarTotaisOrcamentos() {
-    const tabela = document.querySelector("#orcamentosExistentes table");
-    if (!tabela) return;
+  const USER_TOKEN = getUserToken();
+  const tabela = document.querySelector("#orcamentosExistentes table");
+  if (!tabela) return;
 
-    const rows = Array.from(tabela.querySelectorAll("tbody tr"));
-    await Promise.allSettled(rows.map(async (row) => {
-        const orcamentoId = row.dataset.orcamentoId;
-        if (!orcamentoId) return;
+  const rows = Array.from(tabela.querySelectorAll("tbody tr"));
 
-        const qtdCell = row.querySelector('[data-field="quantidade_total"]');
-        const valorCell = row.querySelector('[data-field="valor_total"]');
+  await Promise.allSettled(rows.map(async (row) => {
+    const orcamentoId = row.dataset.orcamentoId;
+    if (!orcamentoId) return;
 
-        try {
-            const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
-                headers: {
-                    "Authorization": `Bearer ${USER_TOKEN}`
-                }
-            });
-            const dataPortas = await resPortas.json();
+    const qtdCell = row.querySelector('[data-field="quantidade_total"]');
+    const valorCell = row.querySelector('[data-field="valor_total"]');
 
-            if (!dataPortas.success || !Array.isArray(dataPortas.portas)) {
-                return;
-            }
-
-            let qtdTotal = 0;
-            let valorTotal = 0;
-            dataPortas.portas.forEach(p => {
-                const quantidade = +p.quantidade || 1;
-                qtdTotal += quantidade;
-                valorTotal += (p.preco || 0);
-            });
-
-            if (qtdCell) qtdCell.textContent = qtdTotal;
-            if (valorCell) valorCell.textContent = valorTotal.toFixed(2);
-        } catch (err) {
-            console.error("Erro ao carregar portas do orçamento:", err);
+    try {
+      const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
+        headers: {
+          "Authorization": `Bearer ${USER_TOKEN}`
         }
-    }));
+      });
+
+      if (!resPortas.ok) return;
+
+      const dataPortas = await resPortas.json();
+
+      if (!dataPortas.success || !Array.isArray(dataPortas.portas)) {
+        return;
+      }
+
+      let qtdTotal = 0;
+      let valorTotal = 0;
+
+      dataPortas.portas.forEach(p => {
+        const quantidade = Number(p.quantidade) || 1;
+        const preco = Number(p.preco) || 0;
+
+        qtdTotal += quantidade;
+
+        // ✅ Se "preco" for por item, multiplica pela quantidade:
+        valorTotal += preco * quantidade;
+
+        // Se teu preco já vier totalizado por porta, use isso em vez do de cima:
+        // valorTotal += preco;
+      });
+
+      if (qtdCell) qtdCell.textContent = qtdTotal;
+      if (valorCell) valorCell.textContent = formatarDinheiroBR(valorTotal);
+
+    } catch (err) {
+      console.error("Erro ao carregar portas do orçamento:", err);
+    }
+  }));
 }
 
 // ✏️ EDITAR ORÇAMENTO
 function editarOrcamento(uuid){
-    window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
 
 // 🪙 APROVAÇÃO / BOLETO
 function aprovarPedido(uuid){
-    window.location.href = `/aprovacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = `/aprovacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
 
 // =====================
 // FICHA CLIENTE
 // =====================
-let cliente = {nome:"", id:null};
-async function criarFichaCliente(){
-    const nome = document.getElementById("clienteNome").value.trim();
-    if(!nome){ alert("Digite o nome do cliente"); return; }
-    cliente.nome = nome;
+let cliente = { nome: "", id: null };
 
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                "Authorization": `Bearer ${USER_TOKEN}`
-            },
-            body:JSON.stringify({cliente_nome: cliente.nome})
-        });
-        const data = await res.json();
-        if(data.success){
-            cliente.id = data.id;
-            alert("Ficha criada com sucesso! ID: " + data.id);
-            document.getElementById("formCliente").style.display="none";
-            carregarOrcamentos();
-        } else {
-            alert("Erro ao criar ficha: " + data.error);
-        }
-    } catch(err) {
-        console.error("Erro criarFichaCliente:", err);
-        alert("Erro ao criar ficha, veja o console.");
+async function criarFichaCliente(){
+  const USER_TOKEN = getUserToken();
+  const nome = document.getElementById("clienteNome")?.value.trim();
+
+  if (!nome) {
+    alert("Digite o nome do cliente");
+    return;
+  }
+
+  cliente.nome = nome;
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      },
+      body: JSON.stringify({ cliente_nome: cliente.nome })
+    });
+
+    if (!res.ok) {
+      alert("Falha no servidor ao criar ficha.");
+      return;
     }
+
+    const data = await res.json();
+
+    if (data.success) {
+      cliente.id = data.id;
+      alert("Ficha criada com sucesso! ID: " + data.id);
+
+      const form = document.getElementById("formCliente");
+      if (form) form.style.display = "none";
+
+      carregarOrcamentos();
+    } else {
+      alert("Erro ao criar ficha: " + (data.error || "Erro desconhecido"));
+    }
+  } catch (err) {
+    console.error("Erro criarFichaCliente:", err);
+    alert("Erro ao criar ficha, veja o console.");
+  }
 }
 
-// Carrega orçamentos automaticamente ao abrir a página
+// =====================
+// Boot
+// =====================
 validarSessao().then((ok) => {
-    if (ok) {
-        carregarOrcamentos();
-        document.getElementById("orcamentoFiltro").addEventListener("input", aplicarFiltroOrcamentos);
-    }
+  if (ok) {
+    carregarOrcamentos();
+
+    const filtroEl = document.getElementById("orcamentoFiltro");
+    if (filtroEl) filtroEl.addEventListener("input", aplicarFiltroOrcamentos);
+  }
 });
 </script>
 </body>
