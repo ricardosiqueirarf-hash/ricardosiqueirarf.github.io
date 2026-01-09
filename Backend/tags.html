@@ -157,6 +157,11 @@
             .filter(tag => tag);
     }
 
+    function limparNomeMaterial(valor) {
+        if (!valor) return "";
+        return valor.split(" - ")[0].trim();
+    }
+
     // =====================
     // CARREGAR LISTAS
     // =====================
@@ -182,9 +187,9 @@
 
         data.forEach(vidro => {
             const option = document.createElement("option");
-            const descricao = [vidro.tipo, vidro.espessura].filter(Boolean).join(" - ");
-            option.value = descricao;
-            option.textContent = descricao || vidro.tipo || "Vidro";
+            const nome = vidro.tipo || "Vidro";
+            option.value = nome;
+            option.textContent = nome;
             select.appendChild(option);
         });
     }
@@ -211,11 +216,13 @@
         tbody.innerHTML = "";
 
         data.forEach(tag => {
+            const perfilNome = limparNomeMaterial(tag.perfis);
+            const vidroNome = limparNomeMaterial(tag.vidros);
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${(tag.tags || []).join(", ")}</td>
-                <td>${tag.perfis || ""}</td>
-                <td>${tag.vidros || ""}</td>
+                <td>${perfilNome}</td>
+                <td>${vidroNome}</td>
                 <td>${tag.valor ?? ""}</td>
                 <td>${tag.medida || ""}</td>
                 <td>
@@ -272,10 +279,12 @@
         document.getElementById("tags").value = (tag.tags || []).join(", ");
         const perfisSelect = document.getElementById("perfis");
         const vidrosSelect = document.getElementById("vidros");
-        garantirOpcao(perfisSelect, tag.perfis);
-        garantirOpcao(vidrosSelect, tag.vidros);
-        perfisSelect.value = tag.perfis || "";
-        vidrosSelect.value = tag.vidros || "";
+        const perfilNome = limparNomeMaterial(tag.perfis);
+        const vidroNome = limparNomeMaterial(tag.vidros);
+        garantirOpcao(perfisSelect, perfilNome);
+        garantirOpcao(vidrosSelect, vidroNome);
+        perfisSelect.value = perfilNome;
+        vidrosSelect.value = vidroNome;
         document.getElementById("valor").value = tag.valor ?? "";
         document.getElementById("medida").value = tag.medida || "";
     }
@@ -317,4 +326,3 @@
 
 </body>
 </html>
-
