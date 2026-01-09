@@ -111,6 +111,14 @@ def tags_page():
 def tags_html_page():
     return send_from_directory(BASE_DIR, "tags.html")
 
+@app.route("/financeiro")
+def financeiro_page():
+    return send_from_directory(BASE_DIR, "financeiro.html")
+
+@app.route("/financeiro.html")
+def financeiro_html_page():
+    return send_from_directory(BASE_DIR, "financeiro.html")
+
 
 
 
