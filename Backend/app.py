@@ -103,6 +103,16 @@ def aprovacao_page():
 def aprovacao_html_page():
     return send_from_directory(BASE_DIR, "aprovacao.html")
 
+@app.route("/tags")
+def tags_page():
+    return send_from_directory(BASE_DIR, "tags.html")
+
+@app.route("/tags.html")
+def tags_html_page():
+    return send_from_directory(BASE_DIR, "tags.html")
+
+
+
 
 
 def exige_nivel_2_ou_3(fn):
