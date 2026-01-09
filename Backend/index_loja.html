@@ -647,13 +647,9 @@ async function atualizarTotaisOrcamentos() {
         const quantidade = Number(p.quantidade) || 1;
         const preco = Number(p.preco) || 0;
 
-        qtdTotal += quantidade;
+        valorTotal += preco 
 
-        // ✅ Se "preco" for por item, multiplica pela quantidade:
-        valorTotal += preco * quantidade;
-
-        // Se teu preco já vier totalizado por porta, use isso em vez do de cima:
-        // valorTotal += preco;
+   
       });
 
       if (qtdCell) qtdCell.textContent = qtdTotal;
