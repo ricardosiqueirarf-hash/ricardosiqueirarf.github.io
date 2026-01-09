@@ -527,6 +527,20 @@ function renderizarOrcamentos(orcamentos) {
     // ✅ Mantém número em dataset pra lógica/estilo
     const statusLabel = o.status_label ?? String(o.status ?? "Desconhecido");
     const statusNumero = (o.status ?? "");
+    const statusValor = Number(statusNumero);
+    const podeEditar = statusValor === 1;
+
+    const actionsHtml = podeEditar
+      ? `
+        <div class="actions">
+          <button class="icon-btn edit" title="Editar"
+            onclick="editarOrcamento('${o.id}')">✏️</button>
+
+          <button class="icon-btn pay" title="Aprovar / Boleto"
+            onclick="aprovarPedido('${o.id}')">🪙</button>
+        </div>
+      `
+      : "";
 
     tr.dataset.orcamentoId = o.id;
     tr.dataset.status = statusNumero;
@@ -541,15 +555,7 @@ function renderizarOrcamentos(orcamentos) {
       <td data-field="status_label">${statusLabel}</td>
 
       <td data-field="valor_total">${valorTotal === "--" ? "--" : formatarDinheiroBR(valorTotal)}</td>
-      <td>
-        <div class="actions">
-          <button class="icon-btn edit" title="Editar"
-            onclick="editarOrcamento('${o.id}')">✏️</button>
-
-          <button class="icon-btn pay" title="Aprovar / Boleto"
-            onclick="aprovarPedido('${o.id}')">🪙</button>
-        </div>
-      </td>
+      <td>${actionsHtml}</td>
     `;
 
     tbody.appendChild(tr);
