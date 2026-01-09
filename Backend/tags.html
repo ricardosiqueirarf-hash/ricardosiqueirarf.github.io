@@ -47,7 +47,8 @@
         }
 
         /* INPUTS */
-        .form-perfil input {
+        .form-perfil input,
+        .form-perfil select {
             padding: 6px 10px;
             font-size: 0.95rem;
             border-radius: 8px;
@@ -56,7 +57,8 @@
             transition: all 0.2s ease;
         }
 
-        .form-perfil input:focus {
+        .form-perfil input:focus,
+        .form-perfil select:focus {
             border-color: #1079ba;
             box-shadow: 0 0 4px rgba(16,121,186,0.4);
             outline: none;
@@ -113,6 +115,19 @@
     <section class="form-perfil">
         <input type="hidden" id="tag_id">
         <input id="tags" placeholder="Tags (separadas por vírgula)">
+        <select id="perfis">
+            <option value="">Selecione o perfil</option>
+        </select>
+        <select id="vidros">
+            <option value="">Selecione o vidro</option>
+        </select>
+        <input id="valor" type="number" step="0.01" placeholder="Valor">
+        <select id="medida">
+            <option value="">Selecione a medida</option>
+            <option value="m2">m2</option>
+            <option value="perimetro">perimetro</option>
+            <option value="unidade">unidade</option>
+        </select>
     </section>
 
     <section>
@@ -120,6 +135,10 @@
             <thead>
                 <tr>
                     <th>Tags</th>
+                    <th>Perfis</th>
+                    <th>Vidros</th>
+                    <th>Valor</th>
+                    <th>Medida</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -139,6 +158,49 @@
     }
 
     // =====================
+    // CARREGAR LISTAS
+    // =====================
+    async function carregarPerfis() {
+        const res = await fetch(`${API_BASE}/api/perfis`);
+        const data = await res.json();
+        const select = document.getElementById("perfis");
+        select.innerHTML = `<option value="">Selecione o perfil</option>`;
+
+        data.forEach(perfil => {
+            const option = document.createElement("option");
+            option.value = perfil.nome;
+            option.textContent = perfil.nome;
+            select.appendChild(option);
+        });
+    }
+
+    async function carregarVidros() {
+        const res = await fetch(`${API_BASE}/api/vidros`);
+        const data = await res.json();
+        const select = document.getElementById("vidros");
+        select.innerHTML = `<option value="">Selecione o vidro</option>`;
+
+        data.forEach(vidro => {
+            const option = document.createElement("option");
+            const descricao = [vidro.tipo, vidro.espessura].filter(Boolean).join(" - ");
+            option.value = descricao;
+            option.textContent = descricao || vidro.tipo || "Vidro";
+            select.appendChild(option);
+        });
+    }
+
+    function garantirOpcao(selectElement, valor) {
+        if (!valor) return;
+        const existe = Array.from(selectElement.options).some(option => option.value === valor);
+        if (!existe) {
+            const option = document.createElement("option");
+            option.value = valor;
+            option.textContent = valor;
+            selectElement.appendChild(option);
+        }
+    }
+
+    // =====================
     // CARREGAR TAGS
     // =====================
     async function carregar() {
@@ -152,6 +214,10 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${(tag.tags || []).join(", ")}</td>
+                <td>${tag.perfis || ""}</td>
+                <td>${tag.vidros || ""}</td>
+                <td>${tag.valor ?? ""}</td>
+                <td>${tag.medida || ""}</td>
                 <td>
                     <button onclick='editar(${JSON.stringify(tag)})'>Editar</button>
                     <button onclick="excluir('${tag.id}')">Excluir</button>
@@ -167,6 +233,10 @@
     async function salvar() {
         const id = document.getElementById("tag_id").value;
         const tagsValue = document.getElementById("tags").value;
+        const perfis = document.getElementById("perfis").value;
+        const vidros = document.getElementById("vidros").value;
+        const valorRaw = document.getElementById("valor").value;
+        const medida = document.getElementById("medida").value;
         const tags = normalizarTags(tagsValue);
 
         if (!tags.length) {
@@ -174,7 +244,13 @@
             return;
         }
 
-        const payload = { tags };
+        const payload = {
+            tags,
+            perfis,
+            vidros,
+            valor: valorRaw === "" ? null : Number(valorRaw),
+            medida
+        };
         const url = id ? `${API_BASE}/api/tags/${id}` : `${API_BASE}/api/tags`;
         const method = id ? "PUT" : "POST";
 
@@ -194,6 +270,14 @@
     function editar(tag) {
         document.getElementById("tag_id").value = tag.id;
         document.getElementById("tags").value = (tag.tags || []).join(", ");
+        const perfisSelect = document.getElementById("perfis");
+        const vidrosSelect = document.getElementById("vidros");
+        garantirOpcao(perfisSelect, tag.perfis);
+        garantirOpcao(vidrosSelect, tag.vidros);
+        perfisSelect.value = tag.perfis || "";
+        vidrosSelect.value = tag.vidros || "";
+        document.getElementById("valor").value = tag.valor ?? "";
+        document.getElementById("medida").value = tag.medida || "";
     }
 
     // =====================
@@ -213,13 +297,24 @@
     function cancelar() {
         document.getElementById("tag_id").value = "";
         document.getElementById("tags").value = "";
+        document.getElementById("perfis").value = "";
+        document.getElementById("vidros").value = "";
+        document.getElementById("valor").value = "";
+        document.getElementById("medida").value = "";
     }
 
     // =====================
     // INIT
     // =====================
-    carregar();
+    async function init() {
+        await carregarPerfis();
+        await carregarVidros();
+        await carregar();
+    }
+
+    init();
 </script>
 
 </body>
 </html>
+
