@@ -118,6 +118,14 @@ def financeiro_page():
 @app.route("/financeiro.html")
 def financeiro_html_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
+    
+@app.route("/estruturastemp")
+def estruturastemp_page():
+    return send_from_directory(BASE_DIR, "estruturastemp.html")
+
+@app.route("/estruturastemp.html")
+def estruturastemp_html_page():
+    return send_from_directory(BASE_DIR, "estruturastemp.html")
 
 
 
