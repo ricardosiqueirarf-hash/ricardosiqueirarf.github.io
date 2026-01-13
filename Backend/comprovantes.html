@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5; 
+      background: #f5f5f5;
       margin: 0;
       padding: 40px;
     }
@@ -80,7 +80,7 @@
     const preview = document.getElementById("preview");
 
     const params = new URLSearchParams(window.location.search);
-    const apiBase = params.get("apiBase") || "http://localhost:5000";
+    const apiBase = params.get("apiBase") || window.location.origin;
 
     botao.addEventListener("click", async () => {
       status.textContent = "";
@@ -124,3 +124,4 @@
   </script>
 </body>
 </html>
+
