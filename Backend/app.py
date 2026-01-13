@@ -118,7 +118,15 @@ def financeiro_page():
 @app.route("/financeiro.html")
 def financeiro_html_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
-    
+
+@app.route("/comprovantes")
+def comprovantes_page():
+    return send_from_directory(BASE_DIR, "comprovantes.html")
+
+@app.route("/comprovantes.html")
+def comprovantes_html_page():
+    return send_from_directory(BASE_DIR, "comprovantes.html")
+
 @app.route("/estruturastemp")
 def estruturastemp_page():
     return send_from_directory(BASE_DIR, "estruturastemp.html")
@@ -171,6 +179,7 @@ from api_puxadores import puxadores_bp
 from api_estruturas3d import estruturas3d_bp
 from api_cadastroelogin import cadastro_login_bp
 from api_tags import tags_bp
+from api_comprovantes import comprovantes_bp
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
@@ -183,6 +192,7 @@ app.register_blueprint(puxadores_bp)
 app.register_blueprint(estruturas3d_bp)
 app.register_blueprint(cadastro_login_bp)
 app.register_blueprint(tags_bp)
+app.register_blueprint(comprovantes_bp)
 
 # =====================
 # START
@@ -190,3 +200,4 @@ app.register_blueprint(tags_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
