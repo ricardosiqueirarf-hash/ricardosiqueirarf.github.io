@@ -9,7 +9,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não configurados")
+    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não configurados") 
 
 comprovantes_bp = Blueprint("comprovantes_bp", __name__)
 CORS(comprovantes_bp, resources={r"/api/*": {"origins": "*"}})
