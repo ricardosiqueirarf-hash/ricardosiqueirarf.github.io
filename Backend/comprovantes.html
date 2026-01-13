@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload de Comprovantes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 520px;
+      margin: 0 auto;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+
+    .field {
+      margin: 16px 0;
+    }
+
+    button {
+      background: #1f6feb;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:disabled {
+      background: #9bbbf3;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #1f2937;
+    }
+
+    .preview img {
+      max-width: 100%;
+      margin-top: 12px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Enviar comprovante</h1>
+    <p>Selecione uma imagem para enviar ao storage do Supabase.</p>
+
+    <div class="field">
+      <input type="file" id="arquivo" accept="image/*" />
+    </div>
+
+    <button id="enviar" type="button">Fazer upload</button>
+
+    <div class="status" id="status"></div>
+    <div class="preview" id="preview"></div>
+  </div>
+
+  <script>
+    const botao = document.getElementById("enviar");
+    const campoArquivo = document.getElementById("arquivo");
+    const status = document.getElementById("status");
+    const preview = document.getElementById("preview");
+
+    const params = new URLSearchParams(window.location.search);
+    const apiBase = params.get("apiBase") || "http://localhost:5000";
+
+    botao.addEventListener("click", async () => {
+      status.textContent = "";
+      preview.innerHTML = "";
+
+      if (!campoArquivo.files.length) {
+        status.textContent = "Selecione uma imagem antes de enviar.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("arquivo", campoArquivo.files[0]);
+
+      botao.disabled = true;
+      status.textContent = "Enviando...";
+
+      try {
+        const resposta = await fetch(`${apiBase}/api/comprovantes/upload`, {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await resposta.json();
+
+        if (!resposta.ok) {
+          throw new Error(data.error || "Erro ao enviar arquivo.");
+        }
+
+        status.textContent = "Upload concluído com sucesso!";
+
+        const img = document.createElement("img");
+        img.src = data.url;
+        img.alt = "Comprovante enviado";
+        preview.appendChild(img);
+      } catch (error) {
+        status.textContent = `Falha: ${error.message}`;
+      } finally {
+        botao.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
