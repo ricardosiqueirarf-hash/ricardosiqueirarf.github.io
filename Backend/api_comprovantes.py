@@ -2,6 +2,7 @@ import os
 import datetime
 import requests
 from flask import Blueprint, request, jsonify
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -11,6 +12,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não configurados")
 
 comprovantes_bp = Blueprint("comprovantes_bp", __name__)
+CORS(comprovantes_bp, resources={r"/api/*": {"origins": "*"}})
 
 @comprovantes_bp.route("/api/comprovantes/upload", methods=["POST"])
 def upload_comprovante():
@@ -43,3 +45,4 @@ def upload_comprovante():
         return jsonify({"status": "ok", "arquivo": nome_arquivo, "url": public_url})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
+
