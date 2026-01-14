@@ -71,7 +71,6 @@ function safeName(n){
 
 function setStatus(txt){ status.innerText = txt || ""; }
 function append(txt){ status.innerText += (txt || "") + "\n"; }
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 function sbLocalStorageInfo(){
   const keys = Object.keys(localStorage);
@@ -87,6 +86,16 @@ function sbLocalStorageInfo(){
 
   return { sbKeys, tokenKey, access_token_exists: !!access_token, access_token };
 }
+
+// Debug avançado: captura erros 400 de fetch internos? (não pega tudo, mas ajuda)
+window.addEventListener("unhandledrejection", (e) => {
+  append("UNHANDLED REJECTION: " + (e?.reason?.message || e?.reason || e));
+  console.error("unhandledrejection", e);
+});
+window.addEventListener("error", (e) => {
+  append("WINDOW ERROR: " + (e?.message || e));
+  console.error("window error", e);
+});
 
 async function manualAuthUserCheck(){
   const info = sbLocalStorageInfo();
@@ -130,6 +139,7 @@ async function refresh(){
   append("ACCESS TOKEN EXISTS? " + info.access_token_exists);
   append("");
 
+  // 1) getSession
   try {
     const sess = await supabase.auth.getSession();
     append("getSession OK");
@@ -141,6 +151,7 @@ async function refresh(){
     console.error("getSession throw", e);
   }
 
+  // 2) getUser (aqui costuma dar 400)
   try {
     const u = await supabase.auth.getUser();
     append("getUser OK");
@@ -160,29 +171,8 @@ async function refresh(){
     console.error("getUser throw", e);
   }
 
+  // 3) teste manual do endpoint que dá o veredito do 400
   await manualAuthUserCheck();
-}
-
-async function createSignedUrlWithRetry(path, seconds=600){
-  const delays = [0, 500, 1200, 2500]; // tenta imediato e depois aguarda
-  let last = null;
-
-  for (let i = 0; i < delays.length; i++){
-    if (delays[i]) {
-      append(`Aguardando ${delays[i]}ms para tentar assinar...`);
-      await sleep(delays[i]);
-    }
-
-    const res = await supabase.storage.from(BUCKET).createSignedUrl(path, seconds);
-    append("SIGNED TRY " + (i+1) + ":");
-    append(JSON.stringify(res, null, 2));
-    append("");
-
-    if (!res.error && res.data?.signedUrl) return res;
-    last = res;
-  }
-
-  return last;
 }
 
 document.getElementById("login").onclick = async ()=>{
@@ -219,7 +209,7 @@ document.getElementById("reset").onclick = async ()=>{
 document.getElementById("upload").onclick = async ()=>{
   preview.innerHTML = "";
 
-  // garante que tá tudo carregado
+  // força refresh antes pra garantir sessão carregada
   await refresh();
 
   const u = await supabase.auth.getUser().catch(()=>({}));
@@ -240,7 +230,7 @@ document.getElementById("upload").onclick = async ()=>{
   append("UPLOAD START");
   append("PATH=" + path);
 
-  const up = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
+  const up = await supabase.storage.from(BUCKET).upload(path, file);
   append("UPLOAD RESULT:");
   append(JSON.stringify(up, null, 2));
   append("");
@@ -250,30 +240,18 @@ document.getElementById("upload").onclick = async ()=>{
     return;
   }
 
-  // 🔥 retry: evita "Object not found" por delay
-  const signed = await createSignedUrlWithRetry(path, 600);
+  const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 600);
+  append("SIGNED RESULT:");
+  append(JSON.stringify(signed, null, 2));
+  append("");
 
   if(signed.error){
-    append("SIGNED ERROR (após retries): " + signed.error.message);
-
-    // fallback: tenta public url (só funciona se bucket for público)
-    const pub = supabase.storage.from(BUCKET).getPublicUrl(path);
-    append("PUBLIC URL (fallback):");
-    append(JSON.stringify(pub, null, 2));
-
-    if(pub?.data?.publicUrl){
-      const a = document.createElement("a");
-      a.href = pub.data.publicUrl;
-      a.target = "_blank";
-      a.innerText = "Abrir comprovante (public url)";
-      preview.appendChild(a);
-    }
+    append("SIGNED ERROR: " + signed.error.message);
     return;
   }
 
   const url = signed.data.signedUrl;
   append("SIGNED URL OK");
-  append(url);
 
   if(file.type.startsWith("image")){
     const img = document.createElement("img");
@@ -296,7 +274,6 @@ supabase.auth.onAuthStateChange(async (event) => {
 </script>
 </body>
 </html>
-    
 
 
 
