@@ -11,7 +11,6 @@
       margin: 0;
       padding: 40px;
     }
-
     .card {
       background: #ffffff;
       border-radius: 12px;
@@ -20,16 +19,16 @@
       margin: 0 auto;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     }
-
-    h1 {
-      margin-top: 0;
-      font-size: 22px;
+    h1 { margin-top: 0; font-size: 22px; }
+    .field { margin: 16px 0; }
+    input[type="email"], input[type="password"]{
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      box-sizing: border-box;
     }
-
-    .field {
-      margin: 16px 0;
-    }
-
     button {
       background: #1f6feb;
       color: #ffffff;
@@ -39,32 +38,59 @@
       cursor: pointer;
       font-size: 14px;
     }
-
-    button:disabled {
-      background: #9bbbf3;
-      cursor: not-allowed;
+    button.secondary {
+      background: #111827;
+      margin-left: 8px;
     }
-
-    .status {
-      margin-top: 16px;
-      font-size: 14px;
-      color: #1f2937;
-    }
-
+    button:disabled { background: #9bbbf3; cursor: not-allowed; }
+    .status { margin-top: 16px; font-size: 14px; color: #1f2937; white-space: pre-wrap; }
+    .preview { margin-top: 12px; }
     .preview img {
       max-width: 100%;
-      margin-top: 12px;
       border-radius: 8px;
+      display: block;
     }
+    .preview a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #1f6feb;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    .hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 18px 0; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Enviar comprovante</h1>
-    <p>Selecione uma imagem para enviar ao storage do Supabase.</p>
+    <p>Login → selecione arquivo → upload (Storage privado via Signed URL).</p>
 
     <div class="field">
-      <input type="file" id="arquivo" accept="image/*" />
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input type="email" id="email" placeholder="seu@email.com" />
+        </div>
+        <div>
+          <label>Senha</label>
+          <input type="password" id="senha" placeholder="••••••••" />
+        </div>
+      </div>
+      <div class="hint">Precisa estar logado porque a API exige <b>Bearer access_token</b> (pra bater com as policies).</div>
+      <div style="margin-top: 10px;">
+        <button id="btnLogin" type="button">Login</button>
+        <button id="btnLogout" type="button" class="secondary">Logout</button>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="field">
+      <input type="file" id="arquivo" accept="image/*,application/pdf" />
+      <div class="hint">Aceita imagem e PDF (se quiser só imagem, volte pra image/*).</div>
     </div>
 
     <button id="enviar" type="button">Fazer upload</button>
@@ -73,56 +99,154 @@
     <div class="preview" id="preview"></div>
   </div>
 
-  <script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // ============
+    // CONFIG
+    // ============
+    const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
+    const SUPABASE_ANON_KEY = "COLOQUE_SUA_ANON_KEY_AQUI";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const botao = document.getElementById("enviar");
     const campoArquivo = document.getElementById("arquivo");
     const status = document.getElementById("status");
     const preview = document.getElementById("preview");
 
+    const btnLogin = document.getElementById("btnLogin");
+    const btnLogout = document.getElementById("btnLogout");
+    const emailEl = document.getElementById("email");
+    const senhaEl = document.getElementById("senha");
+
     const params = new URLSearchParams(window.location.search);
     const apiBase = params.get("apiBase") || window.location.origin;
 
+    function setStatus(msg) {
+      status.textContent = msg || "";
+    }
+
+    async function getAccessToken() {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    }
+
+    async function refreshStatus() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setStatus(`Logado como: ${user.email}`);
+      else setStatus("Não logado.");
+    }
+
+    btnLogin.addEventListener("click", async () => {
+      try {
+        setStatus("Fazendo login...");
+        const email = emailEl.value.trim();
+        const password = senhaEl.value;
+
+        if (!email || !password) {
+          setStatus("Informe email e senha.");
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        setStatus(`Logado como: ${data.user.email}`);
+      } catch (e) {
+        setStatus("Erro no login: " + (e?.message || e));
+      }
+    });
+
+    btnLogout.addEventListener("click", async () => {
+      try {
+        await supabase.auth.signOut();
+        setStatus("Logout feito.");
+      } catch (e) {
+        setStatus("Erro no logout: " + (e?.message || e));
+      }
+    });
+
     botao.addEventListener("click", async () => {
-      status.textContent = "";
+      setStatus("");
       preview.innerHTML = "";
 
       if (!campoArquivo.files.length) {
-        status.textContent = "Selecione uma imagem antes de enviar.";
+        setStatus("Selecione um arquivo antes de enviar.");
         return;
       }
 
+      const token = await getAccessToken();
+      if (!token) {
+        setStatus("Você precisa fazer login antes (não existe access_token).");
+        return;
+      }
+
+      const file = campoArquivo.files[0];
       const formData = new FormData();
-      formData.append("arquivo", campoArquivo.files[0]);
+      formData.append("arquivo", file);
 
       botao.disabled = true;
-      status.textContent = "Enviando...";
+      setStatus("Enviando...");
 
       try {
         const resposta = await fetch(`${apiBase}/api/comprovantes/upload`, {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
           body: formData
         });
 
-        const data = await resposta.json();
+        const data = await resposta.json().catch(() => ({}));
 
         if (!resposta.ok) {
-          throw new Error(data.error || "Erro ao enviar arquivo.");
+          throw new Error(data.error || data.details || "Erro ao enviar arquivo.");
         }
 
-        status.textContent = "Upload concluído com sucesso!";
+        setStatus(
+          `Upload concluído com sucesso!\n` +
+          `Path: ${data.path || "(sem path)"}\n` +
+          `Expira em: ${data.expires_in ? data.expires_in + "s" : "(?)"}`
+        );
 
-        const img = document.createElement("img");
-        img.src = data.url;
-        img.alt = "Comprovante enviado";
-        preview.appendChild(img);
+        // A API nova retorna signed_url (bucket privado)
+        const url = data.signed_url || data.url;
+
+        if (!url) {
+          preview.innerHTML = "<div class='hint'>Upload OK, mas não veio URL para preview.</div>";
+          return;
+        }
+
+        // Se for imagem, mostra preview. Se for PDF, mostra link.
+        if (file.type.startsWith("image/")) {
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = "Comprovante enviado";
+          preview.appendChild(img);
+        } else {
+          const a = document.createElement("a");
+          a.href = url;
+          a.target = "_blank";
+          a.rel = "noreferrer";
+          a.textContent = "Abrir comprovante (link temporário)";
+          preview.appendChild(a);
+        }
       } catch (error) {
-        status.textContent = `Falha: ${error.message}`;
+        setStatus(`Falha: ${error.message}`);
       } finally {
         botao.disabled = false;
       }
     });
+
+    // status inicial
+    refreshStatus();
+
+    // se sessão mudar, atualiza status
+    supabase.auth.onAuthStateChange(() => refreshStatus());
   </script>
 </body>
 </html>
+
 
 
