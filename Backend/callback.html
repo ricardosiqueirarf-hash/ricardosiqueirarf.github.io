@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Callback</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; }
+  </style>
+</head>
+<body>
+  <p>Finalizando login...</p>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
+    const SUPABASE_ANON_KEY = "COLOQUE_SUA_ANON_KEY_AQUI";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // consome o #access_token e salva sessão no browser
+    await supabase.auth.getSession();
+
+    // volta pra tua tela de comprovantes
+    window.location.href = "/comprovantes.html";
+  </script>
+</body>
+</html>
