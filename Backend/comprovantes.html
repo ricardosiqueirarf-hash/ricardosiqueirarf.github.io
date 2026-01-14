@@ -1,166 +1,114 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload de Comprovantes</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 40px; }
-    .card { background: #ffffff; border-radius: 12px; padding: 24px; max-width: 520px; margin: 0 auto;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
-    h1 { margin-top: 0; font-size: 22px; }
-    .field { margin: 16px 0; }
-    button { background: #1f6feb; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px;
-      cursor: pointer; font-size: 14px; }
-    button.secondary { background: #111827; margin-left: 8px; }
-    button:disabled { background: #9bbbf3; cursor: not-allowed; }
-    .status { margin-top: 16px; font-size: 14px; color: #1f2937; white-space: pre-wrap; }
-    .preview img { max-width: 100%; margin-top: 12px; border-radius: 8px; display:block; }
-    .preview a { display:inline-block; margin-top:12px; color:#1f6feb; font-weight:700; text-decoration:none; }
-    .hint { font-size: 12px; color: #6b7280; margin-top: 8px; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; }
-  </style>
+<meta charset="UTF-8">
+<title>Upload de Comprovantes</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+body{font-family:Arial;background:#f5f5f5;padding:40px}
+.card{background:#fff;border-radius:12px;padding:24px;max-width:520px;margin:auto;box-shadow:0 0 30px rgba(0,0,0,.08)}
+button{background:#1f6feb;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer}
+button.sec{background:#111827}
+.status{white-space:pre-wrap;margin-top:15px;font-size:14px}
+img{max-width:100%;margin-top:15px;border-radius:8px}
+</style>
 </head>
 <body>
-  <div class="card">
-    <h1>Enviar comprovante</h1>
-    <p>Entrar com GitHub → enviar arquivo → preview (signed URL).</p>
 
-    <div class="row">
-      <button id="btnGithub" type="button">Entrar com GitHub</button>
-      <button id="btnLogout" type="button" class="secondary">Logout</button>
-    </div>
-    <div class="hint">O upload usa o token do Supabase (Bearer) pra respeitar sua policy do bucket.</div>
-    <div class="status" id="authStatus"></div>
+<div class="card">
+<h2>Enviar comprovante</h2>
 
-    <div class="field">
-      <input type="file" id="arquivo" accept="image/*,application/pdf" />
-    </div>
+<button id="login">Entrar com GitHub</button>
+<button id="logout" class="sec">Logout</button>
 
-    <button id="enviar" type="button">Fazer upload</button>
+<p id="auth"></p>
 
-    <div class="status" id="status"></div>
-    <div class="preview" id="preview"></div>
-  </div>
+<input type="file" id="file" accept="image/*,application/pdf"><br><br>
+<button id="upload">Enviar</button>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<p class="status" id="status"></p>
+<div id="preview"></div>
+</div>
 
-    const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
-    const SUPABASE_ANON_KEY = "COLOQUE_SUA_ANON_KEY_AQUI";
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(
+  "https://hfhwvzldhgqniqnurync.supabase.co",
+  "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl"
+);
 
-    const btnGithub = document.getElementById("btnGithub");
-    const btnLogout = document.getElementById("btnLogout");
-    const authStatus = document.getElementById("authStatus");
+const BUCKET = "comprovantes";
+const REDIRECT = "https://www.colorglassfortaleza.com.br/callback.html";
 
-    const botao = document.getElementById("enviar");
-    const campoArquivo = document.getElementById("arquivo");
-    const status = document.getElementById("status");
-    const preview = document.getElementById("preview");
+const auth = document.getElementById("auth");
+const status = document.getElementById("status");
+const preview = document.getElementById("preview");
 
-    function setAuth(msg) { authStatus.textContent = msg || ""; }
-    function setStatus(msg) { status.textContent = msg || ""; }
+function safeName(n){
+  return n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
+}
 
-    async function refreshAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const provider = user.app_metadata?.provider || "oauth";
-        const label = user.email || user.user_metadata?.user_name || user.id;
-        setAuth(`Logado via: ${provider}\nUsuário: ${label}`);
-      } else {
-        setAuth("Não logado.");
-      }
-    }
+async function refresh(){
+  const {data:{user}} = await supabase.auth.getUser();
+  if(user){
+    auth.innerText = "Logado: " + (user.email || user.user_metadata?.user_name || user.id);
+  } else {
+    auth.innerText = "Não logado";
+  }
+}
 
-    async function getAccessToken() {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token || null;
-    }
+document.getElementById("login").onclick = async ()=>{
+  const {error} = await supabase.auth.signInWithOAuth({
+    provider:"github",
+    options:{ redirectTo: REDIRECT }
+  });
+  if(error){
+    alert(error.message);
+    console.error(error);
+  }
+};
 
-    btnGithub.addEventListener("click", async () => {
-      setAuth("Redirecionando para GitHub...");
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "github",
-        options: {
-          // MUITO IMPORTANTE: redireciona para callback.html no MESMO host do Flask
-          redirectTo: `${window.location.origin}/callback.html`
-        }
-      });
-      if (error) setAuth("Erro no login: " + error.message);
-    });
+document.getElementById("logout").onclick = async ()=>{
+  await supabase.auth.signOut();
+  refresh();
+};
 
-    btnLogout.addEventListener("click", async () => {
-      await supabase.auth.signOut();
-      setAuth("Logout feito.");
-    });
+document.getElementById("upload").onclick = async ()=>{
+  status.innerText="";
+  preview.innerHTML="";
 
-    botao.addEventListener("click", async () => {
-      setStatus("");
-      preview.innerHTML = "";
+  const {data:{user}} = await supabase.auth.getUser();
+  if(!user){ status.innerText="Faça login"; return; }
 
-      if (!campoArquivo.files.length) {
-        setStatus("Selecione um arquivo antes de enviar.");
-        return;
-      }
+  const file = document.getElementById("file").files[0];
+  if(!file){ status.innerText="Selecione um arquivo"; return; }
 
-      const token = await getAccessToken();
-      if (!token) {
-        setStatus("Você precisa entrar com GitHub primeiro.");
-        return;
-      }
+  const path = user.id + "/" + crypto.randomUUID() + "_" + safeName(file.name);
 
-      botao.disabled = true;
-      setStatus("Enviando...");
+  status.innerText="Enviando...";
+  const {error} = await supabase.storage.from(BUCKET).upload(path,file);
+  if(error){ status.innerText=error.message; return; }
 
-      try {
-        const formData = new FormData();
-        const file = campoArquivo.files[0];
-        formData.append("arquivo", file);
+  const {data} = await supabase.storage.from(BUCKET).createSignedUrl(path,600);
+  status.innerText="Upload OK\n" + path;
 
-        const resposta = await fetch(`/api/comprovantes/upload`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData
-        });
+  if(file.type.startsWith("image")){
+    const img = document.createElement("img");
+    img.src = data.signedUrl;
+    preview.appendChild(img);
+  } else {
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.target="_blank";
+    a.innerText="Abrir comprovante";
+    preview.appendChild(a);
+  }
+};
 
-        const data = await resposta.json().catch(() => ({}));
-        if (!resposta.ok) throw new Error(data.error || data.details || "Erro ao enviar arquivo.");
-
-        setStatus(
-          `Upload OK!\nPath: ${data.path}\nExpira em: ${data.expires_in || data.expires || "?"}s`
-        );
-
-        const url = data.signed_url || data.url;
-        if (!url) {
-          preview.innerHTML = "<div class='hint'>Upload OK, mas não veio URL para preview.</div>";
-          return;
-        }
-
-        if (file.type.startsWith("image/")) {
-          const img = document.createElement("img");
-          img.src = url;
-          img.alt = "Comprovante";
-          preview.appendChild(img);
-        } else {
-          const a = document.createElement("a");
-          a.href = url;
-          a.target = "_blank";
-          a.rel = "noreferrer";
-          a.textContent = "Abrir comprovante (link temporário)";
-          preview.appendChild(a);
-        }
-      } catch (e) {
-        setStatus("Falha: " + (e?.message || e));
-      } finally {
-        botao.disabled = false;
-      }
-    });
-
-    refreshAuth();
-    supabase.auth.onAuthStateChange(() => refreshAuth());
-  </script>
+refresh();
+supabase.auth.onAuthStateChange(refresh);
+</script>
 </body>
 </html>
 
