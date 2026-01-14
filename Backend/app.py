@@ -188,6 +188,8 @@ from api_estruturas3d import estruturas3d_bp
 from api_cadastroelogin import cadastro_login_bp
 from api_tags import tags_bp
 from api_comprovantes import comprovantes_bp
+from api_imagetags import imagetags_bp
+
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
@@ -201,6 +203,7 @@ app.register_blueprint(estruturas3d_bp)
 app.register_blueprint(cadastro_login_bp)
 app.register_blueprint(tags_bp)
 app.register_blueprint(comprovantes_bp)
+app.register_blueprint(imagetags_bp)
 
 # =====================
 # START
