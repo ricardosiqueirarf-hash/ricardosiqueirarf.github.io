@@ -1,7 +1,7 @@
 if (localStorage.getItem("darkmode") === "true") {
     document.getElementById("tema-css").href = "/static/css/indexdark.css";
 }
-
+ 
 function go(p){ window.location.href = p }
 
 // =====================
