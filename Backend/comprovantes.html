@@ -59,9 +59,11 @@ async function refresh(){
 }
 
 document.getElementById("login").onclick = async ()=>{
-  const {error} = await supabase.auth.signInWithOAuth({
-    provider:"github",
-    options:{ redirectTo: REDIRECT }
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "github",
+    options: {
+      redirectTo: "https://www.colorglassfortaleza.com.br/callback.html"
+    }
   });
   if(error){
     alert(error.message);
