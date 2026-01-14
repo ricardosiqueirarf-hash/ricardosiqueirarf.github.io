@@ -135,6 +135,14 @@ def estruturastemp_page():
 def estruturastemp_html_page():
     return send_from_directory(BASE_DIR, "estruturastemp.html")
 
+@app.route("/callback.html")
+def callback_html_page():
+    return send_from_directory(BASE_DIR, "callback.html")
+
+@app.route("/callback")
+def callback_page():
+    return send_from_directory(BASE_DIR, "callback.html")
+
 
 
 
