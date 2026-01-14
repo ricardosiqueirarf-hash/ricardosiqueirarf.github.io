@@ -6,42 +6,35 @@
   <title>Upload de Comprovantes</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 40px; }
-    .card {
-      background: #ffffff; border-radius: 12px; padding: 24px; max-width: 520px; margin: 0 auto;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    }
+    .card { background: #ffffff; border-radius: 12px; padding: 24px; max-width: 520px; margin: 0 auto;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
     h1 { margin-top: 0; font-size: 22px; }
     .field { margin: 16px 0; }
-    button {
-      background: #1f6feb; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px;
-      cursor: pointer; font-size: 14px;
-    }
+    button { background: #1f6feb; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px;
+      cursor: pointer; font-size: 14px; }
     button.secondary { background: #111827; margin-left: 8px; }
     button:disabled { background: #9bbbf3; cursor: not-allowed; }
     .status { margin-top: 16px; font-size: 14px; color: #1f2937; white-space: pre-wrap; }
     .preview img { max-width: 100%; margin-top: 12px; border-radius: 8px; display:block; }
-    .preview a { display:inline-block; margin-top:10px; color:#1f6feb; text-decoration:none; font-weight:600; }
-    .hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
-    hr { border: none; border-top: 1px solid #e5e7eb; margin: 18px 0; }
+    .preview a { display:inline-block; margin-top:12px; color:#1f6feb; font-weight:700; text-decoration:none; }
+    .hint { font-size: 12px; color: #6b7280; margin-top: 8px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Enviar comprovante</h1>
-    <p>Faça login com GitHub e envie o comprovante.</p>
+    <p>Entrar com GitHub → enviar arquivo → preview (signed URL).</p>
 
-    <div class="field">
+    <div class="row">
       <button id="btnGithub" type="button">Entrar com GitHub</button>
       <button id="btnLogout" type="button" class="secondary">Logout</button>
-      <div class="hint">O upload exige token do usuário (Bearer access_token).</div>
-      <div class="status" id="authStatus"></div>
     </div>
-
-    <hr />
+    <div class="hint">O upload usa o token do Supabase (Bearer) pra respeitar sua policy do bucket.</div>
+    <div class="status" id="authStatus"></div>
 
     <div class="field">
       <input type="file" id="arquivo" accept="image/*,application/pdf" />
-      <div class="hint">Aceita imagem e PDF.</div>
     </div>
 
     <button id="enviar" type="button">Fazer upload</button>
@@ -67,9 +60,6 @@
     const status = document.getElementById("status");
     const preview = document.getElementById("preview");
 
-    const params = new URLSearchParams(window.location.search);
-    const apiBase = params.get("apiBase") || window.location.origin;
-
     function setAuth(msg) { authStatus.textContent = msg || ""; }
     function setStatus(msg) { status.textContent = msg || ""; }
 
@@ -90,28 +80,20 @@
     }
 
     btnGithub.addEventListener("click", async () => {
-      try {
-        setAuth("Redirecionando para GitHub...");
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "github",
-          options: {
-            // IMPORTANTÍSSIMO: callback na mesma pasta do backend
-            redirectTo: `${window.location.origin}/callback.html`
-          }
-        });
-        if (error) throw error;
-      } catch (e) {
-        setAuth("Erro: " + (e?.message || e));
-      }
+      setAuth("Redirecionando para GitHub...");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          // MUITO IMPORTANTE: redireciona para callback.html no MESMO host do Flask
+          redirectTo: `${window.location.origin}/callback.html`
+        }
+      });
+      if (error) setAuth("Erro no login: " + error.message);
     });
 
     btnLogout.addEventListener("click", async () => {
-      try {
-        await supabase.auth.signOut();
-        setAuth("Logout feito.");
-      } catch (e) {
-        setAuth("Erro no logout: " + (e?.message || e));
-      }
+      await supabase.auth.signOut();
+      setAuth("Logout feito.");
     });
 
     botao.addEventListener("click", async () => {
@@ -125,37 +107,63 @@
 
       const token = await getAccessToken();
       if (!token) {
-        setStatus("Você precisa entrar com GitHub antes (sem access_token).");
+        setStatus("Você precisa entrar com GitHub primeiro.");
         return;
       }
-
-      const file = campoArquivo.files[0];
-      const formData = new FormData();
-      formData.append("arquivo", file);
 
       botao.disabled = true;
       setStatus("Enviando...");
 
       try {
-        const resposta = await fetch(`${apiBase}/api/comprovantes/upload`, {
+        const formData = new FormData();
+        const file = campoArquivo.files[0];
+        formData.append("arquivo", file);
+
+        const resposta = await fetch(`/api/comprovantes/upload`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData
         });
 
         const data = await resposta.json().catch(() => ({}));
-
-        if (!resposta.ok) {
-          throw new Error(data.error || data.details || "Erro ao enviar arquivo.");
-        }
+        if (!resposta.ok) throw new Error(data.error || data.details || "Erro ao enviar arquivo.");
 
         setStatus(
-          `Upload OK!\n` +
-          `Path: ${data.path || "(sem path)"}\n` +
-          `Expira em: ${data.expires_in ? data.expires_in + "s" : "(?)"}`
+          `Upload OK!\nPath: ${data.path}\nExpira em: ${data.expires_in || data.expires || "?"}s`
         );
 
-        const url = data.s
+        const url = data.signed_url || data.url;
+        if (!url) {
+          preview.innerHTML = "<div class='hint'>Upload OK, mas não veio URL para preview.</div>";
+          return;
+        }
+
+        if (file.type.startsWith("image/")) {
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = "Comprovante";
+          preview.appendChild(img);
+        } else {
+          const a = document.createElement("a");
+          a.href = url;
+          a.target = "_blank";
+          a.rel = "noreferrer";
+          a.textContent = "Abrir comprovante (link temporário)";
+          preview.appendChild(a);
+        }
+      } catch (e) {
+        setStatus("Falha: " + (e?.message || e));
+      } finally {
+        botao.disabled = false;
+      }
+    });
+
+    refreshAuth();
+    supabase.auth.onAuthStateChange(() => refreshAuth());
+  </script>
+</body>
+</html>
+
 
 
 
