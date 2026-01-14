@@ -2,36 +2,217 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Upload de Comprovantes</title>
+<title>Upload + Tags | ColorGlass</title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
 <style>
-body{font-family:Arial;background:#f5f5f5;padding:40px}
-.card{background:#fff;border-radius:12px;padding:24px;max-width:1100px;margin:auto;box-shadow:0 0 30px rgba(0,0,0,.08)}
-button{background:#1f6feb;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer}
-button.sec{background:#111827}
-button.warn{background:#b45309}
-button.ghost{background:#eef2ff;color:#1f6feb}
-button:disabled{opacity:.6;cursor:not-allowed}
-.status{white-space:pre-wrap;margin-top:15px;font-size:13px;background:#f3f4f6;padding:10px;border-radius:10px}
-img{max-width:100%;margin-top:15px;border-radius:8px}
-a{display:inline-block;margin-top:12px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-table{width:100%;border-collapse:collapse;margin-top:14px;background:#fff;border-radius:10px;overflow:hidden}
-th,td{padding:10px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:left;vertical-align:top}
-th{background:#f9fafb;font-weight:700}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#1f6feb;font-size:12px}
-.small{font-size:12px;color:#6b7280}
-.actions{display:flex;gap:8px;flex-wrap:wrap}
-input[type="file"]{max-width:100%}
-input[type="text"]{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;min-width:260px}
-.tagpill{display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:12px;margin:2px 4px 0 0}
-.tagsCell{max-width:360px}
-.hint{font-size:12px;color:#6b7280;margin-top:4px}
-hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}
+  :root{
+    --bg:#0b1020;
+    --panel:#0f172a;
+    --card:rgba(255,255,255,.06);
+    --card2:rgba(255,255,255,.04);
+    --border:rgba(255,255,255,.10);
+    --text:#e5e7eb;
+    --muted:#9ca3af;
+    --accent:#3b82f6;
+    --accent2:#22c55e;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+    --shadow: 0 24px 80px rgba(0,0,0,.55);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color:var(--text);
+    background:
+      radial-gradient(1000px 700px at 10% 15%, rgba(59,130,246,.24), transparent 60%),
+      radial-gradient(900px 600px at 85% 20%, rgba(34,197,94,.18), transparent 60%),
+      radial-gradient(1200px 700px at 50% 90%, rgba(245,158,11,.12), transparent 65%),
+      linear-gradient(180deg, var(--bg), #050815);
+    padding:42px 18px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 14px;border:1px solid var(--border);
+    border-radius:999px;background:rgba(255,255,255,.03);
+    backdrop-filter: blur(10px);
+  }
+  .dot{
+    width:12px;height:12px;border-radius:50%;
+    background: linear-gradient(180deg, var(--accent), rgba(59,130,246,.35));
+    box-shadow: 0 0 0 5px rgba(59,130,246,.12);
+  }
+  .brand h1{
+    font-size:14px;margin:0;letter-spacing:.5px;font-weight:800;
+  }
+  .brand span{color:var(--muted);font-size:12px}
+
+  .card{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+
+  .cardHead{
+    padding:18px 18px 10px 18px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .title{
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .title h2{
+    margin:0;
+    font-size:18px;
+    letter-spacing:.3px;
+  }
+  .title p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:999px;border:1px solid var(--border);
+    background:rgba(255,255,255,.03);
+    color:var(--muted);font-size:12px;
+  }
+  .pill b{color:var(--text)}
+
+  .cardBody{padding:14px 18px 18px 18px}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row + .row{margin-top:10px}
+
+  button{
+    border:none;
+    padding:10px 14px;
+    border-radius:12px;
+    font-weight:800;
+    letter-spacing:.2px;
+    cursor:pointer;
+    color:white;
+    background: linear-gradient(180deg, rgba(59,130,246,1), rgba(59,130,246,.78));
+    box-shadow: 0 10px 28px rgba(59,130,246,.22);
+    transition: transform .08s ease, filter .15s ease;
+  }
+  button:hover{filter:brightness(1.06)}
+  button:active{transform: translateY(1px)}
+  button:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+
+  button.sec{
+    background: linear-gradient(180deg, rgba(148,163,184,.35), rgba(148,163,184,.18));
+    box-shadow:none;color:var(--text);
+    border:1px solid var(--border);
+  }
+  button.warn{
+    background: linear-gradient(180deg, rgba(245,158,11,1), rgba(245,158,11,.78));
+    box-shadow: 0 10px 28px rgba(245,158,11,.18);
+  }
+  button.ghost{
+    background: rgba(255,255,255,.04);
+    border:1px solid var(--border);
+    color: var(--text);
+    box-shadow:none;
+  }
+  button.good{
+    background: linear-gradient(180deg, rgba(34,197,94,1), rgba(34,197,94,.72));
+    box-shadow: 0 10px 28px rgba(34,197,94,.15);
+  }
+
+  input[type="text"], input[type="file"]{
+    padding:11px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.04);
+    color: var(--text);
+    outline:none;
+  }
+  input[type="text"]::placeholder{color: rgba(156,163,175,.85)}
+  input[type="text"]{min-width:280px}
+  .hint{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px dashed rgba(255,255,255,.14);
+    background: rgba(255,255,255,.03);
+  }
+
+  .status{
+    margin-top:14px;
+    white-space:pre-wrap;
+    font-size:12px;
+    line-height:1.45;
+    color: rgba(229,231,235,.92);
+    background: rgba(2,6,23,.55);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    padding:12px;
+    max-height: 340px;
+    overflow:auto;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:14px;
+    border:1px solid var(--border);
+    border-radius: 16px;
+    overflow:hidden;
+    background: rgba(255,255,255,.03);
+  }
+  thead th{
+    text-align:left;
+    font-size:12px;
+    color: rgba(229,231,235,.85);
+    padding:12px;
+    background: rgba(255,255,255,.04);
+    border-bottom:1px solid var(--border);
+  }
+  tbody td{
+    padding:12px;
+    font-size:12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    vertical-align:top;
+    color: rgba(229,231,235,.92);
+  }
+  tbody tr:hover{background: rgba(255,255,255,.03)}
+  .small{font-size:12px;color:var(--muted)}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 10px;border-radius:999px;
+    background: rgba(59,130,246,.14);
+    border:1px solid rgba(59,130,246,.28);
+    color: rgba(229,231,235,.95);
+    font-size:12px;font-weight:800;
+  }
+  .tagpill{
+    display:inline-flex;
+    padding:4px 9px;
+    border-radius:999px;
+    background: rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+    color: rgba(229,231,235,.92);
+    font-size:12px;
+    margin: 2px 6px 0 0;
+  }
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .filemeta{margin-top:6px;color:var(--muted);font-size:11px;word-break:break-all}
+  .split{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap
+  }
+  .rightTools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 </style>
 </head>
-<body>
 
+<body>
 <script>
   // FORÇA WWW (evita sessão sumir por origem diferente)
   if (location.hostname === "colorglassfortaleza.com.br") {
@@ -39,40 +220,71 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}
   }
 </script>
 
-<div class="card">
-  <h2>Enviar comprovante + Tags</h2>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>ColorGlass • Upload + Tags</h1>
+        <span>Storage + index por tags (Supabase)</span>
+      </div>
+    </div>
 
-  <div class="row">
-    <button id="login">Entrar com GitHub</button>
-    <button id="logout" class="sec">Logout</button>
-    <button id="reset" class="warn" type="button">RESET AUTH</button>
-    <button id="listar" type="button">Listar arquivos</button>
+    <div class="pill">
+      <span>Status:</span> <b id="authMini">Não logado</b>
+    </div>
   </div>
 
-  <p id="auth" class="small"></p>
+  <div class="card">
+    <div class="cardHead">
+      <div class="title">
+        <h2>Enviar arquivos + organizar com tags</h2>
+        <p>Upload vai para o bucket <b>comprovantes</b>. Tags ficam na tabela <b>imagetags</b> usando <b>id = fullPath</b>.</p>
+      </div>
 
-  <div class="row">
-    <input type="file" id="file" accept="image/*,application/pdf">
-    <button id="upload">Enviar</button>
+      <div class="rightTools">
+        <button id="login">Entrar com GitHub</button>
+        <button id="logout" class="sec">Logout</button>
+        <button id="reset" class="warn" type="button">RESET</button>
+        <button id="listar" class="ghost" type="button">Listar</button>
+      </div>
+    </div>
+
+    <div class="cardBody">
+      <div class="row">
+        <span class="badge">Upload</span>
+        <span class="small" id="auth"></span>
+      </div>
+
+      <div class="row">
+        <input type="file" id="file" accept="image/*,application/pdf">
+        <button id="upload">Enviar</button>
+      </div>
+
+      <div class="row">
+        <input type="text" id="tagsInput" placeholder="Tags (separe por vírgula): cozinha, bronze, 1036">
+        <button id="salvarUltimo" class="good" type="button">Adicionar tags no ÚLTIMO upload</button>
+      </div>
+
+      <div class="hint">
+        ✅ <b>Múltiplas tags</b>: este HTML adiciona tags sem apagar as antigas.<br>
+        Se existir a função <b>RPC</b> <code>add_image_tag(p_id text, p_tag text)</code>, ela será usada automaticamente (melhor).
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <span class="badge">Busca</span>
+      </div>
+      <div class="row">
+        <input type="text" id="searchTag" placeholder="Buscar por 1 tag (ex: bronze)">
+        <button id="buscar" type="button">Buscar</button>
+        <button id="limparBusca" class="sec" type="button">Limpar</button>
+      </div>
+
+      <div id="listaWrap"></div>
+
+      <p class="status" id="status"></p>
+    </div>
   </div>
-
-  <div class="row">
-    <input type="text" id="tagsInput" placeholder="Tags para o PRÓXIMO upload (ex: cozinha, bronze, 1036)">
-    <button id="salvarUltimo" class="ghost" type="button">Salvar tags do ÚLTIMO upload</button>
-  </div>
-  <div class="hint">As tags são salvas na tabela <b>imagetags</b> usando <b>id = fullPath</b> (ex: userId/arquivo.jpg).</div>
-
-  <hr>
-
-  <div class="row">
-    <input type="text" id="searchTag" placeholder="Buscar por tag (ex: bronze)">
-    <button id="buscar" type="button">Buscar</button>
-    <button id="limparBusca" class="sec" type="button">Limpar busca</button>
-  </div>
-
-  <div id="listaWrap"></div>
-
-  <p class="status" id="status"></p>
 </div>
 
 <script type="module">
@@ -90,32 +302,36 @@ const supabase = createClient(
 const BUCKET = "comprovantes";
 const REDIRECT = "https://www.colorglassfortaleza.com.br/callback.html";
 const TAGS_TABLE = "imagetags";
+const RPC_ADD_TAG = "add_image_tag"; // se existir, usamos
 
 const auth = document.getElementById("auth");
+const authMini = document.getElementById("authMini");
 const status = document.getElementById("status");
 const listaWrap = document.getElementById("listaWrap");
 const tagsInput = document.getElementById("tagsInput");
 const salvarUltimoBtn = document.getElementById("salvarUltimo");
 const searchTag = document.getElementById("searchTag");
 
-let lastUploadedPath = null; // guarda o fullPath (userId/arquivo) do último upload
+let lastUploadedPath = null;
 
 function safeName(n){
-  return (n || "comprovante")
+  return (n || "arquivo")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-zA-Z0-9._-]/g,"_");
 }
-
 function setStatus(txt){ status.innerText = txt || ""; }
 function append(txt){ status.innerText += (txt || "") + "\n"; }
 
 function parseTags(str){
-  return (str || "")
+  // múltiplas tags
+  const arr = (str || "")
     .split(",")
     .map(s => s.trim())
     .filter(Boolean)
     .map(s => s.toLowerCase());
+  // dedup
+  return Array.from(new Set(arr));
 }
 
 function bytesToHuman(bytes){
@@ -126,7 +342,6 @@ function bytesToHuman(bytes){
   while (v >= 1024 && i < units.length-1){ v /= 1024; i++; }
   return (i === 0 ? v : v.toFixed(2)) + " " + units[i];
 }
-
 function escapeHtml(s){
   return String(s ?? "")
     .replaceAll("&","&amp;")
@@ -136,103 +351,23 @@ function escapeHtml(s){
     .replaceAll("'","&#039;");
 }
 
-function sbLocalStorageInfo(){
-  const keys = Object.keys(localStorage);
-  const sbKeys = keys.filter(k => k.includes("sb-") || k.includes("supabase"));
-  const tokenKey = sbKeys.find(k => k.includes("-auth-token")) || null;
-
-  let raw = null, parsed = null, access_token = null;
-  try {
-    raw = tokenKey ? localStorage.getItem(tokenKey) : null;
-    parsed = raw ? JSON.parse(raw) : null;
-    access_token = parsed?.access_token || parsed?.currentSession?.access_token || null;
-  } catch (e) {}
-
-  return { sbKeys, tokenKey, access_token_exists: !!access_token, access_token };
-}
-
-window.addEventListener("unhandledrejection", (e) => {
-  append("UNHANDLED REJECTION: " + (e?.reason?.message || e?.reason || e));
-  console.error("unhandledrejection", e);
-});
-window.addEventListener("error", (e) => {
-  append("WINDOW ERROR: " + (e?.message || e));
-  console.error("window error", e);
-});
-
-async function manualAuthUserCheck(){
-  const info = sbLocalStorageInfo();
-  append("MANUAL CHECK: access_token exists? " + info.access_token_exists);
-
-  if(!info.access_token){
-    append("MANUAL CHECK: sem access_token no localStorage.");
-    return;
-  }
-
-  try{
-    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-      method: "GET",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: "Bearer " + info.access_token
-      }
-    });
-    const txt = await r.text();
-    append("MANUAL /auth/v1/user STATUS=" + r.status);
-    append(txt);
-  } catch (e) {
-    append("MANUAL /auth/v1/user THROW: " + (e?.message || e));
-    console.error("manual user throw", e);
-  }
-}
-
 async function refresh(){
-  setStatus("");
-
-  append("REFRESH AUTH...");
-  append("HOST=" + location.host);
-  append("ORIGIN=" + location.origin);
-  append("");
-
-  const info = sbLocalStorageInfo();
-  append("LS KEYS:");
-  append(info.sbKeys.length ? info.sbKeys.join("\n") : "(vazio)");
-  append("");
-  append("TOKEN KEY: " + (info.tokenKey || "(nenhuma)"));
-  append("ACCESS TOKEN EXISTS? " + info.access_token_exists);
-  append("");
-
-  try {
-    const sess = await supabase.auth.getSession();
-    append("getSession OK");
-    append(JSON.stringify(sess, null, 2));
-    append("");
-  } catch (e) {
-    append("getSession THROW: " + (e?.message || e));
-    append("");
-    console.error("getSession throw", e);
-  }
-
-  try {
+  // deixa mais limpo (sem printar sessão gigante toda hora)
+  try{
     const u = await supabase.auth.getUser();
-    append("getUser OK");
-    append(JSON.stringify(u, null, 2));
-    append("");
     const user = u?.data?.user;
-
     if(user){
-      auth.innerText = "Logado: " + (user.email || user.user_metadata?.user_name || user.id);
+      const label = (user.email || user.user_metadata?.user_name || user.id);
+      auth.innerText = "Logado: " + label;
+      authMini.innerText = label;
     } else {
       auth.innerText = "Não logado";
+      authMini.innerText = "Não logado";
     }
-  } catch (e) {
-    auth.innerText = "Não logado (erro getUser)";
-    append("getUser THROW: " + (e?.message || e));
-    append("");
-    console.error("getUser throw", e);
+  } catch(e){
+    auth.innerText = "Não logado (erro auth)";
+    authMini.innerText = "Não logado";
   }
-
-  await manualAuthUserCheck();
 }
 
 // ---------- STORAGE OPEN ----------
@@ -242,43 +377,20 @@ async function openObject(path){
     window.open(signed.data.signedUrl, "_blank", "noopener");
     return;
   }
-
   const dl = await supabase.storage.from(BUCKET).download(path);
   if (dl.error){
-    append("OPEN ERROR (signed+download): " + dl.error.message);
+    append("OPEN ERROR: " + dl.error.message);
     return;
   }
-
   const blobUrl = URL.createObjectURL(dl.data);
   window.open(blobUrl, "_blank", "noopener");
   setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
 }
 
-// ---------- TAGS (imagetags: id text, tais jsonb) ----------
-async function upsertTagsForId(id, tagsArr){
-  const payload = {
-    id,
-    tais: {
-      tags: tagsArr,
-      updated_at: new Date().toISOString()
-    }
-  };
-
-  const res = await supabase.from(TAGS_TABLE).upsert(payload, { onConflict: "id" }).select("id,tais").single();
-  append("TAGS UPSERT RESULT:");
-  append(JSON.stringify(res, null, 2));
-  append("");
-  return res;
-}
-
+// ---------- TAGS HELPERS ----------
 async function getTagsForIds(ids){
-  // Busca em lote
   if(!ids.length) return new Map();
   const res = await supabase.from(TAGS_TABLE).select("id,tais").in("id", ids);
-  append("TAGS BATCH SELECT:");
-  append(JSON.stringify(res, null, 2));
-  append("");
-
   const map = new Map();
   if(!res.error && Array.isArray(res.data)){
     for(const row of res.data){
@@ -290,16 +402,67 @@ async function getTagsForIds(ids){
 }
 
 async function findIdsByTag(tag){
-  // JSONB contains: tais @> {"tags":["tag"]}
-  const res = await supabase.from(TAGS_TABLE).select("id,tais").contains("tais", { tags: [tag] }).limit(200);
-  append("TAGS SEARCH contains tais.tags:");
-  append(JSON.stringify(res, null, 2));
-  append("");
+  const res = await supabase
+    .from(TAGS_TABLE)
+    .select("id")
+    .contains("tais", { tags: [tag] })
+    .limit(400);
+
   if(res.error) return [];
   return (res.data || []).map(r => r.id);
 }
 
-// ---------- LISTAGEM EM TABELA + TAGS ----------
+async function getExistingTags(id){
+  const res = await supabase.from(TAGS_TABLE).select("id,tais").eq("id", id).maybeSingle();
+  if(res.error) return [];
+  const t = res.data?.tais?.tags;
+  return Array.isArray(t) ? t : [];
+}
+
+// ✅ Melhor caminho: RPC para adicionar tag sem perder as antigas
+async function addTagsAtomic(id, tagsArr){
+  // tenta RPC. Se não existir, fallback pro merge no JS.
+  // adiciona tags 1 por 1 para manter atômico.
+  append("ADD TAGS -> " + id);
+  append("TAGS INPUT -> " + JSON.stringify(tagsArr));
+
+  // 1) tenta RPC
+  let rpcOk = true;
+  for(const t of tagsArr){
+    const r = await supabase.rpc(RPC_ADD_TAG, { p_id: id, p_tag: t });
+    if(r.error){
+      rpcOk = false;
+      append("RPC FAIL (vai fallback): " + r.error.message);
+      break;
+    }
+  }
+  if(rpcOk){
+    append("RPC OK: tags adicionadas sem sobrescrever.");
+    return { ok:true, mode:"rpc" };
+  }
+
+  // 2) fallback: merge no JS e upsert (funciona, mas não é tão forte quanto RPC)
+  const oldTags = await getExistingTags(id);
+  const merged = Array.from(new Set([...(oldTags||[]), ...(tagsArr||[])]));
+  const payload = {
+    id,
+    tais: {
+      tags: merged,
+      updated_at: new Date().toISOString()
+    }
+  };
+
+  const up = await supabase.from(TAGS_TABLE).upsert(payload, { onConflict: "id" }).select("id,tais");
+  if(up.error){
+    append("FALLBACK UPSERT ERROR: " + up.error.message);
+    return { ok:false, mode:"fallback", error: up.error };
+  }
+
+  append("FALLBACK OK: tags mescladas e salvas.");
+  return { ok:true, mode:"fallback" };
+}
+
+// ---------- LISTAGEM ----------
 function renderTags(tags){
   if(!tags || !tags.length) return `<span class="small">(sem tags)</span>`;
   return tags.map(t => `<span class="tagpill">${escapeHtml(t)}</span>`).join("");
@@ -308,19 +471,22 @@ function renderTags(tags){
 function renderTable(folder, files, tagsMap, filteredIdsSet=null){
   let html = `
     <div class="row" style="justify-content:space-between;margin-top:16px">
-      <div><span class="badge">Pasta</span> <b>${escapeHtml(folder)}/</b></div>
+      <div class="split">
+        <span class="badge">Pasta</span>
+        <div><b>${escapeHtml(folder)}/</b></div>
+      </div>
       <div class="small">${files.length} arquivo(s)</div>
     </div>
 
     <table>
       <thead>
         <tr>
-          <th>Arquivo</th>
-          <th>Tamanho</th>
-          <th>Atualizado</th>
-          <th>Tipo</th>
-          <th>Tags</th>
-          <th>Ações</th>
+          <th style="width:28%">Arquivo</th>
+          <th style="width:10%">Tamanho</th>
+          <th style="width:14%">Atualizado</th>
+          <th style="width:12%">Tipo</th>
+          <th style="width:26%">Tags</th>
+          <th style="width:10%">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -333,28 +499,30 @@ function renderTable(folder, files, tagsMap, filteredIdsSet=null){
     const mime = f.metadata?.mimetype || f.metadata?.contentType || "-";
     const fullPath = `${folder}/${name}`;
 
-    // se estiver em modo filtro por tag, esconde o que não está no set
     if(filteredIdsSet && !filteredIdsSet.has(fullPath)) continue;
 
     const tags = tagsMap.get(fullPath) || [];
 
     html += `
       <tr>
-        <td><b>${escapeHtml(name)}</b><div class="small">${escapeHtml(fullPath)}</div></td>
+        <td>
+          <b>${escapeHtml(name)}</b>
+          <div class="filemeta">${escapeHtml(fullPath)}</div>
+        </td>
         <td>${escapeHtml(size)}</td>
         <td>${escapeHtml(updated)}</td>
         <td>${escapeHtml(mime)}</td>
 
-        <td class="tagsCell">
+        <td>
           <div data-tags-view="${escapeHtml(fullPath)}">${renderTags(tags)}</div>
-          <div class="row" style="margin-top:8px">
+          <div class="row" style="margin-top:10px">
             <input type="text" data-tags-input="${escapeHtml(fullPath)}" placeholder="ex: cozinha, bronze, 1036" style="min-width:240px">
-            <button type="button" class="ghost" data-save-tags="${escapeHtml(fullPath)}">Salvar</button>
+            <button type="button" class="good" data-add-tags="${escapeHtml(fullPath)}">Adicionar</button>
           </div>
         </td>
 
         <td class="actions">
-          <button type="button" data-open="${escapeHtml(fullPath)}">Abrir</button>
+          <button type="button" class="ghost" data-open="${escapeHtml(fullPath)}">Abrir</button>
         </td>
       </tr>
     `;
@@ -372,22 +540,35 @@ function renderTable(folder, files, tagsMap, filteredIdsSet=null){
     });
   });
 
-  // salvar tags por arquivo
-  listaWrap.querySelectorAll("button[data-save-tags]").forEach(btn => {
+  // adicionar tags (sem sobrescrever)
+  listaWrap.querySelectorAll("button[data-add-tags]").forEach(btn => {
     btn.addEventListener("click", async () => {
-      const id = btn.getAttribute("data-save-tags");
+      const id = btn.getAttribute("data-add-tags");
       const inp = listaWrap.querySelector(`input[data-tags-input="${CSS.escape(id)}"]`);
       const tagsArr = parseTags(inp?.value || "");
-      append("SAVE TAGS id=" + id);
-      append("TAGS=" + JSON.stringify(tagsArr));
-      const res = await upsertTagsForId(id, tagsArr);
-      if(res.error){
-        append("SAVE TAGS ERROR: " + res.error.message);
+      if(!tagsArr.length){
+        append("ADD TAGS BLOQUEADO: sem tags.");
         return;
       }
-      // atualiza UI sem refazer tudo
-      const view = listaWrap.querySelector(`div[data-tags-view="${CSS.escape(id)}"]`);
-      if(view) view.innerHTML = renderTags(tagsArr);
+
+      btn.disabled = true;
+      try{
+        append("ADD TAGS CLICK id=" + id);
+        const result = await addTagsAtomic(id, tagsArr);
+        if(!result.ok){
+          append("ADD TAGS ERROR.");
+          return;
+        }
+
+        // atualiza UI pegando do banco de novo
+        const updatedTags = await getExistingTags(id);
+        const view = listaWrap.querySelector(`div[data-tags-view="${CSS.escape(id)}"]`);
+        if(view) view.innerHTML = renderTags(updatedTags);
+
+        append("OK: tags atualizadas (" + result.mode + ").");
+      } finally {
+        btn.disabled = false;
+      }
     });
   });
 }
@@ -403,23 +584,16 @@ async function listMyFiles(filterByIds=null){
   }
 
   const folder = user.id;
-  append("LIST START folder=" + folder);
+  append("LIST folder=" + folder);
 
   const res = await supabase.storage.from(BUCKET).list(folder, {
-    limit: 100,
+    limit: 200,
     offset: 0,
     sortBy: { column: "updated_at", order: "desc" }
   });
 
-  append("LIST RESULT:");
-  append(JSON.stringify(res, null, 2));
-  append("");
-
   if(res.error){
-    listaWrap.innerHTML = `
-      <p class="small" style="color:#b91c1c">
-        Erro ao listar: ${escapeHtml(res.error.message)}
-      </p>`;
+    listaWrap.innerHTML = `<p class="small" style="color:#ef4444">Erro ao listar: ${escapeHtml(res.error.message)}</p>`;
     return;
   }
 
@@ -429,7 +603,6 @@ async function listMyFiles(filterByIds=null){
     return;
   }
 
-  // carregar tags em lote (ids = fullPath)
   const ids = files.map(f => `${folder}/${f.name}`);
   const tagsMap = await getTagsForIds(ids);
 
@@ -439,15 +612,13 @@ async function listMyFiles(filterByIds=null){
 
 // ---------- BOTÕES ----------
 document.getElementById("login").onclick = async ()=>{
-  setStatus("CLICK LOGIN...\n");
+  setStatus("LOGIN...\n");
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "github",
     options: { redirectTo: REDIRECT }
   });
   if(error){
-    append("OAUTH ERROR:");
-    append(error.message);
-    console.error(error);
+    append("OAUTH ERROR: " + error.message);
     alert(error.message);
   } else {
     append("REDIRECTING...");
@@ -457,11 +628,12 @@ document.getElementById("login").onclick = async ()=>{
 document.getElementById("logout").onclick = async ()=>{
   await supabase.auth.signOut();
   listaWrap.innerHTML = "";
+  setStatus("Logout OK.");
   await refresh();
 };
 
 document.getElementById("reset").onclick = async ()=>{
-  setStatus("RESET AUTH...\n");
+  setStatus("RESET...\n");
   try{ await supabase.auth.signOut(); } catch(e){}
   const keys = Object.keys(localStorage).filter(k => k.includes("sb-") || k.includes("supabase"));
   keys.forEach(k => localStorage.removeItem(k));
@@ -472,7 +644,7 @@ document.getElementById("reset").onclick = async ()=>{
 
 document.getElementById("listar").onclick = async ()=>{ await listMyFiles(); };
 
-// buscar por tag (filtra a tabela)
+// buscar por tag
 document.getElementById("buscar").onclick = async ()=>{
   await refresh();
   const tag = (searchTag.value || "").trim().toLowerCase();
@@ -489,34 +661,39 @@ document.getElementById("buscar").onclick = async ()=>{
   await listMyFiles(ids);
 };
 
-document.getElementById("limparBusca").onclick = async ()=>{
+document.getElementById("limpar").onclick = async ()=>{
   searchTag.value = "";
   await listMyFiles();
 };
 
-// salvar tags do último upload
+// adicionar tags no último upload (sem apagar as antigas)
 salvarUltimoBtn.onclick = async ()=>{
   await refresh();
   if(!lastUploadedPath){
-    append("Nenhum upload recente para salvar tags.");
+    append("Nenhum upload recente.");
     return;
   }
   const tagsArr = parseTags(tagsInput.value);
-  append("SAVE LAST UPLOAD TAGS path=" + lastUploadedPath);
-  append("TAGS=" + JSON.stringify(tagsArr));
-  const res = await upsertTagsForId(lastUploadedPath, tagsArr);
-  if(res.error){
-    append("SAVE TAGS ERROR: " + res.error.message);
+  if(!tagsArr.length){
+    append("Sem tags para adicionar.");
     return;
   }
-  append("OK: tags salvas para " + lastUploadedPath);
-  await listMyFiles();
+  salvarUltimoBtn.disabled = true;
+  try{
+    append("ADD TAGS LAST path=" + lastUploadedPath);
+    const result = await addTagsAtomic(lastUploadedPath, tagsArr);
+    if(result.ok){
+      append("OK: tags adicionadas no último upload (" + result.mode + ").");
+      await listMyFiles();
+    }
+  } finally {
+    salvarUltimoBtn.disabled = false;
+  }
 };
 
-// ---------- UPLOAD (MANTIDO IGUAL AO SEU) ----------
+// ---------- UPLOAD (MANTIDO) ----------
 document.getElementById("upload").onclick = async ()=>{
-  // ⚠️ Não mexi no upload, só deixei como você tinha
-  // (mantém o comportamento original)
+  // MANTIDO: você pediu para não mexer no upload do storage.
   await refresh();
 
   const u = await supabase.auth.getUser().catch(()=>({}));
@@ -559,29 +736,25 @@ document.getElementById("upload").onclick = async ()=>{
 
   append("SIGNED URL OK");
 
-  // ✅ NOVO: guarda o lastUploadedPath, mas sem mexer no upload em si
   lastUploadedPath = path;
   append("LAST UPLOAD SET: " + lastUploadedPath);
 
-  // ✅ opcional: se você quiser salvar tags automaticamente do input (descomenta)
+  // opcional: auto adicionar tags do input ao terminar upload (sem apagar)
   // const tagsArr = parseTags(tagsInput.value);
   // if(tagsArr.length){
-  //   await upsertTagsForId(lastUploadedPath, tagsArr);
+  //   await addTagsAtomic(lastUploadedPath, tagsArr);
   //   append("AUTO TAGS OK");
   // }
-
-  // ✅ opcional: refresh da lista após upload
-  // await listMyFiles();
 };
 
 await refresh();
-supabase.auth.onAuthStateChange(async (event) => {
-  append("AUTH STATE CHANGE: " + event);
+supabase.auth.onAuthStateChange(async () => {
   await refresh();
 });
 </script>
 </body>
 </html>
+
 
 
 
