@@ -9,11 +9,9 @@ body{font-family:Arial;background:#f5f5f5;padding:40px}
 .card{background:#fff;border-radius:12px;padding:24px;max-width:520px;margin:auto;box-shadow:0 0 30px rgba(0,0,0,.08)}
 button{background:#1f6feb;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer}
 button.sec{background:#111827}
-button.warn{background:#b45309}
 .status{white-space:pre-wrap;margin-top:15px;font-size:13px;background:#f3f4f6;padding:10px;border-radius:10px}
 img{max-width:100%;margin-top:15px;border-radius:8px}
 a{display:inline-block;margin-top:12px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 </style>
 </head>
 <body>
@@ -28,11 +26,8 @@ a{display:inline-block;margin-top:12px}
 <div class="card">
   <h2>Enviar comprovante</h2>
 
-  <div class="row">
-    <button id="login">Entrar com GitHub</button>
-    <button id="logout" class="sec">Logout</button>
-    <button id="reset" class="warn" type="button">RESET AUTH</button>
-  </div>
+  <button id="login">Entrar com GitHub</button>
+  <button id="logout" class="sec">Logout</button>
 
   <p id="auth"></p>
 
@@ -46,12 +41,9 @@ a{display:inline-block;margin-top:12px}
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
-
 const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
+  "https://hfhwvzldhgqniqnurync.supabase.co",
+  "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl",
   { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
 );
 
@@ -69,125 +61,44 @@ function safeName(n){
     .replace(/[^a-zA-Z0-9._-]/g,"_");
 }
 
-function setStatus(txt){ status.innerText = txt || ""; }
-function append(txt){ status.innerText += (txt || "") + "\n"; }
+async function refresh(){
+  status.innerText = ""; // limpa e mostra só o estado atual
 
-function sbLocalStorageInfo(){
+  status.innerText += "REFRESH AUTH...\n";
+  status.innerText += "HOST=" + location.host + "\n";
+  status.innerText += "ORIGIN=" + location.origin + "\n\n";
+
   const keys = Object.keys(localStorage);
   const sbKeys = keys.filter(k => k.includes("sb-") || k.includes("supabase"));
-  const tokenKey = sbKeys.find(k => k.includes("-auth-token")) || null;
+  status.innerText += "LS KEYS:\n" + (sbKeys.length ? sbKeys.join("\n") : "(vazio)") + "\n\n";
 
-  let raw = null, parsed = null, access_token = null;
-  try {
-    raw = tokenKey ? localStorage.getItem(tokenKey) : null;
-    parsed = raw ? JSON.parse(raw) : null;
-    access_token = parsed?.access_token || parsed?.currentSession?.access_token || null;
-  } catch (e) {}
+  const sess = await supabase.auth.getSession();
+  status.innerText += "getSession:\n" + JSON.stringify(sess, null, 2) + "\n\n";
 
-  return { sbKeys, tokenKey, access_token_exists: !!access_token, access_token };
-}
+  const u = await supabase.auth.getUser();
+  status.innerText += "getUser:\n" + JSON.stringify(u, null, 2) + "\n\n";
 
-// Debug avançado: captura erros 400 de fetch internos? (não pega tudo, mas ajuda)
-window.addEventListener("unhandledrejection", (e) => {
-  append("UNHANDLED REJECTION: " + (e?.reason?.message || e?.reason || e));
-  console.error("unhandledrejection", e);
-});
-window.addEventListener("error", (e) => {
-  append("WINDOW ERROR: " + (e?.message || e));
-  console.error("window error", e);
-});
+  const user = u?.data?.user;
 
-async function manualAuthUserCheck(){
-  const info = sbLocalStorageInfo();
-  append("MANUAL CHECK: access_token exists? " + info.access_token_exists);
-
-  if(!info.access_token){
-    append("MANUAL CHECK: sem access_token no localStorage.");
-    return;
+  if(user){
+    auth.innerText = "Logado: " + (user.email || user.user_metadata?.user_name || user.id);
+  } else {
+    auth.innerText = "Não logado";
   }
-
-  try{
-    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-      method: "GET",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: "Bearer " + info.access_token
-      }
-    });
-    const txt = await r.text();
-    append("MANUAL /auth/v1/user STATUS=" + r.status);
-    append(txt);
-  } catch (e) {
-    append("MANUAL /auth/v1/user THROW: " + (e?.message || e));
-    console.error("manual user throw", e);
-  }
-}
-
-async function refresh(){
-  setStatus("");
-
-  append("REFRESH AUTH...");
-  append("HOST=" + location.host);
-  append("ORIGIN=" + location.origin);
-  append("");
-
-  const info = sbLocalStorageInfo();
-  append("LS KEYS:");
-  append(info.sbKeys.length ? info.sbKeys.join("\n") : "(vazio)");
-  append("");
-  append("TOKEN KEY: " + (info.tokenKey || "(nenhuma)"));
-  append("ACCESS TOKEN EXISTS? " + info.access_token_exists);
-  append("");
-
-  // 1) getSession
-  try {
-    const sess = await supabase.auth.getSession();
-    append("getSession OK");
-    append(JSON.stringify(sess, null, 2));
-    append("");
-  } catch (e) {
-    append("getSession THROW: " + (e?.message || e));
-    append("");
-    console.error("getSession throw", e);
-  }
-
-  // 2) getUser (aqui costuma dar 400)
-  try {
-    const u = await supabase.auth.getUser();
-    append("getUser OK");
-    append(JSON.stringify(u, null, 2));
-    append("");
-    const user = u?.data?.user;
-
-    if(user){
-      auth.innerText = "Logado: " + (user.email || user.user_metadata?.user_name || user.id);
-    } else {
-      auth.innerText = "Não logado";
-    }
-  } catch (e) {
-    auth.innerText = "Não logado (erro getUser)";
-    append("getUser THROW: " + (e?.message || e));
-    append("");
-    console.error("getUser throw", e);
-  }
-
-  // 3) teste manual do endpoint que dá o veredito do 400
-  await manualAuthUserCheck();
 }
 
 document.getElementById("login").onclick = async ()=>{
-  setStatus("CLICK LOGIN...\n");
+  status.innerText = "CLICK LOGIN...\n";
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "github",
     options: { redirectTo: REDIRECT }
   });
   if(error){
-    append("OAUTH ERROR:");
-    append(error.message);
+    status.innerText += "OAUTH ERROR:\n" + error.message;
     console.error(error);
     alert(error.message);
   } else {
-    append("REDIRECTING...");
+    status.innerText += "REDIRECTING...\n";
   }
 };
 
@@ -196,62 +107,43 @@ document.getElementById("logout").onclick = async ()=>{
   await refresh();
 };
 
-document.getElementById("reset").onclick = async ()=>{
-  setStatus("RESET AUTH...\n");
-  try{ await supabase.auth.signOut(); } catch(e){}
-  const keys = Object.keys(localStorage).filter(k => k.includes("sb-") || k.includes("supabase"));
-  keys.forEach(k => localStorage.removeItem(k));
-  append("REMOVIDAS KEYS:\n" + (keys.length ? keys.join("\n") : "(nenhuma)"));
-  append("\nRELOAD...");
-  location.reload();
-};
-
 document.getElementById("upload").onclick = async ()=>{
   preview.innerHTML = "";
 
-  // força refresh antes pra garantir sessão carregada
-  await refresh();
-
-  const u = await supabase.auth.getUser().catch(()=>({}));
+  const u = await supabase.auth.getUser();
   const user = u?.data?.user;
 
   if(!user){
-    append("UPLOAD BLOQUEADO: não logado.");
+    status.innerText = "Faça login";
     return;
   }
 
   const file = document.getElementById("file").files[0];
   if(!file){
-    append("UPLOAD BLOQUEADO: selecione um arquivo.");
+    status.innerText = "Selecione um arquivo";
     return;
   }
 
   const path = user.id + "/" + crypto.randomUUID() + "_" + safeName(file.name);
-  append("UPLOAD START");
-  append("PATH=" + path);
+  status.innerText = "Enviando...\nPATH=" + path + "\n";
 
   const up = await supabase.storage.from(BUCKET).upload(path, file);
-  append("UPLOAD RESULT:");
-  append(JSON.stringify(up, null, 2));
-  append("");
+  status.innerText += "UPLOAD RESULT:\n" + JSON.stringify(up, null, 2) + "\n\n";
 
   if(up.error){
-    append("UPLOAD ERROR: " + up.error.message);
+    status.innerText += "UPLOAD ERROR:\n" + up.error.message;
     return;
   }
 
   const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 600);
-  append("SIGNED RESULT:");
-  append(JSON.stringify(signed, null, 2));
-  append("");
+  status.innerText += "SIGNED RESULT:\n" + JSON.stringify(signed, null, 2) + "\n\n";
 
   if(signed.error){
-    append("SIGNED ERROR: " + signed.error.message);
+    status.innerText += "SIGNED ERROR:\n" + signed.error.message;
     return;
   }
 
   const url = signed.data.signedUrl;
-  append("SIGNED URL OK");
 
   if(file.type.startsWith("image")){
     const img = document.createElement("img");
@@ -260,15 +152,14 @@ document.getElementById("upload").onclick = async ()=>{
   } else {
     const a = document.createElement("a");
     a.href = url;
-    a.target="_blank";
-    a.innerText="Abrir comprovante";
+    a.target = "_blank";
+    a.innerText = "Abrir comprovante";
     preview.appendChild(a);
   }
 };
 
 await refresh();
-supabase.auth.onAuthStateChange(async (event) => {
-  append("AUTH STATE CHANGE: " + event);
+supabase.auth.onAuthStateChange(async () => {
   await refresh();
 });
 </script>
