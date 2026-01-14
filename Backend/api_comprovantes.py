@@ -6,11 +6,8 @@ from flask import Blueprint, jsonify, request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não configurados")
+SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co"
+SUPABASE_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl"
 
 comprovantes_bp = Blueprint("comprovantes_bp", __name__)
 CORS(comprovantes_bp, resources={r"/api/*": {"origins": "*"}})
@@ -39,7 +36,8 @@ def upload_comprovante():
             params={"upsert": "true"},
             data=arquivo.read(),
         )
-        response.raise_for_status()
+        if not response.ok:
+            return jsonify({"error": response.text}), response.status_code
 
         public_url = (
             f"{SUPABASE_URL}/storage/v1/object/public/comprovantes/{nome_arquivo}"
@@ -47,5 +45,6 @@ def upload_comprovante():
         return jsonify({"status": "ok", "arquivo": nome_arquivo, "url": public_url})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
+
 
 
