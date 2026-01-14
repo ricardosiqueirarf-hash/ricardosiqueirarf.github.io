@@ -1,33 +1,24 @@
 import datetime
 import os
 import requests
-
-from flask import Blueprint, jsonify, request, send_from_directory
+from flask import Blueprint, jsonify, request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 # =========================
 # CONFIG
 # =========================
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://hfhwvzldhgqniqnurync.supabase.co")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "COLOQUE_SUA_ANON_KEY_AQUI")  # use a ANON key do projeto
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")  # aqui use a ANON key do projeto (a mesma que você já usa no app)
 BUCKET = os.getenv("SUPABASE_BUCKET", "comprovantes")
 SIGNED_URL_EXPIRES_SECONDS = int(os.getenv("SIGNED_URL_EXPIRES_SECONDS", "600"))  # 10 minutos
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não definidos")
+
 comprovantes_bp = Blueprint("comprovantes_bp", __name__)
 CORS(comprovantes_bp, resources={r"/api/*": {"origins": "*"}})
-
-# =========================
-# (Opcional) servir HTML localmente pelo Flask
-# Coloque upload.html e callback.html numa pasta "public"
-# =========================
-@comprovantes_bp.route("/upload.html", methods=["GET"])
-def serve_upload():
-    return send_from_directory("public", "upload.html")
-
-@comprovantes_bp.route("/callback.html", methods=["GET"])
-def serve_callback():
-    return send_from_directory("public", "callback.html")
 
 
 # =========================
@@ -39,12 +30,13 @@ def _get_bearer_token():
         return None
     return auth.split(" ", 1)[1].strip()
 
+
 def _supabase_get_user(access_token: str):
     """
-    Valida token e retorna o user (com id).
+    Valida token do usuário (OAuth GitHub) e devolve user com id.
     """
     headers = {
-        "apikey": SUPABASE_ANON_KEY,
+        "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {access_token}",
     }
     r = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers, timeout=20)
@@ -52,15 +44,17 @@ def _supabase_get_user(access_token: str):
         return None, r.text, r.status_code
     return r.json(), None, 200
 
+
 def _supabase_upload_object(access_token: str, path: str, file_bytes: bytes, content_type: str, upsert: bool = False):
     """
-    Upload no storage respeitando RLS/policies (usa token do usuário).
+    Upload no Storage usando token do usuário (RLS/policies aplicam).
     """
     headers = {
-        "apikey": SUPABASE_ANON_KEY,
+        "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {access_token}",
         "Content-Type": content_type or "application/octet-stream",
     }
+
     url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{path}"
     r = requests.post(
         url,
@@ -71,12 +65,13 @@ def _supabase_upload_object(access_token: str, path: str, file_bytes: bytes, con
     )
     return r
 
+
 def _supabase_signed_url(access_token: str, path: str, expires_in: int):
     """
-    Gera signed URL (ideal se bucket for PRIVATE)
+    Gera signed URL (ideal para bucket PRIVATE).
     """
     headers = {
-        "apikey": SUPABASE_ANON_KEY,
+        "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
     }
@@ -86,15 +81,16 @@ def _supabase_signed_url(access_token: str, path: str, expires_in: int):
 
 
 # =========================
-# ROUTE: UPLOAD
+# ROUTE
 # =========================
 @comprovantes_bp.route("/api/comprovantes/upload", methods=["POST"])
 def upload_comprovante():
     """
     Frontend deve enviar:
-      Authorization: Bearer <access_token>
-    Arquivo:
-      multipart/form-data com campo 'arquivo'
+      Authorization: Bearer <access_token_do_usuario>
+
+    Arquivo em multipart:
+      arquivo=<file>
 
     Salva em:
       <user_id>/<timestamp>_<filename>
@@ -121,11 +117,10 @@ def upload_comprovante():
 
         original_name = arquivo.filename or "comprovante"
         nome_seguro = secure_filename(original_name) or "comprovante"
-
         timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
         nome_arquivo = f"{timestamp}_{nome_seguro}"
 
-        # OBRIGATÓRIO para policy: primeira pasta == user_id
+        # POLICY: primeira pasta precisa ser user_id
         path = f"{user_id}/{nome_arquivo}"
 
         file_bytes = arquivo.read()
@@ -144,7 +139,7 @@ def upload_comprovante():
                 "error": "Upload failed",
                 "status_code": r_up.status_code,
                 "details": r_up.text,
-                "hint": "Se der 403, sua policy/path não bateu. O path deve começar com user_id/..."
+                "hint": "Se der 403: sua policy exige que o path comece com user_id/..."
             }), r_up.status_code
 
         r_sign = _supabase_signed_url(access_token, path, SIGNED_URL_EXPIRES_SECONDS)
@@ -170,3 +165,4 @@ def upload_comprovante():
 
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
+
