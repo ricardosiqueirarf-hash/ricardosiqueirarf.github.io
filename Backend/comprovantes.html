@@ -6,10 +6,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 body{font-family:Arial;background:#f5f5f5;padding:40px}
-.card{background:#fff;border-radius:12px;padding:24px;max-width:980px;margin:auto;box-shadow:0 0 30px rgba(0,0,0,.08)}
+.card{background:#fff;border-radius:12px;padding:24px;max-width:1100px;margin:auto;box-shadow:0 0 30px rgba(0,0,0,.08)}
 button{background:#1f6feb;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer}
 button.sec{background:#111827}
 button.warn{background:#b45309}
+button.ghost{background:#eef2ff;color:#1f6feb}
+button:disabled{opacity:.6;cursor:not-allowed}
 .status{white-space:pre-wrap;margin-top:15px;font-size:13px;background:#f3f4f6;padding:10px;border-radius:10px}
 img{max-width:100%;margin-top:15px;border-radius:8px}
 a{display:inline-block;margin-top:12px}
@@ -21,6 +23,11 @@ th{background:#f9fafb;font-weight:700}
 .small{font-size:12px;color:#6b7280}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 input[type="file"]{max-width:100%}
+input[type="text"]{padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;min-width:260px}
+.tagpill{display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:12px;margin:2px 4px 0 0}
+.tagsCell{max-width:360px}
+.hint{font-size:12px;color:#6b7280;margin-top:4px}
+hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}
 </style>
 </head>
 <body>
@@ -33,7 +40,7 @@ input[type="file"]{max-width:100%}
 </script>
 
 <div class="card">
-  <h2>Enviar comprovante</h2>
+  <h2>Enviar comprovante + Tags</h2>
 
   <div class="row">
     <button id="login">Entrar com GitHub</button>
@@ -47,6 +54,20 @@ input[type="file"]{max-width:100%}
   <div class="row">
     <input type="file" id="file" accept="image/*,application/pdf">
     <button id="upload">Enviar</button>
+  </div>
+
+  <div class="row">
+    <input type="text" id="tagsInput" placeholder="Tags para o PRÓXIMO upload (ex: cozinha, bronze, 1036)">
+    <button id="salvarUltimo" class="ghost" type="button">Salvar tags do ÚLTIMO upload</button>
+  </div>
+  <div class="hint">As tags são salvas na tabela <b>imagetags</b> usando <b>id = fullPath</b> (ex: userId/arquivo.jpg).</div>
+
+  <hr>
+
+  <div class="row">
+    <input type="text" id="searchTag" placeholder="Buscar por tag (ex: bronze)">
+    <button id="buscar" type="button">Buscar</button>
+    <button id="limparBusca" class="sec" type="button">Limpar busca</button>
   </div>
 
   <div id="listaWrap"></div>
@@ -68,10 +89,16 @@ const supabase = createClient(
 
 const BUCKET = "comprovantes";
 const REDIRECT = "https://www.colorglassfortaleza.com.br/callback.html";
+const TAGS_TABLE = "imagetags";
 
 const auth = document.getElementById("auth");
 const status = document.getElementById("status");
 const listaWrap = document.getElementById("listaWrap");
+const tagsInput = document.getElementById("tagsInput");
+const salvarUltimoBtn = document.getElementById("salvarUltimo");
+const searchTag = document.getElementById("searchTag");
+
+let lastUploadedPath = null; // guarda o fullPath (userId/arquivo) do último upload
 
 function safeName(n){
   return (n || "comprovante")
@@ -82,6 +109,32 @@ function safeName(n){
 
 function setStatus(txt){ status.innerText = txt || ""; }
 function append(txt){ status.innerText += (txt || "") + "\n"; }
+
+function parseTags(str){
+  return (str || "")
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => s.toLowerCase());
+}
+
+function bytesToHuman(bytes){
+  if (bytes == null) return "-";
+  const units = ["B","KB","MB","GB"];
+  let i = 0;
+  let v = Number(bytes);
+  while (v >= 1024 && i < units.length-1){ v /= 1024; i++; }
+  return (i === 0 ? v : v.toFixed(2)) + " " + units[i];
+}
+
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
 function sbLocalStorageInfo(){
   const keys = Object.keys(localStorage);
@@ -182,34 +235,14 @@ async function refresh(){
   await manualAuthUserCheck();
 }
 
-// ---------- LISTAGEM EM TABELA (NOVA FUNÇÃO) ----------
-function bytesToHuman(bytes){
-  if (bytes == null) return "-";
-  const units = ["B","KB","MB","GB"];
-  let i = 0;
-  let v = Number(bytes);
-  while (v >= 1024 && i < units.length-1){ v /= 1024; i++; }
-  return (i === 0 ? v : v.toFixed(2)) + " " + units[i];
-}
-
-function escapeHtml(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
+// ---------- STORAGE OPEN ----------
 async function openObject(path){
-  // tenta signed url primeiro
   const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 600);
   if (!signed.error && signed.data?.signedUrl){
     window.open(signed.data.signedUrl, "_blank", "noopener");
     return;
   }
 
-  // fallback: download blob e abre
   const dl = await supabase.storage.from(BUCKET).download(path);
   if (dl.error){
     append("OPEN ERROR (signed+download): " + dl.error.message);
@@ -218,52 +251,61 @@ async function openObject(path){
 
   const blobUrl = URL.createObjectURL(dl.data);
   window.open(blobUrl, "_blank", "noopener");
-  // não revoga imediatamente pra não quebrar a aba
   setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
 }
 
-async function listMyFiles(){
-  // sem mexer no upload: isso só lista o destino
-  await refresh();
+// ---------- TAGS (imagetags: id text, tais jsonb) ----------
+async function upsertTagsForId(id, tagsArr){
+  const payload = {
+    id,
+    tais: {
+      tags: tagsArr,
+      updated_at: new Date().toISOString()
+    }
+  };
 
-  const u = await supabase.auth.getUser().catch(()=>({}));
-  const user = u?.data?.user;
-  if(!user){
-    listaWrap.innerHTML = `<p class="small">Faça login para listar.</p>`;
-    return;
-  }
+  const res = await supabase.from(TAGS_TABLE).upsert(payload, { onConflict: "id" }).select("id,tais").single();
+  append("TAGS UPSERT RESULT:");
+  append(JSON.stringify(res, null, 2));
+  append("");
+  return res;
+}
 
-  const folder = user.id; // mesma pasta que você usa no upload: user.id/...
-
-  append("LIST START folder=" + folder);
-
-  // Lista arquivos da pasta do usuário
-  const res = await supabase.storage.from(BUCKET).list(folder, {
-    limit: 100,
-    offset: 0,
-    sortBy: { column: "updated_at", order: "desc" }
-  });
-
-  append("LIST RESULT:");
+async function getTagsForIds(ids){
+  // Busca em lote
+  if(!ids.length) return new Map();
+  const res = await supabase.from(TAGS_TABLE).select("id,tais").in("id", ids);
+  append("TAGS BATCH SELECT:");
   append(JSON.stringify(res, null, 2));
   append("");
 
-  if(res.error){
-    listaWrap.innerHTML = `
-      <p class="small" style="color:#b91c1c">
-        Erro ao listar: ${escapeHtml(res.error.message)}<br>
-        (Isso é policy de SELECT no storage.objects)
-      </p>`;
-    return;
+  const map = new Map();
+  if(!res.error && Array.isArray(res.data)){
+    for(const row of res.data){
+      const t = row?.tais?.tags;
+      map.set(row.id, Array.isArray(t) ? t : []);
+    }
   }
+  return map;
+}
 
-  const files = res.data || [];
-  if(!files.length){
-    listaWrap.innerHTML = `<p class="small">Nenhum arquivo encontrado em <b>${escapeHtml(folder)}/</b>.</p>`;
-    return;
-  }
+async function findIdsByTag(tag){
+  // JSONB contains: tais @> {"tags":["tag"]}
+  const res = await supabase.from(TAGS_TABLE).select("id,tais").contains("tais", { tags: [tag] }).limit(200);
+  append("TAGS SEARCH contains tais.tags:");
+  append(JSON.stringify(res, null, 2));
+  append("");
+  if(res.error) return [];
+  return (res.data || []).map(r => r.id);
+}
 
-  // Monta tabela
+// ---------- LISTAGEM EM TABELA + TAGS ----------
+function renderTags(tags){
+  if(!tags || !tags.length) return `<span class="small">(sem tags)</span>`;
+  return tags.map(t => `<span class="tagpill">${escapeHtml(t)}</span>`).join("");
+}
+
+function renderTable(folder, files, tagsMap, filteredIdsSet=null){
   let html = `
     <div class="row" style="justify-content:space-between;margin-top:16px">
       <div><span class="badge">Pasta</span> <b>${escapeHtml(folder)}/</b></div>
@@ -277,6 +319,7 @@ async function listMyFiles(){
           <th>Tamanho</th>
           <th>Atualizado</th>
           <th>Tipo</th>
+          <th>Tags</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -290,12 +333,26 @@ async function listMyFiles(){
     const mime = f.metadata?.mimetype || f.metadata?.contentType || "-";
     const fullPath = `${folder}/${name}`;
 
+    // se estiver em modo filtro por tag, esconde o que não está no set
+    if(filteredIdsSet && !filteredIdsSet.has(fullPath)) continue;
+
+    const tags = tagsMap.get(fullPath) || [];
+
     html += `
       <tr>
         <td><b>${escapeHtml(name)}</b><div class="small">${escapeHtml(fullPath)}</div></td>
         <td>${escapeHtml(size)}</td>
         <td>${escapeHtml(updated)}</td>
         <td>${escapeHtml(mime)}</td>
+
+        <td class="tagsCell">
+          <div data-tags-view="${escapeHtml(fullPath)}">${renderTags(tags)}</div>
+          <div class="row" style="margin-top:8px">
+            <input type="text" data-tags-input="${escapeHtml(fullPath)}" placeholder="ex: cozinha, bronze, 1036" style="min-width:240px">
+            <button type="button" class="ghost" data-save-tags="${escapeHtml(fullPath)}">Salvar</button>
+          </div>
+        </td>
+
         <td class="actions">
           <button type="button" data-open="${escapeHtml(fullPath)}">Abrir</button>
         </td>
@@ -306,7 +363,7 @@ async function listMyFiles(){
   html += `</tbody></table>`;
   listaWrap.innerHTML = html;
 
-  // eventos dos botões
+  // abrir
   listaWrap.querySelectorAll("button[data-open]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const p = btn.getAttribute("data-open");
@@ -314,6 +371,70 @@ async function listMyFiles(){
       await openObject(p);
     });
   });
+
+  // salvar tags por arquivo
+  listaWrap.querySelectorAll("button[data-save-tags]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-save-tags");
+      const inp = listaWrap.querySelector(`input[data-tags-input="${CSS.escape(id)}"]`);
+      const tagsArr = parseTags(inp?.value || "");
+      append("SAVE TAGS id=" + id);
+      append("TAGS=" + JSON.stringify(tagsArr));
+      const res = await upsertTagsForId(id, tagsArr);
+      if(res.error){
+        append("SAVE TAGS ERROR: " + res.error.message);
+        return;
+      }
+      // atualiza UI sem refazer tudo
+      const view = listaWrap.querySelector(`div[data-tags-view="${CSS.escape(id)}"]`);
+      if(view) view.innerHTML = renderTags(tagsArr);
+    });
+  });
+}
+
+async function listMyFiles(filterByIds=null){
+  await refresh();
+
+  const u = await supabase.auth.getUser().catch(()=>({}));
+  const user = u?.data?.user;
+  if(!user){
+    listaWrap.innerHTML = `<p class="small">Faça login para listar.</p>`;
+    return;
+  }
+
+  const folder = user.id;
+  append("LIST START folder=" + folder);
+
+  const res = await supabase.storage.from(BUCKET).list(folder, {
+    limit: 100,
+    offset: 0,
+    sortBy: { column: "updated_at", order: "desc" }
+  });
+
+  append("LIST RESULT:");
+  append(JSON.stringify(res, null, 2));
+  append("");
+
+  if(res.error){
+    listaWrap.innerHTML = `
+      <p class="small" style="color:#b91c1c">
+        Erro ao listar: ${escapeHtml(res.error.message)}
+      </p>`;
+    return;
+  }
+
+  const files = res.data || [];
+  if(!files.length){
+    listaWrap.innerHTML = `<p class="small">Nenhum arquivo encontrado em <b>${escapeHtml(folder)}/</b>.</p>`;
+    return;
+  }
+
+  // carregar tags em lote (ids = fullPath)
+  const ids = files.map(f => `${folder}/${f.name}`);
+  const tagsMap = await getTagsForIds(ids);
+
+  const filteredIdsSet = filterByIds ? new Set(filterByIds) : null;
+  renderTable(folder, files, tagsMap, filteredIdsSet);
 }
 
 // ---------- BOTÕES ----------
@@ -349,11 +470,50 @@ document.getElementById("reset").onclick = async ()=>{
   location.reload();
 };
 
-document.getElementById("listar").onclick = async ()=>{
+document.getElementById("listar").onclick = async ()=>{ await listMyFiles(); };
+
+// buscar por tag (filtra a tabela)
+document.getElementById("buscar").onclick = async ()=>{
+  await refresh();
+  const tag = (searchTag.value || "").trim().toLowerCase();
+  if(!tag){
+    append("BUSCA: digite uma tag.");
+    return;
+  }
+  append("BUSCA TAG=" + tag);
+  const ids = await findIdsByTag(tag);
+  if(!ids.length){
+    listaWrap.innerHTML = `<p class="small">Nenhum arquivo encontrado com a tag <b>${escapeHtml(tag)}</b>.</p>`;
+    return;
+  }
+  await listMyFiles(ids);
+};
+
+document.getElementById("limparBusca").onclick = async ()=>{
+  searchTag.value = "";
   await listMyFiles();
 };
 
-// ---------- UPLOAD (MANTIDO) ----------
+// salvar tags do último upload
+salvarUltimoBtn.onclick = async ()=>{
+  await refresh();
+  if(!lastUploadedPath){
+    append("Nenhum upload recente para salvar tags.");
+    return;
+  }
+  const tagsArr = parseTags(tagsInput.value);
+  append("SAVE LAST UPLOAD TAGS path=" + lastUploadedPath);
+  append("TAGS=" + JSON.stringify(tagsArr));
+  const res = await upsertTagsForId(lastUploadedPath, tagsArr);
+  if(res.error){
+    append("SAVE TAGS ERROR: " + res.error.message);
+    return;
+  }
+  append("OK: tags salvas para " + lastUploadedPath);
+  await listMyFiles();
+};
+
+// ---------- UPLOAD (MANTIDO IGUAL AO SEU) ----------
 document.getElementById("upload").onclick = async ()=>{
   // ⚠️ Não mexi no upload, só deixei como você tinha
   // (mantém o comportamento original)
@@ -398,6 +558,20 @@ document.getElementById("upload").onclick = async ()=>{
   }
 
   append("SIGNED URL OK");
+
+  // ✅ NOVO: guarda o lastUploadedPath, mas sem mexer no upload em si
+  lastUploadedPath = path;
+  append("LAST UPLOAD SET: " + lastUploadedPath);
+
+  // ✅ opcional: se você quiser salvar tags automaticamente do input (descomenta)
+  // const tagsArr = parseTags(tagsInput.value);
+  // if(tagsArr.length){
+  //   await upsertTagsForId(lastUploadedPath, tagsArr);
+  //   append("AUTO TAGS OK");
+  // }
+
+  // ✅ opcional: refresh da lista após upload
+  // await listMyFiles();
 };
 
 await refresh();
@@ -408,6 +582,7 @@ supabase.auth.onAuthStateChange(async (event) => {
 </script>
 </body>
 </html>
+
 
 
 
