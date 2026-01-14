@@ -1,102 +1,101 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Auth Callback - DEBUG</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Callback - DEBUG</title>
   <style>
-    body{font-family:Arial;padding:20px;background:#f5f5f5}
-    .card{background:#fff;border-radius:12px;padding:16px;max-width:900px;margin:auto;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+    body{font-family:Arial;background:#f5f5f5;padding:20px}
+    .card{background:#fff;border-radius:12px;padding:16px;max-width:960px;margin:auto;box-shadow:0 6px 20px rgba(0,0,0,.08)}
     pre{white-space:pre-wrap;word-break:break-word;background:#0b1020;color:#e5e7eb;padding:12px;border-radius:10px;overflow:auto}
     button{background:#1f6feb;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;margin-top:12px}
-    .warn{color:#b45309;font-weight:700}
-    .ok{color:#065f46;font-weight:700}
+    .ok{color:#065f46;font-weight:800}
+    .bad{color:#b45309;font-weight:800}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Callback DEBUG</h2>
-    <p>Se aqui não aparecer sessão e não surgir chave <b>sb-...-auth-token</b>, o problema é persistência (Site URL/Redirect URLs/cookies/proxy).</p>
-    <div id="msg" class="warn">Processando...</div>
-    <button id="go" style="display:none">Ir para /comprovantes.html</button>
 
-    <h3>Resultado</h3>
-    <pre id="out">Aguardando...</pre>
-  </div>
+<script>
+  // FORÇA WWW (evita perder sessão por mudar de origem)
+  if (location.hostname === "colorglassfortaleza.com.br") {
+    location.replace("https://www.colorglassfortaleza.com.br" + location.pathname + location.search + location.hash);
+  }
+</script>
+
+<div class="card">
+  <h2>Callback DEBUG</h2>
+  <div id="msg" class="bad">Processando...</div>
+
+  <button id="go" style="display:none">Voltar para /comprovantes.html</button>
+
+  <h3>Resultado</h3>
+  <pre id="out">Aguardando...</pre>
+</div>
 
 <script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
+  const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
-const msg = document.getElementById("msg");
-const out = document.getElementById("out");
-const go = document.getElementById("go");
+  const msg = document.getElementById("msg");
+  const out = document.getElementById("out");
+  const go = document.getElementById("go");
 
-function dump(title, obj) {
-  return `\n=== ${title} ===\n` + JSON.stringify(obj, null, 2);
-}
-
-try {
-  // 1) Mostra o URL completo (sem esconder o hash) pra confirmar se veio #access_token
-  const fullUrl = window.location.href;
-
-  // 2) Pega sessão (isso deveria consumir o hash e persistir)
-  const resSession = await supabase.auth.getSession();
-
-  // 3) Pega user (confirma se session realmente virou auth)
-  const resUser = await supabase.auth.getUser();
-
-  // 4) Chaves de armazenamento (prova se persistiu)
-  const lsKeys = Object.keys(localStorage);
-  const sbKeys = lsKeys.filter(k => k.includes("sb-") || k.includes("supabase"));
-  const tokenKey = sbKeys.find(k => k.includes("-auth-token")) || null;
-
-  // 5) Monta diagnóstico
-  const okSession = !!resSession?.data?.session;
-  const okUser = !!resUser?.data?.user;
-
-  let report = "";
-  report += dump("window.location.href", fullUrl);
-  report += dump("getSession()", resSession);
-  report += dump("getUser()", resUser);
-  report += dump("localStorage sb keys", sbKeys);
-  report += dump("auth-token key found", tokenKey);
-
-  out.textContent = report;
-
-  if (okSession && okUser && tokenKey) {
-    msg.className = "ok";
-    msg.textContent = "✅ Sessão OK e persistida. Pode voltar para /comprovantes.html.";
-  } else if (okSession || okUser) {
-    msg.className = "warn";
-    msg.textContent = "⚠️ Token chegou, mas NÃO persistiu direito (sem key sb-...-auth-token). Isso é Site URL/Redirect URLs/cookies/proxy.";
-  } else {
-    msg.className = "warn";
-    msg.textContent = "❌ Sessão NÃO apareceu. Provavelmente o callback não recebeu #access_token (ou foi bloqueado).";
+  function dump(title, obj) {
+    return `\n=== ${title} ===\n` + JSON.stringify(obj, null, 2);
   }
 
-  go.style.display = "inline-block";
-  go.onclick = () => window.location.href = "/comprovantes.html";
+  try {
+    const href = location.href;
 
-} catch (e) {
-  msg.className = "warn";
-  msg.textContent = "❌ Erro no callback: " + (e?.message || e);
-  out.textContent = String(e?.stack || e);
-  go.style.display = "inline-block";
-  go.onclick = () => window.location.href = "/comprovantes.html";
-}
+    // Consome #access_token e tenta persistir
+    const sess = await supabase.auth.getSession();
+    const userRes = await supabase.auth.getUser();
+
+    const lsKeys = Object.keys(localStorage);
+    const sbKeys = lsKeys.filter(k => k.includes("sb-") || k.includes("supabase"));
+    const tokenKey = sbKeys.find(k => k.includes("-auth-token")) || null;
+
+    let report = "";
+    report += dump("host/origin", { host: location.host, origin: location.origin });
+    report += dump("href", href);
+    report += dump("localStorage sb keys", sbKeys);
+    report += dump("auth-token key found", tokenKey);
+    report += dump("getSession()", sess);
+    report += dump("getUser()", userRes);
+
+    out.textContent = report;
+
+    const ok = !!sess?.data?.session && !!userRes?.data?.user && !!tokenKey;
+
+    if (ok) {
+      msg.className = "ok";
+      msg.textContent = "✅ Sessão criada e persistida nesta origem. Clique para voltar.";
+    } else {
+      msg.className = "bad";
+      msg.textContent = "⚠️ Token até pode ter chegado, mas algo não persistiu. Veja o relatório abaixo.";
+    }
+
+    go.style.display = "inline-block";
+    go.onclick = () => location.href = "/comprovantes.html";
+
+  } catch (e) {
+    msg.className = "bad";
+    msg.textContent = "❌ Erro no callback: " + (e?.message || e);
+    out.textContent = String(e?.stack || e);
+
+    go.style.display = "inline-block";
+    go.onclick = () => location.href = "/comprovantes.html";
+  }
 </script>
 </body>
 </html>
+
+
 
 
