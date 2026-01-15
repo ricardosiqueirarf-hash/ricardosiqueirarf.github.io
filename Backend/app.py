@@ -143,6 +143,14 @@ def callback_html_page():
 def callback_page():
     return send_from_directory(BASE_DIR, "callback.html")
 
+@app.route("/imagefinder.html")
+def imagefinder_html_page():
+    return send_from_directory(BASE_DIR, "imagefinder.html")
+
+@app.route("/imagefinder")
+def imagefinder_page():
+    return send_from_directory(BASE_DIR, "imagefinder.html")
+
 
 
 
