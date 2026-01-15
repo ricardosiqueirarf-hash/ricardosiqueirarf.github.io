@@ -42,20 +42,32 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 def health():
     return jsonify({"status": "ok", "service": "ColorGlass API"})
 
+# =====================
+# PÁGINAS (ROTAS HTML)
+# =====================
+
+# ✅ HOME AGORA É inicio.html
 @app.route("/")
-def login_cadastro_page():
-    return send_from_directory(BASE_DIR, "login.html")
+def home_page():
+    return send_from_directory(BASE_DIR, "inicio.html")
 
-@app.route("/logincadastro.html")
-def login_cadastro_html_page():
-    return send_from_directory(BASE_DIR, "login.html")
+# ✅ NOVA ROTA EXPLÍCITA PARA inicio.html
+@app.route("/inicio.html")
+def inicio_html_page():
+    return send_from_directory(BASE_DIR, "inicio.html")
 
+# ✅ LOGIN AGORA FICA SOMENTE AQUI
 @app.route("/login.html")
 def login_html_page():
     return send_from_directory(BASE_DIR, "login.html")
 
 @app.route("/login")
 def login_page():
+    return send_from_directory(BASE_DIR, "login.html")
+
+# (Compatibilidade com links antigos — opcional manter)
+@app.route("/logincadastro.html")
+def login_cadastro_html_page():
     return send_from_directory(BASE_DIR, "login.html")
 
 @app.route("/cadastro.html")
@@ -152,8 +164,6 @@ def imagefinder_page():
     return send_from_directory(BASE_DIR, "imagefinder.html")
 
 
-
-
 def exige_nivel_2_ou_3(fn):
     from auth_utils import buscar_usuario_por_token, extrair_token
 
@@ -198,7 +208,6 @@ from api_tags import tags_bp
 from api_comprovantes import comprovantes_bp
 from api_imagetags import imagetags_bp
 
-
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
 app.register_blueprint(insumos_bp)
@@ -219,4 +228,5 @@ app.register_blueprint(imagetags_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
