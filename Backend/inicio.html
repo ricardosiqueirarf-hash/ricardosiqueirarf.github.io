@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Glass Fortaleza | Fornecedor B2B de Portas e Estruturas em Vidro & Alumínio</title>
+  <meta name="description" content="Fornecedor B2B em Fortaleza: portas de vidro e alumínio (giro e correr), estruturas thin, closet e prateleiras. Prazo cumprido, padrão premium e personalização." />
+  <style>
+    :root {
+      --cg-blue: #1079ba;
+      --cg-blue-dark: #0d5d8c;
+      --cg-blue-soft: #e7f3fb;
+      --cg-gold: #f0c24c;
+      --cg-white: #ffffff;
+      --cg-text: #1f2933;
+      --cg-muted: #6b7280;
+      --cg-border: rgba(16, 121, 186, 0.12);
+      --cg-shadow: 0 18px 40px rgba(15, 44, 62, 0.18);
+      --cg-shadow-soft: 0 12px 26px rgba(15, 44, 62, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, rgba(16, 121, 186, 0.16), transparent 55%),
+        linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+      color: var(--cg-text);
+      min-height: 100vh;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.8);
+      border-bottom: 1px solid var(--cg-border);
+      box-shadow: 0 10px 20px rgba(15, 44, 62, 0.08);
+    }
+
+    .nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: var(--cg-blue-dark);
+      font-size: 1.2rem;
+      white-space: nowrap;
+    }
+
+    .brand span {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      color: #fff;
+      box-shadow: var(--cg-shadow-soft);
+      font-weight: 800;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--cg-text);
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 999px;
+      transition: all 0.2s ease;
+    }
+
+    .nav a:hover {
+      background: var(--cg-blue-soft);
+      color: var(--cg-blue-dark);
+    }
+
+    .cta {
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      box-shadow: var(--cg-shadow);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(15, 44, 62, 0.2);
+    }
+
+    .cta.secondary {
+      background: transparent;
+      color: var(--cg-blue-dark);
+      border: 1px solid var(--cg-border);
+      box-shadow: none;
+    }
+
+    .cta.secondary:hover {
+      background: var(--cg-blue-soft);
+      transform: translateY(-2px);
+    }
+
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 90px 24px 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 4vw, 3.2rem);
+      color: var(--cg-blue-dark);
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      color: var(--cg-muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hero-card {
+      background: var(--cg-white);
+      padding: 26px;
+      border-radius: 22px;
+      box-shadow: var(--cg-shadow);
+      border: 1px solid var(--cg-border);
+      position: relative;
+      overflow: hidden;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: -60px 60px auto -60px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(16, 121, 186, 0.2), transparent 70%);
+      opacity: 0.8;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    .stat {
+      background: var(--cg-blue-soft);
+      padding: 16px;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .stat strong {
+      font-size: 1.4rem;
+      color: var(--cg-blue-dark);
+    }
+
+    section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 50px 24px;
+    }
+
+    section h2 {
+      font-size: 2rem;
+      color: var(--cg-blue-dark);
+      margin-bottom: 12px;
+    }
+
+    section p.subtitle {
+      color: var(--cg-muted);
+      margin-bottom: 30px;
+      max-width: 780px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--cg-white);
+      padding: 22px;
+      border-radius: 20px;
+      border: 1px solid var(--cg-border);
+      box-shadow: var(--cg-shadow-soft);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 32px rgba(15, 44, 62, 0.18);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(240, 194, 76, 0.18);
+      color: #9a6b00;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(16, 121, 186, 0.10);
+      border: 1px solid var(--cg-border);
+      color: var(--cg-blue-dark);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-top: 12px;
+    }
+
+    .portfolio {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .portfolio-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(16, 121, 186, 0.2), rgba(16, 121, 186, 0.05));
+      min-height: 210px;
+      padding: 18px;
+      border: 1px solid var(--cg-border);
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .portfolio-item h3 {
+      color: var(--cg-blue-dark);
+      margin-bottom: 8px;
+    }
+
+    .portfolio-item span {
+      font-size: 0.95rem;
+      color: var(--cg-muted);
+      display: block;
+      line-height: 1.5;
+      max-width: 90%;
+    }
+
+    .portfolio-item ul {
+      margin-top: 12px;
+      padding-left: 18px;
+      color: var(--cg-muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .portfolio-item::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -40px auto;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(240, 194, 76, 0.4), transparent 70%);
+    }
+
+    .faq-item {
+      background: var(--cg-white);
+      border-radius: 18px;
+      border: 1px solid var(--cg-border);
+      padding: 18px 20px;
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .faq-item button {
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--cg-blue-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .faq-item p {
+      color: var(--cg-muted);
+      margin-top: 12px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .faq-item.active p {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .faq-item .icon {
+      transition: transform 0.2s ease;
+    }
+
+    .faq-item.active .icon {
+      transform: rotate(180deg);
+    }
+
+    .cta-banner {
+      background: linear-gradient(135deg, rgba(16, 121, 186, 0.16), rgba(240, 194, 76, 0.16));
+      padding: 32px;
+      border-radius: 24px;
+      border: 1px solid var(--cg-border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: var(--cg-shadow);
+    }
+
+    footer {
+      padding: 30px 24px 50px;
+      text-align: center;
+      color: var(--cg-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: all 0.5s ease;
+    }
+
+    .reveal.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mini {
+      font-size: 0.92rem;
+      color: var(--cg-muted);
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 800px) {
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .hero {
+        padding-top: 60px;
+      }
+
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="brand">
+        <span>CG</span>
+        Color Glass Fortaleza
+      </div>
+      <nav class="nav-links">
+        <a href="#quem-somos">Quem somos</a>
+        <a href="#portfolio">Portfólio</a>
+        <a href="#diferenciais">Diferenciais</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <button class="cta" id="ctaTop">Virar parceiro</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="badge">🤝 B2B em Fortaleza — parceiro de marcenarias e lojas de planejados</div>
+        <h1>Portas e estruturas em vidro &amp; alumínio com prazo cumprido e padrão premium.</h1>
+        <p>
+          A <strong>Color Glass Fortaleza</strong> atende <strong>lojas de móveis planejados e marcenarias</strong> com produção sob medida,
+          personalização e um processo transparente do pedido até a entrega.
+          Se você quer <strong>previsibilidade</strong>, <strong>acabamento</strong> e <strong>parceria</strong>, é aqui.
+        </p>
+
+        <div class="hero-actions">
+          <button class="cta" id="ctaHero">Quero parceria no WhatsApp</button>
+          <button class="cta secondary" id="ctaCatalogo">Pedir portfólio/linhas</button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat">
+            <strong data-count="15" data-suffix="">0</strong>
+            <p>anos de experiência</p>
+          </div>
+          <div class="stat">
+            <strong data-count="1652" data-suffix="+">0</strong>
+            <p>projetos entregues</p>
+          </div>
+          <div class="stat">
+            <strong data-count="92" data-suffix="%">0</strong>
+            <p>satisfação</p>
+          </div>
+        </div>
+
+        <div class="pill">Condições: 50% entrada • 50% entrega • prazo médio 7–14 dias úteis</div>
+      </div>
+
+      <div class="hero-card">
+        <h3>O que muda quando você fecha com a Color Glass?</h3>
+        <p>
+          Você para de “apagar incêndio” com fornecedor. Aqui o jogo é:
+          <strong>combinar e cumprir</strong>. E quando houver variável (medida, vidro, perfil),
+          a comunicação é direta — sem surpresa.
+        </p>
+
+        <div class="grid" style="margin-top: 18px;">
+          <div class="card">
+            <strong>Transparência B2B</strong>
+            <p class="mini">Prazos claros, alinhamento do pedido e acompanhamento até a entrega.</p>
+          </div>
+          <div class="card">
+            <strong>Acabamento premium</strong>
+            <p class="mini">Perfis de linha <strong>clássico, slim e invisível</strong> com montagem precisa.</p>
+          </div>
+        </div>
+
+        <p class="mini">
+          Vidros conforme disponibilidade e especificação: <strong>Guardian / AGC / Ecodesigne</strong>.
+          Alumínio (quando aplicável): <strong>Alternativa</strong>.
+        </p>
+      </div>
+    </section>
+
+    <section id="quem-somos" class="reveal">
+      <h2>Quem somos</h2>
+      <p class="subtitle">
+        Somos um fornecedor B2B em Fortaleza, especializado em <strong>portas de vidro e alumínio</strong> e
+        <strong>estruturas sob medida</strong> para lojas de móveis planejados e marcenarias.
+        Nossa prioridade é simples: <strong>prazo cumprido</strong> e <strong>produto premium</strong>.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Missão</h3>
+          <p>Ser o fornecedor mais confiável de portas e estruturas em vidro &amp; alumínio em Fortaleza — com entrega dentro do combinado.</p>
+        </div>
+
+        <div class="card">
+          <h3>Como trabalhamos</h3>
+          <p>Produção sob medida com foco em repetibilidade, acabamento e comunicação clara para o seu time vender com segurança.</p>
+        </div>
+
+        <div class="card">
+          <h3>Parceria B2B</h3>
+          <p>Você ganha previsibilidade: especificação de perfis, orientação de aplicação e suporte no fechamento de pedido.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="portfolio" class="reveal">
+      <h2>Portfólio</h2>
+      <p class="subtitle">
+        Linhas voltadas para o dia a dia do planejado: soluções que vendem bem, têm boa estética e encaixam em obra sem dor de cabeça.
+      </p>
+
+      <div class="portfolio">
+        <div class="portfolio-item">
+          <h3>Portas de giro (vidro + alumínio)</h3>
+          <span>Para ambientes internos e mobiliário planejado — visual limpo e fechamento sólido.</span>
+          <ul>
+            <li>Acabamento premium</li>
+            <li>Personalização por medida</li>
+            <li>Aplicação B2B (lojas e marcenarias)</li>
+          </ul>
+        </div>
+
+        <div class="portfolio-item">
+          <h3>Portas de correr (alumínio + vidro)</h3>
+          <span>Alta demanda no planejado: funcionalidade + estética, ideal para otimizar espaço.</span>
+          <ul>
+            <li>Corre suave e alinhamento</li>
+            <li>Variação de perfis</li>
+            <li>Entrega com padrão</li>
+          </ul>
+        </div>
+
+        <div class="portfolio-item">
+          <h3>Estruturas thin (alumínio)</h3>
+          <span>Estruturas leves, modernas e com visual sofisticado para composições contemporâneas.</span>
+          <ul>
+            <li>Linhas: clássico, slim e invisível</li>
+            <li>Montagem precisa</li>
+            <li>Visual clean</li>
+          </ul>
+        </div>
+
+        <div class="portfolio-item">
+          <h3>Closet + prateleiras (alumínio)</h3>
+          <span>Soluções sob medida para projetos completos — estética e resistência no mesmo pacote.</span>
+          <ul>
+            <li>Personalização total</li>
+            <li>Integração no planejado</li>
+            <li>Padronização de entrega</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="diferenciais" class="reveal">
+      <h2>Diferenciais</h2>
+      <p class="subtitle">
+        B2B não precisa de “marketing bonito”, precisa de <strong>confiança operacional</strong>.
+        Aqui estão os pilares que sustentam a parceria:
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Cumprimento de prazos</h3>
+          <p>Processo desenhado para previsibilidade: combinado é combinado. Se houver variável, você fica sabendo cedo.</p>
+        </div>
+
+        <div class="card">
+          <h3>Produção rápida</h3>
+          <p>Prazo médio de <strong>7 a 14 dias úteis</strong> (variando por tamanho e especificação do pedido).</p>
+        </div>
+
+        <div class="card">
+          <h3>Personalização real</h3>
+          <p>Medidas, configuração e linha de perfil (clássico, slim, invisível) para encaixar no seu projeto.</p>
+        </div>
+
+        <div class="card">
+          <h3>Padrão premium</h3>
+          <p>Acabamento, alinhamento e montagem pensados para reduzir retrabalho e elevar sua entrega final.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="reveal">
+      <h2>Perguntas frequentes</h2>
+      <p class="subtitle">
+        Respostas objetivas, do jeito que fornecedor B2B tem que ser. Sem enrolação.
+      </p>
+
+      <div class="grid">
+        <div class="faq-item">
+          <button type="button">
+            Qual o prazo de entrega?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Em média, <strong>7 a 14 dias úteis</strong>, variando conforme tamanho e especificação do pedido. O prazo é alinhado antes de iniciar.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Quais linhas de perfis vocês trabalham?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Trabalhamos com linhas de perfil <strong>clássico, slim e invisível</strong>, adequando estética e aplicação ao seu projeto.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Quais marcas de vidro e alumínio vocês utilizam?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Vidros conforme especificação e disponibilidade: <strong>Guardian, AGC e Ecodesigne</strong>.
+            Alumínio (quando aplicável): <strong>Alternativa</strong>.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Como funciona a condição de pagamento?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Padrão B2B: <strong>50% de entrada</strong> para iniciar produção e <strong>50% na entrega</strong>.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Como funciona a garantia?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            O vidro segue a garantia da distribuidora, em média <strong>6 meses</strong>.
+            Perfis e componentes: a garantia é da loja em casos de <strong>defeito de fabricação</strong> ou <strong>mau funcionamento entregue</strong>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal">
+      <div class="cta-banner">
+        <div>
+          <h2>Quer um fornecedor B2B que cumpre o combinado?</h2>
+          <p class="subtitle" style="margin-bottom: 0;">
+            Chama no WhatsApp e me diga: tipo de produto, medidas e linha de perfil. Eu te respondo com direcionamento e próximo passo.
+          </p>
+        </div>
+        <button class="cta" id="ctaBottom">Falar no WhatsApp</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Color Glass Fortaleza</strong> © 2026 — Parceiro B2B em portas e estruturas de vidro &amp; alumínio.<br />
+    Atendimento: seg–sex, 8:30 às 17:30 • Fortaleza/CE •
+    <a href="mailto:colorglassfortaleza@gmail.com" style="color:inherit; text-decoration: underline;">colorglassfortaleza@gmail.com</a> •
+    <a href="https://instagram.com/colorglassfortaleza" target="_blank" rel="noopener" style="color:inherit; text-decoration: underline;">@colorglassfortaleza</a>
+  </footer>
+
+  <script>
+    // =====================
+    // WhatsApp CTA (B2B)
+    // =====================
+    const waBase = "https://wa.me/5585996636822";
+    const encode = (s) => encodeURIComponent(s);
+
+    const msgParceria =
+      "Olá! Sou de uma loja/marcenaria de planejados em Fortaleza. Quero parceria B2B com a Color Glass. " +
+      "Trabalho com portas/estruturas e gostaria de alinhar: linhas de perfis (clássico/slim/invisível), prazos e condições. " +
+      "Posso te passar medidas e quantidade do meu próximo pedido?";
+
+    const msgCatalogo =
+      "Olá! Quero receber as linhas e aplicações (clássico/slim/invisível) e exemplos do portfólio B2B (giro, correr, thin, closet/prateleiras). " +
+      "Também queria alinhar prazo médio (7–14 dias úteis) e forma de pedido.";
+
+    const openWA = (message) => {
+      window.open(`${waBase}?text=${encode(message)}`, "_blank", "noopener");
+    };
+
+    const counters = document.querySelectorAll("[data-count]");
+    const revealElements = document.querySelectorAll(".reveal");
+    const faqItems = document.querySelectorAll(".faq-item");
+
+    // Counters
+    const animateCounters = () => {
+      counters.forEach((counter) => {
+        const target = Number(counter.dataset.count);
+        const suffix = counter.dataset.suffix || "";
+        const duration = 1400;
+        const start = 0;
+        const startTime = performance.now();
+
+        const step = (now) => {
+          const progress = Math.min((now - startTime) / duration, 1);
+          const value = Math.floor(progress * (target - start) + start);
+
+          counter.textContent = value + suffix;
+
+          if (progress < 1) requestAnimationFrame(step);
+        };
+
+        requestAnimationFrame(step);
+      });
+    };
+
+    // Reveal on scroll
+    const onScroll = () => {
+      revealElements.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 120) element.classList.add("show");
+      });
+    };
+
+    // FAQ accordion
+    faqItems.forEach((item) => {
+      item.querySelector("button").addEventListener("click", () => {
+        item.classList.toggle("active");
+      });
+    });
+
+    // CTA events
+    document.getElementById("ctaTop").addEventListener("click", () => openWA(msgParceria));
+    document.getElementById("ctaHero").addEventListener("click", () => openWA(msgParceria));
+    document.getElementById("ctaBottom").addEventListener("click", () => openWA(msgParceria));
+    document.getElementById("ctaCatalogo").addEventListener("click", () => openWA(msgCatalogo));
+
+    window.addEventListener("load", () => {
+      animateCounters();
+      onScroll();
+    });
+
+    window.addEventListener("scroll", onScroll);
+  </script>
+</body>
+</html>
