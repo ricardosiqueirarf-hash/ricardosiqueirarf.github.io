@@ -64,17 +64,16 @@
       white-space: nowrap;
     }
 
-    .brand span {
-      width: 42px;
-      height: 42px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
-      color: #fff;
-      box-shadow: var(--cg-shadow-soft);
-      font-weight: 800;
-    }
+    /* ✅ Logo no lugar do "CG" mantendo o mesmo tamanho e formato */
+    .brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  box-shadow: var(--cg-shadow-soft);
+  object-fit: cover;
+  display: block;
+}
+
 
     .nav a {
       text-decoration: none;
@@ -420,8 +419,13 @@
   <header>
     <div class="nav">
       <div class="brand">
-        <span>CG</span>
-        Color Glass Fortaleza
+        <img
+  src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo.jpg"
+  alt="Color Glass Fortaleza"
+  class="brand-logo"
+/>
+Color Glass Fortaleza
+
       </div>
       <nav class="nav-links">
         <a href="#quem-somos">Quem somos</a>
@@ -754,4 +758,5 @@
     window.addEventListener("scroll", onScroll);
   </script>
 </body>
-</html>
+</html> apenas substitua a logo pelo link que estava falando antes.
+
