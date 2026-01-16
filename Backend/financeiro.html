@@ -1,238 +1,201 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Financeiro - Pedidos Aprovados</title>
+
 <style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
 
-    body {
-        background: #f5f7fa;
-        color: #111;
-        padding: 24px;
-    }
+body {
+  background: #f5f7fa;
+  color: #111;
+  padding: 24px;
+}
 
-    h1 {
-        margin-bottom: 12px;
-        color: #1079ba;
-    }
+h1 {
+  margin-bottom: 8px;
+  color: #1079ba;
+}
 
-    .hint {
-        color: #666;
-        margin-bottom: 18px;
-        font-size: 0.9rem;
-    }
+.hint {
+  color: #555;
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+}
 
-    .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
+.btn {
+  background: #1079ba;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
 
-    .controls input {
-        padding: 10px 12px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        min-width: 280px;
-    }
+.btn:hover {
+  background: #0d5d8c;
+}
 
-    .btn {
-        background: #1079ba;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 14px;
-        cursor: pointer;
-        font-weight: 600;
-    }
+.table-wrapper {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  overflow-x: auto;
+}
 
-    .btn:hover {
-        background: #0d5d8c;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
 
-    .table-wrapper {
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        overflow-x: auto;
-    }
+th, td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 720px;
-    }
+th {
+  background: #e6f0fa;
+  color: #1f2937;
+  font-weight: 700;
+}
 
-    th, td {
-        padding: 12px 14px;
-        text-align: left;
-        border-bottom: 1px solid #eee;
-    }
+tr:last-child td {
+  border-bottom: none;
+}
 
-    th {
-        background: #e6f0fa;
-        color: #1f2937;
-    }
+tr.debito-em-aberto {
+  background: rgba(239, 68, 68, 0.12);
+}
 
-    tr:last-child td {
-        border-bottom: none;
-    }
-
-    tr.debito-em-aberto {
-        background: rgba(239, 68, 68, 0.12);
-    }
-
-    .status {
-        margin-top: 10px;
-        font-size: 0.9rem;
-        color: #555;
-    }
+.status {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #555;
+}
 </style>
 </head>
-<body>
-<h1>Financeiro</h1>
-<p class="hint">Preencha SUPABASE_URL e SUPABASE_KEY para carregar os orçamentos aprovados (status 2, 3, 4, 5).</p>
 
-<div class="controls">
-    <input type="text" id="supabaseUrl" placeholder="SUPABASE_URL (ex: https://xxxx.supabase.co)">
-    <input type="password" id="supabaseKey" placeholder="SUPABASE_KEY (service_role ou anon)">
-    <button class="btn" onclick="carregarPedidos()">Carregar pedidos</button>
-</div>
+<body>
+
+<h1>Financeiro</h1>
+<p class="hint">
+  Pedidos aprovados (status 2, 3, 4, 5).  
+  Dados carregados com segurança via backend.
+</p>
+
+<button class="btn" onclick="carregarPedidos()">Atualizar</button>
+
+<br><br>
 
 <div class="table-wrapper">
-    <table>
-        <thead>
-            <tr>
-                <th>Número do Pedido</th>
-                <th>Cliente</th>
-                <th>Data do Status</th>
-                <th>Valor em Débito</th>
-                <th>Valor Pago</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaPedidos">
-            <tr><td colspan="5"><em>Carregue os pedidos para visualizar.</em></td></tr>
-        </tbody>
-    </table>
+  <table>
+    <thead>
+      <tr>
+        <th>Nº Pedido</th>
+        <th>Cliente</th>
+        <th>Data</th>
+        <th>Valor Total</th>
+        <th>Valor Pago</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaPedidos">
+      <tr>
+        <td colspan="5"><em>Carregando...</em></td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 <div class="status" id="statusMensagem"></div>
 
 <script>
 function setStatus(msg) {
-    document.getElementById("statusMensagem").textContent = msg;
+  document.getElementById("statusMensagem").textContent = msg;
 }
 
-function obterConfig() {
-    const url = document.getElementById("supabaseUrl").value.trim();
-    const key = document.getElementById("supabaseKey").value.trim();
-    if (!url || !key) {
-        setStatus("Preencha SUPABASE_URL e SUPABASE_KEY.");
-        return null;
-    }
-    return { url, key };
+function parseValor(v) {
+  if (v === null || v === undefined || v === "") return 0;
+  if (typeof v === "number") return v;
+
+  return Number(
+    String(v)
+      .replace(/[^0-9,.-]/g, "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+  ) || 0;
 }
 
-function parseValor(valor) {
-    if (valor === null || valor === undefined || valor === "") return 0;
-    if (typeof valor === "number") return valor;
-    const normalizado = String(valor)
-        .replace(/[^0-9,.-]/g, "")
-        .replace(/\./g, "")
-        .replace(",", ".");
-    const parsed = Number(normalizado);
-    return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function formatarData(valor) {
-    if (!valor) return "--";
-    const data = new Date(valor);
-    return Number.isNaN(data.getTime()) ? String(valor) : data.toLocaleString("pt-BR");
+function formatarData(v) {
+  if (!v) return "--";
+  const d = new Date(v);
+  return isNaN(d) ? v : d.toLocaleString("pt-BR");
 }
 
 function renderizarPedidos(pedidos) {
-    const tbody = document.getElementById("tabelaPedidos");
-    tbody.innerHTML = "";
+  const tbody = document.getElementById("tabelaPedidos");
+  tbody.innerHTML = "";
 
-    if (!pedidos.length) {
-        tbody.innerHTML = "<tr><td colspan='5'><em>Nenhum pedido aprovado encontrado.</em></td></tr>";
-        return;
-    }
+  if (!pedidos || !pedidos.length) {
+    tbody.innerHTML =
+      "<tr><td colspan='5'><em>Nenhum pedido encontrado.</em></td></tr>";
+    return;
+  }
 
-    const formatter = new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
+  const fmt = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 
-    pedidos.forEach((pedido) => {
-        const linha = document.createElement("tr");
-        const valorDebito = parseValor(pedido.valor_total);
-        const valorPago = parseValor(pedido.valor_pago);
+  pedidos.forEach(p => {
+    const total = parseValor(p.valor_total);
+    const pago = parseValor(p.valor_pago);
 
-        if (valorDebito > valorPago) {
-            linha.classList.add("debito-em-aberto");
-        }
+    const tr = document.createElement("tr");
+    if (total > pago) tr.classList.add("debito-em-aberto");
 
-        linha.innerHTML = `
-            <td>${pedido.numero_pedido ?? "--"}</td>
-            <td>${pedido.cliente_nome ?? "--"}</td>
-            <td>${formatarData(pedido.data_status || pedido.data_criacao)}</td>
-            <td>${formatter.format(valorDebito)}</td>
-            <td>${formatter.format(valorPago)}</td>
-        `;
+    tr.innerHTML = `
+      <td>${p.numero_pedido ?? "--"}</td>
+      <td>${p.cliente_nome ?? "--"}</td>
+      <td>${formatarData(p.data_criacao)}</td>
+      <td>${fmt.format(total)}</td>
+      <td>${fmt.format(pago)}</td>
+    `;
 
-        tbody.appendChild(linha);
-    });
+    tbody.appendChild(tr);
+  });
 }
 
 async function carregarPedidos() {
-    const config = obterConfig();
-    if (!config) return;
+  try {
+    setStatus("Carregando pedidos...");
+    const res = await fetch("/api/financeiro");
 
-    setStatus("Carregando pedidos aprovados...");
-    const { url, key } = config;
-
-    try {
-        const selectCampos = [
-  "numero_pedido",
-  "cliente_nome",
-  "data_criacao",
-  "status",
-  "valor_total",
-  "valor_pago"
-].join(",");
-
-const res = await fetch(
-  `${url}/rest/v1/orcamentos?select=${encodeURIComponent(selectCampos)}&status=in.(2,3,4,5)&order=numero_pedido.asc`,
-  {
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`
+    if (!res.ok) {
+      throw new Error("Erro ao buscar dados do financeiro");
     }
+
+    const dados = await res.json();
+    renderizarPedidos(dados);
+    setStatus(`${dados.length} pedido(s) carregado(s).`);
+  } catch (err) {
+    console.error(err);
+    setStatus("Erro ao carregar pedidos.");
   }
-);
-
-
-        if (!res.ok) {
-            const txt = await res.text();
-            throw new Error(txt || "Falha ao carregar pedidos.");
-        }
-
-        const pedidos = await res.json();
-        renderizarPedidos(pedidos);
-        setStatus(`${pedidos.length} pedido(s) carregado(s).`);
-    } catch (err) {
-        console.error(err);
-        setStatus("Erro ao carregar pedidos.");
-    }
 }
+
+document.addEventListener("DOMContentLoaded", carregarPedidos);
 </script>
+
 </body>
 </html>
+
