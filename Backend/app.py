@@ -163,6 +163,15 @@ def imagefinder_html_page():
 def imagefinder_page():
     return send_from_directory(BASE_DIR, "imagefinder.html")
 
+@app.route("/perfis.html")
+def perfis_html_page():
+    return send_from_directory(BASE_DIR, "perfis.html")
+
+@app.route("/perfis")
+def perfis_page():
+    return send_from_directory(BASE_DIR, "perfis.html")
+
+
 
 def exige_nivel_2_ou_3(fn):
     from auth_utils import buscar_usuario_por_token, extrair_token
