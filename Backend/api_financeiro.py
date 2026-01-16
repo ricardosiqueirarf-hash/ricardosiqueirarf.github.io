@@ -2,7 +2,7 @@ import os
 import requests
 from flask import Blueprint, jsonify, request, make_response
 
-api_financeiro_bp = Blueprint("api_financeiro_bp", __name__)
+api_financeiro_bp = Blueprint("api_financeiro_bp", __name__) 
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
