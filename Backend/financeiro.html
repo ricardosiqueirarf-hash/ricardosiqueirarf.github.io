@@ -201,23 +201,24 @@ async function carregarPedidos() {
 
     try {
         const selectCampos = [
-            "numero_pedido",
-            "cliente_nome",
-            "data_status",
-            "data_criacao",
-            "status",
-            "valor_total",
-            "valor_pago"
-        ].join(",");
-        const res = await fetch(
-            `${url}/rest/v1/orcamentos?select=${encodeURIComponent(selectCampos)}&status=in.(2,3,4,5)&order=numero_pedido.asc`,
-            {
-                headers: {
-                    apikey: key,
-                    Authorization: `Bearer ${key}`
-                }
-            }
-        );
+  "numero_pedido",
+  "cliente_nome",
+  "data_criacao",
+  "status",
+  "valor_total",
+  "valor_pago"
+].join(",");
+
+const res = await fetch(
+  `${url}/rest/v1/orcamentos?select=${encodeURIComponent(selectCampos)}&status=in.(2,3,4,5)&order=numero_pedido.asc`,
+  {
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`
+    }
+  }
+);
+
 
         if (!res.ok) {
             const txt = await res.text();
