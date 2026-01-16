@@ -171,6 +171,22 @@ def perfis_html_page():
 def perfis_page():
     return send_from_directory(BASE_DIR, "perfis.html")
 
+@app.route("/vidros.html")
+def vidros_html_page():
+    return send_from_directory(BASE_DIR, "vidros.html")
+
+@app.route("/vidros")
+def vidros_page():
+    return send_from_directory(BASE_DIR, "vidros.html")
+
+@app.route("/insumos.html")
+def insumos_html_page():
+    return send_from_directory(BASE_DIR, "insumos.html")
+
+@app.route("/insumos")
+def insumos_page():
+    return send_from_directory(BASE_DIR, "insumos.html")
+
 
 
 def exige_nivel_2_ou_3(fn):
