@@ -187,6 +187,14 @@ def insumos_html_page():
 def insumos_page():
     return send_from_directory(BASE_DIR, "insumos.html")
 
+@app.route("/Dashboard.html")
+def Dashboard_html_page():
+    return send_from_directory(BASE_DIR, "Dashboard.html")
+
+@app.route("/Dashboard")
+def Dashboard_page():
+    return send_from_directory(BASE_DIR, "Dashboard.html")
+
 
 
 def exige_nivel_2_ou_3(fn):
