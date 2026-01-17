@@ -9,19 +9,37 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Python-like ping
+      - name: Ping Render + Domain (robust)
+        shell: bash
         run: |
-          echo "Pinging Render (real request)..."
+          set +e
 
-          curl -L --fail --max-time 20 \
-            https://colorglass.onrender.com/ \
-            -o /tmp/render.html
+          ping_url () {
+            local url="$1"
+            echo "==> Pinging: $url"
 
-          echo "Pinging domain..."
+            # 3 tentativas, 60s cada (cold start do Render pode passar de 20s)
+            for i in 1 2 3; do
+              echo "Attempt $i..."
+              code=$(curl -L -sS -o /tmp/ping_out.html -w "%{http_code}" --max-time 60 "$url")
+              rc=$?
 
-          curl -L --fail --max-time 20 \
-            https://colorglassfortaleza.com.br/ \
-            -o /tmp/domain.html
+              if [ $rc -eq 0 ] && [ "$code" != "000" ]; then
+                echo "OK (HTTP $code) - bytes: $(wc -c < /tmp/ping_out.html)"
+                return 0
+              else
+                echo "Fail (rc=$rc, http=$code)."
+                sleep 5
+              fi
+            done
 
-          echo "Ping OK"
+            echo "WARNING: Could not reach $url after retries (continuing)."
+            return 0
+          }
+
+          ping_url "https://colorglass.onrender.com/"
+          ping_url "https://colorglassfortaleza.com.br/"
+
+          echo "Done."
+
 
