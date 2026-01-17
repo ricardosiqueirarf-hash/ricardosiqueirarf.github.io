@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard do Dono | Color Glass</title>
+  <meta name="description" content="Dashboard do Dono para gestão da Color Glass.">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root{
+      --cg-blue:#1079ba;
+      --cg-blue-dark:#0d5d8c;
+      --cg-blue-soft:#e7f3fb;
+      --cg-gold:#f0c24c;
+      --cg-white:#ffffff;
+      --cg-text:#1f2933;
+      --cg-muted:#6b7280;
+      --cg-border:rgba(16,121,186,0.12);
+      --cg-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
+      --cg-shadow-soft: 0 10px 24px rgba(15,44,62,0.10);
+      --cg-danger:#d64545;
+      --cg-success:#1f9d66;
+      --cg-warning:#f6a623;
+    }
+
+    *{
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body{
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, rgba(16,121,186,0.16), transparent 55%),
+        linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+      color: var(--cg-text);
+    }
+
+    a{ color: inherit; text-decoration: none; }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: rgba(255,255,255,0.85);
+      border-bottom: 1px solid var(--cg-border);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .brand{
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand strong{
+      font-size: 1.35rem;
+      color: var(--cg-blue-dark);
+      letter-spacing: 0.6px;
+    }
+
+    .breadcrumb{
+      font-size: 0.9rem;
+      color: var(--cg-muted);
+    }
+
+    .top-actions{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge{
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border: 1px solid transparent;
+    }
+
+    .badge.online{ background: rgba(31,157,102,0.12); color: var(--cg-success); border-color: rgba(31,157,102,0.28); }
+    .badge.offline{ background: rgba(214,69,69,0.12); color: var(--cg-danger); border-color: rgba(214,69,69,0.28); }
+
+    .btn{
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .btn:focus-visible{
+      outline: 3px solid rgba(16,121,186,0.4);
+      outline-offset: 2px;
+    }
+
+    .btn-primary{
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      color: #fff;
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .btn-primary:hover{ transform: translateY(-1px); box-shadow: var(--cg-shadow); }
+
+    .btn-ghost{
+      background: rgba(16,121,186,0.1);
+      color: var(--cg-blue-dark);
+      border: 1px solid rgba(16,121,186,0.25);
+    }
+
+    .container{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card{
+      background: var(--cg-white);
+      border-radius: 18px;
+      border: 1px solid var(--cg-border);
+      box-shadow: var(--cg-shadow-soft);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card h2{
+      color: var(--cg-blue);
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+
+    .filters{
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      align-items: end;
+    }
+
+    label{
+      font-size: 0.85rem;
+      color: var(--cg-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    select, input[type="date"], input[type="number"]{
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d4d9df;
+      background: #fdfefe;
+      font-size: 0.95rem;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus, input:focus{
+      border-color: var(--cg-blue);
+      box-shadow: 0 0 0 3px rgba(16,121,186,0.12);
+      outline: none;
+    }
+
+    .kpi-grid{
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    }
+
+    .kpi-card{
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(16,121,186,0.1);
+      background: rgba(255,255,255,0.85);
+      box-shadow: var(--cg-shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 92px;
+    }
+
+    .kpi-card h3{
+      font-size: 0.85rem;
+      color: var(--cg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .kpi-value{
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cg-blue-dark);
+    }
+
+    .kpi-sub{
+      font-size: 0.8rem;
+      color: var(--cg-muted);
+    }
+
+    .progress{
+      height: 10px;
+      background: rgba(16,121,186,0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .progress span{
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cg-gold), var(--cg-blue));
+      border-radius: 999px;
+    }
+
+    .split{
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .bottleneck-table{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .bottleneck-table th,
+    .bottleneck-table td{
+      padding: 10px 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(16,121,186,0.08);
+    }
+
+    .bottleneck-table th{ color: var(--cg-muted); font-weight: 600; }
+
+    .table-actions{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tag{
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(246,166,35,0.15);
+      color: var(--cg-warning);
+      border: 1px solid rgba(246,166,35,0.3);
+    }
+
+    .empty{
+      padding: 16px;
+      text-align: center;
+      color: var(--cg-muted);
+    }
+
+    .production-state{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .marketing-grid{
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .chart-wrap{
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(16,121,186,0.1);
+      background: rgba(255,255,255,0.9);
+    }
+
+    .toast{
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: rgba(16,121,186,0.95);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      box-shadow: var(--cg-shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show{ opacity: 1; transform: translateY(0); }
+
+    .skeleton{
+      position: relative;
+      overflow: hidden;
+      background: #f1f5f9;
+      color: transparent;
+    }
+
+    .skeleton::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 1.2s infinite;
+    }
+
+    @keyframes shimmer{
+      100%{ transform: translateX(100%); }
+    }
+
+    @media (max-width: 768px){
+      .topbar{ padding: 14px 16px; }
+      .container{ padding: 16px; }
+      .top-actions{ justify-content: flex-start; }
+      .bottleneck-table thead{ display: none; }
+      .bottleneck-table, .bottleneck-table tbody, .bottleneck-table tr, .bottleneck-table td{
+        display: block;
+        width: 100%;
+      }
+      .bottleneck-table tr{
+        margin-bottom: 12px;
+        border: 1px solid rgba(16,121,186,0.1);
+        border-radius: 12px;
+        padding: 8px;
+        background: #fff;
+      }
+      .bottleneck-table td{
+        display: flex;
+        justify-content: space-between;
+        border-bottom: none;
+        padding: 6px 4px;
+      }
+      .bottleneck-table td::before{
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--cg-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <strong>Color Glass</strong>
+      <span class="breadcrumb">Painel do Dono</span>
+    </div>
+    <div class="top-actions">
+      <span id="statusBadge" class="badge offline">Offline</span>
+      <button class="btn btn-primary" id="refreshBtn">Atualizar</button>
+      <button class="btn btn-ghost" id="logoutBtn" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Filtros rápidos</h2>
+      <div class="filters">
+        <label>
+          Período
+          <select id="periodSelect">
+            <option value="today">Hoje</option>
+            <option value="7">7 dias</option>
+            <option value="30">30 dias</option>
+            <option value="month">Mês atual</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </label>
+        <label>
+          Data inicial
+          <input type="date" id="startDate" disabled>
+        </label>
+        <label>
+          Data final
+          <input type="date" id="endDate" disabled>
+        </label>
+        <label>
+          Canal
+          <select id="channelSelect">
+            <option value="all">Todos</option>
+            <option value="site">Site</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="indicacao">Indicação</option>
+            <option value="outro">Outro</option>
+          </select>
+        </label>
+        <button class="btn btn-primary" id="applyFiltersBtn">Aplicar filtros</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Hoje</h2>
+      <div class="kpi-grid" id="todayKpis">
+        <div class="kpi-card"><h3>Leads hoje</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Atualizando</div></div>
+        <div class="kpi-card"><h3>Orçamentos hoje</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Atualizando</div></div>
+        <div class="kpi-card"><h3>Aprovados hoje</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Atualizando</div></div>
+        <div class="kpi-card"><h3>Faturamento hoje</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Atualizando</div></div>
+        <div class="kpi-card"><h3>Ticket médio hoje</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Atualizando</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Mês</h2>
+      <div class="split">
+        <div class="kpi-card" id="monthRevenueCard">
+          <h3>Faturamento no mês</h3>
+          <div class="kpi-value skeleton">--</div>
+          <div class="kpi-sub">Comparativo até hoje</div>
+        </div>
+        <div class="kpi-card" id="monthGoalCard">
+          <h3>Meta do mês</h3>
+          <div class="kpi-value" id="goalValue">R$ 0</div>
+          <label style="margin-top:8px; font-size:0.8rem; color:var(--cg-muted);">
+            Ajustar meta (R$)
+            <input type="number" id="goalInput" min="0" step="100" value="120000">
+          </label>
+          <div class="progress" aria-label="Progresso da meta">
+            <span id="goalProgress" style="width:0%"></span>
+          </div>
+          <div class="kpi-sub" id="goalPercent">0% atingido</div>
+        </div>
+        <div class="kpi-card" id="monthTicketCard">
+          <h3>Ticket médio mês</h3>
+          <div class="kpi-value skeleton">--</div>
+          <div class="kpi-sub">Base de orçamentos</div>
+        </div>
+        <div class="kpi-card" id="monthConversionCard">
+          <h3>Taxa de conversão</h3>
+          <div class="kpi-value skeleton">--</div>
+          <div class="kpi-sub">Aprovados / Orçamentos</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Gargalos prioritários</h2>
+      <div class="filters" style="margin-bottom: 12px;">
+        <label>
+          Sem resposta
+          <select id="noReplySelect">
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </label>
+        <label>
+          Orçamento parado
+          <select id="staleSelect">
+            <option value="24">24 h</option>
+            <option value="48">48 h</option>
+            <option value="72">72 h</option>
+          </select>
+        </label>
+      </div>
+      <div id="bottlenecksArea">
+        <table class="bottleneck-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Tempo parado</th>
+              <th>Última ação</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="bottleneckBody">
+            <tr>
+              <td colspan="5" class="empty">Carregando gargalos...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Produção</h2>
+      <div class="production-state" id="productionState">
+        <div class="kpi-sub">Aguardando integração com produção.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Marketing real</h2>
+      <div class="marketing-grid" id="marketingKpis">
+        <div class="kpi-card"><h3>Cliques WhatsApp</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">GA4 / Tracking</div></div>
+        <div class="kpi-card"><h3>Leads por origem</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Distribuição</div></div>
+        <div class="kpi-card"><h3>Orçamentos por origem</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Distribuição</div></div>
+        <div class="kpi-card"><h3>Vendas por origem</h3><div class="kpi-value skeleton">--</div><div class="kpi-sub">Distribuição</div></div>
+      </div>
+      <div class="chart-wrap" style="margin-top: 16px;">
+        <canvas id="marketingChart" height="120"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API_BASE = '';
+    const CACHE_KEY = 'dashboard_cache_v1';
+    const CACHE_TTL = 60 * 1000;
+    const TOKEN_KEYS = ['ADMIN_TOKEN', 'DONO_TOKEN'];
+
+    const state = {
+      data: null,
+      online: false
+    };
+
+    const elements = {
+      statusBadge: document.getElementById('statusBadge'),
+      refreshBtn: document.getElementById('refreshBtn'),
+      logoutBtn: document.getElementById('logoutBtn'),
+      periodSelect: document.getElementById('periodSelect'),
+      startDate: document.getElementById('startDate'),
+      endDate: document.getElementById('endDate'),
+      channelSelect: document.getElementById('channelSelect'),
+      applyFiltersBtn: document.getElementById('applyFiltersBtn'),
+      todayKpis: document.getElementById('todayKpis'),
+      monthRevenueCard: document.querySelector('#monthRevenueCard .kpi-value'),
+      monthTicketCard: document.querySelector('#monthTicketCard .kpi-value'),
+      monthConversionCard: document.querySelector('#monthConversionCard .kpi-value'),
+      goalInput: document.getElementById('goalInput'),
+      goalValue: document.getElementById('goalValue'),
+      goalProgress: document.getElementById('goalProgress'),
+      goalPercent: document.getElementById('goalPercent'),
+      bottleneckBody: document.getElementById('bottleneckBody'),
+      noReplySelect: document.getElementById('noReplySelect'),
+      staleSelect: document.getElementById('staleSelect'),
+      productionState: document.getElementById('productionState'),
+      marketingKpis: document.getElementById('marketingKpis'),
+      marketingChart: document.getElementById('marketingChart'),
+      toast: document.getElementById('toast')
+    };
+
+    function formatMoneyBRL(value){
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+    }
+
+    function formatDateBR(date){
+      const d = new Date(date);
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    function daysBetween(start, end){
+      const ms = new Date(end) - new Date(start);
+      return Math.round(ms / (1000 * 60 * 60 * 24));
+    }
+
+    async function copyToClipboard(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast('Copiado!');
+      }catch{
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        showToast('Copiado!');
+      }
+    }
+
+    function showToast(message){
+      elements.toast.textContent = message;
+      elements.toast.classList.add('show');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => elements.toast.classList.remove('show'), 2000);
+    }
+
+    function setOnlineStatus(ok){
+      state.online = ok;
+      elements.statusBadge.textContent = ok ? 'Online' : 'Offline';
+      elements.statusBadge.classList.toggle('online', ok);
+      elements.statusBadge.classList.toggle('offline', !ok);
+    }
+
+    function setLoading(isLoading){
+      document.querySelectorAll('.kpi-value').forEach((el) => {
+        el.classList.toggle('skeleton', isLoading);
+      });
+    }
+
+    function renderKPIs(data){
+      const today = data.today;
+      const month = data.month;
+
+      const todayCards = [
+        { label: 'Leads hoje', value: today.leads },
+        { label: 'Orçamentos hoje', value: today.quotations },
+        { label: 'Aprovados hoje', value: today.approved },
+        { label: 'Faturamento hoje', value: formatMoneyBRL(today.revenue) },
+        { label: 'Ticket médio hoje', value: formatMoneyBRL(today.avgTicket) }
+      ];
+
+      elements.todayKpis.innerHTML = todayCards.map((item) => `
+        <div class="kpi-card">
+          <h3>${item.label}</h3>
+          <div class="kpi-value">${item.value}</div>
+          <div class="kpi-sub">Atualizado ${formatDateBR(data.generatedAt)}</div>
+        </div>
+      `).join('');
+
+      elements.monthRevenueCard.textContent = formatMoneyBRL(month.revenue);
+      elements.monthTicketCard.textContent = formatMoneyBRL(month.avgTicket);
+      elements.monthConversionCard.textContent = `${Math.round(month.conversion * 100)}%`;
+
+      updateGoal(month.revenue);
+    }
+
+    function updateGoal(currentRevenue){
+      const goal = Number(elements.goalInput.value) || 0;
+      elements.goalValue.textContent = formatMoneyBRL(goal);
+      const percent = goal > 0 ? Math.min((currentRevenue / goal) * 100, 100) : 0;
+      elements.goalProgress.style.width = `${percent.toFixed(1)}%`;
+      elements.goalPercent.textContent = `${percent.toFixed(1)}% atingido`;
+    }
+
+    function renderBottlenecks(list){
+      if(!list.length){
+        elements.bottleneckBody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum gargalo encontrado para o período.</td></tr>';
+        return;
+      }
+      elements.bottleneckBody.innerHTML = list.map((item) => {
+        const followUpText = buildFollowUp(item);
+        return `
+          <tr>
+            <td data-label="Cliente">${item.client}</td>
+            <td data-label="Tempo parado">${item.staleFor}</td>
+            <td data-label="Última ação">${item.lastAction}</td>
+            <td data-label="Status"><span class="tag">${item.type}</span></td>
+            <td data-label="Ações">
+              <div class="table-actions">
+                <a class="btn btn-ghost" href="${item.link}" target="_blank" rel="noopener">Abrir</a>
+                <button class="btn btn-primary" data-followup="${encodeURIComponent(followUpText)}">Copiar follow-up</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      elements.bottleneckBody.querySelectorAll('button[data-followup]').forEach((btn) => {
+        btn.addEventListener('click', () => copyToClipboard(decodeURIComponent(btn.dataset.followup)));
+      });
+    }
+
+    function renderProduction(data){
+      if(!data || data.awaitingIntegration){
+        elements.productionState.innerHTML = '<div class="kpi-sub">Aguardando integração com produção.</div>';
+        return;
+      }
+      elements.productionState.innerHTML = `
+        <div class="kpi-grid">
+          <div class="kpi-card"><h3>Em produção</h3><div class="kpi-value">${data.inProduction}</div><div class="kpi-sub">Ativos agora</div></div>
+          <div class="kpi-card"><h3>Prontos</h3><div class="kpi-value">${data.ready}</div><div class="kpi-sub">Aguardando entrega</div></div>
+          <div class="kpi-card"><h3>Prazo médio</h3><div class="kpi-value">${data.avgDeadline} dias</div><div class="kpi-sub">Lead time médio</div></div>
+          <div class="kpi-card"><h3>Atrasos</h3><div class="kpi-value">${data.delays}</div><div class="kpi-sub">Pedidos fora do prazo</div></div>
+        </div>
+      `;
+    }
+
+    function renderMarketing(data){
+      const cards = [
+        { label: 'Cliques WhatsApp', value: data.whatsappClicks },
+        { label: 'Leads por origem', value: data.leadsBySource },
+        { label: 'Orçamentos por origem', value: data.quotesBySource },
+        { label: 'Vendas por origem', value: data.salesBySource }
+      ];
+
+      elements.marketingKpis.innerHTML = cards.map((item) => `
+        <div class="kpi-card">
+          <h3>${item.label}</h3>
+          <div class="kpi-value">${item.value}</div>
+          <div class="kpi-sub">Últimos ${data.rangeLabel}</div>
+        </div>
+      `).join('');
+
+      renderCharts(data.series);
+    }
+
+    function renderCharts(series){
+      const canvas = elements.marketingChart;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.clientWidth;
+      const height = canvas.height;
+      canvas.width = width;
+
+      ctx.clearRect(0, 0, width, height);
+      if(!series.length){
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('Sem dados para o período.', 10, 20);
+        return;
+      }
+
+      const values = series.map((p) => p.value);
+      const maxValue = Math.max(...values, 1);
+      const padding = 30;
+      const stepX = (width - padding * 2) / (series.length - 1 || 1);
+
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      for(let i = 0; i <= 4; i++){
+        const y = padding + ((height - padding * 2) / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#1079ba';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      series.forEach((point, index) => {
+        const x = padding + stepX * index;
+        const y = height - padding - ((point.value / maxValue) * (height - padding * 2));
+        if(index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = '#0d5d8c';
+      series.forEach((point, index) => {
+        const x = padding + stepX * index;
+        const y = height - padding - ((point.value / maxValue) * (height - padding * 2));
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function applyFilters(){
+      const period = elements.periodSelect.value;
+      const channel = elements.channelSelect.value;
+      const noReply = elements.noReplySelect.value;
+      const stale = elements.staleSelect.value;
+      const { start, end, label } = resolvePeriod(period);
+      if(period === 'custom'){
+        if(!elements.startDate.value || !elements.endDate.value){
+          showToast('Selecione datas válidas.');
+          return;
+        }
+      }
+      loadDashboard({ start, end, channel, noReply, stale, label }, true);
+    }
+
+    function resolvePeriod(period){
+      const today = new Date();
+      const end = new Date();
+      let start = new Date();
+      let label = '';
+
+      if(period === 'today'){
+        label = '1 dia';
+      }else if(period === '7'){
+        start.setDate(today.getDate() - 6);
+        label = '7 dias';
+      }else if(period === '30'){
+        start.setDate(today.getDate() - 29);
+        label = '30 dias';
+      }else if(period === 'month'){
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        label = 'Mês atual';
+      }else{
+        start = new Date(elements.startDate.value);
+        end.setTime(new Date(elements.endDate.value).getTime());
+        label = `${formatDateBR(start)} - ${formatDateBR(end)}`;
+      }
+
+      return {
+        start: formatISODate(start),
+        end: formatISODate(end),
+        label
+      };
+    }
+
+    function formatISODate(date){
+      return date.toISOString().slice(0,10);
+    }
+
+    function buildFollowUp(item){
+      const name = item.client || 'cliente';
+      const quote = item.quote ? ` do orçamento ${item.quote}` : '';
+      return `Olá ${name}, tudo bem? Estou acompanhando${quote}. Notei que estamos há ${item.staleFor} sem movimentação desde "${item.lastAction}". Posso ajudar em algo para avançarmos?`;
+    }
+
+    function getToken(){
+      for(const key of TOKEN_KEYS){
+        const token = localStorage.getItem(key);
+        if(token) return token;
+      }
+      return null;
+    }
+
+    function redirectToLogin(){
+      window.location.href = 'login.html';
+    }
+
+    function buildMockData(label){
+      const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+      const monthRevenue = randomInt(45000, 130000);
+      return {
+        generatedAt: new Date().toISOString(),
+        today: {
+          leads: randomInt(8, 26),
+          quotations: randomInt(4, 18),
+          approved: randomInt(2, 9),
+          revenue: randomInt(3500, 12500),
+          avgTicket: randomInt(800, 2100)
+        },
+        month: {
+          revenue: monthRevenue,
+          avgTicket: randomInt(1600, 3200),
+          conversion: Math.random() * 0.4 + 0.4
+        },
+        bottlenecks: [
+          { client: 'Vidraçaria Lima', staleFor: '2h 15m', lastAction: 'Aguardando retorno', type: 'Sem resposta', link: '#', quote: 'CG-204' },
+          { client: 'Construção Alfa', staleFor: '36h', lastAction: 'Revisão pendente', type: 'Orçamento parado', link: '#', quote: 'CG-198' },
+          { client: 'Hotel Aurora', staleFor: '3 dias', lastAction: 'Entrega em atraso', type: 'Pedido em atraso', link: '#', quote: 'CG-156' }
+        ],
+        production: {
+          awaitingIntegration: true
+        },
+        marketing: {
+          rangeLabel: label,
+          whatsappClicks: randomInt(40, 120),
+          leadsBySource: 'Site 52% · Whats 32% · Indicação 16%',
+          quotesBySource: 'Site 45% · Whats 40% · Indicação 15%',
+          salesBySource: 'Site 50% · Whats 35% · Indicação 15%',
+          series: Array.from({ length: 7 }, (_, i) => ({
+            date: formatISODate(new Date(Date.now() - (6 - i) * 86400000)),
+            value: randomInt(10, 40)
+          }))
+        }
+      };
+    }
+
+    async function fetchDashboard(params){
+      const token = getToken();
+      if(!token){
+        redirectToLogin();
+        throw new Error('Token ausente');
+      }
+
+      const cache = sessionStorage.getItem(CACHE_KEY);
+      if(cache){
+        const cached = JSON.parse(cache);
+        if(Date.now() - cached.timestamp < CACHE_TTL && !params.force){
+          return { data: cached.data, fromCache: true };
+        }
+      }
+
+      if(!API_BASE){
+        // TODO: integrar com endpoint real
+        const mock = buildMockData(params.label);
+        return { data: mock, fromCache: false, mocked: true };
+      }
+
+      const qs = new URLSearchParams({
+        inicio: params.start,
+        fim: params.end,
+        canal: params.channel || 'all'
+      });
+      const summary = await fetch(`${API_BASE}/api/dashboard/resumo?${qs}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if(!summary.ok){
+        throw new Error('Falha ao buscar resumo');
+      }
+      const data = await summary.json();
+      return { data, fromCache: false };
+    }
+
+    async function loadDashboard(params, force){
+      setLoading(true);
+      try{
+        const result = await fetchDashboard({ ...params, force });
+        state.data = result.data;
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+          timestamp: Date.now(),
+          data: result.data
+        }));
+        setOnlineStatus(true);
+        renderKPIs(result.data);
+        renderBottlenecks(result.data.bottlenecks || []);
+        renderProduction(result.data.production);
+        renderMarketing({
+          ...result.data.marketing,
+          rangeLabel: params.label
+        });
+      }catch(error){
+        console.error(error);
+        setOnlineStatus(false);
+        const fallback = buildMockData(params.label);
+        renderKPIs(fallback);
+        renderBottlenecks(fallback.bottlenecks || []);
+        renderProduction(fallback.production);
+        renderMarketing({
+          ...fallback.marketing,
+          rangeLabel: params.label
+        });
+        showToast('Falha ao carregar dados. Exibindo mock.');
+      }finally{
+        setLoading(false);
+      }
+    }
+
+    function init(){
+      elements.periodSelect.addEventListener('change', () => {
+        const isCustom = elements.periodSelect.value === 'custom';
+        elements.startDate.disabled = !isCustom;
+        elements.endDate.disabled = !isCustom;
+      });
+
+      elements.applyFiltersBtn.addEventListener('click', applyFilters);
+      elements.refreshBtn.addEventListener('click', () => applyFilters());
+      elements.goalInput.addEventListener('input', () => {
+        if(state.data){
+          updateGoal(state.data.month.revenue);
+        }
+      });
+      elements.logoutBtn.addEventListener('click', () => {
+        TOKEN_KEYS.forEach((key) => localStorage.removeItem(key));
+        redirectToLogin();
+      });
+
+      const now = new Date();
+      elements.startDate.value = formatISODate(new Date(now.getFullYear(), now.getMonth(), 1));
+      elements.endDate.value = formatISODate(now);
+
+      applyFilters();
+    }
+
+    init();
+  </script>
+</body>
+</html>
