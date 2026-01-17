@@ -112,7 +112,7 @@ function gerarSvgOrdemProducao(porta) {
       <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetY}" x2="${offsetX}" y2="${offsetY}" stroke="#333"/>
       <line x1="${offsetX - 24}" y1="${offsetX + doorHeight}" x2="${offsetX}" y2="${offsetX + doorHeight}" stroke="#333"/>
-      <text x="${offsetX - 50}" y="${offsetY + doorHeight / 2}" class="op-measure" transform="rotate(-90 ${offsetX - 50} ${offsetX - 50} ${offsetY + doorHeight / 2})">${altura} mm</text>
+      <text x="${offsetX - 52}" y="${offsetY + doorHeight / 2}" class="op-measure" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 ${offsetX - 52} ${offsetX - 52} ${offsetY + doorHeight / 2})">${altura} mm</text>
 
       <line x1="${offsetX}" y1="${offsetY + doorHeight + 20}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 20}" stroke="#333"/>
       <line x1="${offsetX}" y1="${offsetX + doorHeight + 16}" x2="${offsetX}" y2="${offsetX + doorHeight + 24}" stroke="#333"/>
@@ -157,14 +157,42 @@ function atualizarResumoOrdem() {
                 </div>
                 <div class="op-info">
                     <div><strong>O.P. ${index + 1} - ${p.tipo}</strong></div>
-                    <div>Perfil: ${perfilNome}</div>
-                    <div>Vidro: ${vidroNome}</div>
-                    <div>Puxador: ${puxadorNome}</div>
-                    <div>Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</div>
-                    <div>Observação de venda: ${observacaoVenda}</div>
-                    <div>Observação de produção: ${observacaoProducao}</div>
-                    <div>Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})</div>
-                    <div>Vão do puxador: ${vaoPuxador}</div>
+                    <table class="op-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tbody>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Perfil</th>
+                                <td style="text-align: left; padding: 4px 6px;">${perfilNome}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Vidro</th>
+                                <td style="text-align: left; padding: 4px 6px;">${vidroNome}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Puxador</th>
+                                <td style="text-align: left; padding: 4px 6px;">${puxadorNome}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Valor adicional</th>
+                                <td style="text-align: left; padding: 4px 6px;">${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Observação de venda</th>
+                                <td style="text-align: left; padding: 4px 6px;">${observacaoVenda}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Observação de produção</th>
+                                <td style="text-align: left; padding: 4px 6px;">${observacaoProducao}</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Dobradiças</th>
+                                <td style="text-align: left; padding: 4px 6px;">${quantidadeDobradicas} (alturas: ${alturasDobradicas})</td>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Vão do puxador</th>
+                                <td style="text-align: left; padding: 4px 6px;">${vaoPuxador}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;
@@ -260,3 +288,4 @@ window.atualizarEtiquetasTermicas = atualizarEtiquetasTermicas;
 window.imprimirOrcamento = imprimirOrcamento;
 window.imprimirOrdemProducao = imprimirOrdemProducao;
 window.imprimirEtiquetaTermica = imprimirEtiquetaTermica;
+
