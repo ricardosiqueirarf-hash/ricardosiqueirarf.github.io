@@ -266,39 +266,115 @@
       border-radius: 20px;
       background: linear-gradient(135deg, rgba(16, 121, 186, 0.2), rgba(16, 121, 186, 0.05));
       min-height: 210px;
-      padding: 18px;
+      padding: 0;
       border: 1px solid var(--cg-border);
       box-shadow: var(--cg-shadow-soft);
+      cursor: pointer;
     }
 
-    .portfolio-item h3 {
-      color: var(--cg-blue-dark);
-      margin-bottom: 8px;
-    }
-
-    .portfolio-item span {
-      font-size: 0.95rem;
-      color: var(--cg-muted);
+    .portfolio-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
-      line-height: 1.5;
+      transition: transform 0.3s ease;
+    }
+
+    .portfolio-overlay {
+      position: absolute;
+      inset: 0;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+      background: linear-gradient(180deg, rgba(16, 121, 186, 0) 25%, rgba(13, 93, 140, 0.78) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .portfolio-overlay h3 {
+      color: var(--cg-white);
+      margin-bottom: 2px;
+      font-size: 1.1rem;
+    }
+
+    .portfolio-overlay p {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.4;
+      margin: 0;
       max-width: 90%;
     }
 
-    .portfolio-item ul {
-      margin-top: 12px;
-      padding-left: 18px;
-      color: var(--cg-muted);
-      line-height: 1.6;
-      font-size: 0.95rem;
+    .portfolio-item:hover img {
+      transform: scale(1.05);
     }
 
-    .portfolio-item::after {
-      content: "";
+    .portfolio-item:hover .portfolio-overlay {
+      opacity: 1;
+    }
+
+    .portfolio-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 44, 62, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      padding: 24px;
+      z-index: 40;
+    }
+
+    .portfolio-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .portfolio-modal-content {
+      background: var(--cg-white);
+      border-radius: 20px;
+      padding: 16px;
+      max-width: min(900px, 92vw);
+      box-shadow: var(--cg-shadow);
+      position: relative;
+    }
+
+    .portfolio-modal img {
+      display: block;
+      max-width: 85vw;
+      max-height: 80vh;
+      border-radius: 14px;
+      object-fit: contain;
+    }
+
+    .portfolio-modal h3 {
+      margin: 12px 8px 4px;
+      color: var(--cg-blue-dark);
+    }
+
+    .portfolio-modal p {
+      margin: 0 8px 8px;
+      color: var(--cg-muted);
+      line-height: 1.5;
+    }
+
+    .portfolio-modal-close {
       position: absolute;
-      inset: auto -40px -40px auto;
-      width: 120px;
-      height: 120px;
-      background: radial-gradient(circle, rgba(240, 194, 76, 0.4), transparent 70%);
+      top: 10px;
+      right: 10px;
+      border: none;
+      background: rgba(16, 121, 186, 0.12);
+      color: var(--cg-blue-dark);
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
     }
 
     .faq-item {
@@ -539,47 +615,88 @@ Color Glass Fortaleza
       </p>
 
       <div class="portfolio">
-        <div class="portfolio-item">
-          <h3>Portas de giro (vidro + alumínio)</h3>
-          <span>Para ambientes internos e mobiliário planejado — visual limpo e fechamento sólido.</span>
-          <ul>
-            <li>Acabamento premium</li>
-            <li>Personalização por medida</li>
-            <li>Aplicação B2B (lojas e marcenarias)</li>
-          </ul>
-        </div>
+        <button
+          class="portfolio-item"
+          type="button"
+          data-title="Portas de giro (vidro + alumínio)"
+          data-description="Para ambientes internos e mobiliário planejado — visual limpo e fechamento sólido."
+          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
+          aria-label="Abrir imagem Portas de giro (vidro + alumínio)"
+        >
+          <img
+            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
+            alt="Portas de giro (vidro + alumínio)"
+          />
+          <div class="portfolio-overlay">
+            <h3>Portas de giro (vidro + alumínio)</h3>
+            <p>Para ambientes internos e mobiliário planejado — visual limpo e fechamento sólido.</p>
+          </div>
+        </button>
 
-        <div class="portfolio-item">
-          <h3>Portas de correr (alumínio + vidro)</h3>
-          <span>Alta demanda no planejado: funcionalidade + estética, ideal para otimizar espaço.</span>
-          <ul>
-            <li>Corre suave e alinhamento</li>
-            <li>Variação de perfis</li>
-            <li>Entrega com padrão</li>
-          </ul>
-        </div>
+        <button
+          class="portfolio-item"
+          type="button"
+          data-title="Portas de correr (alumínio + vidro)"
+          data-description="Alta demanda no planejado: funcionalidade + estética, ideal para otimizar espaço."
+          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
+          aria-label="Abrir imagem Portas de correr (alumínio + vidro)"
+        >
+          <img
+            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
+            alt="Portas de correr (alumínio + vidro)"
+          />
+          <div class="portfolio-overlay">
+            <h3>Portas de correr (alumínio + vidro)</h3>
+            <p>Alta demanda no planejado: funcionalidade + estética, ideal para otimizar espaço.</p>
+          </div>
+        </button>
 
-        <div class="portfolio-item">
-          <h3>Estruturas thin (alumínio)</h3>
-          <span>Estruturas leves, modernas e com visual sofisticado para composições contemporâneas.</span>
-          <ul>
-            <li>Linhas: clássico, slim e invisível</li>
-            <li>Montagem precisa</li>
-            <li>Visual clean</li>
-          </ul>
-        </div>
+        <button
+          class="portfolio-item"
+          type="button"
+          data-title="Estruturas thin (alumínio)"
+          data-description="Estruturas leves, modernas e com visual sofisticado para composições contemporâneas."
+          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
+          aria-label="Abrir imagem Estruturas thin (alumínio)"
+        >
+          <img
+            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
+            alt="Estruturas thin (alumínio)"
+          />
+          <div class="portfolio-overlay">
+            <h3>Estruturas thin (alumínio)</h3>
+            <p>Estruturas leves, modernas e com visual sofisticado para composições contemporâneas.</p>
+          </div>
+        </button>
 
-        <div class="portfolio-item">
-          <h3>Closet + prateleiras (alumínio)</h3>
-          <span>Soluções sob medida para projetos completos — estética e resistência no mesmo pacote.</span>
-          <ul>
-            <li>Personalização total</li>
-            <li>Integração no planejado</li>
-            <li>Padronização de entrega</li>
-          </ul>
-        </div>
+        <button
+          class="portfolio-item"
+          type="button"
+          data-title="Closet + prateleiras (alumínio)"
+          data-description="Soluções sob medida para projetos completos — estética e resistência no mesmo pacote."
+          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
+          aria-label="Abrir imagem Closet + prateleiras (alumínio)"
+        >
+          <img
+            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
+            alt="Closet + prateleiras (alumínio)"
+          />
+          <div class="portfolio-overlay">
+            <h3>Closet + prateleiras (alumínio)</h3>
+            <p>Soluções sob medida para projetos completos — estética e resistência no mesmo pacote.</p>
+          </div>
+        </button>
       </div>
     </section>
+
+    <div class="portfolio-modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="portfolio-modal-content">
+        <button class="portfolio-modal-close" type="button" aria-label="Fechar">×</button>
+        <img src="" alt="" />
+        <h3></h3>
+        <p></p>
+      </div>
+    </div>
 
     <section id="diferenciais" class="reveal">
       <h2>Diferenciais</h2>
@@ -715,6 +832,12 @@ Color Glass Fortaleza
     const counters = document.querySelectorAll("[data-count]");
     const revealElements = document.querySelectorAll(".reveal");
     const faqItems = document.querySelectorAll(".faq-item");
+    const portfolioItems = document.querySelectorAll(".portfolio-item");
+    const portfolioModal = document.querySelector(".portfolio-modal");
+    const portfolioModalImage = portfolioModal.querySelector("img");
+    const portfolioModalTitle = portfolioModal.querySelector("h3");
+    const portfolioModalDescription = portfolioModal.querySelector("p");
+    const portfolioModalClose = portfolioModal.querySelector(".portfolio-modal-close");
 
     // Counters
     const animateCounters = () => {
@@ -759,6 +882,44 @@ Color Glass Fortaleza
     document.getElementById("ctaBottom").addEventListener("click", () => openWA(msgParceria));
     document.getElementById("ctaCatalogo").addEventListener("click", () => openWA(msgCatalogo));
 
+    // Portfolio modal
+    const openPortfolioModal = (item) => {
+      const image = item.dataset.image;
+      const title = item.dataset.title;
+      const description = item.dataset.description;
+
+      portfolioModalImage.src = image;
+      portfolioModalImage.alt = title;
+      portfolioModalTitle.textContent = title;
+      portfolioModalDescription.textContent = description;
+      portfolioModal.classList.add("active");
+      portfolioModal.setAttribute("aria-hidden", "false");
+    };
+
+    const closePortfolioModal = () => {
+      portfolioModal.classList.remove("active");
+      portfolioModal.setAttribute("aria-hidden", "true");
+      portfolioModalImage.src = "";
+    };
+
+    portfolioItems.forEach((item) => {
+      item.addEventListener("click", () => openPortfolioModal(item));
+    });
+
+    portfolioModalClose.addEventListener("click", closePortfolioModal);
+
+    portfolioModal.addEventListener("click", (event) => {
+      if (event.target === portfolioModal) {
+        closePortfolioModal();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && portfolioModal.classList.contains("active")) {
+        closePortfolioModal();
+      }
+    });
+
     window.addEventListener("load", () => {
       animateCounters();
       onScroll();
@@ -767,5 +928,6 @@ Color Glass Fortaleza
     window.addEventListener("scroll", onScroll);
   </script>
 </body>
-</html> apenas substitua a logo pelo link que estava falando antes.
+</html>
+
 
