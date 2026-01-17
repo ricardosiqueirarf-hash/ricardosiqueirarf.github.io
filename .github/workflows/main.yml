@@ -4,13 +4,24 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
- 
+
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping site
+      - name: Python-like ping
         run: |
-          curl -s https://colorglassfortaleza.com.br > /dev/null
-          curl -s -L https://colorglass.onrender.com/ > /dev/null
+          echo "Pinging Render (real request)..."
+
+          curl -L --fail --max-time 20 \
+            https://colorglass.onrender.com/ \
+            -o /tmp/render.html
+
+          echo "Pinging domain..."
+
+          curl -L --fail --max-time 20 \
+            https://colorglassfortaleza.com.br/ \
+            -o /tmp/domain.html
+
+          echo "Ping OK"
 
