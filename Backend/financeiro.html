@@ -166,6 +166,15 @@ function renderizarPedidos(pedidos) {
     currency: "BRL"
   });
 
+  const statusLabels = {
+    0: "Cancelado",
+    1: "Orçamento",
+    2: "Aprovado",
+    3: "Em Produção",
+    4: "Separado",
+    5: "Entregue"
+  };
+
   pedidos.forEach(p => {
     const total = parseValor(p.valor_total);
     const pago = parseValor(p.valor_pago);
@@ -173,10 +182,11 @@ function renderizarPedidos(pedidos) {
 
     const selectStatus = document.createElement("select");
     selectStatus.className = "status-select";
-    ["1", "2", "3", "4", "5"].forEach(opcao => {
+    ["0", "1", "2", "3", "4", "5"].forEach(opcao => {
+      const label = statusLabels[Number(opcao)] || opcao;
       const option = document.createElement("option");
       option.value = opcao;
-      option.textContent = opcao;
+      option.textContent = `${opcao} - ${label}`;
       if (opcao === statusAtual) option.selected = true;
       selectStatus.appendChild(option);
     });
@@ -234,5 +244,6 @@ document.addEventListener("DOMContentLoaded", carregarPedidos);
 
 </body>
 </html>
+
 
 
