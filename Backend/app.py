@@ -74,6 +74,14 @@ def cadastro_html_page():
 def cadastro_page():
     return send_from_directory(BASE_DIR, "cadastro.html")
 
+@app.route("/taskmenager.html")
+def taskmenager_html_page():
+    return send_from_directory(BASE_DIR, "taskmenager.html")
+
+@app.route("/taskmenager")
+def taskmenager_page():
+    return send_from_directory(BASE_DIR, "taskmenager.html")
+
 # =====================
 # DECORATOR
 # =====================
