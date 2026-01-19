@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portas de Vidro e Alumínio em Fortaleza | ColorGlass</title>
+<meta name="description" content="Portas de vidro e alumínio sob medida em Fortaleza. Orçamento rápido, qualidade premium e instalação profissional.">
+<meta name="robots" content="index, follow">
+
+<!-- SEO LOCAL -->
+<meta name="geo.region" content="BR-CE">
+<meta name="geo.placename" content="Fortaleza">
+<meta name="geo.position" content="-3.7319;-38.5267">
+<meta name="ICBM" content="-3.7319, -38.5267">
+
+<!-- CANONICAL -->
+<link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
+
+<!-- OPEN GRAPH -->
+<meta property="og:title" content="Portas de Vidro e Alumínio em Fortaleza | ColorGlass">
+<meta property="og:description" content="Orçamento rápido em portas de vidro e alumínio sob medida em Fortaleza. Qualidade premium e instalação profissional.">
+<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
+<meta property="og:type" content="website">
+
+<style>
+/* =========================
+   ESTÉTICA NOVA (login/aprovacao-like)
+   ⚠️ NÃO MEXE EM MECÂNICA
+   ========================= */
+
+:root {
+  --cg-blue: #1079ba;
+  --cg-blue-dark: #0d5d8c;
+  --cg-blue-soft: #e7f3fb;
+  --cg-gold: #f0c24c;
+  --cg-white: #ffffff;
+  --cg-text: #1f2933;
+  --cg-muted: #6b7280;
+  --cg-border: rgba(16, 121, 186, 0.12);
+  --cg-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
+  --cg-shadow-soft: 0 10px 24px rgba(15, 44, 62, 0.10);
+}
+
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+/* FUNDO padrão */
+body {
+  background:
+    radial-gradient(circle at top, rgba(16,121,186,0.15), transparent 55%),
+    linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+  color: var(--cg-text);
+  min-height: 100vh;
+}
+
+/* APP GRID */
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  gap: 18px;
+  padding: 18px;
+  animation: fadeIn 0.75s ease;
+}
+
+/* SIDEBAR (card) */
+.sidebar {
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 18px;
+  box-shadow: var(--cg-shadow);
+  position: sticky;
+  top: 18px;
+  height: calc(100vh - 36px);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sidebar::after{
+  content:"";
+  position:absolute;
+  right:-90px;
+  top:-120px;
+  width:260px;
+  height:260px;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 60%);
+  pointer-events:none;
+}
+
+.sidebar h3 {
+  margin-bottom: 8px;
+  font-size: 1.25rem;
+  letter-spacing: 0.6px;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar button {
+  padding: 12px 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 700;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar button:hover {
+  background: rgba(255,255,255,0.22);
+  transform: translateX(4px);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+}
+
+/* CONTENT (glass card) */
+.content {
+  padding: 22px;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(16,121,186,0.10);
+  box-shadow: var(--cg-shadow-soft);
+  backdrop-filter: blur(10px);
+  animation: floatIn 0.65s ease;
+}
+
+.content h1 {
+  color: var(--cg-blue-dark);
+  margin-bottom: 10px;
+  font-size: 1.65rem;
+}
+.content h2{
+  color: var(--cg-blue);
+  margin-bottom: 10px;
+  font-size: 1.15rem;
+}
+
+/* Info orçamento */
+#infoOrcamento{
+  background: var(--cg-white);
+  border: 1px solid var(--cg-border);
+  box-shadow: var(--cg-shadow-soft);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+#infoOrcamento::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, rgba(16,121,186,0.10), transparent 55%);
+  opacity: 0.0;
+  transition: opacity 0.25s ease;
+  pointer-events:none;
+}
+#infoOrcamento:hover::before{ opacity: 1; }
+
+/* Layout principal */
+.door-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 460px) 1fr;
+  gap: 18px;
+  align-items: start;
+  margin-top: 10px;
+}
+
+/* Cards */
+.door-form,
+.door-preview,
+.section-card{
+  background: var(--cg-white);
+  border-radius: 18px;
+  border: 1px solid var(--cg-border);
+  box-shadow: var(--cg-shadow);
+  position: relative;
+  overflow: hidden;
+  animation: cardIn 0.6s ease;
+}
+
+.door-form::before,
+.door-preview::before,
+.section-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, rgba(16,121,186,0.08), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events:none;
+}
+.door-form:hover::before,
+.door-preview:hover::before,
+.section-card:hover::before{ opacity: 1; }
+
+.door-form{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.door-preview{
+  padding: 12px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.section-card{
+  padding: 16px;
+  margin-top: 18px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.door-form:hover,
+.door-preview:hover,
+.section-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(15,44,62,0.14);
+}
+
+/* Inputs */
+label { display:flex; flex-direction:column; font-size:0.92rem; gap:7px; color:#374151; }
+input, select, textarea{
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  border: 1px solid #d4d9df;
+  width: 100%;
+  background: #fdfefe;
+  transition: border .2s ease, box-shadow .2s ease, transform .15s ease;
+}
+input:focus, select:focus, textarea:focus{
+  border-color: var(--cg-blue);
+  box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
+  outline: none;
+}
+input:hover, select:hover, textarea:hover{
+  transform: translateY(-1px);
+}
+
+/* Required highlight (mantém lógica existente) */
+.required-empty {
+  background: #fdeaea !important;
+  border-color: #f1b0b0 !important;
+}
+.required-filled {
+  background: #e9f8ee !important;
+  border-color: #9fd4b1 !important;
+}
+
+/* Botões */
+.btn{
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  font-weight: 800;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  box-shadow: 0 10px 18px rgba(16,121,186,0.22);
+}
+.btn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(16,121,186,0.26);
+}
+.btn:active{ transform: translateY(0); }
+.btn-danger{
+  background: linear-gradient(135deg, #e84118, #c23616);
+  box-shadow: 0 10px 18px rgba(226, 73, 33, 0.20);
+}
+.btn-danger:hover{
+  box-shadow: 0 14px 24px rgba(226, 73, 33, 0.26);
+}
+
+/* SVG preview */
+#portaSVG{
+  width: 100%;
+  height: 400px;
+  border: 1px solid rgba(16,121,186,0.18);
+  background: rgba(255,255,255,0.95);
+  border-radius: 14px;
+}
+
+/* Price preview */
+.price-preview{
+  background: linear-gradient(135deg, rgba(16,121,186,0.10), rgba(13,93,140,0.04));
+  color: var(--cg-blue-dark);
+  font-weight: 800;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(16,121,186,0.14);
+}
+
+/* Cost toggle/details */
+.cost-toggle{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+  color: #374151;
+}
+.cost-toggle input[type="checkbox"]{
+  width: 18px;
+  height: 18px;
+  transform: translateY(1px);
+}
+
+.cost-details{
+  background: rgba(255,255,255,0.92);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 10px 18px rgba(15,44,62,0.10);
+  font-size: 0.9rem;
+  border: 1px solid rgba(16,121,186,0.12);
+}
+
+cost-details table{
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.cost-details th,
+.cost-details td{
+  border: 1px solid rgba(220,221,225,0.85);
+  padding: 8px;
+  text-align: left;
+}
+
+cost-details th{
+  background: rgba(231,243,251,0.9);
+}
+
+/* Cards internos */
+#portasSalvas div,
+#printResumo .print-item,
+#printOrdem .print-item{
+  margin-bottom: 12px;
+  border: 1px solid rgba(16,121,186,0.14);
+  padding: 12px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 14px;
+  box-shadow: 0 10px 18px rgba(15,44,62,0.08);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+#portasSalvas div:hover,
+#printResumo .print-item:hover,
+#printOrdem .print-item:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(15,44,62,0.12);
+}
+
+#estruturas3DSalvas > div{
+  margin-bottom: 10px;
+  border: 1px solid rgba(16,121,186,0.14);
+  padding: 12px;
+  background: rgba(247,249,252,0.95);
+  border-radius: 14px;
+  box-shadow: 0 10px 18px rgba(15,44,62,0.08);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+#estruturas3DSalvas > div:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(15,44,62,0.12);
+}
+
+/* Print areas */
+.print-area { display: none; }
+.print-area.active { display: block; }
+.thermal-area { display: none; }
+.thermal-area.active { display: block; }
+#printResumo svg { display: none; }
+
+/* Ordem produção */
+.op-svg { border: 1px solid rgba(16,121,186,0.14); border-radius: 14px; background: #fff; width: 100%; height: auto; margin-top: 10px; }
+.op-page { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: center; margin-bottom: 24px; }
+.op-info { font-size: 20px; line-height: 1.6; }
+.op-quantity { font-size: 28px; font-weight: 700; fill: var(--cg-blue-dark); }
+.op-measure { font-size: 20px; fill: #333; }
+
+/* Etiqueta térmica (mantida) */
+.thermal-label {
+  width: 100mm;
+  height: 150mm;
+  padding: 6mm;
+  border: 1px solid #333;
+  box-sizing: border-box;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+}
+.thermal-header { font-size: 20px; line-height: 1.4; }
+.thermal-header strong { font-size: 20px; }
+.thermal-divider { border-top: 1px solid #333; margin: 4px 0; }
+.thermal-body { font-size: 20px; line-height: 1.4; }
+.thermal-footer { text-align: center; font-size: 20px; }
+
+.helper-text { color: var(--cg-muted); font-size: 0.85rem; }
+
+/* Scrollbars */
+.content::-webkit-scrollbar { width: 10px; }
+.content::-webkit-scrollbar-thumb { background: var(--cg-blue); border-radius: 999px; }
+.content::-webkit-scrollbar-track { background: rgba(255,255,255,0.0); }
+
+/* PRINT mantém a regra original, só não muda mecânica */
+@media print {
+  body { background: #fff; }
+  .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
+  .print-area.active, .thermal-area.active { display: block; }
+  .content { padding: 0; box-shadow: none; border: none; background: #fff; }
+  .op-page { page-break-after: always; }
+  .thermal-label { page-break-after: always; border: none; }
+  #printResumo svg { display: none !important; }
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: relative;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar button { text-align: center; flex: 1; }
+  .door-layout { grid-template-columns: 1fr; }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<link id="tema-css" rel="stylesheet" href="">
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/main.js" defer></script>
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/api.js" defer></script>
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/pricing.js" defer></script>
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/ui.js" defer></script>
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/print.js" defer></script>
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/estruturas3d.js" defer></script>
+</head>
+
+<body>
+<div class="app">
+    <div class="sidebar">
+        <h3>ColorGlass</h3>
+        <button onclick="go('index_loja.html')">Voltar</button>
+    </div>
+
+    <div class="content">
+        <h1>Orçamento de Portas</h1>
+
+        <div id="infoOrcamento"></div>
+
+        <div class="door-layout">
+            <div class="door-form">
+                <label>Tipologia
+                    <select id="tipologia" onchange="renderCampos()">
+                        <option value="">Selecione</option>
+                        <option value="giro">Giro</option>
+                        <option value="deslizante">Deslizante</option>
+                        <option value="correr">Correr</option>
+                        <option value="pivotante">Pivotante</option>
+                    </select>
+                </label>
+
+                <button class="btn" onclick="abrirEstrutura3D()">
+                    🧱 Orçar Estrutura 3D
+                </button>
+
+                <label>Quantidade
+                    <input type="number" id="quantidade" value="1" min="1" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()">
+                </label>
+
+                <div id="campos"></div>
+                <div class="price-preview" id="precoPorta">Preço estimado: R$ 0,00</div>
+                <label class="cost-toggle">
+                    <input type="checkbox" id="toggleCustos" onchange="toggleDetalhesCustos()">
+                    Mostrar custos e preços detalhados
+                </label>
+                <div class="cost-details" id="detalhesCustos" style="display: none;"></div>
+                <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
+            </div>
+
+            <div class="door-preview">
+                <svg id="portaSVG"></svg>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Portas Salvas</h2>
+            <div id="portasSalvas"></div>
+            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                <button class="btn" onclick="imprimirOrcamento()">Imprimir Orçamento</button>
+                <button class="btn" onclick="imprimirOrdemProducao()">Imprimir Ordem de Produção</button>
+                <button class="btn" onclick="imprimirEtiquetaTermica()">Etiqueta térmica</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Estruturas 3D Salvas</h2>
+            <div id="estruturas3DSalvas"></div>
+        </div>
+
+        <div id="printResumo" class="print-area"></div>
+        <div id="printOrdem" class="print-area"></div>
+        <div id="printEtiqueta" class="thermal-area"></div>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
