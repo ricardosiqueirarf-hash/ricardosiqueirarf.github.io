@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 import requests
 import uuid
 
@@ -89,13 +89,21 @@ def login_usuario():
 
         token_sessao = gerar_token_usuario(usuario)
 
-        return jsonify({
+        response = make_response(jsonify({
             "success": True,
             "userid": usuario.get("userid"),
             "user": usuario.get("user"),
             "token": token_sessao,
             "message": "Login autorizado."
-        })
+        }))
+        response.set_cookie(
+            "auth_token",
+            token_sessao,
+            max_age=12 * 60 * 60,
+            httponly=True,
+            samesite="Lax"
+        )
+        return response
 
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
@@ -126,6 +134,7 @@ def validar_token():
         })
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
 
 
 
