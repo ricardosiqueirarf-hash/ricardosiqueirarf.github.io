@@ -529,65 +529,32 @@ async function carregarDadosDoOrcamento(uuid) {
 }
 
 /**
- * ✅ Aprovação + emissão de boleto via Asaas (chamando o BACKEND)
+ * ✅ Aprovação do pedido (atualiza status do orçamento para aprovado)
  */
 async function aprovarPedido() {
   const btn = document.getElementById("btnAprovar");
   const token = getToken();
 
   const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
-  const numero_pedido = document.getElementById("numero_pedido").value.trim();
-  const cliente_nome = document.getElementById("cliente_nome").value.trim();
-  const valor_total = Number(document.getElementById("valor_total").value || 0);
   
   if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
   if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
-  if (!valor_total || valor_total <= 0) { setStatus("Valor inválido no orçamento.", "erro"); return; }
 
   try {
     btn.disabled = true;
-    setStatus("Aprovando pedido e gerando boleto...");
+    setStatus("Aprovando pedido...");
 
-    const res = await fetch(`${API_BASE}/api/pagamentos/aprovar-boleto`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        orcamento_uuid,
-        numero_pedido: numero_pedido || null,
-        cliente_nome: cliente_nome || null,
-        valor_total: valor_total || null,
-      })
-    });
-
-    const data = await res.json();
-
-    if (!data.success) {
-      setStatus(data.error || "Não foi possível aprovar/gerar boleto.", "erro");
-      btn.disabled = false;
-      return;
-    }
-
-    if (!data.boleto_url) {
-      setStatus("Boleto não retornou URL. Verifique o backend.", "erro");
-      btn.disabled = false;
-      return;
-    }
-
-    document.getElementById("boleto_url").value = data.boleto_url;
     const statusAtualizado = await atualizarStatusOrcamento(orcamento_uuid, token);
     if (statusAtualizado) {
-      setStatus("Pedido aprovado! Boleto gerado e status atualizado.", "ok");
+      setStatus("Pedido aprovado! Status atualizado.", "ok");
     } else {
-      setStatus("Pedido aprovado! Boleto gerado, mas não foi possível atualizar o status.", "erro");
+      setStatus("Não foi possível atualizar o status do pedido.", "erro");
     }
     btn.disabled = false;
 
   } catch (err) {
     console.error(err);
-    setStatus("Erro ao aprovar/gerar boleto. Verifique o console.", "erro");
+    setStatus("Erro ao aprovar pedido. Verifique o console.", "erro");
     btn.disabled = false;
   }
 }
@@ -617,25 +584,11 @@ async function atualizarStatusOrcamento(uuid, token) {
 }
 
 async function copiarBoleto() {
-  const url = document.getElementById("boleto_url").value.trim();
-  if (!url) { setStatus("Nenhum link de boleto para copiar.", "erro"); return; }
-
-  try {
-    await navigator.clipboard.writeText(url);
-    setStatus("Link copiado!", "ok");
-  } catch (e) {
-    const inp = document.getElementById("boleto_url");
-    inp.focus();
-    inp.select();
-    document.execCommand("copy");
-    setStatus("Link copiado!", "ok");
-  }
+  setStatus("Esta página apenas atualiza o status do orçamento.", "erro");
 }
 
 function abrirBoleto() {
-  const url = document.getElementById("boleto_url").value.trim();
-  if (!url) { setStatus("Nenhum link de boleto para abrir.", "erro"); return; }
-  window.open(url, "_blank", "noopener,noreferrer");
+  setStatus("Esta página apenas atualiza o status do orçamento.", "erro");
 }
 
 function voltar() { history.back(); }
@@ -651,6 +604,7 @@ function voltar() { history.back(); }
 
 </body>
 </html>
+
 
 
 
