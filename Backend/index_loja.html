@@ -529,6 +529,7 @@ function renderizarOrcamentos(orcamentos) {
     const statusNumero = (o.status ?? "");
     const statusValor = Number(statusNumero);
     const podeEditar = statusValor === 1;
+    const podeVisualizar = statusValor >= 2 && statusValor <= 5;
 
     const actionsHtml = podeEditar
       ? `
@@ -540,7 +541,14 @@ function renderizarOrcamentos(orcamentos) {
             onclick="aprovarPedido('${o.id}')">🪙</button>
         </div>
       `
-      : "";
+      : podeVisualizar
+        ? `
+          <div class="actions">
+            <button class="icon-btn edit" title="Visualizar"
+              onclick="visualizarOrcamento('${o.id}')">👁️</button>
+          </div>
+        `
+        : "";
 
     tr.dataset.orcamentoId = o.id;
     tr.dataset.status = statusNumero;
@@ -677,6 +685,11 @@ function aprovarPedido(uuid){
   window.location.href = `/aprovacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
 
+// 👁️ VISUALIZAR
+function visualizarOrcamento(uuid){
+  window.location.href = `/vizualizacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+}
+
 // =====================
 // FICHA CLIENTE
 // =====================
@@ -741,6 +754,7 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
+
 
 
 
