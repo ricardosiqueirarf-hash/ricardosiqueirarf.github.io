@@ -253,7 +253,7 @@ body{
   white-space: nowrap;
 }
 
-/* AÇÕES com ícones — mais “premium” */
+/* AÇES com ícones — mais “premium” */
 .actions{
   display: flex;
   gap: 10px;
@@ -516,7 +516,16 @@ function renderizarOrcamentos(orcamentos) {
   `;
   const tbody = table.querySelector("tbody");
 
-  orcamentos.forEach((o) => {
+  const orcamentosOrdenados = [...orcamentos].sort((a, b) => {
+    const pedidoA = Number(a?.numero_pedido ?? 0);
+    const pedidoB = Number(b?.numero_pedido ?? 0);
+    if (pedidoA !== pedidoB) return pedidoB - pedidoA;
+    const dataA = a?.data_criacao ? new Date(a.data_criacao).getTime() : 0;
+    const dataB = b?.data_criacao ? new Date(b.data_criacao).getTime() : 0;
+    return dataB - dataA;
+  });
+
+  orcamentosOrdenados.forEach((o) => {
     const tr = document.createElement("tr");
 
     const dataCriacao = formatarDataLocal(o.data_criacao);
@@ -754,6 +763,7 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
+
 
 
 
