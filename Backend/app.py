@@ -97,27 +97,22 @@ def exige_nivel_2_ou_3(fn):
 # =====================
 
 @app.route("/loja")
-@exige_nivel_2_ou_3
 def index_loja_page():
     return send_from_directory(BASE_DIR, "index_loja.html")
 
 @app.route("/index_loja.html")
-@exige_nivel_2_ou_3
 def index_loja_html_page():
     return send_from_directory(BASE_DIR, "index_loja.html")
 
 @app.route("/index.html")
-@exige_nivel_2_ou_3
 def index_admin_page():
     return send_from_directory(BASE_DIR, "index.html")
 
 @app.route("/portas")
-@exige_nivel_2_ou_3
 def portas_page():
     return send_from_directory(BASE_DIR, "portas.html")
 
 @app.route("/portas.html")
-@exige_nivel_2_ou_3
 def portas_html_page():
     return send_from_directory(BASE_DIR, "portas.html")
 
