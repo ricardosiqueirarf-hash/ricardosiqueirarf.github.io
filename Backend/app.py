@@ -29,7 +29,7 @@ HEADERS = {
 # =====================
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -147,10 +147,12 @@ def tags_html_page():
     return send_from_directory(BASE_DIR, "tags.html")
 
 @app.route("/financeiro")
+@exige_nivel_2_ou_3
 def financeiro_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
 
 @app.route("/financeiro.html")
+@exige_nivel_2_ou_3
 def financeiro_html_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
 
@@ -304,6 +306,7 @@ app.register_blueprint(api_task)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
