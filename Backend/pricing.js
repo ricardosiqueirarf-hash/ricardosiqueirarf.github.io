@@ -145,7 +145,7 @@ function calcularPrecoPorta() {
         if (tipo === "metro_linear") {
             quantidadeInsumo = perimetro;
         } else if (tipo === "unidade") {
-            quantidadeInsumo = quantidadePortas;
+            quantidadeInsumo = 1;
         }
         total += (insumo.preco || 0) * quantidadeInsumo;
     });
@@ -170,3 +170,4 @@ window.obterTagCorrespondente = obterTagCorrespondente;
 window.calcularMedidasPorta = calcularMedidasPorta;
 window.calcularTagAplicada = calcularTagAplicada;
 window.calcularPrecoPorta = calcularPrecoPorta;
+
