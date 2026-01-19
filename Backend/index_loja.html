@@ -253,7 +253,7 @@ body{
   white-space: nowrap;
 }
 
-/* AÇES com ícones — mais “premium” */
+/* AÇÕES com ícones — mais “premium” */
 .actions{
   display: flex;
   gap: 10px;
@@ -403,8 +403,24 @@ tr:hover{
 // =====================
 // Navegação
 // =====================
+function buildUrlComToken(url) {
+  const token = getUserToken();
+  if (!token) return url;
+
+  try {
+    const target = new URL(url, window.location.origin);
+    if (!target.searchParams.get("token")) {
+      target.searchParams.set("token", token);
+    }
+    return target.toString();
+  } catch (error) {
+    console.error("URL inválida:", error);
+    return url;
+  }
+}
+
 function go(url){
-  window.location.href = url;
+  window.location.href = buildUrlComToken(url);
 }
 
 // =====================
@@ -516,16 +532,7 @@ function renderizarOrcamentos(orcamentos) {
   `;
   const tbody = table.querySelector("tbody");
 
-  const orcamentosOrdenados = [...orcamentos].sort((a, b) => {
-    const pedidoA = Number(a?.numero_pedido ?? 0);
-    const pedidoB = Number(b?.numero_pedido ?? 0);
-    if (pedidoA !== pedidoB) return pedidoB - pedidoA;
-    const dataA = a?.data_criacao ? new Date(a.data_criacao).getTime() : 0;
-    const dataB = b?.data_criacao ? new Date(b.data_criacao).getTime() : 0;
-    return dataB - dataA;
-  });
-
-  orcamentosOrdenados.forEach((o) => {
+  orcamentos.forEach((o) => {
     const tr = document.createElement("tr");
 
     const dataCriacao = formatarDataLocal(o.data_criacao);
@@ -686,17 +693,20 @@ async function atualizarTotaisOrcamentos() {
 
 // ✏️ EDITAR ORÇAMENTO
 function editarOrcamento(uuid){
-  window.location.href = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  const baseUrl = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = buildUrlComToken(baseUrl);
 }
 
 // 🪙 APROVAÇÃO / BOLETO
 function aprovarPedido(uuid){
-  window.location.href = `/aprovacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  const baseUrl = `/aprovacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = buildUrlComToken(baseUrl);
 }
 
 // 👁️ VISUALIZAR
 function visualizarOrcamento(uuid){
-  window.location.href = `/vizualizacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  const baseUrl = `/vizualizacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = buildUrlComToken(baseUrl);
 }
 
 // =====================
