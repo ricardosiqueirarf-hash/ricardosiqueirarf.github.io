@@ -1,4 +1,3 @@
-import os
 import requests
 from flask import Blueprint, request, jsonify
 
@@ -22,6 +21,21 @@ def listar_tarefas():
     )
     r.raise_for_status()
     return jsonify(r.json())
+
+
+@api_task.route("/api/tarefas", methods=["POST"])
+def criar_tarefa():
+    data = request.json or {}
+
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/tarefas",
+        headers={**HEADERS, "Prefer": "return=representation"},
+        json=data,
+    )
+    r.raise_for_status()
+
+    res = r.json()
+    return jsonify(res[0] if res else {}), 201
 
 
 @api_task.route("/api/tarefas/<uuid>", methods=["PATCH"])
