@@ -218,7 +218,6 @@ function atualizarDetalhesCusto() {
 
     const largura = (+document.getElementById("largura")?.value || 0) / 1000;
     const altura = (+document.getElementById("altura")?.value || 0) / 1000;
-    const quantidadePortas = +document.getElementById("quantidade")?.value || 1;
     const valorAdicional = +document.getElementById("valor_adicional")?.value || 0;
     const perimetro = 2 * (largura + altura);
 
@@ -274,7 +273,7 @@ function atualizarDetalhesCusto() {
         if (tipo === "metro_linear") {
             quantidadeInsumo = perimetro;
         } else if (tipo === "unidade") {
-            quantidadeInsumo = quantidadePortas;
+            quantidadeInsumo = 1;
         } else {
             return;
         }
@@ -539,3 +538,4 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
+
