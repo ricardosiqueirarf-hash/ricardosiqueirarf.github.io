@@ -197,32 +197,26 @@ def imagefinder_html_page():
     return send_from_directory(BASE_DIR, "imagefinder.html")
 
 @app.route("/perfis")
-@exige_nivel_2_ou_3
 def perfis_page():
     return send_from_directory(BASE_DIR, "perfis.html")
 
 @app.route("/perfis.html")
-@exige_nivel_2_ou_3
 def perfis_html_page():
     return send_from_directory(BASE_DIR, "perfis.html")
 
 @app.route("/vidros")
-@exige_nivel_2_ou_3
 def vidros_page():
     return send_from_directory(BASE_DIR, "vidros.html")
 
 @app.route("/vidros.html")
-@exige_nivel_2_ou_3
 def vidros_html_page():
     return send_from_directory(BASE_DIR, "vidros.html")
 
 @app.route("/insumos")
-@exige_nivel_2_ou_3
 def insumos_page():
     return send_from_directory(BASE_DIR, "insumos.html")
 
 @app.route("/insumos.html")
-@exige_nivel_2_ou_3
 def insumos_html_page():
     return send_from_directory(BASE_DIR, "insumos.html")
 
@@ -247,12 +241,10 @@ def vizualizacao_html_page():
     return send_from_directory(BASE_DIR, "vizualizacao.html")
 
 @app.route("/tarefas")
-@exige_nivel_2_ou_3
 def task_page():
     return send_from_directory(BASE_DIR, "task.html")
 
 @app.route("/tarefas.html")
-@exige_nivel_2_ou_3
 def task_html_page():
     return send_from_directory(BASE_DIR, "task.html")
 
