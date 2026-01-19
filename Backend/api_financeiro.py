@@ -46,6 +46,7 @@ def api_financeiro():
     # IMPORTANTÍSSIMO: não pedir coluna que não existe.
     # Pelo seu erro anterior, 'data_status' não existe. Use 'data_criacao'.
     select_campos = ",".join([
+        "id",
         "numero_pedido",
         "cliente_nome",
         "data_criacao",
