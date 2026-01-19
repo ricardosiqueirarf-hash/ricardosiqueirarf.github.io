@@ -28,10 +28,12 @@ def extrair_token(request):
         return auth_header.replace("Bearer ", "", 1).strip()
 
     json_body = request.get_json(silent=True) or {}
+    cookie_token = request.cookies.get("auth_token")
     return (
         request.headers.get("X-Auth-Token")
         or request.args.get("token")
         or json_body.get("token")
+        or cookie_token
     )
 
 
@@ -56,6 +58,7 @@ def pagina_por_nivel(level):
     if level in (1, 2):
         return "index_loja.html"
     return "login.html"
+
 
 
 
