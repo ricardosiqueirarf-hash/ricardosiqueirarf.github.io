@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamentos | ColorGlass</title>
+<meta name="description" content="Orçamentos e pedidos da ColorGlass.">
+<meta name="robots" content="index, follow">
+
+<style>
+/* =====================
+   ESTÉTICA NOVA (login/aprovacao-like)
+   ⚠️ MECÂNICA INTACTA
+   ===================== */
+
+:root{
+  --cg-blue:#1079ba;
+  --cg-blue-dark:#0d5d8c;
+  --cg-blue-soft:#e7f3fb;
+  --cg-gold:#f0c24c;
+  --cg-white:#ffffff;
+  --cg-text:#1f2933;
+  --cg-muted:#6b7280;
+  --cg-border:rgba(16,121,186,0.12);
+  --cg-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
+  --cg-shadow-soft: 0 10px 24px rgba(15,44,62,0.10);
+}
+
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+/* FUNDO igual vibe do aprovacao/login */
+body{
+  min-height: 100vh;
+  display: flex;
+  background:
+    radial-gradient(circle at top, rgba(16,121,186,0.16), transparent 55%),
+    linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+  color: var(--cg-text);
+}
+
+/* APP WRAPPER */
+.app {
+  display: flex;
+  width: 100%;
+  gap: 18px;
+  padding: 18px;
+  animation: fadeIn 0.7s ease;
+}
+
+/* SIDEBAR — ainda azul, mas mais “card” como login */
+.sidebar{
+  width: 240px;
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 18px;
+  gap: 12px;
+  border-radius: 18px;
+  box-shadow: var(--cg-shadow);
+  position: sticky;
+  top: 18px;
+  height: calc(100vh - 36px);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sidebar::after{
+  content:"";
+  position:absolute;
+  right:-90px;
+  top:-120px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 60%);
+  pointer-events:none;
+}
+
+.sidebar:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(15,44,62,0.16);
+}
+
+.sidebar h3{
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+  letter-spacing: 0.8px;
+  transition: transform .25s ease, opacity .25s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar h3:hover{
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+/* BOTÕES SIDEBAR */
+.sidebar button{
+  background: rgba(255,255,255,0.14);
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  cursor: pointer;
+  text-align: left;
+  font-weight: 600;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar button:hover{
+  background: rgba(255,255,255,0.22);
+  transform: translateX(4px);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+}
+
+/* CONTENT como “cards” */
+.content{
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(16,121,186,0.10);
+  box-shadow: var(--cg-shadow-soft);
+  backdrop-filter: blur(10px);
+  animation: floatIn 0.6s ease;
+}
+
+/* Títulos */
+.content h1{
+  color: var(--cg-blue-dark);
+  font-size: 1.6rem;
+  margin-bottom: 14px;
+}
+
+.content h2{
+  margin-top: 10px;
+  color: var(--cg-blue);
+  font-size: 1.15rem;
+}
+
+/* FORMULÁRIOS — card estilo aprovacao */
+#formCliente{
+  background: var(--cg-white);
+  padding: 20px;
+  border-radius: 18px;
+  margin: 14px 0 22px;
+  box-shadow: var(--cg-shadow-soft);
+  border: 1px solid var(--cg-border);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+#formCliente::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, rgba(16,121,186,0.10), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events:none;
+}
+#formCliente:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(15,44,62,0.14);
+}
+#formCliente:hover::before{ opacity: 1; }
+
+#formCliente label{
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #374151;
+}
+
+#formCliente input{
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d4d9df;
+  margin-top: 0;
+  background: #fdfefe;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+#formCliente input:focus{
+  border-color: var(--cg-blue);
+  box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
+  outline: none;
+}
+
+/* BOTÕES — gradiente igual aprovacao */
+.btn{
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  font-weight: 800;
+  margin-top: 10px;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  box-shadow: 0 10px 18px rgba(16,121,186,0.22);
+}
+
+.btn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(16,121,186,0.26);
+}
+
+.btn:active{ transform: translateY(0); }
+
+/* TOOLBAR — estilo input “clean” */
+.orcamentos-toolbar{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 12px 0 12px;
+}
+
+.orcamentos-toolbar input{
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d4d9df;
+  background: #fff;
+  transition: border .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.orcamentos-toolbar input:focus{
+  border-color: var(--cg-blue);
+  box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
+  outline: none;
+}
+
+.orcamentos-toolbar input:hover{
+  transform: translateY(-1px);
+}
+
+.status-text{
+  font-size: 0.9rem;
+  color: var(--cg-muted);
+  background: rgba(231,243,251,0.65);
+  border: 1px solid rgba(16,121,186,0.14);
+  padding: 8px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* AÇÕES com ícones — mais “premium” */
+.actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.icon-btn{
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(16,121,186,0.18);
+  background: rgba(255,255,255,0.85);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color .18s ease;
+  box-shadow: 0 10px 18px rgba(15,44,62,0.10);
+  user-select: none;
+  padding: 0;
+}
+
+.icon-btn:hover{
+  transform: translateY(-2px);
+  background: #ffffff;
+  border-color: rgba(16,121,186,0.28);
+  box-shadow: 0 14px 24px rgba(15,44,62,0.14);
+}
+
+.icon-btn:active{ transform: translateY(0); }
+
+.icon-btn.edit{ color: var(--cg-blue-dark); }
+.icon-btn.pay{ color: #0c7c3c; }
+
+/* TABELAS — card + hover suave */
+#orcamentosExistentes { overflow-x: auto; }
+
+table{
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 14px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--cg-shadow-soft);
+  border: 1px solid rgba(16,121,186,0.10);
+}
+
+th, td{
+  border: 1px solid rgba(220,221,225,0.85);
+  padding: 12px 12px;
+  text-align: left;
+}
+
+th{
+  background: linear-gradient(135deg, rgba(231,243,251,0.95), rgba(231,243,251,0.65));
+  color: #1f2933;
+  font-weight: 800;
+}
+
+tr{
+  transition: background .18s ease, transform .18s ease;
+}
+
+tr:hover{
+  background: rgba(243,249,255,0.95);
+}
+
+/* SCROLLBARS CUSTOM */
+.content::-webkit-scrollbar { width: 10px; }
+.content::-webkit-scrollbar-thumb { background: var(--cg-blue); border-radius: 999px; }
+.content::-webkit-scrollbar-track { background: rgba(255,255,255,0.0); }
+
+/* ANIMAÇÕES */
+@keyframes fadeIn{
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatIn{
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* RESPONSIVO */
+@media (max-width: 900px), (orientation: portrait){
+  body{ display: block; }
+  .app{
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 14px;
+  }
+  .sidebar{
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
+    border-radius: 18px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .sidebar button{
+    text-align: center;
+    flex: 1;
+  }
+  .content{
+    padding: 18px 14px 22px;
+    border-radius: 18px;
+  }
+  .orcamentos-toolbar{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .btn{ width: 100%; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+    <div class="sidebar">
+        <h3>COLOR GLASS</h3>
+        <button onclick="go('index_loja.html')">Orçamentos</button>
+    </div>
+
+    <div class="content">
+        <h1>Orçamento de Portas</h1>
+
+        <div id="formCliente">
+            <label>Nome do Cliente<input type="text" id="clienteNome"></label>
+            <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
+        </div>
+
+        <h2>Orçamentos Existentes</h2>
+        <div class="orcamentos-toolbar">
+            <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
+            <span id="orcamentosStatus" class="status-text">Carregando...</span>
+        </div>
+        <div id="orcamentosExistentes"><em>Carregando...</em></div>
+    </div>
+</div>
+<script>
+// =====================
+// Navegação
+// =====================
+function buildUrlComToken(url) {
+  const token = getUserToken();
+  if (!token) return url;
+
+  try {
+    const target = new URL(url, window.location.origin);
+    if (!target.searchParams.get("token")) {
+      target.searchParams.set("token", token);
+    }
+    return target.toString();
+  } catch (error) {
+    console.error("URL inválida:", error);
+    return url;
+  }
+}
+
+function go(url){
+  window.location.href = buildUrlComToken(url);
+}
+
+// =====================
+// URL do backend
+// =====================
+const BACKEND_URL = "https://colorglass.onrender.com";
+
+function getUserToken() {
+  return localStorage.getItem("USER_TOKEN");
+}
+
+// =====================
+// Sessão
+// =====================
+async function validarSessao() {
+  const USER_TOKEN = getUserToken();
+
+  // redireciona para login se nao tiver user_token
+  if (!USER_TOKEN) {
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      }
+    });
+
+    // Se backend cair e devolver HTML/erro, evita quebrar
+    if (!res.ok) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    const data = await res.json();
+
+    // se user token estiver errado redireciona pra login
+    if (!data.success) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    // Se backend mandar redirect, obedece (ex: admin vs user)
+    if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
+      window.location.href = data.redirect;
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao validar sessão:", err);
+    window.location.href = "login.html";
+    return false;
+  }
+}
+
+// =====================
+// CARREGAR ORÇAMENTOS
+// =====================
+let orcamentosCache = [];
+
+function atualizarStatusOrcamentos(mensagem) {
+  const status = document.getElementById("orcamentosStatus");
+  if (status) status.textContent = mensagem;
+}
+
+function formatarDinheiroBR(valor) {
+  if (valor === null || valor === undefined || valor === "--") return "--";
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return "--";
+  return n.toFixed(2);
+}
+
+function formatarDataLocal(dataISO) {
+  if (!dataISO) return "";
+  const d = new Date(dataISO);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString();
+}
+
+function renderizarOrcamentos(orcamentos) {
+  const container = document.getElementById("orcamentosExistentes");
+  container.innerHTML = "";
+
+  if (!orcamentos || orcamentos.length === 0) {
+    container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
+    atualizarStatusOrcamentos("Nenhum resultado");
+    return;
+  }
+
+  const table = document.createElement("table");
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th># Pedido</th>
+        <th>Cliente</th>
+        <th>Data Criação</th>
+        <th>Qtd Total</th>
+        <th>Status do pedido</th>
+        <th>Valor Total (R$)</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+  const tbody = table.querySelector("tbody");
+
+  orcamentos.forEach((o) => {
+    const tr = document.createElement("tr");
+
+    const dataCriacao = formatarDataLocal(o.data_criacao);
+    const qtdTotal = (o.quantidade_total ?? "--");
+    const valorTotal = (o.valor_total ?? "--");
+
+    // ✅ Exibição do status: usa status_label (backend)
+    // ✅ Mantém número em dataset pra lógica/estilo
+    const statusLabel = o.status_label ?? String(o.status ?? "Desconhecido");
+    const statusNumero = (o.status ?? "");
+    const statusValor = Number(statusNumero);
+    const podeEditar = statusValor === 1;
+    const podeVisualizar = statusValor >= 2 && statusValor <= 5;
+
+    const actionsHtml = podeEditar
+      ? `
+        <div class="actions">
+          <button class="icon-btn edit" title="Editar"
+            onclick="editarOrcamento('${o.id}')">✏️</button>
+
+          <button class="icon-btn pay" title="Aprovar / Boleto"
+            onclick="aprovarPedido('${o.id}')">🪙</button>
+        </div>
+      `
+      : podeVisualizar
+        ? `
+          <div class="actions">
+            <button class="icon-btn edit" title="Visualizar"
+              onclick="visualizarOrcamento('${o.id}')">👁️</button>
+          </div>
+        `
+        : "";
+
+    tr.dataset.orcamentoId = o.id;
+    tr.dataset.status = statusNumero;
+
+    tr.innerHTML = `
+      <td>${o.numero_pedido ?? ""}</td>
+      <td>${o.cliente_nome ?? ""}</td>
+      <td>${dataCriacao}</td>
+      <td data-field="quantidade_total">${qtdTotal}</td>
+
+      <!-- ✅ Aqui: mostra o texto amigável -->
+      <td data-field="status_label">${statusLabel}</td>
+
+      <td data-field="valor_total">${valorTotal === "--" ? "--" : formatarDinheiroBR(valorTotal)}</td>
+      <td>${actionsHtml}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  container.appendChild(table);
+  atualizarStatusOrcamentos(`${orcamentos.length} orçamento(s)`);
+}
+
+function aplicarFiltroOrcamentos() {
+  const filtroEl = document.getElementById("orcamentoFiltro");
+  const filtro = (filtroEl?.value || "").trim().toLowerCase();
+
+  if (!filtro) {
+    renderizarOrcamentos(orcamentosCache);
+    return;
+  }
+
+  const filtrados = orcamentosCache.filter((o) => {
+    const cliente = (o.cliente_nome || "").toLowerCase();
+    const pedido = String(o.numero_pedido || "");
+    const statusLabel = (o.status_label || "").toLowerCase();
+    return cliente.includes(filtro) || pedido.includes(filtro) || statusLabel.includes(filtro);
+  });
+
+  renderizarOrcamentos(filtrados);
+}
+
+async function carregarOrcamentos() {
+  const USER_TOKEN = getUserToken();
+
+  try {
+    atualizarStatusOrcamentos("Carregando...");
+
+    const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
+      headers: {
+        "Authorization": `Bearer ${USER_TOKEN}`
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const orcamentos = data.orcamentos || [];
+
+    orcamentosCache = orcamentos;
+    renderizarOrcamentos(orcamentosCache);
+
+    // Atualiza totais calculando pelas portas
+    await atualizarTotaisOrcamentos();
+
+  } catch (err) {
+    console.error("Erro ao carregar orçamentos:", err);
+    const cont = document.getElementById("orcamentosExistentes");
+    if (cont) cont.innerHTML = "<em>Erro ao carregar orçamentos.</em>";
+    atualizarStatusOrcamentos("Erro ao carregar");
+  }
+}
+
+async function atualizarTotaisOrcamentos() {
+  const USER_TOKEN = getUserToken();
+  const tabela = document.querySelector("#orcamentosExistentes table");
+  if (!tabela) return;
+
+  const rows = Array.from(tabela.querySelectorAll("tbody tr"));
+
+  await Promise.allSettled(rows.map(async (row) => {
+    const orcamentoId = row.dataset.orcamentoId;
+    if (!orcamentoId) return;
+
+    const qtdCell = row.querySelector('[data-field="quantidade_total"]');
+    const valorCell = row.querySelector('[data-field="valor_total"]');
+
+    try {
+      const resPortas = await fetch(`${BACKEND_URL}/api/orcamento/${orcamentoId}/portas`, {
+        headers: {
+          "Authorization": `Bearer ${USER_TOKEN}`
+        }
+      });
+
+      if (!resPortas.ok) return;
+
+      const dataPortas = await resPortas.json();
+
+      if (!dataPortas.success || !Array.isArray(dataPortas.portas)) {
+        return;
+      }
+
+      let qtdTotal = 0;
+      let valorTotal = 0;
+
+      dataPortas.portas.forEach(p => {
+        const quantidade = Number(p.quantidade) || 1;
+        const preco = Number(p.preco) || 0;
+
+        valorTotal += preco 
+
+   
+      });
+
+      if (qtdCell) qtdCell.textContent = qtdTotal;
+      if (valorCell) valorCell.textContent = formatarDinheiroBR(valorTotal);
+
+    } catch (err) {
+      console.error("Erro ao carregar portas do orçamento:", err);
+    }
+  }));
+}
+
+// ✏️ EDITAR ORÇAMENTO
+function editarOrcamento(uuid){
+  const baseUrl = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = buildUrlComToken(baseUrl);
+}
+
+// 🪙 APROVAÇÃO / BOLETO
+function aprovarPedido(uuid){
+  const baseUrl = `/aprovacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = buildUrlComToken(baseUrl);
+}
+
+// 👁️ VISUALIZAR
+function visualizarOrcamento(uuid){
+  const baseUrl = `/vizualizacao.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  window.location.href = buildUrlComToken(baseUrl);
+}
+
+// =====================
+// FICHA CLIENTE
+// =====================
+let cliente = { nome: "", id: null };
+
+async function criarFichaCliente(){
+  const USER_TOKEN = getUserToken();
+  const nome = document.getElementById("clienteNome")?.value.trim();
+
+  if (!nome) {
+    alert("Digite o nome do cliente");
+    return;
+  }
+
+  cliente.nome = nome;
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      },
+      body: JSON.stringify({ cliente_nome: cliente.nome })
+    });
+
+    if (!res.ok) {
+      alert("Falha no servidor ao criar ficha.");
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.success) {
+      cliente.id = data.id;
+      alert("Ficha criada com sucesso! ID: " + data.id);
+
+      const form = document.getElementById("formCliente");
+      if (form) form.style.display = "none";
+
+      carregarOrcamentos();
+    } else {
+      alert("Erro ao criar ficha: " + (data.error || "Erro desconhecido"));
+    }
+  } catch (err) {
+    console.error("Erro criarFichaCliente:", err);
+    alert("Erro ao criar ficha, veja o console.");
+  }
+}
+
+// =====================
+// Boot
+// =====================
+validarSessao().then((ok) => {
+  if (ok) {
+    carregarOrcamentos();
+
+    const filtroEl = document.getElementById("orcamentoFiltro");
+    if (filtroEl) filtroEl.addEventListener("input", aplicarFiltroOrcamentos);
+  }
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
