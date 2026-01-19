@@ -175,6 +175,35 @@ function renderizarPedidos(pedidos) {
     5: "Entregue"
   };
 
+  async function atualizarStatusPedido(uuid, novoStatus, selectEl) {
+    if (!uuid) {
+      setStatus("Não foi possível identificar o pedido para atualizar o status.");
+      selectEl.value = selectEl.dataset.previousValue;
+      return;
+    }
+
+    try {
+      setStatus("Atualizando status...");
+      const res = await fetch(`/api/orcamento/${uuid}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: Number(novoStatus) })
+      });
+
+      const payload = await res.json();
+      if (!res.ok || !payload.success) {
+        throw new Error(payload.error || "Falha ao atualizar status.");
+      }
+
+      selectEl.dataset.previousValue = selectEl.value;
+      setStatus(`Status atualizado para ${selectEl.value}.`);
+    } catch (err) {
+      console.error(err);
+      setStatus("Erro ao atualizar status do pedido.");
+      selectEl.value = selectEl.dataset.previousValue;
+    }
+  }
+
   pedidos.forEach(p => {
     const total = parseValor(p.valor_total);
     const pago = parseValor(p.valor_pago);
@@ -200,7 +229,7 @@ function renderizarPedidos(pedidos) {
         target.value = target.dataset.previousValue;
         return;
       }
-      target.dataset.previousValue = target.value;
+      atualizarStatusPedido(p.id, target.value, target);
     });
 
     const tr = document.createElement("tr");
