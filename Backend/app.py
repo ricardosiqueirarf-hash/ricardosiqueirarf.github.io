@@ -285,6 +285,7 @@ from api_comprovantes import comprovantes_bp
 from api_imagetags import imagetags_bp
 from api_financeiro import api_financeiro_bp
 from api_task import api_task
+from api_clientes import clientes_api_bp
 
 
 app.register_blueprint(perfis_bp)
@@ -302,7 +303,7 @@ app.register_blueprint(comprovantes_bp)
 app.register_blueprint(imagetags_bp)
 app.register_blueprint(api_financeiro_bp)
 app.register_blueprint(api_task)
-
+app.register_blueprint(clientes_api_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
