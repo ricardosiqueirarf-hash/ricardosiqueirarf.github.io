@@ -6,7 +6,7 @@
 <title>Orçamentos | ColorGlass</title>
 <meta name="description" content="Orçamentos e pedidos da ColorGlass.">
 <meta name="robots" content="index, follow">
-<script src="js/global.js"></script>
+
 <style>
 /* =====================
    ESTÉTICA NOVA (login/aprovacao-like)
@@ -222,6 +222,7 @@ body{
   gap: 12px;
   align-items: center;
   margin: 12px 0 12px;
+  flex-wrap: wrap;
 }
 
 .orcamentos-toolbar input{
@@ -251,6 +252,48 @@ body{
   padding: 8px 10px;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+.orcamentos-limit{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.limit-label{
+  font-size: 0.9rem;
+  color: var(--cg-muted);
+  white-space: nowrap;
+}
+
+.limit-buttons{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.limit-btn{
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(16,121,186,0.2);
+  background: #fff;
+  color: var(--cg-blue-dark);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.limit-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(16,121,186,0.18);
+}
+
+.limit-btn.active{
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  border-color: rgba(16,121,186,0.45);
+  box-shadow: 0 10px 18px rgba(16,121,186,0.24);
 }
 
 /* AÇÕES com ícones — mais “premium” */
@@ -394,6 +437,15 @@ tr:hover{
         <h2>Orçamentos Existentes</h2>
         <div class="orcamentos-toolbar">
             <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
+            <div class="orcamentos-limit">
+              <span class="limit-label">Mostrar:</span>
+              <div class="limit-buttons">
+                <button class="limit-btn" type="button" data-limit="10">10</button>
+                <button class="limit-btn" type="button" data-limit="50">50</button>
+                <button class="limit-btn" type="button" data-limit="100">100</button>
+                <button class="limit-btn" type="button" data-limit="todos">Todos</button>
+              </div>
+            </div>
             <span id="orcamentosStatus" class="status-text">Carregando...</span>
         </div>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
@@ -485,6 +537,8 @@ async function validarSessao() {
 // CARREGAR ORÇAMENTOS
 // =====================
 let orcamentosCache = [];
+let limiteOrcamentos = 10;
+const LIMITE_TODOS = "todos";
 
 function atualizarStatusOrcamentos(mensagem) {
   const status = document.getElementById("orcamentosStatus");
@@ -505,7 +559,7 @@ function formatarDataLocal(dataISO) {
   return d.toLocaleString();
 }
 
-function renderizarOrcamentos(orcamentos) {
+function renderizarOrcamentos(orcamentos, totalDisponivel = null) {
   const container = document.getElementById("orcamentosExistentes");
   container.innerHTML = "";
 
@@ -586,26 +640,61 @@ function renderizarOrcamentos(orcamentos) {
   });
 
   container.appendChild(table);
-  atualizarStatusOrcamentos(`${orcamentos.length} orçamento(s)`);
+  const totalBase = totalDisponivel ?? orcamentos.length;
+  const statusMensagem = totalBase > orcamentos.length
+    ? `${orcamentos.length} de ${totalBase} orçamento(s)`
+    : `${orcamentos.length} orçamento(s)`;
+  atualizarStatusOrcamentos(statusMensagem);
 }
 
 function aplicarFiltroOrcamentos() {
+  atualizarListaOrcamentos();
+}
+
+function obterOrcamentosFiltrados() {
   const filtroEl = document.getElementById("orcamentoFiltro");
   const filtro = (filtroEl?.value || "").trim().toLowerCase();
 
   if (!filtro) {
-    renderizarOrcamentos(orcamentosCache);
-    return;
+    return orcamentosCache;
   }
 
-  const filtrados = orcamentosCache.filter((o) => {
+  return orcamentosCache.filter((o) => {
     const cliente = (o.cliente_nome || "").toLowerCase();
     const pedido = String(o.numero_pedido || "");
     const statusLabel = (o.status_label || "").toLowerCase();
     return cliente.includes(filtro) || pedido.includes(filtro) || statusLabel.includes(filtro);
   });
+}
 
-  renderizarOrcamentos(filtrados);
+function aplicarLimiteOrcamentos(orcamentos) {
+  if (limiteOrcamentos === LIMITE_TODOS) {
+    return orcamentos;
+  }
+  return orcamentos.slice(0, limiteOrcamentos);
+}
+
+function atualizarListaOrcamentos() {
+  const filtrados = obterOrcamentosFiltrados();
+  const visiveis = aplicarLimiteOrcamentos(filtrados);
+  renderizarOrcamentos(visiveis, filtrados.length);
+}
+
+function normalizarLimite(valor) {
+  if (valor === LIMITE_TODOS) return LIMITE_TODOS;
+  const numero = Number(valor);
+  return Number.isFinite(numero) ? numero : 10;
+}
+
+function atualizarBotoesLimite() {
+  const botoes = document.querySelectorAll(".limit-btn");
+  botoes.forEach((botao) => {
+    const limite = normalizarLimite(botao.dataset.limit);
+    const ativo = limiteOrcamentos === LIMITE_TODOS
+      ? limite === LIMITE_TODOS
+      : limite === limiteOrcamentos;
+    botao.classList.toggle("active", ativo);
+  });
 }
 
 async function carregarOrcamentos() {
@@ -626,9 +715,10 @@ async function carregarOrcamentos() {
 
     const data = await res.json();
     const orcamentos = data.orcamentos || [];
+    const orcamentosOrdenados = [...orcamentos].reverse();
 
-    orcamentosCache = orcamentos;
-    renderizarOrcamentos(orcamentosCache);
+    orcamentosCache = orcamentosOrdenados;
+    atualizarListaOrcamentos();
 
     // Atualiza totais calculando pelas portas
     await atualizarTotaisOrcamentos();
@@ -678,8 +768,6 @@ async function atualizarTotaisOrcamentos() {
         const preco = Number(p.preco) || 0;
 
         valorTotal += preco 
-
-   
       });
 
       if (qtdCell) qtdCell.textContent = qtdTotal;
@@ -768,6 +856,16 @@ validarSessao().then((ok) => {
 
     const filtroEl = document.getElementById("orcamentoFiltro");
     if (filtroEl) filtroEl.addEventListener("input", aplicarFiltroOrcamentos);
+
+    const botoesLimite = document.querySelectorAll(".limit-btn");
+    botoesLimite.forEach((botao) => {
+      botao.addEventListener("click", () => {
+        limiteOrcamentos = normalizarLimite(botao.dataset.limit);
+        atualizarBotoesLimite();
+        atualizarListaOrcamentos();
+      });
+    });
+    atualizarBotoesLimite();
   }
 });
 </script>
