@@ -1,270 +1,218 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tarefas da Empresa</title>
-    <style>
-      :root {
-        color-scheme: light;
-        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-        background: #f7f7f8;
-        color: #1f2328;
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tarefas da Empresa</title>
+
+  <style>
+    :root {
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      background: #f7f7f8;
+      color: #1f2328;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 20px 64px;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+    }
+
+    p {
+      margin: 0;
+      color: #5b616e;
+    }
+
+    .board {
+      max-width: 1100px;
+      margin: auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      padding: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #6c7383;
+      padding: 12px 10px;
+      border-bottom: 1px solid #e6e8ee;
+    }
+
+    tbody td {
+      padding: 14px 10px;
+      border-bottom: 1px solid #f0f2f6;
+      font-size: 15px;
+    }
+
+    tbody tr:hover {
+      background: #f7f8fb;
+    }
+
+    .tag {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .high { background: #ffe8e7; color: #cc3a2f; }
+    .medium { background: #fff2da; color: #b36b00; }
+    .low { background: #e9f7ee; color: #1f7a3a; }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #1977ff;
+      cursor: pointer;
+    }
+
+    .date {
+      white-space: nowrap;
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #6c7383;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 720px) {
+      table, thead, tbody, tr, td, th {
+        display: block;
+      }
+      thead { display: none; }
+
+      tbody tr {
+        border: 1px solid #e5e7ef;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        padding: 8px;
       }
 
-      body {
-        margin: 0;
-        padding: 32px 20px 64px;
-      }
-
-      header {
-        max-width: 1100px;
-        margin: 0 auto 24px;
-      }
-
-      h1 {
-        font-size: 28px;
-        margin: 0 0 8px;
-      }
-
-      p {
-        margin: 0;
-        color: #5b616e;
-      }
-
-      .board {
-        max-width: 1100px;
-        margin: 24px auto 0;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
-        padding: 16px 18px 20px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      thead th {
-        text-align: left;
-        font-size: 13px;
-        letter-spacing: 0.03em;
+      tbody td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
         text-transform: uppercase;
         color: #6c7383;
-        padding: 12px 10px;
-        border-bottom: 1px solid #e6e8ee;
+        margin-bottom: 4px;
       }
+    }
+  </style>
+</head>
 
-      tbody td {
-        padding: 14px 10px;
-        border-bottom: 1px solid #f0f2f6;
-        font-size: 15px;
-      }
+<body>
 
-      tbody tr:hover {
-        background: #f7f8fb;
-      }
+<header>
+  <h1>Tarefas da Empresa</h1>
+  <p>Controle interno com datas automáticas.</p>
+</header>
 
-      .tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-      }
+<section class="board">
+  <table>
+    <thead>
+      <tr>
+        <th>Tarefa</th>
+        <th>Prioridade</th>
+        <th>Responsável</th>
+        <th>Data início</th>
+        <th>Concluída</th>
+        <th>Data fim</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
 
-      .tag.high {
-        background: #ffe8e7;
-        color: #cc3a2f;
-      }
+  <div class="footer">
+    <span>Marcar como concluída grava automaticamente a data no sistema.</span>
+    <span>Atualizado em <span id="dataAtual"></span></span>
+  </div>
+</section>
 
-      .tag.medium {
-        background: #fff2da;
-        color: #b36b00;
-      }
+<script>
+  const tbody = document.getElementById("tbody");
+  document.getElementById("dataAtual").textContent =
+    new Date().toLocaleDateString("pt-BR");
 
-      .tag.low {
-        background: #e9f7ee;
-        color: #1f7a3a;
-      }
+  function prioridadeTag(p) {
+    p = (p || "").toLowerCase();
+    if (p === "alta") return ["Alta", "high"];
+    if (p === "media" || p === "média") return ["Média", "medium"];
+    return ["Baixa", "low"];
+  }
 
-      .status {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
+  function formatDate(d) {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("pt-BR");
+  }
 
-      .status input {
-        width: 18px;
-        height: 18px;
-        accent-color: #1977ff;
-      }
+  async function carregarTarefas() {
+    const res = await fetch("/api/tarefas");
+    const tarefas = await res.json();
 
-      .date {
-        font-variant-numeric: tabular-nums;
-        color: #2f353f;
-      }
+    tbody.innerHTML = "";
 
-      .footer {
-        margin-top: 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: #6c7383;
-        font-size: 13px;
-      }
+    tarefas.forEach(t => {
+      const [label, cls] = prioridadeTag(t.prioridade);
 
-      .note {
-        background: #f4f6fb;
-        padding: 8px 12px;
-        border-radius: 8px;
-      }
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td data-label="Tarefa">${t.titulo}</td>
+        <td data-label="Prioridade"><span class="tag ${cls}">${label}</span></td>
+        <td data-label="Responsável">${t.responsavel_nome}</td>
+        <td data-label="Data início" class="date">${formatDate(t.data_inicio)}</td>
+        <td data-label="Concluída">
+          <div class="status">
+            <input type="checkbox" ${t.concluida ? "checked" : ""}
+              onchange="toggleTarefa('${t.id}', this.checked)">
+            <span>${t.concluida ? "Concluída" : "Concluir"}</span>
+          </div>
+        </td>
+        <td data-label="Data fim" class="date">${formatDate(t.data_fim)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
-      @media (max-width: 720px) {
-        body {
-          padding: 20px 14px 48px;
-        }
+  async function toggleTarefa(id, value) {
+    await fetch("/api/tarefas/" + id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ concluida: value })
+    });
 
-        table,
-        thead,
-        tbody,
-        th,
-        td,
-        tr {
-          display: block;
-        }
+    carregarTarefas();
+  }
 
-        thead {
-          display: none;
-        }
+  carregarTarefas();
+</script>
 
-        tbody tr {
-          margin-bottom: 16px;
-          border: 1px solid #e5e7ef;
-          border-radius: 12px;
-          padding: 6px 10px;
-        }
-
-        tbody td {
-          border: none;
-          padding: 10px 6px;
-        }
-
-        tbody td::before {
-          content: attr(data-label);
-          display: block;
-          font-size: 12px;
-          text-transform: uppercase;
-          color: #6c7383;
-          margin-bottom: 6px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>Tarefas da Empresa</h1>
-      <p>Visão geral estilo Notion com datas de início e conclusão automática.</p>
-    </header>
-
-    <section class="board">
-      <table>
-        <thead>
-          <tr>
-            <th>Tarefa</th>
-            <th>Prioridade</th>
-            <th>Responsável</th>
-            <th>Data de início</th>
-            <th>Concluído</th>
-            <th>Data de fim</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td data-label="Tarefa">Atualizar proposta comercial Q3</td>
-            <td data-label="Prioridade"><span class="tag high">Alta</span></td>
-            <td data-label="Responsável">Mariana Lopes</td>
-            <td data-label="Data de início" class="date">05/08/2024</td>
-            <td data-label="Concluído">
-              <div class="status">
-                <input type="checkbox" data-finish-target="#fim-1" />
-                <span>Concluir</span>
-              </div>
-            </td>
-            <td data-label="Data de fim" class="date" id="fim-1">—</td>
-          </tr>
-          <tr>
-            <td data-label="Tarefa">Revisar fluxo de onboarding</td>
-            <td data-label="Prioridade"><span class="tag medium">Média</span></td>
-            <td data-label="Responsável">Ricardo Silva</td>
-            <td data-label="Data de início" class="date">07/08/2024</td>
-            <td data-label="Concluído">
-              <div class="status">
-                <input type="checkbox" data-finish-target="#fim-2" />
-                <span>Concluir</span>
-              </div>
-            </td>
-            <td data-label="Data de fim" class="date" id="fim-2">—</td>
-          </tr>
-          <tr>
-            <td data-label="Tarefa">Planejar lançamento da campanha digital</td>
-            <td data-label="Prioridade"><span class="tag high">Alta</span></td>
-            <td data-label="Responsável">Ana Beatriz</td>
-            <td data-label="Data de início" class="date">12/08/2024</td>
-            <td data-label="Concluído">
-              <div class="status">
-                <input type="checkbox" data-finish-target="#fim-3" />
-                <span>Concluir</span>
-              </div>
-            </td>
-            <td data-label="Data de fim" class="date" id="fim-3">—</td>
-          </tr>
-          <tr>
-            <td data-label="Tarefa">Mapear melhorias no suporte ao cliente</td>
-            <td data-label="Prioridade"><span class="tag low">Baixa</span></td>
-            <td data-label="Responsável">João Pereira</td>
-            <td data-label="Data de início" class="date">15/08/2024</td>
-            <td data-label="Concluído">
-              <div class="status">
-                <input type="checkbox" data-finish-target="#fim-4" />
-                <span>Concluir</span>
-              </div>
-            </td>
-            <td data-label="Data de fim" class="date" id="fim-4">—</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="footer">
-        <span class="note">Marque a tarefa como concluída para registrar a data de fim automaticamente.</span>
-        <span>Atualizado em <span id="data-atual"></span></span>
-      </div>
-    </section>
-
-    <script>
-      const formatDate = (date) =>
-        date.toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-
-      document.querySelector("#data-atual").textContent = formatDate(new Date());
-
-      document.querySelectorAll("input[data-finish-target]").forEach((checkbox) => {
-        checkbox.addEventListener("change", (event) => {
-          const target = document.querySelector(event.target.dataset.finishTarget);
-          if (!target) return;
-
-          if (event.target.checked) {
-            target.textContent = formatDate(new Date());
-          } else {
-            target.textContent = "—";
-          }
-        });
-      });
-    </script>
-  </body>
+</body>
 </html>
+
