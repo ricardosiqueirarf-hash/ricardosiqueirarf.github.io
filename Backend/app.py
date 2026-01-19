@@ -195,6 +195,14 @@ def Dashboard_html_page():
 def Dashboard_page():
     return send_from_directory(BASE_DIR, "Dashboard.html")
 
+@app.route("/vizualizacao.html")
+def vizualizacao_html_page():
+    return send_from_directory(BASE_DIR, "vizualizacao.html")
+
+@app.route("/vizualizacao")
+def vizualizacao_page():
+    return send_from_directory(BASE_DIR, "vizualizacao.html")
+
 
 
 def exige_nivel_2_ou_3(fn):
