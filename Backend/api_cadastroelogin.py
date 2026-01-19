@@ -101,7 +101,8 @@ def login_usuario():
             token_sessao,
             max_age=12 * 60 * 60,
             httponly=True,
-            samesite="Lax"
+            samesite="Lax",
+            path="/"
         )
         return response
 
@@ -134,6 +135,7 @@ def validar_token():
         })
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
 
 
 
