@@ -147,12 +147,10 @@ def tags_html_page():
     return send_from_directory(BASE_DIR, "tags.html")
 
 @app.route("/financeiro")
-@exige_nivel_2_ou_3
 def financeiro_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
 
 @app.route("/financeiro.html")
-@exige_nivel_2_ou_3
 def financeiro_html_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
 
