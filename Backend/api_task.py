@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify
 api_task = Blueprint("api_task", __name__)
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")  # use SERVICE ROLE no backend
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -14,9 +14,6 @@ HEADERS = {
 }
 
 
-# ==========================
-# BUSCAR TAREFAS
-# ==========================
 @api_task.route("/api/tarefas", methods=["GET"])
 def listar_tarefas():
     r = requests.get(
@@ -27,22 +24,17 @@ def listar_tarefas():
     return jsonify(r.json())
 
 
-# ==========================
-# MARCAR / DESMARCAR
-# ==========================
 @api_task.route("/api/tarefas/<uuid>", methods=["PATCH"])
 def atualizar_tarefa(uuid):
-    body = request.json
+    data = request.json or {}
 
     r = requests.patch(
         f"{SUPABASE_URL}/rest/v1/tarefas?id=eq.{uuid}",
-        headers={
-            **HEADERS,
-            "Prefer": "return=representation",
-        },
-        json=body,
+        headers={**HEADERS, "Prefer": "return=representation"},
+        json=data,
     )
     r.raise_for_status()
 
-    data = r.json()
-    return jsonify(data[0] if data else {})
+    res = r.json()
+    return jsonify(res[0] if res else {})
+
