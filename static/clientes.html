@@ -132,6 +132,7 @@ tr:hover { background: #e6f0fa; }
 
     <section class="form-cliente">
         <input type="hidden" id="cliente_id">
+        <input id="store_id" placeholder="Store ID (opcional)">
         <input id="nome" class="required-field" placeholder="Nome completo / Razão social *" required>
         <select id="tipo_pessoa" class="required-field" required>
             <option value="">Tipo de pessoa *</option>
@@ -157,6 +158,7 @@ tr:hover { background: #e6f0fa; }
         <table>
             <thead>
                 <tr>
+                    <th>Store ID</th>
                     <th>Nome</th>
                     <th>Tipo</th>
                     <th>CPF/CNPJ</th>
@@ -176,6 +178,7 @@ tr:hover { background: #e6f0fa; }
 let clientes = [];
 
 const clienteIdInput = document.getElementById("cliente_id");
+const storeIdInput = document.getElementById("store_id");
 const nomeInput = document.getElementById("nome");
 const tipoPessoaInput = document.getElementById("tipo_pessoa");
 const cpfCnpjInput = document.getElementById("cpf_cnpj");
@@ -217,9 +220,10 @@ function renderTabela() {
         ].filter(Boolean).join(", ");
 
         tr.innerHTML = `
-            <td>${cliente.nome}</td>
+            <td>${cliente.storeId || "-"}</td>
+            <td>${cliente.nome || "-"}</td>
             <td>${cliente.tipoPessoa || "-"}</td>
-            <td>${cliente.cpfCnpj}</td>
+            <td>${cliente.cpfCnpj || "-"}</td>
             <td>${cliente.contato || "-"}</td>
             <td>${cliente.telefone || cliente.celular || "-"}</td>
             <td>${cliente.email || "-"}</td>
@@ -235,6 +239,7 @@ function renderTabela() {
 
 function limparFormulario() {
     clienteIdInput.value = "";
+    storeIdInput.value = "";
     nomeInput.value = "";
     tipoPessoaInput.value = "";
     cpfCnpjInput.value = "";
@@ -253,6 +258,7 @@ function limparFormulario() {
 }
 
 function salvar() {
+    const storeId = storeIdInput.value.trim();
     const nome = nomeInput.value.trim();
     const tipoPessoa = tipoPessoaInput.value;
     const cpfCnpj = cpfCnpjInput.value.trim();
@@ -282,6 +288,7 @@ function salvar() {
 
     const cliente = {
         id: clienteIdInput.value || Date.now().toString(),
+        storeId: storeId || "",
         nome,
         tipoPessoa,
         cpfCnpj,
@@ -313,6 +320,7 @@ function salvar() {
 
 function editar(cliente) {
     clienteIdInput.value = cliente.id;
+    storeIdInput.value = cliente.storeId || "";
     nomeInput.value = cliente.nome;
     tipoPessoaInput.value = cliente.tipoPessoa || "";
     cpfCnpjInput.value = cliente.cpfCnpj || "";
@@ -342,10 +350,66 @@ function cancelar() {
     limparFormulario();
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+async function carregarStoreIds() {
+    try {
+        const token = localStorage.getItem("ADMIN_TOKEN") || localStorage.getItem("USER_TOKEN");
+        const headers = {};
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+        const res = await fetch("/api/clientes/storeids", { headers });
+        if (!res.ok) {
+            throw new Error("Falha ao carregar store IDs.");
+        }
+
+        const data = await res.json();
+        const storeIds = Array.isArray(data.storeIds) ? data.storeIds : [];
+        const existentes = new Set(
+            clientes
+                .map((cliente) => cliente.storeId)
+                .filter((storeId) => storeId && storeId.trim())
+        );
+
+        storeIds.forEach((storeId) => {
+            const normalizado = String(storeId).trim();
+            if (!normalizado || existentes.has(normalizado)) {
+                return;
+            }
+
+            clientes.push({
+                id: `store:${normalizado}`,
+                storeId: normalizado,
+                nome: "",
+                tipoPessoa: "",
+                cpfCnpj: "",
+                rgIe: "",
+                telefone: "",
+                celular: "",
+                email: "",
+                contato: "",
+                cep: "",
+                endereco: "",
+                numero: "",
+                bairro: "",
+                cidade: "",
+                uf: "",
+                observacoes: ""
+            });
+            existentes.add(normalizado);
+        });
+
+        salvarLocal();
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
     carregarLocal();
+    await carregarStoreIds();
     renderTabela();
 });
 </script>
 </body>
 </html>
+
