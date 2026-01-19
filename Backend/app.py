@@ -203,6 +203,14 @@ def vizualizacao_html_page():
 def vizualizacao_page():
     return send_from_directory(BASE_DIR, "vizualizacao.html")
 
+@app.route("/task.html")
+def task_html_page():
+    return send_from_directory(BASE_DIR, "task.html")
+
+@app.route("/task")
+def task_page():
+    return send_from_directory(BASE_DIR, "task.html")
+
 
 
 def exige_nivel_2_ou_3(fn):
