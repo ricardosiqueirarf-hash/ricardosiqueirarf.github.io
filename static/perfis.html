@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfis de Alumínio | ColorGlass</title>
+<meta name="description" content="Gestão de perfis de alumínio da ColorGlass.">
+
+<style>
+/* RESET BÁSICO */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #f5f7fa; color: #333; padding: 20px; }
+
+/* LAYOUT PRINCIPAL */
+.container { max-width: 1200px; margin: 0 auto; }
+header { margin-bottom: 20px; }
+h1 { color: #1079ba; margin-bottom: 10px; }
+
+/* MENU SUPERIOR */
+.menu {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.menu button {
+    padding: 10px 16px;
+    background: #1079ba;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.menu button:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+/* FORMULÁRIO PERFIL */
+.form-perfil {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+/* INPUTS E SELECTS */
+.form-perfil input, 
+.form-perfil select {
+    padding: 6px 10px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.form-perfil input:focus, 
+.form-perfil select:focus {
+    border-color: #1079ba;
+    box-shadow: 0 0 4px rgba(16,121,186,0.4);
+    outline: none;
+}
+
+.preco-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef4fb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #0d5d8c;
+}
+
+/* BOTÕES DO FORMULÁRIO */
+.form-perfil button {
+    padding: 6px 12px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    border: none;
+    background: #1079ba;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.form-perfil button:hover {
+    background: #0d5d8c;
+    transform: translateY(-1px);
+}
+
+/* TIPOS E INSUMOS FIXOS EMBAIXO */
+.form-perfil .tipologias-container,
+.form-perfil .insumos-container {
+    grid-column: 1 / -1; /* ocupa toda a largura do grid */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.tipologias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.tipologias label, .insumo-item {
+    background: #f0f4fb;
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+}
+.insumo-item select { width: auto; }
+
+/* BOTÕES GERAIS */
+button, .form-perfil button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #1079ba;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+button:hover, .form-perfil button:hover { background: #0d5d8c; transform: translateY(-2px); }
+.btn-danger { background: #e84118; }
+.btn-danger:hover { background: #c23616; transform: translateY(-2px); }
+
+/* TABELA */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+th, td { padding: 12px; text-align: center; border: 1px solid #dcdde1; }
+th { background: #1079ba; color: #fff; }
+tr:nth-child(even) { background: #f7f9fc; }
+tr:hover { background: #e6f0fa; }
+
+/* RESPONSIVO */
+@media(max-width: 768px) {
+    .form-perfil { grid-template-columns: 1fr; }
+    .menu { flex-direction: column; }
+    .tipologias, .insumos-container { flex-direction: column; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <header>
+        <h1>Perfis de Alumínio</h1>
+        <div class="menu">
+            <button onclick="window.location.href='/'">Voltar</button>
+            <button onclick="salvar()">Salvar</button>
+            <button onclick="cancelar()">Cancelar</button>
+        </div>
+    </header>
+
+    <section class="form-perfil">
+        <input type="hidden" id="perfil_id">
+        <input id="nome" placeholder="Nome">
+        <input id="custo" type="number" step="0.01" placeholder="Custo">
+        <input id="margem" type="number" step="0.01" placeholder="Margem %">
+        <input id="perda" type="number" step="0.01" placeholder="Perda %">
+        <div class="preco-preview" id="precoPreview">Preço final: R$ 0,00</div>
+        
+        <div class="tipologias-container">
+            <h4>Tipologias</h4>
+            <div class="tipologias">
+                <label><input type="checkbox" value="giro"> Giro</label>
+                <label><input type="checkbox" value="correr"> Correr</label>
+                <label><input type="checkbox" value="deslizante"> Deslizante</label>
+                <label><input type="checkbox" value="pivotante"> Pivotante</label>
+                <label><input type="checkbox" value="estrutural"> Estrutural</label>
+            </div>
+        </div>
+
+        <div class="insumos-container">
+            <h4>Insumos</h4>
+            <div id="insumos-container">
+                <div class="insumo-item">
+                    <select class="insumo-select"></select>
+                    <button type="button" onclick="adicionarInsumo(this)">+</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Custo</th>
+                    <th>Margem</th>
+                    <th>Perda</th>
+                    <th>Preo Final</th>
+                    <th>Tipologias</th>
+                    <th>Insumos</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+        </table>
+    </section>
+</div>
+<script>
+// =====================
+// CONFIGURAÇÕES BACKEND
+// =====================
+const BASE_URL = "https://colorglass.onrender.com";
+
+// =====================
+// FUNÇÕES PERFIS E INSUMOS
+// =====================
+let insumosLista = [];
+
+async function carregarInsumos() {
+    const res = await fetch(`${BASE_URL}/api/materiais`);
+    const data = await res.json();
+    insumosLista = data.map(m => m.nome);
+    atualizarSelects();
+}
+
+function atualizarSelects() {
+    document.querySelectorAll(".insumo-select").forEach(select => {
+        const valorAtual = select.value;
+        select.innerHTML = "<option value=''>--Selecione--</option>";
+        insumosLista.forEach(insumo => {
+            const opt = document.createElement("option");
+            opt.value = insumo;
+            opt.textContent = insumo;
+            select.appendChild(opt);
+        });
+        select.value = valorAtual;
+    });
+}
+
+function adicionarInsumo(botao) {
+    const container = document.getElementById("insumos-container");
+    const novoItem = document.createElement("div");
+    novoItem.className = "insumo-item";
+    novoItem.innerHTML = `
+        <select class="insumo-select"></select>
+        <button type="button" onclick="adicionarInsumo(this)">+</button>
+        <button type="button" onclick="removerInsumo(this)">-</button>
+    `;
+    container.appendChild(novoItem);
+    atualizarSelects();
+}
+
+function removerInsumo(botao) {
+    botao.parentElement.remove();
+}
+
+function getInsumosSelecionados() {
+    return Array.from(document.querySelectorAll(".insumo-select"))
+        .map(s => s.value)
+        .filter(v => v);
+}
+
+function getTipologiasSelecionadas() {
+    return Array.from(document.querySelectorAll(".tipologias input:checked"))
+        .map(c => c.value);
+}
+
+// =====================
+// CARREGAR PERFIS
+// =====================
+async function carregar() {
+    const res = await fetch(`${BASE_URL}/api/perfis`);
+    const data = await res.json();
+    const tbody = document.getElementById("tabela");
+    tbody.innerHTML = "";
+
+    data.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${p.nome}</td>
+            <td>R$ ${Number(p.custo).toFixed(2)}</td>
+            <td>${p.margem}%</td>
+            <td>${p.perda}%</td>
+            <td><b>R$ ${Number(p.preco).toFixed(2)}</b></td>
+            <td>${(p.tipologias || []).join(", ")}</td>
+            <td>${(p.insumos || []).join(", ")}</td>
+            <td>
+                <button onclick='editar(${JSON.stringify(p)})'>Editar</button>
+                <button onclick="excluir('${p.id}')">Excluir</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// =====================
+// SALVAR / EDITAR / EXCLUIR
+// =====================
+const nomeInput = document.getElementById("nome");
+const custoInput = document.getElementById("custo");
+const margemInput = document.getElementById("margem");
+const perdaInput = document.getElementById("perda");
+const perfil_id = document.getElementById("perfil_id");
+const precoPreview = document.getElementById("precoPreview");
+
+function atualizarPrecoPreview() {
+    const custo = parseFloat(custoInput.value) || 0;
+    const margem = parseFloat(margemInput.value) || 0;
+    const perda = parseFloat(perdaInput.value) || 0;
+    const preco = custo * (1 + perda / 100) * (1 + margem / 100);
+    precoPreview.textContent = `Preço final: R$ ${preco.toFixed(2)}`;
+}
+
+async function salvar() {
+    const id = perfil_id.value;
+    const nome = nomeInput.value;
+    const custo = parseFloat(custoInput.value);
+    const margem = parseFloat(margemInput.value);
+    const perda = parseFloat(perdaInput.value);
+    const tipologias = getTipologiasSelecionadas();
+    const insumos = getInsumosSelecionados();
+
+    if (!nome || isNaN(custo) || isNaN(margem) || isNaN(perda) || tipologias.length === 0) {
+        alert("Preencha todos os campos e selecione ao menos uma tipologia");
+        return;
+    }
+
+    const payload = { nome, custo, margem, perda, tipologias, insumos };
+    const url = id ? `${BASE_URL}/api/perfis/${id}` : `${BASE_URL}/api/perfis`;
+    const method = id ? "PUT" : "POST";
+
+    await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    cancelar();
+    carregar();
+}
+
+function editar(p) {
+    perfil_id.value = p.id;
+    nomeInput.value = p.nome;
+    custoInput.value = p.custo;
+    margemInput.value = p.margem;
+    perdaInput.value = p.perda;
+    atualizarPrecoPreview();
+
+    document.querySelectorAll(".tipologias input")
+        .forEach(c => c.checked = p.tipologias?.includes(c.value));
+
+    const container = document.getElementById("insumos-container");
+    container.innerHTML = "";
+    (p.insumos?.length ? p.insumos : [""]).forEach(insumo => {
+        const div = document.createElement("div");
+        div.className = "insumo-item";
+        div.innerHTML = `
+            <select class="insumo-select"></select>
+            <button type="button" onclick="adicionarInsumo(this)">+</button>
+            <button type="button" onclick="removerInsumo(this)">-</button>
+        `;
+        container.appendChild(div);
+    });
+
+    atualizarSelects();
+    document.querySelectorAll(".insumo-select")
+        .forEach((s, i) => s.value = p.insumos?.[i] || "");
+}
+
+async function excluir(id) {
+    if (!confirm("Excluir este perfil?")) return;
+    await fetch(`${BASE_URL}/api/perfis/${id}`, { method: "DELETE" });
+    carregar();
+}
+
+function cancelar() {
+    perfil_id.value = "";
+    nomeInput.value = "";
+    custoInput.value = "";
+    margemInput.value = "";
+    perdaInput.value = "";
+    atualizarPrecoPreview();
+    document.querySelectorAll(".tipologias input").forEach(c => c.checked = false);
+
+    document.getElementById("insumos-container").innerHTML = `
+        <div class="insumo-item">
+            <select class="insumo-select"></select>
+            <button type="button" onclick="adicionarInsumo(this)">+</button>
+        </div>
+    `;
+    atualizarSelects();
+}
+
+// =====================
+// INIT
+// =====================
+window.addEventListener("DOMContentLoaded", () => {
+    ["input", "change"].forEach((eventType) => {
+        custoInput.addEventListener(eventType, atualizarPrecoPreview);
+        margemInput.addEventListener(eventType, atualizarPrecoPreview);
+        perdaInput.addEventListener(eventType, atualizarPrecoPreview);
+    });
+    atualizarPrecoPreview();
+    carregarInsumos();
+    carregar();
+});
+</script>
+</body>
+</html>
+
