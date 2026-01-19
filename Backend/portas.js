@@ -257,7 +257,7 @@ function calcularPrecoPorta(){
         if (tipo === "metro_linear") {
             quantidadeInsumo = perimetro
         } else if (tipo === "unidade") {
-            quantidadeInsumo = quantidadePortas
+            quantidadeInsumo = 1
         }
         total += (insumo.preco || 0) * quantidadeInsumo
     })
@@ -307,7 +307,6 @@ function atualizarDetalhesCusto() {
 
     const largura = (+document.getElementById("largura")?.value || 0) / 1000
     const altura = (+document.getElementById("altura")?.value || 0) / 1000
-    const quantidadePortas = +document.getElementById("quantidade")?.value || 1
     const valorAdicional = +document.getElementById("valor_adicional")?.value || 0
     const perimetro = 2 * (largura + altura)
 
@@ -363,7 +362,7 @@ function atualizarDetalhesCusto() {
         if (tipo === "metro_linear") {
             quantidadeInsumo = perimetro
         } else if (tipo === "unidade") {
-            quantidadeInsumo = quantidadePortas
+            quantidadeInsumo = 1
         } else {
             return
         }
@@ -1108,3 +1107,4 @@ carregarTags()
 carregarPortas()
 carregarEstruturas3D()
 carregarOrcamentoInfo()
+
