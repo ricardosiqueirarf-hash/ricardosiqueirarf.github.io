@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nova tarefa</title>
+
+  <style>
+    :root {
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      background: #f7f7f8;
+      color: #1f2328;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 20px 64px;
+    }
+
+    header {
+      max-width: 960px;
+      margin: 0 auto 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+    }
+
+    p {
+      margin: 0;
+      color: #5b616e;
+    }
+
+    .btn-link {
+      text-decoration: none;
+      color: #1977ff;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .card {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4b5160;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    input,
+    select,
+    textarea {
+      border: 1px solid #d7dbe5;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+      grid-column: 1 / -1;
+    }
+
+    .row {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .row label {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-primary {
+      background: #1977ff;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: #f0f2f6;
+      color: #333;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .status {
+      font-size: 14px;
+      color: #2f3b52;
+      background: #f5f7fb;
+      border-radius: 12px;
+      padding: 12px 16px;
+      grid-column: 1 / -1;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .error {
+      color: #b42318;
+      background: #fee4e2;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>Nova tarefa</h1>
+    <p>Cadastre novas tarefas para aparecerem no painel principal.</p>
+  </div>
+  <a class="btn-link" href="/tarefas.html">← Voltar para tarefas</a>
+</header>
+
+<section class="card">
+  <form id="tarefaForm">
+    <label>
+      Título da tarefa
+      <input id="titulo" name="titulo" type="text" placeholder="Ex: Revisar pedidos do dia" required />
+    </label>
+
+    <label>
+      Prioridade
+      <select id="prioridade" name="prioridade" required>
+        <option value="">Selecione</option>
+        <option value="alta">Alta</option>
+        <option value="media">Média</option>
+        <option value="baixa">Baixa</option>
+      </select>
+    </label>
+
+    <label>
+      Responsável
+      <input id="responsavel" name="responsavel" type="text" placeholder="Nome do responsável" required />
+    </label>
+
+    <label>
+      Data de início
+      <input id="dataInicio" name="dataInicio" type="date" />
+    </label>
+
+    <div class="row">
+      <label>
+        Concluída?
+        <select id="concluida" name="concluida">
+          <option value="false">Não</option>
+          <option value="true">Sim</option>
+        </select>
+      </label>
+
+      <label>
+        Data de fim
+        <input id="dataFim" name="dataFim" type="date" disabled />
+      </label>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div class="actions">
+      <button class="btn-primary" type="submit">Salvar tarefa</button>
+      <button class="btn-secondary" type="button" id="limpar">Limpar</button>
+    </div>
+  </form>
+</section>
+
+<script>
+  const form = document.getElementById("tarefaForm");
+  const dataInicio = document.getElementById("dataInicio");
+  const dataFim = document.getElementById("dataFim");
+  const concluida = document.getElementById("concluida");
+  const statusBox = document.getElementById("status");
+  const limparBtn = document.getElementById("limpar");
+
+  const hoje = new Date();
+  const hojeISO = hoje.toISOString().split("T")[0];
+  dataInicio.value = hojeISO;
+
+  function atualizarDataFim() {
+    const concluidaValue = concluida.value === "true";
+    dataFim.disabled = !concluidaValue;
+    if (concluidaValue && !dataFim.value) {
+      dataFim.value = hojeISO;
+    }
+    if (!concluidaValue) {
+      dataFim.value = "";
+    }
+  }
+
+  function exibirStatus(message, isError = false) {
+    statusBox.textContent = message;
+    statusBox.classList.toggle("show", true);
+    statusBox.classList.toggle("error", isError);
+  }
+
+  function limparFormulario() {
+    form.reset();
+    dataInicio.value = hojeISO;
+    dataFim.value = "";
+    dataFim.disabled = true;
+    statusBox.classList.remove("show", "error");
+  }
+
+  concluida.addEventListener("change", atualizarDataFim);
+
+  limparBtn.addEventListener("click", limparFormulario);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    statusBox.classList.remove("show", "error");
+
+    const payload = {
+      titulo: document.getElementById("titulo").value.trim(),
+      prioridade: document.getElementById("prioridade").value,
+      responsavel_nome: document.getElementById("responsavel").value.trim(),
+      data_inicio: dataInicio.value || null,
+      concluida: concluida.value === "true",
+      data_fim: concluida.value === "true" ? dataFim.value || hojeISO : null
+    };
+
+    try {
+      const res = await fetch("/api/tarefas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Erro ao salvar tarefa");
+      }
+
+      exibirStatus("✅ Tarefa salva com sucesso!");
+      limparFormulario();
+    } catch (error) {
+      exibirStatus(`⚠️ Não foi possível salvar. ${error.message}`, true);
+    }
+  });
+
+  atualizarDataFim();
+</script>
+
+</body>
+</html>
