@@ -29,7 +29,7 @@ HEADERS = {
 # =====================
 
 app = Flask(__name__)
-CORS(app)  # aceita requisições de qualquer origem, pode restringir se quiser
+CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -43,20 +43,17 @@ def health():
     return jsonify({"status": "ok", "service": "ColorGlass API"})
 
 # =====================
-# PÁGINAS (ROTAS HTML)
+# ROTAS PUBLICAS
 # =====================
 
-# ✅ HOME AGORA É inicio.html
 @app.route("/")
 def home_page():
     return send_from_directory(BASE_DIR, "inicio.html")
 
-# ✅ NOVA ROTA EXPLÍCITA PARA inicio.html
 @app.route("/inicio.html")
 def inicio_html_page():
     return send_from_directory(BASE_DIR, "inicio.html")
 
-# ✅ LOGIN AGORA FICA SOMENTE AQUI
 @app.route("/login.html")
 def login_html_page():
     return send_from_directory(BASE_DIR, "login.html")
@@ -65,7 +62,6 @@ def login_html_page():
 def login_page():
     return send_from_directory(BASE_DIR, "login.html")
 
-# (Compatibilidade com links antigos — opcional manter)
 @app.route("/logincadastro.html")
 def login_cadastro_html_page():
     return send_from_directory(BASE_DIR, "login.html")
@@ -78,140 +74,9 @@ def cadastro_html_page():
 def cadastro_page():
     return send_from_directory(BASE_DIR, "cadastro.html")
 
-# ✅ ADICIONADO: rota para a loja
-@app.route("/loja")
-def index_loja_page():
-    return send_from_directory(BASE_DIR, "index_loja.html")
-
-@app.route("/index_loja.html")
-def index_loja_html_page():
-    return send_from_directory(BASE_DIR, "index_loja.html")
-
-@app.route("/index.html")
-def index_admin_page():
-    return send_from_directory(BASE_DIR, "index.html")
-
-@app.route("/portas")
-def portas_page():
-    return send_from_directory(BASE_DIR, "portas.html")
-
-@app.route("/portas.html")
-def portas_html_page():
-    return send_from_directory(BASE_DIR, "portas.html")
-
-@app.route("/catalogo3d")
-def catalogo3d_page():
-    return send_from_directory(BASE_DIR, "catalogo3d.html")
-
-@app.route("/catalogo3d.html")
-def catalogo3d_html_page():
-    return send_from_directory(BASE_DIR, "catalogo3d.html")
-
-@app.route("/aprovacao")
-def aprovacao_page():
-    return send_from_directory(BASE_DIR, "aprovacao.html")
-
-@app.route("/aprovacao.html")
-def aprovacao_html_page():
-    return send_from_directory(BASE_DIR, "aprovacao.html")
-
-@app.route("/tags")
-def tags_page():
-    return send_from_directory(BASE_DIR, "tags.html")
-
-@app.route("/tags.html")
-def tags_html_page():
-    return send_from_directory(BASE_DIR, "tags.html")
-
-@app.route("/financeiro")
-def financeiro_page():
-    return send_from_directory(BASE_DIR, "financeiro.html")
-
-@app.route("/financeiro.html")
-def financeiro_html_page():
-    return send_from_directory(BASE_DIR, "financeiro.html")
-
-@app.route("/comprovantes")
-def comprovantes_page():
-    return send_from_directory(BASE_DIR, "comprovantes.html")
-
-@app.route("/comprovantes.html")
-def comprovantes_html_page():
-    return send_from_directory(BASE_DIR, "comprovantes.html")
-
-@app.route("/estruturastemp")
-def estruturastemp_page():
-    return send_from_directory(BASE_DIR, "estruturastemp.html")
-
-@app.route("/estruturastemp.html")
-def estruturastemp_html_page():
-    return send_from_directory(BASE_DIR, "estruturastemp.html")
-
-@app.route("/callback.html")
-def callback_html_page():
-    return send_from_directory(BASE_DIR, "callback.html")
-
-@app.route("/callback")
-def callback_page():
-    return send_from_directory(BASE_DIR, "callback.html")
-
-@app.route("/imagefinder.html")
-def imagefinder_html_page():
-    return send_from_directory(BASE_DIR, "imagefinder.html")
-
-@app.route("/imagefinder")
-def imagefinder_page():
-    return send_from_directory(BASE_DIR, "imagefinder.html")
-
-@app.route("/perfis.html")
-def perfis_html_page():
-    return send_from_directory(BASE_DIR, "perfis.html")
-
-@app.route("/perfis")
-def perfis_page():
-    return send_from_directory(BASE_DIR, "perfis.html")
-
-@app.route("/vidros.html")
-def vidros_html_page():
-    return send_from_directory(BASE_DIR, "vidros.html")
-
-@app.route("/vidros")
-def vidros_page():
-    return send_from_directory(BASE_DIR, "vidros.html")
-
-@app.route("/insumos.html")
-def insumos_html_page():
-    return send_from_directory(BASE_DIR, "insumos.html")
-
-@app.route("/insumos")
-def insumos_page():
-    return send_from_directory(BASE_DIR, "insumos.html")
-
-@app.route("/Dashboard.html")
-def Dashboard_html_page():
-    return send_from_directory(BASE_DIR, "Dashboard.html")
-
-@app.route("/Dashboard")
-def Dashboard_page():
-    return send_from_directory(BASE_DIR, "Dashboard.html")
-
-@app.route("/vizualizacao.html")
-def vizualizacao_html_page():
-    return send_from_directory(BASE_DIR, "vizualizacao.html")
-
-@app.route("/vizualizacao")
-def vizualizacao_page():
-    return send_from_directory(BASE_DIR, "vizualizacao.html")
-
-@app.route("/tarefas.html")
-def task_html_page():
-    return send_from_directory(BASE_DIR, "task.html")
-
-@app.route("/tarefas")
-def task_page():
-    return send_from_directory(BASE_DIR, "task.html")
-
-
+# =====================
+# DECORATOR
+# =====================
 
 def exige_nivel_2_ou_3(fn):
     from auth_utils import buscar_usuario_por_token, extrair_token
@@ -227,12 +92,179 @@ def exige_nivel_2_ou_3(fn):
 
     return wrapper
 
+# =====================
+# ROTAS PROTEGIDAS
+# =====================
+
+@app.route("/loja")
+@exige_nivel_2_ou_3
+def index_loja_page():
+    return send_from_directory(BASE_DIR, "index_loja.html")
+
+@app.route("/index_loja.html")
+@exige_nivel_2_ou_3
+def index_loja_html_page():
+    return send_from_directory(BASE_DIR, "index_loja.html")
+
+@app.route("/index.html")
+@exige_nivel_2_ou_3
+def index_admin_page():
+    return send_from_directory(BASE_DIR, "index.html")
+
+@app.route("/portas")
+@exige_nivel_2_ou_3
+def portas_page():
+    return send_from_directory(BASE_DIR, "portas.html")
+
+@app.route("/portas.html")
+@exige_nivel_2_ou_3
+def portas_html_page():
+    return send_from_directory(BASE_DIR, "portas.html")
+
+@app.route("/catalogo3d")
+@exige_nivel_2_ou_3
+def catalogo3d_page():
+    return send_from_directory(BASE_DIR, "catalogo3d.html")
+
+@app.route("/catalogo3d.html")
+@exige_nivel_2_ou_3
+def catalogo3d_html_page():
+    return send_from_directory(BASE_DIR, "catalogo3d.html")
+
+@app.route("/aprovacao")
+@exige_nivel_2_ou_3
+def aprovacao_page():
+    return send_from_directory(BASE_DIR, "aprovacao.html")
+
+@app.route("/aprovacao.html")
+@exige_nivel_2_ou_3
+def aprovacao_html_page():
+    return send_from_directory(BASE_DIR, "aprovacao.html")
+
+@app.route("/tags")
+@exige_nivel_2_ou_3
+def tags_page():
+    return send_from_directory(BASE_DIR, "tags.html")
+
+@app.route("/tags.html")
+@exige_nivel_2_ou_3
+def tags_html_page():
+    return send_from_directory(BASE_DIR, "tags.html")
+
+@app.route("/financeiro")
+@exige_nivel_2_ou_3
+def financeiro_page():
+    return send_from_directory(BASE_DIR, "financeiro.html")
+
+@app.route("/financeiro.html")
+@exige_nivel_2_ou_3
+def financeiro_html_page():
+    return send_from_directory(BASE_DIR, "financeiro.html")
+
+@app.route("/comprovantes")
+@exige_nivel_2_ou_3
+def comprovantes_page():
+    return send_from_directory(BASE_DIR, "comprovantes.html")
+
+@app.route("/comprovantes.html")
+@exige_nivel_2_ou_3
+def comprovantes_html_page():
+    return send_from_directory(BASE_DIR, "comprovantes.html")
+
+@app.route("/estruturastemp")
+@exige_nivel_2_ou_3
+def estruturastemp_page():
+    return send_from_directory(BASE_DIR, "estruturastemp.html")
+
+@app.route("/estruturastemp.html")
+@exige_nivel_2_ou_3
+def estruturastemp_html_page():
+    return send_from_directory(BASE_DIR, "estruturastemp.html")
+
+@app.route("/callback")
+@exige_nivel_2_ou_3
+def callback_page():
+    return send_from_directory(BASE_DIR, "callback.html")
+
+@app.route("/callback.html")
+@exige_nivel_2_ou_3
+def callback_html_page():
+    return send_from_directory(BASE_DIR, "callback.html")
+
+@app.route("/imagefinder")
+@exige_nivel_2_ou_3
+def imagefinder_page():
+    return send_from_directory(BASE_DIR, "imagefinder.html")
+
+@app.route("/imagefinder.html")
+@exige_nivel_2_ou_3
+def imagefinder_html_page():
+    return send_from_directory(BASE_DIR, "imagefinder.html")
+
+@app.route("/perfis")
+@exige_nivel_2_ou_3
+def perfis_page():
+    return send_from_directory(BASE_DIR, "perfis.html")
+
+@app.route("/perfis.html")
+@exige_nivel_2_ou_3
+def perfis_html_page():
+    return send_from_directory(BASE_DIR, "perfis.html")
+
+@app.route("/vidros")
+@exige_nivel_2_ou_3
+def vidros_page():
+    return send_from_directory(BASE_DIR, "vidros.html")
+
+@app.route("/vidros.html")
+@exige_nivel_2_ou_3
+def vidros_html_page():
+    return send_from_directory(BASE_DIR, "vidros.html")
+
+@app.route("/insumos")
+@exige_nivel_2_ou_3
+def insumos_page():
+    return send_from_directory(BASE_DIR, "insumos.html")
+
+@app.route("/insumos.html")
+@exige_nivel_2_ou_3
+def insumos_html_page():
+    return send_from_directory(BASE_DIR, "insumos.html")
+
+@app.route("/Dashboard")
+@exige_nivel_2_ou_3
+def Dashboard_page():
+    return send_from_directory(BASE_DIR, "Dashboard.html")
+
+@app.route("/Dashboard.html")
+@exige_nivel_2_ou_3
+def Dashboard_html_page():
+    return send_from_directory(BASE_DIR, "Dashboard.html")
+
+@app.route("/vizualizacao")
+@exige_nivel_2_ou_3
+def vizualizacao_page():
+    return send_from_directory(BASE_DIR, "vizualizacao.html")
+
+@app.route("/vizualizacao.html")
+@exige_nivel_2_ou_3
+def vizualizacao_html_page():
+    return send_from_directory(BASE_DIR, "vizualizacao.html")
+
+@app.route("/tarefas")
+@exige_nivel_2_ou_3
+def task_page():
+    return send_from_directory(BASE_DIR, "task.html")
+
+@app.route("/tarefas.html")
+@exige_nivel_2_ou_3
+def task_html_page():
+    return send_from_directory(BASE_DIR, "task.html")
 
 @app.route("/clientes")
 @exige_nivel_2_ou_3
 def clientes_page():
     return send_from_directory(ROOT_DIR, "clientes.html")
-
 
 @app.route("/clientes.html")
 @exige_nivel_2_ou_3
@@ -240,7 +272,7 @@ def clientes_html_page():
     return send_from_directory(ROOT_DIR, "clientes.html")
 
 # =====================
-# REGISTRO DE BLUEPRINTS
+# BLUEPRINTS
 # =====================
 
 from api_perfis import perfis_bp
@@ -258,7 +290,6 @@ from api_comprovantes import comprovantes_bp
 from api_imagetags import imagetags_bp
 from api_financeiro import api_financeiro_bp
 
-
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
 app.register_blueprint(insumos_bp)
@@ -274,12 +305,8 @@ app.register_blueprint(comprovantes_bp)
 app.register_blueprint(imagetags_bp)
 app.register_blueprint(api_financeiro_bp)
 
-
-# =====================
-# START
-# =====================
-
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
