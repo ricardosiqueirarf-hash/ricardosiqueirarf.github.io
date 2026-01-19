@@ -77,6 +77,15 @@ tr.debito-em-aberto {
   background: rgba(239, 68, 68, 0.12);
 }
 
+.status-select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5f5;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #1f2937;
+}
+
 .status {
   margin-top: 12px;
   font-size: 0.9rem;
@@ -106,11 +115,12 @@ tr.debito-em-aberto {
         <th>Data</th>
         <th>Valor Total</th>
         <th>Valor Pago</th>
+        <th>Status do Pedido</th>
       </tr>
     </thead>
     <tbody id="tabelaPedidos">
       <tr>
-        <td colspan="5"><em>Carregando...</em></td>
+        <td colspan="6"><em>Carregando...</em></td>
       </tr>
     </tbody>
   </table>
@@ -147,7 +157,7 @@ function renderizarPedidos(pedidos) {
 
   if (!pedidos || !pedidos.length) {
     tbody.innerHTML =
-      "<tr><td colspan='5'><em>Nenhum pedido encontrado.</em></td></tr>";
+      "<tr><td colspan='6'><em>Nenhum pedido encontrado.</em></td></tr>";
     return;
   }
 
@@ -159,6 +169,29 @@ function renderizarPedidos(pedidos) {
   pedidos.forEach(p => {
     const total = parseValor(p.valor_total);
     const pago = parseValor(p.valor_pago);
+    const statusAtual = String(p.status ?? "1");
+
+    const selectStatus = document.createElement("select");
+    selectStatus.className = "status-select";
+    ["1", "2", "3", "4", "5"].forEach(opcao => {
+      const option = document.createElement("option");
+      option.value = opcao;
+      option.textContent = opcao;
+      if (opcao === statusAtual) option.selected = true;
+      selectStatus.appendChild(option);
+    });
+    selectStatus.dataset.previousValue = selectStatus.value;
+    selectStatus.addEventListener("change", event => {
+      const target = event.currentTarget;
+      const confirmar = window.confirm(
+        "tem certeza que eseja alterar status?"
+      );
+      if (!confirmar) {
+        target.value = target.dataset.previousValue;
+        return;
+      }
+      target.dataset.previousValue = target.value;
+    });
 
     const tr = document.createElement("tr");
     if (total > pago) tr.classList.add("debito-em-aberto");
@@ -170,6 +203,9 @@ function renderizarPedidos(pedidos) {
       <td>${fmt.format(total)}</td>
       <td>${fmt.format(pago)}</td>
     `;
+    const statusTd = document.createElement("td");
+    statusTd.appendChild(selectStatus);
+    tr.appendChild(statusTd);
 
     tbody.appendChild(tr);
   });
@@ -198,4 +234,5 @@ document.addEventListener("DOMContentLoaded", carregarPedidos);
 
 </body>
 </html>
+
 
