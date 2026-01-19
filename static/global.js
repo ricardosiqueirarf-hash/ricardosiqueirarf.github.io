@@ -1,8 +1,8 @@
 const pages = [
   "login.html",
-  "painel.html",
-  "buscar.html",
-  "financeiro.html"
+  "index_loja.html",
+  "portas.html",
+  "cadastro.html"
 ];
 
 pages.forEach(p => {
