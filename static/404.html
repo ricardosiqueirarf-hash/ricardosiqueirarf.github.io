@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>404 | Color Glass</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --cg-blue:#0f79bf;
+      --cg-blue-2:#0b5f9a;
+      --cg-bg:#eef6fb;
+      --cg-card:#ffffff;
+      --cg-text:#0f172a;
+      --cg-muted:#64748b;
+      --cg-border:rgba(15,121,191,.15);
+      --cg-shadow:0 18px 40px rgba(2, 20, 45, .08);
+      --radius-xl:22px;
+      --radius-lg:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      color:var(--cg-text);
+      background: radial-gradient(1200px 600px at 70% 10%, rgba(15,121,191,.12), transparent 60%),
+                  radial-gradient(900px 600px at 10% 30%, rgba(15,121,191,.10), transparent 60%),
+                  var(--cg-bg);
+    }
+
+    .layout{
+      min-height:100%;
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap: 22px;
+      padding: 26px;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      background: linear-gradient(180deg, var(--cg-blue) 0%, var(--cg-blue-2) 100%);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--cg-shadow);
+      padding: 22px 18px;
+      position: sticky;
+      top: 26px;
+      height: calc(100vh - 52px);
+      overflow:hidden;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 10px 10px 16px;
+      color:#fff;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .logoMark{
+      width:42px;height:42px;border-radius:14px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.22);
+      display:grid;place-items:center;
+      box-shadow: 0 10px 24px rgba(0,0,0,.12);
+    }
+    .logoMark svg{opacity:.95}
+    .nav{
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: var(--radius-lg);
+    }
+    .navBtn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.16);
+      color:#fff;
+      font-weight: 700;
+      cursor:pointer;
+    }
+    .navBtn:active{transform: translateY(1px)}
+    .navBtn svg{opacity:.95}
+
+    /* Main */
+    .main{
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 6px 0 40px;
+    }
+
+    .pageTitle{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 10px 6px 18px;
+    }
+    .pageTitle h1{
+      margin:0;
+      font-size: 34px;
+      letter-spacing:.2px;
+      color: #0b4f82;
+    }
+    .pageTitle .hint{
+      color:var(--cg-muted);
+      font-weight:600;
+      font-size: 14px;
+      padding-bottom: 6px;
+    }
+
+    .card{
+      background: var(--cg-card);
+      border: 1px solid var(--cg-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--cg-shadow);
+      padding: 26px;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--cg-border);
+      background: rgba(15,121,191,.06);
+      color:#0b5f9a;
+      font-weight: 800;
+      letter-spacing:.4px;
+      width: fit-content;
+    }
+
+    .big404{
+      font-size: 86px;
+      line-height: 1;
+      margin: 10px 0 8px;
+      color: #0b5f9a;
+      letter-spacing: -2px;
+    }
+
+    .subtitle{
+      margin:0;
+      color: var(--cg-text);
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .desc{
+      margin: 10px 0 0;
+      color: var(--cg-muted);
+      font-size: 15px;
+      line-height: 1.55;
+      max-width: 62ch;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      cursor:pointer;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-weight: 800;
+      letter-spacing:.2px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      transition: transform .06s ease, filter .15s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+      text-decoration:none;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btnPrimary{
+      background: linear-gradient(180deg, var(--cg-blue) 0%, var(--cg-blue-2) 100%);
+      color:#fff;
+      box-shadow: 0 14px 26px rgba(15,121,191,.22);
+    }
+    .btnGhost{
+      background: #fff;
+      color: #0b5f9a;
+      border: 1px solid var(--cg-border);
+    }
+    .btnGhost:hover{background: rgba(15,121,191,.04)}
+    .btnSmall{
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .rightPanel{
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--cg-border);
+      background: linear-gradient(180deg, rgba(15,121,191,.08) 0%, rgba(255,255,255,.85) 55%, #fff 100%);
+      padding: 18px;
+      position: relative;
+      overflow:hidden;
+      min-height: 260px;
+    }
+
+    .bubble{
+      position:absolute;
+      inset:auto;
+      border-radius: 999px;
+      filter: blur(.0px);
+      opacity: .6;
+      border: 1px solid rgba(15,121,191,.18);
+      background: rgba(15,121,191,.10);
+    }
+    .bubble.b1{width:220px;height:220px; top:-90px; right:-80px;}
+    .bubble.b2{width:180px;height:180px; bottom:-80px; left:-60px;}
+    .bubble.b3{width:120px;height:120px; top:78px; left:28px; opacity:.35}
+
+    .panelInner{
+      position:relative;
+      z-index:1;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      justify-content:center;
+    }
+
+    .panelTitle{
+      margin:0;
+      font-size: 16px;
+      font-weight: 900;
+      color:#0b4f82;
+    }
+    .panelText{
+      margin:0;
+      color:var(--cg-muted);
+      font-weight: 650;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .pathBox{
+      margin-top: 8px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--cg-border);
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color:#0b5f9a;
+      font-weight: 800;
+      font-size: 12.5px;
+      word-break: break-all;
+    }
+
+    footer{
+      margin-top: 14px;
+      color: var(--cg-muted);
+      font-size: 12.5px;
+      font-weight: 650;
+      padding: 0 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .layout{
+        grid-template-columns: 1fr;
+        padding: 18px;
+      }
+      .sidebar{
+        height:auto;
+        position:relative;
+        top:auto;
+      }
+      .hero{grid-template-columns: 1fr}
+      .big404{font-size: 72px}
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" aria-label="Menu lateral">
+      <div class="brand">
+        <div class="logoMark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M7 7h10v10H7z" stroke="white" stroke-width="2" opacity=".95"/>
+            <path d="M4 12a8 8 0 0 1 16 0" stroke="white" stroke-width="2" opacity=".55"/>
+          </svg>
+        </div>
+        <div>COLOR GLASS</div>
+      </div>
+
+      <div class="nav">
+        <button class="navBtn" type="button" onclick="goHome()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1v-10.5Z" stroke="white" stroke-width="2" />
+          </svg>
+          Voltar para Início
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="pageTitle">
+        <h1>Página não encontrada</h1>
+        <div class="hint">Erro 404</div>
+      </div>
+
+      <section class="card">
+        <div class="hero">
+          <div>
+            <div class="badge">
+              <span aria-hidden="true">⚠️</span>
+              Caminho inválido
+            </div>
+
+            <div class="big404">404</div>
+            <p class="subtitle">Você caiu numa rota que não existe.</p>
+            <p class="desc">
+              Se você digitou o endereço manualmente, pode ter faltado um caractere.
+              Se você veio de um link interno, me chama porque isso é bug e a gente conserta na marra.
+            </p>
+
+            <div class="actions">
+              <a class="btn btnPrimary" href="javascript:void(0)" onclick="goHome()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 12l9-9 9 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M9 21V9h6v12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Ir para o início
+              </a>
+
+              <a class="btn btnGhost" href="javascript:void(0)" onclick="goBack()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" stroke="#0b5f9a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Voltar
+              </a>
+
+              <button class="btn btnGhost btnSmall" type="button" onclick="copyPath()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M9 9h10v10H9z" stroke="#0b5f9a" stroke-width="2"/>
+                  <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="#0b5f9a" stroke-width="2"/>
+                </svg>
+                Copiar caminho
+              </button>
+            </div>
+          </div>
+
+          <div class="rightPanel" aria-label="Detalhes do erro">
+            <div class="bubble b1" aria-hidden="true"></div>
+            <div class="bubble b2" aria-hidden="true"></div>
+            <div class="bubble b3" aria-hidden="true"></div>
+
+            <div class="panelInner">
+              <p class="panelTitle">Detalhes</p>
+              <p class="panelText">
+                Caminho solicitado:
+              </p>
+
+              <div class="pathBox">
+                <code id="pathValue">/</code>
+                <span id="copied" style="display:none; color:#0b5f9a; font-weight:900;">Copiado ✅</span>
+              </div>
+
+              <p class="panelText" style="margin-top:6px;">
+                Dica: se era pra abrir um orçamento, confirme se você não perdeu o parâmetro na URL.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Color Glass • Sistema interno • 404
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    function goHome(){
+      // Ajuste aqui se seu "home" for outra rota:
+      window.location.href = "/";
+    }
+
+    function goBack(){
+      if (history.length > 1) history.back();
+      else goHome();
+    }
+
+    function setPath(){
+      const path = window.location.pathname + window.location.search + window.location.hash;
+      document.getElementById("pathValue").textContent = path || "/";
+    }
+
+    async function copyPath(){
+      const txt = document.getElementById("pathValue").textContent || "/";
+      try{
+        await navigator.clipboard.writeText(txt);
+        const ok = document.getElementById("copied");
+        ok.style.display = "inline";
+        setTimeout(()=> ok.style.display = "none", 1400);
+      }catch(e){
+        alert("Não consegui copiar automaticamente. Caminho:\n" + txt);
+      }
+    }
+
+    setPath();
+  </script>
+</body>
+</html>
