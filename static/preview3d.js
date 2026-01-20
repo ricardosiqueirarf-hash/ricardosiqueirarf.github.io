@@ -1,4 +1,5 @@
 const container = document.getElementById("preview-3d");
+const controlButtons = document.querySelectorAll(".preview-3d-btn");
 
 if (container) {
   const importMap = {
@@ -16,6 +17,11 @@ if (container) {
   }
 
   const DEFAULT_MODEL = "1036.glb";
+  const models = {
+    "1036.glb": "Clássico",
+    "3545.glb": "Slim",
+    "3446.glb": "Invisível"
+  };
 
   const THREE = await import("three");
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
@@ -253,9 +259,30 @@ if (container) {
     renderer.render(scene, camera);
   }
 
+  function setActiveButton(filename) {
+    if (!controlButtons.length) return;
+    controlButtons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.model === filename);
+    });
+  }
+
+  function bindControls() {
+    if (!controlButtons.length) return;
+    controlButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const model = button.dataset.model;
+        if (!model || !models[model]) return;
+        setActiveButton(model);
+        await carregarModelo(model);
+      });
+    });
+  }
+
   resizeRenderer();
   atualizarCamera();
   animate();
-
+  bindControls();
+  setActiveButton(DEFAULT_MODEL);
   await carregarModelo(DEFAULT_MODEL);
 }
+
