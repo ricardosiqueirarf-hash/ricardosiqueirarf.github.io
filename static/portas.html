@@ -308,21 +308,6 @@ input:hover, select:hover, textarea:hover{
   font-size: 0.92rem;
   color: #374151;
 }
-.cost-toggle input[type="checkbox"]{
-  width: 18px;
-  height: 18px;
-  transform: translateY(1px);
-}
-
-.cost-details{
-  background: rgba(255,255,255,0.92);
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 10px 18px rgba(15,44,62,0.10);
-  font-size: 0.9rem;
-  border: 1px solid rgba(16,121,186,0.12);
-}
-
 cost-details table{
   width: 100%;
   border-collapse: collapse;
@@ -330,14 +315,12 @@ cost-details table{
   overflow: hidden;
   border-radius: 12px;
 }
-
 .cost-details th,
 .cost-details td{
   border: 1px solid rgba(220,221,225,0.85);
   padding: 8px;
   text-align: left;
 }
-
 cost-details th{
   background: rgba(231,243,251,0.9);
 }
@@ -471,6 +454,31 @@ window.addEventListener("DOMContentLoaded", () => {
   Object.keys(TIPOLOGIAS).forEach((tipo) => {
     TIPOLOGIAS[tipo] = TIPOLOGIAS[tipo].filter((campo) => !camposRemovidos.has(campo));
   });
+
+  const removerCamposTecnicos = () => {
+    const ids = ["dobradicas", "dobradicasContainer", "altura_puxador"];
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const label = el.closest("label");
+      if (label) {
+        label.remove();
+      } else {
+        el.remove();
+      }
+    });
+  };
+
+  if (typeof window.renderCampos === "function") {
+    const originalRenderCampos = window.renderCampos;
+    window.renderCampos = function (...args) {
+      const resultado = originalRenderCampos.apply(this, args);
+      removerCamposTecnicos();
+      return resultado;
+    };
+  }
+
+  removerCamposTecnicos();
 });
 </script>
 </head>
@@ -480,7 +488,6 @@ window.addEventListener("DOMContentLoaded", () => {
     <div class="sidebar">
         <h3>ColorGlass</h3>
         <button onclick="go('index_loja.html')">Voltar</button>
-        <button class="btn" id="btnPortasTecnico">Portas técnico</button>
     </div>
 
     <div class="content">
@@ -530,6 +537,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 <button class="btn" onclick="imprimirOrcamento()">Imprimir Orçamento</button>
                 <button class="btn" onclick="imprimirOrdemProducao()">Imprimir Ordem de Produção</button>
                 <button class="btn" onclick="imprimirEtiquetaTermica()">Etiqueta térmica</button>
+                <button class="btn" id="btnPortasTecnico">Portas técnico</button>
             </div>
         </div>
 
