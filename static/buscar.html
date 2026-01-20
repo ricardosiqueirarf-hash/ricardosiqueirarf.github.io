@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Buscar Imagens por Tags | ColorGlass</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --panel:rgba(255,255,255,.06);
+    --panel2:rgba(255,255,255,.04);
+    --border:rgba(255,255,255,.12);
+    --text:#e5e7eb;
+    --muted:#9ca3af;
+    --accent:#3b82f6;
+    --good:#22c55e;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+    --shadow:0 24px 80px rgba(0,0,0,.55);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color:var(--text);
+    background:
+      radial-gradient(1000px 700px at 10% 15%, rgba(59,130,246,.24), transparent 60%),
+      radial-gradient(900px 600px at 85% 20%, rgba(34,197,94,.18), transparent 60%),
+      radial-gradient(1200px 700px at 50% 90%, rgba(245,158,11,.12), transparent 65%),
+      linear-gradient(180deg, var(--bg), #050815);
+    padding:42px 18px;
+  }
+  .wrap{max-width:1100px;margin:0 auto}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 14px;border:1px solid var(--border);
+    border-radius:999px;background:rgba(255,255,255,.03);
+    backdrop-filter: blur(10px);
+  }
+  .dot{
+    width:12px;height:12px;border-radius:50%;
+    background: linear-gradient(180deg, var(--accent), rgba(59,130,246,.35));
+    box-shadow: 0 0 0 5px rgba(59,130,246,.12);
+  }
+  .brand h1{font-size:14px;margin:0;letter-spacing:.5px;font-weight:800}
+  .brand span{color:var(--muted);font-size:12px}
+
+  .card{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .cardHead{
+    padding:18px 18px 10px 18px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .title{display:flex;flex-direction:column;gap:6px}
+  .title h2{margin:0;font-size:18px;letter-spacing:.3px}
+  .title p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:999px;border:1px solid var(--border);
+    background:rgba(255,255,255,.03);
+    color:var(--muted);font-size:12px;
+  }
+  .pill b{color:var(--text)}
+
+  .cardBody{padding:14px 18px 18px 18px}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row + .row{margin-top:10px}
+
+  button{
+    border:none;
+    padding:10px 14px;
+    border-radius:12px;
+    font-weight:800;
+    letter-spacing:.2px;
+    cursor:pointer;
+    color:white;
+    background: linear-gradient(180deg, rgba(59,130,246,1), rgba(59,130,246,.78));
+    box-shadow: 0 10px 28px rgba(59,130,246,.22);
+    transition: transform .08s ease, filter .15s ease;
+  }
+  button:hover{filter:brightness(1.06)}
+  button:active{transform: translateY(1px)}
+  button:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+
+  button.sec{
+    background: linear-gradient(180deg, rgba(148,163,184,.35), rgba(148,163,184,.18));
+    box-shadow:none;color:var(--text);
+    border:1px solid var(--border);
+  }
+  button.ghost{
+    background: rgba(255,255,255,.04);
+    border:1px solid var(--border);
+    color: var(--text);
+    box-shadow:none;
+  }
+
+  input[type="text"]{
+    padding:11px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.04);
+    color: var(--text);
+    outline:none;
+    min-width:320px;
+  }
+  input[type="text"]::placeholder{color: rgba(156,163,175,.85)}
+
+  .hint{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px dashed rgba(255,255,255,.14);
+    background: rgba(255,255,255,.03);
+  }
+
+  .status{
+    margin-top:14px;
+    white-space:pre-wrap;
+    font-size:12px;
+    line-height:1.45;
+    color: rgba(229,231,235,.92);
+    background: rgba(2,6,23,.55);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    padding:12px;
+    max-height: 280px;
+    overflow:auto;
+  }
+
+  /* Dropdown custom */
+  .picker{
+    position:relative;
+    width:min(540px, 100%);
+  }
+  .dropdown{
+    position:absolute;
+    top: calc(100% + 8px);
+    left:0;
+    right:0;
+    border:1px solid var(--border);
+    background: rgba(6,10,24,.96);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow: 0 18px 60px rgba(0,0,0,.55);
+    max-height: 280px;
+    overflow:auto;
+    display:none;
+    z-index:50;
+  }
+  .dropdown.show{display:block}
+  .opt{
+    padding:10px 12px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+    border-bottom:1px solid rgba(255,255,255,.07);
+  }
+  .opt:last-child{border-bottom:none}
+  .opt:hover{background: rgba(255,255,255,.06)}
+  .tagName{
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .tagCount{
+    font-size:12px;
+    color:var(--muted);
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.04);
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 10px;border-radius:999px;
+    background: rgba(59,130,246,.14);
+    border:1px solid rgba(59,130,246,.28);
+    color: rgba(229,231,235,.95);
+    font-size:12px;font-weight:800;
+  }
+  .pill2{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:999px;border:1px solid var(--border);
+    background:rgba(255,255,255,.03);
+    color:var(--muted);font-size:12px;
+  }
+
+  /* Results grid */
+  .grid{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap:12px;
+  }
+  .tile{
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.03);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .tile .thumb{
+    width:100%;
+    aspect-ratio: 4/3;
+    background: rgba(255,255,255,.04);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: var(--muted);
+    font-size:12px;
+    position:relative;
+  }
+  .tile img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .tile .meta{
+    padding:10px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .path{
+    font-size:11px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .tinyBtn{
+    padding:8px 10px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight:800;
+  }
+</style>
+</head>
+<body>
+
+<script>
+  // FORÇA WWW
+  if (location.hostname === "colorglassfortaleza.com.br") {
+    location.replace("https://www.colorglassfortaleza.com.br" + location.pathname + location.search + location.hash);
+  }
+</script>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>ColorGlass • Busca por Tags</h1>
+        <span>Escolha 1 tag → lista todas as imagens</span>
+      </div>
+    </div>
+    <div class="pill"><span>Status:</span> <b id="authMini">Não logado</b></div>
+  </div>
+
+  <div class="card">
+    <div class="cardHead">
+      <div class="title">
+        <h2>Buscar imagens por tag</h2>
+        <p>Digite no campo para filtrar tags (ex: <b>p</b> → prata, preto). Clique numa tag para buscar.</p>
+      </div>
+      <div class="row">
+        <button id="login">Entrar com GitHub</button>
+        <button id="logout" class="sec">Logout</button>
+        <button id="reloadTags" class="ghost">Recarregar tags</button>
+      </div>
+    </div>
+
+    <div class="cardBody">
+      <div class="row">
+        <span class="badge">Tag picker</span>
+        <span class="pill2">Total tags: <b id="tagsCount">0</b></span>
+        <span class="pill2">Selecionada: <b id="selectedTag">(nenhuma)</b></span>
+      </div>
+
+      <div class="row">
+        <div class="picker">
+          <input id="tagInput" type="text" placeholder="Digite para filtrar tags... (ex: b, p, br, pre)" autocomplete="off" />
+          <div id="dropdown" class="dropdown"></div>
+        </div>
+        <button id="buscar" class="tinyBtn">Buscar</button>
+        <button id="limpar" class="sec tinyBtn">Limpar</button>
+      </div>
+
+      <div class="hint">
+        Regras:
+        <ul style="margin:8px 0 0 18px; color: var(--muted); font-size:12px">
+          <li>O dropdown mostra todas as tags e filtra por letras digitadas.</li>
+          <li>Selecionou uma tag → busca todas as imagens (ids) com essa tag.</li>
+          <li>Mostra miniaturas (imagem) e botão abrir (serve para PDF também).</li>
+        </ul>
+      </div>
+
+      <div id="resultsInfo" class="row" style="margin-top:14px"></div>
+      <div id="grid" class="grid"></div>
+
+      <p class="status" id="status"></p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
+
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+);
+
+const BUCKET = "comprovantes";
+const TAGS_TABLE = "imagetags";
+const REDIRECT = "https://www.colorglassfortaleza.com.br/callback.html";
+
+const authMini = document.getElementById("authMini");
+const tagInput = document.getElementById("tagInput");
+const dropdown = document.getElementById("dropdown");
+const tagsCountEl = document.getElementById("tagsCount");
+const selectedTagEl = document.getElementById("selectedTag");
+const grid = document.getElementById("grid");
+const resultsInfo = document.getElementById("resultsInfo");
+const status = document.getElementById("status");
+
+let allTags = []; // [{tag, count}]
+let selectedTag = "";
+let tagsCacheLoaded = false;
+
+function setStatus(t=""){ status.textContent = t; }
+function append(t=""){ status.textContent += (t + "\n"); }
+
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+async function refreshAuth(){
+  try{
+    const u = await supabase.auth.getUser();
+    const user = u?.data?.user;
+    authMini.textContent = user ? (user.email || user.user_metadata?.user_name || user.id) : "Não logado";
+  } catch(e){
+    authMini.textContent = "Não logado";
+  }
+}
+
+async function openObject(path){
+  const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 600);
+  if(!signed.error && signed.data?.signedUrl){
+    window.open(signed.data.signedUrl, "_blank", "noopener");
+    return;
+  }
+  const dl = await supabase.storage.from(BUCKET).download(path);
+  if(dl.error){
+    append("OPEN ERROR: " + dl.error.message);
+    return;
+  }
+  const blobUrl = URL.createObjectURL(dl.data);
+  window.open(blobUrl, "_blank", "noopener");
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+}
+
+/**
+ * Carrega todas as tags existentes
+ * Sem endpoint "distinct tags" no PostgREST fácil, então:
+ * - Busca rows (id, tais) em páginas
+ * - Extrai tags e monta mapa de contagem
+ *
+ * Se você tiver MUITOS registros (milhares), isso pode pesar.
+ * Aí a solução ideal é criar uma view/materialized view ou função RPC para "list_all_tags".
+ */
+async function loadAllTags(){
+  setStatus("Carregando tags...");
+  grid.innerHTML = "";
+  resultsInfo.innerHTML = "";
+  selectedTag = "";
+  selectedTagEl.textContent = "(nenhuma)";
+
+  // Paginação simples
+  const pageSize = 1000;
+  let from = 0;
+  let rows = [];
+  for(let page=0; page<20; page++){ // hard stop pra não travar: 20k linhas
+    const to = from + pageSize - 1;
+    const res = await supabase.from(TAGS_TABLE).select("id,tais").range(from, to);
+    if(res.error){
+      setStatus("Erro ao carregar tags: " + res.error.message);
+      return;
+    }
+    rows = res.data || [];
+    if(!rows.length) break;
+    rows.forEach(r => rows.push(r));
+    // cuidado: acima duplica. Vamos fazer certo:
+    // (vai refatorar abaixo)
+  }
+}
+
+/* Corrigindo paginação sem duplicar */
+async function loadAllTagsFixed(){
+  setStatus("Carregando tags...");
+  grid.innerHTML = "";
+  resultsInfo.innerHTML = "";
+  selectedTag = "";
+  selectedTagEl.textContent = "(nenhuma)";
+
+  const pageSize = 1000;
+  let from = 0;
+  const allRows = [];
+
+  for(let page=0; page<20; page++){
+    const to = from + pageSize - 1;
+    const res = await supabase.from(TAGS_TABLE).select("id,tais").range(from, to);
+    if(res.error){
+      setStatus("Erro ao carregar tags: " + res.error.message);
+      return;
+    }
+    const batch = res.data || [];
+    if(!batch.length) break;
+    allRows.push(...batch);
+    if(batch.length < pageSize) break;
+    from += pageSize;
+  }
+
+  const map = new Map(); // tag -> count
+  for(const r of allRows){
+    const tags = r?.tais?.tags;
+    if(Array.isArray(tags)){
+      for(const t of tags){
+        const tag = String(t||"").trim().toLowerCase();
+        if(!tag) continue;
+        map.set(tag, (map.get(tag)||0) + 1);
+      }
+    }
+  }
+
+  const arr = Array.from(map.entries())
+    .map(([tag,count]) => ({tag, count}))
+    .sort((a,b) => a.tag.localeCompare(b.tag));
+
+  allTags = arr;
+  tagsCacheLoaded = true;
+  tagsCountEl.textContent = String(allTags.length);
+  setStatus(`Tags carregadas: ${allTags.length} (contagem = nº de imagens que possuem a tag)`);
+
+  renderDropdown("");
+}
+
+function renderDropdown(filterText){
+  const q = (filterText || "").trim().toLowerCase();
+  const filtered = q
+    ? allTags.filter(x => x.tag.includes(q))
+    : allTags;
+
+  const top = filtered.slice(0, 60); // limita UI
+
+  if(!top.length){
+    dropdown.innerHTML = `<div class="opt"><span class="tagName">Nenhuma tag</span></div>`;
+    dropdown.classList.add("show");
+    return;
+  }
+
+  dropdown.innerHTML = top.map(x => `
+    <div class="opt" data-tag="${escapeHtml(x.tag)}">
+      <span class="tagName">${escapeHtml(x.tag)}</span>
+      <span class="tagCount">${x.count}</span>
+    </div>
+  `).join("");
+
+  dropdown.classList.add("show");
+
+  dropdown.querySelectorAll(".opt[data-tag]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const t = el.getAttribute("data-tag");
+      selectedTag = t;
+      selectedTagEl.textContent = t;
+      tagInput.value = t;
+      dropdown.classList.remove("show");
+    });
+  });
+}
+
+async function findIdsByTag(tag){
+  const res = await supabase
+    .from(TAGS_TABLE)
+    .select("id,tais")
+    .contains("tais", { tags: [tag] })
+    .limit(500);
+
+  if(res.error){
+    setStatus("Erro na busca por tag: " + res.error.message);
+    return [];
+  }
+  return (res.data || []).map(r => r.id);
+}
+
+function looksLikeImage(path){
+  const p = (path||"").toLowerCase();
+  return p.endsWith(".png") || p.endsWith(".jpg") || p.endsWith(".jpeg") || p.endsWith(".webp") || p.endsWith(".gif");
+}
+
+async function renderResults(ids){
+  grid.innerHTML = "";
+  resultsInfo.innerHTML = "";
+
+  if(!ids.length){
+    resultsInfo.innerHTML = `<span class="pill2">0 resultados</span>`;
+    return;
+  }
+
+  resultsInfo.innerHTML = `
+    <span class="pill2">Resultados: <b>${ids.length}</b></span>
+    <span class="pill2">Tag: <b>${escapeHtml(selectedTag)}</b></span>
+  `;
+
+  // Para cada id (path), vamos tentar pegar URL assinada se for imagem / ou abrir no clique
+  const tiles = [];
+  for(let i=0;i<ids.length;i++){
+    const path = ids[i];
+
+    let thumbHtml = `<div class="thumb">Arquivo</div>`;
+    if(looksLikeImage(path)){
+      // pega signed url rápida
+      const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, 600);
+      if(!signed.error && signed.data?.signedUrl){
+        thumbHtml = `<div class="thumb"><img src="${escapeHtml(signed.data.signedUrl)}" alt="thumb"></div>`;
+      } else {
+        thumbHtml = `<div class="thumb">Imagem (sem thumb)</div>`;
+      }
+    } else {
+      thumbHtml = `<div class="thumb">PDF/Arquivo</div>`;
+    }
+
+    tiles.push(`
+      <div class="tile">
+        ${thumbHtml}
+        <div class="meta">
+          <div class="path">${escapeHtml(path)}</div>
+          <div class="actions">
+            <button class="ghost tinyBtn" data-open="${escapeHtml(path)}">Abrir</button>
+          </div>
+        </div>
+      </div>
+    `);
+
+    // não trava se vier 500 imagens: limita thumbnails a 60
+    if(i === 59 && ids.length > 60){
+      tiles.push(`
+        <div class="tile">
+          <div class="thumb">+${ids.length - 60}</div>
+          <div class="meta">
+            <div class="path">Muitos resultados. Mostrando só 60 thumbs.</div>
+          </div>
+        </div>
+      `);
+      break;
+    }
+  }
+
+  grid.innerHTML = tiles.join("");
+
+  grid.querySelectorAll("button[data-open]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const p = btn.getAttribute("data-open");
+      await openObject(p);
+    });
+  });
+}
+
+async function doSearch(){
+  setStatus("");
+  const tag = (selectedTag || tagInput.value || "").trim().toLowerCase();
+  if(!tag){
+    setStatus("Selecione ou digite uma tag.");
+    return;
+  }
+  selectedTag = tag;
+  selectedTagEl.textContent = tag;
+  setStatus("Buscando imagens com tag: " + tag + " ...");
+  const ids = await findIdsByTag(tag);
+  setStatus(`OK. Achou ${ids.length} arquivo(s) com a tag "${tag}".`);
+  await renderResults(ids);
+}
+
+function clearAll(){
+  selectedTag = "";
+  selectedTagEl.textContent = "(nenhuma)";
+  tagInput.value = "";
+  dropdown.classList.remove("show");
+  resultsInfo.innerHTML = "";
+  grid.innerHTML = "";
+  setStatus("Limpo. Se quiser, digite para filtrar tags.");
+}
+
+document.getElementById("login").onclick = async ()=>{
+  setStatus("LOGIN...");
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "github",
+    options: { redirectTo: REDIRECT }
+  });
+  if(error){
+    setStatus("OAUTH ERROR: " + error.message);
+    alert(error.message);
+  }
+};
+
+document.getElementById("logout").onclick = async ()=>{
+  await supabase.auth.signOut();
+  await refreshAuth();
+  setStatus("Logout OK.");
+};
+
+document.getElementById("reloadTags").onclick = async ()=>{
+  await refreshAuth();
+  await loadAllTagsFixed();
+};
+
+document.getElementById("buscar").onclick = async ()=>{ await doSearch(); };
+document.getElementById("limpar").onclick = ()=>{ clearAll(); };
+
+tagInput.addEventListener("input", ()=>{
+  if(!tagsCacheLoaded){
+    renderDropdown(tagInput.value);
+    return;
+  }
+  renderDropdown(tagInput.value);
+});
+
+tagInput.addEventListener("focus", ()=>{
+  renderDropdown(tagInput.value);
+});
+
+document.addEventListener("click", (e)=>{
+  // fecha dropdown clicando fora
+  const picker = tagInput.closest(".picker");
+  if(!picker.contains(e.target)){
+    dropdown.classList.remove("show");
+  }
+});
+
+tagInput.addEventListener("keydown", async (e)=>{
+  if(e.key === "Enter"){
+    e.preventDefault();
+    dropdown.classList.remove("show");
+    await doSearch();
+  }
+});
+
+await refreshAuth();
+await loadAllTagsFixed();
+setStatus("Pronto. Digite para filtrar e escolha uma tag.");
+</script>
+</body>
+</html>
