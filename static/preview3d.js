@@ -161,6 +161,7 @@ if (container) {
   }
 
   let currentModel = null;
+  let loadToken = 0;
 
   function limparModelo() {
     if (!currentModel) return;
@@ -178,6 +179,8 @@ if (container) {
   }
 
   async function carregarModelo(filename) {
+    loadToken += 1;
+    const token = loadToken;
     limparModelo();
 
     const urls = makeUrlCandidates(filename);
@@ -195,6 +198,7 @@ if (container) {
     loader.load(
       firstGoodAbs,
       (gltf) => {
+        if (token !== loadToken) return;
         currentModel = gltf.scene;
         scene.add(currentModel);
 
@@ -285,4 +289,5 @@ if (container) {
   setActiveButton(DEFAULT_MODEL);
   await carregarModelo(DEFAULT_MODEL);
 }
+
 
