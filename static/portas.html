@@ -464,6 +464,15 @@ cost-details th{
 <script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/ui.js" defer></script>
 <script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/print.js" defer></script>
 <script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/estruturas3d.js" defer></script>
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  if (!window.TIPOLOGIAS) return;
+  const camposRemovidos = new Set(["dobradicas", "dobradicas_alturas", "altura_puxador"]);
+  Object.keys(TIPOLOGIAS).forEach((tipo) => {
+    TIPOLOGIAS[tipo] = TIPOLOGIAS[tipo].filter((campo) => !camposRemovidos.has(campo));
+  });
+});
+</script>
 </head>
 
 <body>
@@ -471,7 +480,6 @@ cost-details th{
     <div class="sidebar">
         <h3>ColorGlass</h3>
         <button onclick="go('index_loja.html')">Voltar</button>
-        <button onclick="go('tecnico.html')">Portas Tecnico</button>
     </div>
 
     <div class="content">
@@ -521,6 +529,7 @@ cost-details th{
                 <button class="btn" onclick="imprimirOrcamento()">Imprimir Orçamento</button>
                 <button class="btn" onclick="imprimirOrdemProducao()">Imprimir Ordem de Produção</button>
                 <button class="btn" onclick="imprimirEtiquetaTermica()">Etiqueta térmica</button>
+                <button class="btn" id="btnPortasTecnico">Portas técnico</button>
             </div>
         </div>
 
@@ -535,38 +544,19 @@ cost-details th{
     </div>
 </div>
 
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const botao = document.getElementById("btnPortasTecnico");
+    if (!botao) return;
+    botao.addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      const uuid = window.ORCAMENTO_UUID || params.get("orcamento_uuid");
+      const destino = uuid
+        ? `tecnico.html?orcamento_uuid=${encodeURIComponent(uuid)}`
+        : "tecnico.html";
+      window.location.href = destino;
+    });
+  });
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
