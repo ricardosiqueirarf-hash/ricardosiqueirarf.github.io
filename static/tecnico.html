@@ -183,6 +183,20 @@ body {
   background: rgba(231,243,251,0.35);
 }
 
+.tech-preview{
+  border: 1px solid rgba(16,121,186,0.12);
+  border-radius: 14px;
+  padding: 10px;
+  background: #fff;
+  margin-bottom: 12px;
+}
+
+.tech-preview svg{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .tech-meta{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -338,8 +352,10 @@ function renderPortas() {
     const altura = dados.altura || "-";
     const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
     const alturaPuxador = dados.altura_puxador || "";
+    const svgPorta = porta.svg ? `<div class="tech-preview">${porta.svg}</div>` : "";
     return `
       <div class="tech-card">
+        ${svgPorta}
         <div class="tech-meta">
           <div><strong>Tipologia:</strong> ${porta.tipo || "-"}</div>
           <div><strong>Quantidade:</strong> ${porta.quantidade || 1}</div>
