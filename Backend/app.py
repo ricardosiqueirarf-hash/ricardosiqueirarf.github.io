@@ -1,7 +1,6 @@
 import os
-from flask import Flask, jsonify, request, make_response, send_from_directory
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
-from functools import wraps
 import jwt
 import datetime
 
@@ -83,25 +82,7 @@ def taskmenager_page():
     return send_from_directory(BASE_DIR, "taskmenager.html")
 
 # =====================
-# DECORATOR
-# =====================
-
-def exige_nivel_2_ou_3(fn):
-    from auth_utils import buscar_usuario_por_token, extrair_token
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        token = extrair_token(request)
-        usuario = buscar_usuario_por_token(token) if token else None
-        nivel = int((usuario or {}).get("level") or 0)
-        if nivel not in (2, 3):
-            return make_response(jsonify({"error": "Acesso negado"}), 403)
-        return fn(*args, **kwargs)
-
-    return wrapper
-
-# =====================
-# ROTAS PROTEGIDAS
+# ROTAS
 # =====================
 
 @app.route("/loja")
@@ -133,72 +114,58 @@ def catalogo3d_html_page():
     return send_from_directory(BASE_DIR, "catalogo3d.html")
 
 @app.route("/aprovacao")
-@exige_nivel_2_ou_3
 def aprovacao_page():
     return send_from_directory(BASE_DIR, "aprovacao.html")
 
 @app.route("/aprovacao.html")
-@exige_nivel_2_ou_3
 def aprovacao_html_page():
     return send_from_directory(BASE_DIR, "aprovacao.html")
 
 @app.route("/tags")
-@exige_nivel_2_ou_3
 def tags_page():
     return send_from_directory(BASE_DIR, "tags.html")
 
 @app.route("/tags.html")
-@exige_nivel_2_ou_3
 def tags_html_page():
     return send_from_directory(BASE_DIR, "tags.html")
 
 @app.route("/financeiro")
-@exige_nivel_2_ou_3
 def financeiro_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
 
 @app.route("/financeiro.html")
-@exige_nivel_2_ou_3
 def financeiro_html_page():
     return send_from_directory(BASE_DIR, "financeiro.html")
 
 @app.route("/comprovantes")
-@exige_nivel_2_ou_3
 def comprovantes_page():
     return send_from_directory(BASE_DIR, "comprovantes.html")
 
 @app.route("/comprovantes.html")
-@exige_nivel_2_ou_3
 def comprovantes_html_page():
     return send_from_directory(BASE_DIR, "comprovantes.html")
 
 @app.route("/estruturastemp")
-@exige_nivel_2_ou_3
 def estruturastemp_page():
     return send_from_directory(BASE_DIR, "estruturastemp.html")
 
 @app.route("/estruturastemp.html")
-@exige_nivel_2_ou_3
 def estruturastemp_html_page():
     return send_from_directory(BASE_DIR, "estruturastemp.html")
 
 @app.route("/callback")
-@exige_nivel_2_ou_3
 def callback_page():
     return send_from_directory(BASE_DIR, "callback.html")
 
 @app.route("/callback.html")
-@exige_nivel_2_ou_3
 def callback_html_page():
     return send_from_directory(BASE_DIR, "callback.html")
 
 @app.route("/imagefinder")
-@exige_nivel_2_ou_3
 def imagefinder_page():
     return send_from_directory(BASE_DIR, "imagefinder.html")
 
 @app.route("/imagefinder.html")
-@exige_nivel_2_ou_3
 def imagefinder_html_page():
     return send_from_directory(BASE_DIR, "imagefinder.html")
 
@@ -227,22 +194,18 @@ def insumos_html_page():
     return send_from_directory(BASE_DIR, "insumos.html")
 
 @app.route("/Dashboard")
-@exige_nivel_2_ou_3
 def Dashboard_page():
     return send_from_directory(BASE_DIR, "Dashboard.html")
 
 @app.route("/Dashboard.html")
-@exige_nivel_2_ou_3
 def Dashboard_html_page():
     return send_from_directory(BASE_DIR, "Dashboard.html")
 
 @app.route("/vizualizacao")
-@exige_nivel_2_ou_3
 def vizualizacao_page():
     return send_from_directory(BASE_DIR, "vizualizacao.html")
 
 @app.route("/vizualizacao.html")
-@exige_nivel_2_ou_3
 def vizualizacao_html_page():
     return send_from_directory(BASE_DIR, "vizualizacao.html")
 
@@ -255,12 +218,10 @@ def task_html_page():
     return send_from_directory(BASE_DIR, "task.html")
 
 @app.route("/clientes")
-@exige_nivel_2_ou_3
 def clientes_page():
     return send_from_directory(ROOT_DIR, "clientes.html")
 
 @app.route("/clientes.html")
-@exige_nivel_2_ou_3
 def clientes_html_page():
     return send_from_directory(ROOT_DIR, "clientes.html")
 
@@ -305,7 +266,6 @@ app.register_blueprint(clientes_api_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
-
 
 
 
