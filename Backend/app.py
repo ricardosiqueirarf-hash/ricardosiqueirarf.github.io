@@ -125,12 +125,10 @@ def portas_html_page():
     return send_from_directory(BASE_DIR, "portas.html")
 
 @app.route("/catalogo3d")
-@exige_nivel_2_ou_3
 def catalogo3d_page():
     return send_from_directory(BASE_DIR, "catalogo3d.html")
 
 @app.route("/catalogo3d.html")
-@exige_nivel_2_ou_3
 def catalogo3d_html_page():
     return send_from_directory(BASE_DIR, "catalogo3d.html")
 
