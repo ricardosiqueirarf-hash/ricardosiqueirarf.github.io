@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portas Técnicas | ColorGlass</title>
+<meta name="description" content="Especificações técnicas das portas ColorGlass.">
+<meta name="robots" content="index, follow">
+
+<!-- SEO LOCAL -->
+<meta name="geo.region" content="BR-CE">
+<meta name="geo.placename" content="Fortaleza">
+<meta name="geo.position" content="-3.7319;-38.5267">
+<meta name="ICBM" content="-3.7319, -38.5267">
+
+<!-- CANONICAL -->
+<link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
+
+<!-- OPEN GRAPH -->
+<meta property="og:title" content="Portas Técnicas | ColorGlass">
+<meta property="og:description" content="Especificações técnicas das portas ColorGlass.">
+<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
+<meta property="og:type" content="website">
+
+<style>
+:root {
+  --cg-blue: #1079ba;
+  --cg-blue-dark: #0d5d8c;
+  --cg-blue-soft: #e7f3fb;
+  --cg-gold: #f0c24c;
+  --cg-white: #ffffff;
+  --cg-text: #1f2933;
+  --cg-muted: #6b7280;
+  --cg-border: rgba(16, 121, 186, 0.12);
+  --cg-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
+  --cg-shadow-soft: 0 10px 24px rgba(15, 44, 62, 0.10);
+}
+
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(16,121,186,0.15), transparent 55%),
+    linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+  color: var(--cg-text);
+  min-height: 100vh;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  gap: 18px;
+  padding: 18px;
+  animation: fadeIn 0.75s ease;
+}
+
+.sidebar {
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 18px;
+  box-shadow: var(--cg-shadow);
+  position: sticky;
+  top: 18px;
+  height: calc(100vh - 36px);
+  overflow: hidden;
+}
+
+.sidebar::after{
+  content:"";
+  position:absolute;
+  right:-90px;
+  top:-120px;
+  width:260px;
+  height:260px;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 60%);
+  pointer-events:none;
+}
+
+.sidebar h3 {
+  margin-bottom: 8px;
+  font-size: 1.25rem;
+  letter-spacing: 0.6px;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar button {
+  padding: 12px 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 700;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar button:hover {
+  background: rgba(255,255,255,0.22);
+  transform: translateX(4px);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+}
+
+.content {
+  padding: 22px;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(16,121,186,0.10);
+  box-shadow: var(--cg-shadow-soft);
+  backdrop-filter: blur(10px);
+  animation: floatIn 0.65s ease;
+}
+
+.content h1 {
+  color: var(--cg-blue-dark);
+  margin-bottom: 10px;
+  font-size: 1.65rem;
+}
+
+.content h2{
+  color: var(--cg-blue);
+  margin-bottom: 10px;
+  font-size: 1.15rem;
+}
+
+#infoOrcamento{
+  background: var(--cg-white);
+  border: 1px solid var(--cg-border);
+  box-shadow: var(--cg-shadow-soft);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.status{
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  background: rgba(16,121,186,0.08);
+  border: 1px solid rgba(16,121,186,0.2);
+  color: var(--cg-blue-dark);
+  display: none;
+}
+
+.status.erro{
+  display: block;
+  background: rgba(220,53,69,0.12);
+  border-color: rgba(220,53,69,0.4);
+  color: #b02a37;
+}
+
+.status.ok{
+  display: block;
+  background: rgba(25,135,84,0.12);
+  border-color: rgba(25,135,84,0.4);
+  color: #0f5132;
+}
+
+.section-card{
+  background: var(--cg-white);
+  border-radius: 18px;
+  border: 1px solid var(--cg-border);
+  box-shadow: var(--cg-shadow);
+  padding: 16px;
+  margin-top: 18px;
+}
+
+.tech-card{
+  border: 1px solid rgba(16,121,186,0.15);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: rgba(231,243,251,0.35);
+}
+
+.tech-meta{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px 16px;
+  margin-bottom: 10px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+label { display:flex; flex-direction:column; font-size:0.92rem; gap:7px; color:#374151; margin-bottom: 10px; }
+input, textarea{
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  border: 1px solid #d4d9df;
+  width: 100%;
+  background: #fdfefe;
+}
+
+.helper-text{
+  font-size: 0.85rem;
+  color: var(--cg-muted);
+}
+
+.btn{
+  background: linear-gradient(120deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  border: none;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(16,121,186,0.25);
+}
+
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: relative;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar button { text-align: center; flex: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <div class="sidebar">
+    <h3>ColorGlass</h3>
+    <button id="voltarBtn">Voltar ao orçamento</button>
+  </div>
+
+  <div class="content">
+    <h1>Portas - Dados Técnicos</h1>
+    <div id="infoOrcamento"></div>
+    <div id="status" class="status"></div>
+
+    <div class="section-card">
+      <h2>Especificações técnicas</h2>
+      <div id="portasTecnicas"></div>
+      <button class="btn" id="salvarBtn">Salvar dados técnicos</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://colorglass.onrender.com";
+const params = new URLSearchParams(window.location.search);
+const ORCAMENTO_UUID = params.get("orcamento_uuid");
+
+const infoOrcamento = document.getElementById("infoOrcamento");
+const statusEl = document.getElementById("status");
+const portasContainer = document.getElementById("portasTecnicas");
+const salvarBtn = document.getElementById("salvarBtn");
+const voltarBtn = document.getElementById("voltarBtn");
+
+let portas = [];
+
+function setStatus(mensagem, tipo = "") {
+  if (!mensagem) {
+    statusEl.textContent = "";
+    statusEl.className = "status";
+    statusEl.style.display = "none";
+    return;
+  }
+  statusEl.textContent = mensagem;
+  statusEl.className = `status ${tipo}`.trim();
+}
+
+function normalizarAlturasDobradicas(entrada) {
+  if (Array.isArray(entrada)) return entrada.map(String);
+  if (!entrada) return [];
+  return String(entrada)
+    .replace(/[\[\]]/g, "")
+    .split(",")
+    .map((valor) => valor.replace(/['"]/g, "").trim())
+    .filter(Boolean);
+}
+
+function getAlturasDobradicas(idx) {
+  const inputs = document.querySelectorAll(`.dobradica-altura[data-idx="${idx}"]`);
+  return Array.from(inputs)
+    .map((input) => input.value.trim())
+    .filter(Boolean);
+}
+
+function renderAlturasDobradicas(idx, quantidade, valores = []) {
+  const container = document.querySelector(`.dobradicas-alturas[data-idx="${idx}"]`);
+  if (!container) return;
+  if (quantidade <= 0) {
+    container.innerHTML = "<span class='helper-text'>Defina a quantidade para gerar os campos.</span>";
+    return;
+  }
+  const campos = [];
+  for (let i = 0; i < quantidade; i++) {
+    const valor = valores[i] ? String(valores[i]) : "";
+    campos.push(
+      `<input class="dobradica-altura" data-idx="${idx}" type="number" min="0" placeholder="Altura ${i + 1} (mm)" value="${valor}">`
+    );
+  }
+  container.innerHTML = campos.join("");
+}
+
+function renderPortas() {
+  if (!portas.length) {
+    portasContainer.innerHTML = "<p class='helper-text'>Nenhuma porta encontrada para este orçamento.</p>";
+    return;
+  }
+
+  portasContainer.innerHTML = portas.map((porta, idx) => {
+    const dados = porta.dados || {};
+    const largura = dados.largura || "-";
+    const altura = dados.altura || "-";
+    const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
+    const alturaPuxador = dados.altura_puxador || "";
+    return `
+      <div class="tech-card">
+        <div class="tech-meta">
+          <div><strong>Tipologia:</strong> ${porta.tipo || "-"}</div>
+          <div><strong>Quantidade:</strong> ${porta.quantidade || 1}</div>
+          <div><strong>Medidas:</strong> ${largura} x ${altura} mm</div>
+        </div>
+        <label>Quantidade de dobradiças
+          <input class="dobradicas-input" data-idx="${idx}" type="number" min="0" value="${quantidadeDobradicas}">
+        </label>
+        <label>Alturas das dobradiças
+          <div class="dobradicas-alturas" data-idx="${idx}"></div>
+        </label>
+        <label>Altura do puxador (mm)
+          <input class="altura-puxador-input" data-idx="${idx}" type="number" min="0" value="${alturaPuxador}">
+        </label>
+      </div>
+    `;
+  }).join("");
+
+  portas.forEach((porta, idx) => {
+    const dados = porta.dados || {};
+    const qtd = parseInt(dados.dobradicas || "0", 10) || 0;
+    const alturas = normalizarAlturasDobradicas(dados.dobradicas_alturas);
+    renderAlturasDobradicas(idx, qtd, alturas);
+  });
+
+  document.querySelectorAll(".dobradicas-input").forEach((input) => {
+    input.addEventListener("input", (event) => {
+      const idx = event.target.dataset.idx;
+      const valoresAtuais = getAlturasDobradicas(idx);
+      const qtd = parseInt(event.target.value || "0", 10) || 0;
+      renderAlturasDobradicas(idx, qtd, valoresAtuais);
+    });
+  });
+}
+
+async function carregarPortas() {
+  if (!ORCAMENTO_UUID) {
+    infoOrcamento.innerHTML = "<strong style='color:red'>UUID do orçamento não encontrado</strong>";
+    setStatus("UUID do orçamento não encontrado na URL.", "erro");
+    salvarBtn.disabled = true;
+    return;
+  }
+  infoOrcamento.innerHTML = `Orçamento: <strong>${ORCAMENTO_UUID}</strong>`;
+  setStatus("Carregando portas...", "ok");
+  try {
+    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(ORCAMENTO_UUID)}/portas`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "Erro ao carregar portas.");
+    portas = Array.isArray(data.portas) ? data.portas : [];
+    setStatus("", "");
+    renderPortas();
+  } catch (err) {
+    console.error(err);
+    setStatus(`Erro ao carregar portas: ${err.message}`, "erro");
+  }
+}
+
+async function salvarDadosTecnicos() {
+  if (!ORCAMENTO_UUID) return;
+  setStatus("Salvando dados técnicos...", "ok");
+  const portasAtualizadas = portas.map((porta, idx) => {
+    const dados = { ...(porta.dados || {}) };
+    const qtd = parseInt(document.querySelector(`.dobradicas-input[data-idx="${idx}"]`)?.value || "0", 10) || 0;
+    const alturaPuxador = document.querySelector(`.altura-puxador-input[data-idx="${idx}"]`)?.value || "";
+    const alturas = getAlturasDobradicas(idx);
+    dados.dobradicas = String(qtd);
+    dados.dobradicas_alturas = alturas;
+    dados.altura_puxador = alturaPuxador;
+    return { ...porta, dados, orcamento_uuid: ORCAMENTO_UUID };
+  });
+
+  try {
+    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(ORCAMENTO_UUID)}/portas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ portas: portasAtualizadas })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "Erro ao salvar dados técnicos.");
+    setStatus("Dados técnicos salvos com sucesso!", "ok");
+  } catch (err) {
+    console.error(err);
+    setStatus(`Erro ao salvar dados técnicos: ${err.message}`, "erro");
+  }
+}
+
+voltarBtn.addEventListener("click", () => {
+  if (!ORCAMENTO_UUID) {
+    window.location.href = "portas.html";
+    return;
+  }
+  window.location.href = `portas.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}`;
+});
+
+salvarBtn.addEventListener("click", salvarDadosTecnicos);
+
+carregarPortas();
+</script>
+</body>
+</html>
