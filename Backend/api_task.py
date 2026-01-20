@@ -1,11 +1,14 @@
 import os
 import requests
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 
 api_task = Blueprint("api_task", __name__)
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("SUPABASE_URL e SUPABASE_SERVICE_KEY não definidos")
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -52,4 +55,5 @@ def atualizar_tarefa(uuid):
 
     res = r.json()
     return jsonify(res[0] if res else {})
+
 
