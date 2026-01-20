@@ -478,6 +478,50 @@ window.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  const garantirCamposTecnicosParaSalvar = () => {
+    const tipo = document.getElementById("tipologia")?.value || "";
+    const altura = parseFloat(document.getElementById("altura")?.value || "0");
+    let dobradicas = document.getElementById("dobradicas");
+    if (!dobradicas) {
+      dobradicas = document.createElement("input");
+      dobradicas.type = "hidden";
+      dobradicas.id = "dobradicas";
+      document.body.appendChild(dobradicas);
+    }
+
+    let container = document.getElementById("dobradicasContainer");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "dobradicasContainer";
+      container.style.display = "none";
+      document.body.appendChild(container);
+    }
+
+    container.innerHTML = "";
+    if (tipo === "giro") {
+      dobradicas.value = "2";
+      const alturaBase = altura > 0 ? altura : 2000;
+      const alturas = [Math.round(alturaBase * 0.2), Math.round(alturaBase * 0.8)];
+      alturas.forEach((valor) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.className = "dobradica-altura";
+        input.value = String(valor);
+        container.appendChild(input);
+      });
+    } else {
+      dobradicas.value = "0";
+    }
+  };
+
+  if (typeof window.salvarPorta === "function") {
+    const originalSalvarPorta = window.salvarPorta;
+    window.salvarPorta = function (...args) {
+      garantirCamposTecnicosParaSalvar();
+      return originalSalvarPorta.apply(this, args);
+    };
+  }
+
   removerCamposTecnicos();
 });
 </script>
@@ -568,3 +612,4 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
