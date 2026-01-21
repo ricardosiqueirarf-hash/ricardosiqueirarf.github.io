@@ -366,10 +366,15 @@ cost-details th{
 #printResumo svg { display: none; }
 
 /* Ordem produção */
-.op-svg { border: 1px solid rgba(16,121,186,0.14); border-radius: 14px; background: #fff; width: 100%; height: auto; margin-top: 10px; }
-.op-page { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: center; margin-bottom: 24px; }
-.op-info { font-size: 20px; line-height: 1.6; }
-.op-quantity { font-size: 28px; font-weight: 700; fill: var(--cg-blue-dark); }
+.op-svg { border: 1px solid rgba(16,121,186,0.14); border-radius: 14px; background: #fff; width: 100%; height: auto; }
+.op-page { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; margin-bottom: 24px; }
+.op-left { display: flex; flex-direction: column; gap: 12px; }
+.op-title { font-size: 22px; font-weight: 700; color: var(--cg-blue-dark); }
+.op-info { font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px; }
+.op-info-title { font-size: 22px; font-weight: 700; color: #111; }
+.op-info-row { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-bottom: 1px solid rgba(16,121,186,0.12); }
+.op-info-row span { color: #4b5563; font-size: 18px; }
+.op-info-row strong { color: #111; font-size: 20px; }
 .op-measure { font-size: 20px; fill: #333; }
 
 /* Etiqueta térmica (mantida) */
@@ -404,7 +409,7 @@ cost-details th{
   .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
   .print-area.active, .thermal-area.active { display: block; }
   .content { padding: 0; box-shadow: none; border: none; background: #fff; }
-  .op-page { page-break-after: always; }
+  .op-page { page-break-after: always; min-height: 260mm; }
   .thermal-label { page-break-after: always; border: none; }
   #printResumo svg { display: none !important; }
 }
@@ -532,12 +537,9 @@ window.addEventListener("DOMContentLoaded", () => {
     <div class="sidebar">
         <h3>ColorGlass</h3>
         <button onclick="go('index_loja.html')">Voltar</button>
-        <button class="btn" id="btnPortasTecnico">Portas técnico</button>
     </div>
 
     <div class="content">
-        <h1>Orçamento de Portas</h1>
-
         <div id="infoOrcamento"></div>
 
         <div class="door-layout">
@@ -582,6 +584,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 <button class="btn" onclick="imprimirOrcamento()">Imprimir Orçamento</button>
                 <button class="btn" onclick="imprimirOrdemProducao()">Imprimir Ordem de Produção</button>
                 <button class="btn" onclick="imprimirEtiquetaTermica()">Etiqueta térmica</button>
+                <button class="btn" id="btnPortasTecnico">Portas técnico</button>
             </div>
         </div>
 
@@ -612,4 +615,5 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
 
