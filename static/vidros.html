@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidros</title>
+
+    <style>
+        /* RESET BÁSICO */
+        * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f5f7fa; color: #333; padding: 20px; }
+
+        /* LAYOUT PRINCIPAL */
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 20px; }
+        h1 { color: #1079ba; margin-bottom: 10px; }
+
+        /* MENU SUPERIOR */
+        .menu {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .menu button {
+            padding: 10px 16px;
+            background: #1079ba;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .menu button:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+        /* FORMULÁRIO */
+        .form-perfil {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        /* INPUTS */
+        .form-perfil input {
+            padding: 6px 10px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .form-perfil input:focus {
+            border-color: #1079ba;
+            box-shadow: 0 0 4px rgba(16,121,186,0.4);
+            outline: none;
+        }
+
+        .preco-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef4fb;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: 600;
+            color: #0d5d8c;
+        }
+
+        /* BOTÕES GERAIS */
+        button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            background: #1079ba;
+            color: #fff;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        button:hover { background: #0d5d8c; transform: translateY(-2px); }
+        .btn-danger { background: #e84118; }
+        .btn-danger:hover { background: #c23616; transform: translateY(-2px); }
+
+        /* TABELA */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        th, td { padding: 12px; text-align: center; border: 1px solid #dcdde1; }
+        th { background: #1079ba; color: #fff; }
+        tr:nth-child(even) { background: #f7f9fc; }
+        tr:hover { background: #e6f0fa; }
+
+        /* RESPONSIVO */
+        @media(max-width: 768px) {
+            .form-perfil { grid-template-columns: 1fr; }
+            .menu { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Vidros</h1>
+        <div class="menu">
+            <button onclick="window.location.href='/'">Voltar</button>
+            <button onclick="salvar()">Salvar</button>
+            <button onclick="cancelar()">Cancelar</button>
+        </div>
+    </header>
+
+    <section class="form-perfil">
+        <input type="hidden" id="vidro_id">
+
+        <input id="tipo" placeholder="Tipo do vidro">
+        <input id="espessura" type="number" step="0.01" placeholder="Espessura (mm)">
+        <input id="custo" type="number" step="0.01" placeholder="Custo">
+        <input id="margem" type="number" step="0.01" placeholder="Margem %">
+        <input id="perda" type="number" step="0.01" placeholder="Perda %">
+        <div class="preco-preview" id="precoPreview">Preço final: R$ 0,00</div>
+    </section>
+
+    <section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Espessura</th>
+                    <th>Custo</th>
+                    <th>Margem</th>
+                    <th>Perda</th>
+                    <th>Preço Final</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+        </table>
+    </section>
+</div>
+
+<script>
+    const API_BASE = "https://colorglass.onrender.com";
+
+    const vidroIdInput = document.getElementById("vidro_id");
+    const tipoInput = document.getElementById("tipo");
+    const espessuraInput = document.getElementById("espessura");
+    const custoInput = document.getElementById("custo");
+    const margemInput = document.getElementById("margem");
+    const perdaInput = document.getElementById("perda");
+    const precoPreview = document.getElementById("precoPreview");
+
+    function atualizarPrecoPreview() {
+        const custo = parseFloat(custoInput.value) || 0;
+        const margem = parseFloat(margemInput.value) || 0;
+        const perda = parseFloat(perdaInput.value) || 0;
+        const preco = custo * (1 + perda / 100) * (1 + margem / 100);
+        precoPreview.textContent = `Preço final: R$ ${preco.toFixed(2)}`;
+    }
+
+    // =====================
+    // CARREGAR
+    // =====================
+    async function carregar() {
+        const res = await fetch(`${API_BASE}/api/vidros`);
+        const data = await res.json();
+        const tbody = document.getElementById("tabela");
+        tbody.innerHTML = "";
+
+        data.forEach(v => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${v.tipo}</td>
+                <td>${v.espessura} mm</td>
+                <td>R$ ${Number(v.custo).toFixed(2)}</td>
+                <td>${v.margem}%</td>
+                <td>${v.perda}%</td>
+                <td><b>R$ ${Number(v.preco).toFixed(2)}</b></td>
+                <td>
+                    <button onclick="editar(
+                        '${v.id}',
+                        '${v.tipo}',
+                        ${v.espessura},
+                        ${v.custo},
+                        ${v.margem},
+                        ${v.perda}
+                    )">Editar</button>
+                    <button onclick="excluir('${v.id}')">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // =====================
+    // SALVAR
+    // =====================
+    async function salvar() {
+        const id = vidroIdInput.value;
+        const payload = {
+            tipo: tipoInput.value,
+            espessura: parseFloat(espessuraInput.value),
+            custo: parseFloat(custoInput.value),
+            margem: parseFloat(margemInput.value),
+            perda: parseFloat(perdaInput.value)
+        };
+
+        const hasInvalidNumber = [payload.espessura, payload.custo, payload.margem, payload.perda]
+            .some(value => Number.isNaN(value));
+
+        if (!payload.tipo || hasInvalidNumber) {
+            alert("Preencha tudo corretamente");
+            return;
+        }
+
+        const url = id ? `/api/vidros/${id}` : "/api/vidros";
+        const method = id ? "PUT" : "POST";
+
+        await fetch(`${API_BASE}${url}`, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        cancelar();
+        carregar();
+    }
+
+    // =====================
+    // EDITAR / EXCLUIR
+    // =====================
+    function editar(id, tipo, espessura, custo, margem, perda) {
+        vidroIdInput.value = id;
+        tipoInput.value = tipo;
+        espessuraInput.value = espessura;
+        custoInput.value = custo;
+        margemInput.value = margem;
+        perdaInput.value = perda;
+        atualizarPrecoPreview();
+    }
+
+    async function excluir(id) {
+        if (!confirm("Excluir este vidro?")) return;
+
+        await fetch(`${API_BASE}/api/vidros/${id}`, {
+            method: "DELETE",
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        carregar();
+    }
+
+    function cancelar() {
+        vidroIdInput.value = "";
+        tipoInput.value = "";
+        espessuraInput.value = "";
+        custoInput.value = "";
+        margemInput.value = "";
+        perdaInput.value = "";
+        atualizarPrecoPreview();
+    }
+
+    ["input", "change"].forEach((eventType) => {
+        custoInput.addEventListener(eventType, atualizarPrecoPreview);
+        margemInput.addEventListener(eventType, atualizarPrecoPreview);
+        perdaInput.addEventListener(eventType, atualizarPrecoPreview);
+    });
+    atualizarPrecoPreview();
+    carregar();
+</script>
+
+</body>
+</html>
+
