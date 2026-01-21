@@ -405,11 +405,21 @@ cost-details th{
 
 /* PRINT mantém a regra original, só não muda mecânica */
 @media print {
+  @page { size: A4 portrait; margin: 10mm; }
   body { background: #fff; }
   .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
   .print-area.active, .thermal-area.active { display: block; }
   .content { padding: 0; box-shadow: none; border: none; background: #fff; }
-  .op-page { page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; min-height: 260mm; }
+  .op-page {
+    page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    width: 190mm;
+    min-height: 277mm;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
   .thermal-label { page-break-after: always; border: none; }
   #printResumo svg { display: none !important; }
 }
@@ -615,3 +625,4 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
