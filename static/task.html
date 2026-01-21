@@ -155,7 +155,14 @@
   </div>
 </section>
 
-<script>
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   const tbody = document.getElementById("tbody");
   document.getElementById("dataAtual").textContent =
     new Date().toLocaleDateString("pt-BR");
@@ -172,10 +179,26 @@
     return new Date(d).toLocaleDateString("pt-BR");
   }
 
-  async function carregarTarefas() {
-    const res = await fetch("/api/tarefas");
-    const tarefas = await res.json();
+  function renderErroCarregamento(error) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">⚠️ Não foi possível carregar tarefas. ${error.message}</td>
+      </tr>
+    `;
+  }
 
+  async function carregarTarefas() {
+    const { data, error } = await supabase
+      .from("tarefas")
+      .select("*")
+      .order("data_inicio", { ascending: false });
+
+    if (error) {
+      renderErroCarregamento(error);
+      return;
+    }
+
+    const tarefas = data || [];
     tbody.innerHTML = "";
 
     tarefas.forEach(t => {
@@ -200,15 +223,21 @@
     });
   }
 
-  async function toggleTarefa(id, value) {
-    await fetch("/api/tarefas/" + id, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ concluida: value })
-    });
+  window.toggleTarefa = async function toggleTarefa(id, value) {
+    const dataFim = value ? new Date().toISOString().split("T")[0] : null;
+
+    const { error } = await supabase
+      .from("tarefas")
+      .update({ concluida: value, data_fim: dataFim })
+      .eq("id", id);
+
+    if (error) {
+      renderErroCarregamento(error);
+      return;
+    }
 
     carregarTarefas();
-  }
+  };
 
   carregarTarefas();
 </script>
