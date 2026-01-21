@@ -76,64 +76,38 @@ function gerarSvgOrdemProducao(porta) {
     const altura = parseFloat(porta.dados.altura || 0);
     if (!largura || !altura) return "";
 
-    const w = 400;
-    const h = 600;
-    const scale = Math.min(w / largura, h / altura);
+    const canvasWidth = 420;
+    const canvasHeight = 560;
+    const padding = 60;
+    const availableWidth = canvasWidth - padding * 2;
+    const availableHeight = canvasHeight - padding * 2;
+    const scale = Math.min(availableWidth / largura, availableHeight / altura);
 
     const doorWidth = largura * scale;
     const doorHeight = altura * scale;
-    const offsetX = 90;
-    const offsetY = 30;
+    const doorX = padding + (availableWidth - doorWidth) / 2;
+    const doorY = padding + (availableHeight - doorHeight) / 2;
 
-    const puxadorId = porta.dados.puxador;
-    const deveDesenharPuxador = puxadorId && puxadorId !== "sem_puxador";
-    const handleLength = deveDesenharPuxador ? parseFloat(porta.dados.medida_puxador || 0) : 0;
-    const handlePos = deveDesenharPuxador ? parseFloat(porta.dados.altura_puxador || 0) : 0;
-    const recuos = obterRecuosPuxador(altura, handlePos, handleLength);
-
-    const handleScaled = handleLength > 0 ? handleLength * scale : doorHeight * 0.4;
-    const handleCenter = offsetY + doorHeight - (handlePos * scale);
-    const handleY = handleCenter - handleScaled / 2;
-    const handleX = offsetX + doorWidth - 12;
-    const quantidadeTexto = `${porta.quantidade || 1}x`;
-
-    const alturasDobradicas = Array.isArray(porta.dados.dobradicas_alturas)
-        ? porta.dados.dobradicas_alturas
-        : [];
-
-    const dobradicasSvg = alturasDobradicas.map((posicaoMm) => {
-        const posicao = parseFloat(posicaoMm || 0);
-        if (!posicao) return "";
-        const y = offsetY + doorHeight - (posicao * scale);
-        const x = offsetX + 6;
-        return `
-          <line x1="${x}" y1="${y}" x2="${x + 20}" y2="${y}" stroke="#000" stroke-width="3"/>
-          <circle cx="${x}" cy="${y}" r="4" fill="#000"/>
-        `;
-    }).join("");
+    const alturaTextX = doorX - 40;
+    const alturaTextY = doorY + doorHeight / 2;
+    const larguraTextX = doorX + doorWidth / 2;
+    const larguraTextY = doorY + doorHeight + 44;
 
     return `
-    <svg class="op-svg" width="520" height="720" viewBox="0 0 520 720" xmlns="http://www.w3.org/2000/svg">
-      <rect x="${offsetX}" y="${offsetY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
-      ${dobradicasSvg}
-      ${deveDesenharPuxador ? `<rect x="${handleX}" y="${handleY}" width="8" height="${handleScaled}" fill="#d48400"/>` : ""}
-      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight / 2}" text-anchor="middle" dominant-baseline="middle" class="op-quantity">${quantidadeTexto}</text>
+    <svg class="op-svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
+      <rect x="${doorX}" y="${doorY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
 
-      <line x1="${offsetX - 20}" y1="${offsetY}" x2="${offsetX - 20}" y2="${offsetY + doorHeight}" stroke="#333"/>
-      <line x1="${offsetX - 24}" y1="${offsetY}" x2="${offsetX}" y2="${offsetY}" stroke="#333"/>
-      <line x1="${offsetX - 24}" y1="${offsetY + doorHeight}" x2="${offsetX}" y2="${offsetY + doorHeight}" stroke="#333"/>
-
-      <!-- ✅ FIX: transform rotate correto (o seu estava quebrando com ")" e coordenadas erradas) -->
-      <text x="${offsetX - 52}" y="${offsetY + doorHeight / 2}"
-            class="op-measure" text-anchor="middle" dominant-baseline="middle"
-            transform="rotate(-90 ${offsetX - 52} ${offsetY + doorHeight / 2})">
+      <line x1="${doorX - 16}" y1="${doorY}" x2="${doorX - 16}" y2="${doorY + doorHeight}" stroke="#333"/>
+      <line x1="${doorX - 22}" y1="${doorY}" x2="${doorX}" y2="${doorY}" stroke="#333"/>
+      <line x1="${doorX - 22}" y1="${doorY + doorHeight}" x2="${doorX}" y2="${doorY + doorHeight}" stroke="#333"/>
+      <text x="${alturaTextX}" y="${alturaTextY}" class="op-measure" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 ${alturaTextX} ${alturaTextY})">
         ${altura} mm
       </text>
 
-      <line x1="${offsetX}" y1="${offsetY + doorHeight + 20}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 20}" stroke="#333"/>
-      <line x1="${offsetX}" y1="${offsetY + doorHeight + 16}" x2="${offsetX}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
-      <line x1="${offsetX + doorWidth}" y1="${offsetY + doorHeight + 16}" x2="${offsetX + doorWidth}" y2="${offsetY + doorHeight + 24}" stroke="#333"/>
-      <text x="${offsetX + doorWidth / 2}" y="${offsetY + doorHeight + 48}" class="op-measure" text-anchor="middle">${largura} mm</text>
+      <line x1="${doorX}" y1="${doorY + doorHeight + 20}" x2="${doorX + doorWidth}" y2="${doorY + doorHeight + 20}" stroke="#333"/>
+      <line x1="${doorX}" y1="${doorY + doorHeight + 16}" x2="${doorX}" y2="${doorY + doorHeight + 24}" stroke="#333"/>
+      <line x1="${doorX + doorWidth}" y1="${doorY + doorHeight + 16}" x2="${doorX + doorWidth}" y2="${doorY + doorHeight + 24}" stroke="#333"/>
+      <text x="${larguraTextX}" y="${larguraTextY}" class="op-measure" text-anchor="middle">${largura} mm</text>
     </svg>
     `;
 }
@@ -152,68 +126,32 @@ function atualizarResumoOrdem() {
         const puxadorNome = p.dados.puxador === "sem_puxador"
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-");
-
-        const valorAdicional = Number(p.dados.valor_adicional || 0);
-        const observacaoVenda = p.dados.observacao_venda || "-";
         const observacaoProducao = p.dados.observacao_producao || "-";
-
-        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0;
-        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
-            ? `${p.dados.dobradicas_alturas.join(" mm, ")} mm`
-            : "-";
-
-        const alturaPorta = parseFloat(p.dados.altura || 0);
-        const alturaPuxador = parseFloat(p.dados.altura_puxador || 0);
-        const medidaPuxador = parseFloat(p.dados.medida_puxador || 0);
-        const recuos = obterRecuosPuxador(alturaPorta, alturaPuxador, medidaPuxador);
-
-        const vaoPuxador = recuos.recuoBase === null
-            ? "-"
-            : `Base ${Math.round(recuos.recuoBase)} mm | Topo ${Math.round(recuos.recuoTopo)} mm`;
 
         return `
             <div class="print-item op-page">
-                <div>
+                <div class="op-left">
+                    <div class="op-title">O.P. ${index + 1} - ${p.tipo}</div>
                     ${gerarSvgOrdemProducao(p)}
                 </div>
                 <div class="op-info">
-                    <div><strong>O.P. ${index + 1} - ${p.tipo}</strong></div>
-                    <table class="op-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <tbody>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Perfil</th>
-                                <td style="text-align: left; padding: 4px 6px;">${perfilNome}</td>
-                            </tr>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Vidro</th>
-                                <td style="text-align: left; padding: 4px 6px;">${vidroNome}</td>
-                            </tr>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Puxador</th>
-                                <td style="text-align: left; padding: 4px 6px;">${puxadorNome}</td>
-                            </tr>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Valor adicional</th>
-                                <td style="text-align: left; padding: 4px 6px;">${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</td>
-                            </tr>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Observação de venda</th>
-                                <td style="text-align: left; padding: 4px 6px;">${observacaoVenda}</td>
-                            </tr>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Observação de produção</th>
-                                <td style="text-align: left; padding: 4px 6px;">${observacaoProducao}</td>
-                            </tr>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Dobradiças</th>
-                                <td style="text-align: left; padding: 4px 6px;">${quantidadeDobradicas} (alturas: ${alturasDobradicas})</td>
-                            </tr>
-                            <tr>
-                                <th style="text-align: left; padding: 4px 6px; vertical-align: top;">Vão do puxador</th>
-                                <td style="text-align: left; padding: 4px 6px;">${vaoPuxador}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="op-info-title">Detalhes</div>
+                    <div class="op-info-row">
+                        <span>Perfil</span>
+                        <strong>${perfilNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Vidro</span>
+                        <strong>${vidroNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Puxador</span>
+                        <strong>${puxadorNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Observação de produção</span>
+                        <strong>${observacaoProducao}</strong>
+                    </div>
                 </div>
             </div>
         `;
@@ -309,4 +247,6 @@ window.atualizarEtiquetasTermicas = atualizarEtiquetasTermicas;
 window.imprimirOrcamento = imprimirOrcamento;
 window.imprimirOrdemProducao = imprimirOrdemProducao;
 window.imprimirEtiquetaTermica = imprimirEtiquetaTermica;
+
+
 
