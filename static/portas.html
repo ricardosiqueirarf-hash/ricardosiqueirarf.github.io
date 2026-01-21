@@ -366,10 +366,15 @@ cost-details th{
 #printResumo svg { display: none; }
 
 /* Ordem produção */
-.op-svg { border: 1px solid rgba(16,121,186,0.14); border-radius: 14px; background: #fff; width: 100%; height: auto; margin-top: 10px; }
-.op-page { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: center; margin-bottom: 24px; }
-.op-info { font-size: 20px; line-height: 1.6; }
-.op-quantity { font-size: 28px; font-weight: 700; fill: var(--cg-blue-dark); }
+.op-svg { border: 1px solid rgba(16,121,186,0.14); border-radius: 14px; background: #fff; width: 100%; height: auto; }
+.op-page { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; margin-bottom: 24px; break-inside: avoid; page-break-inside: avoid; }
+.op-left { display: flex; flex-direction: column; gap: 12px; }
+.op-title { font-size: 22px; font-weight: 700; color: var(--cg-blue-dark); }
+.op-info { font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px; }
+.op-info-title { font-size: 22px; font-weight: 700; color: #111; }
+.op-info-row { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-bottom: 1px solid rgba(16,121,186,0.12); }
+.op-info-row span { color: #4b5563; font-size: 18px; }
+.op-info-row strong { color: #111; font-size: 20px; }
 .op-measure { font-size: 20px; fill: #333; }
 
 /* Etiqueta térmica (mantida) */
@@ -400,11 +405,21 @@ cost-details th{
 
 /* PRINT mantém a regra original, só não muda mecânica */
 @media print {
+  @page { size: A4 portrait; margin: 10mm; }
   body { background: #fff; }
   .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
   .print-area.active, .thermal-area.active { display: block; }
   .content { padding: 0; box-shadow: none; border: none; background: #fff; }
-  .op-page { page-break-after: always; }
+  .op-page {
+    page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    width: 190mm;
+    min-height: 277mm;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
   .thermal-label { page-break-after: always; border: none; }
   #printResumo svg { display: none !important; }
 }
@@ -441,89 +456,19 @@ cost-details th{
 </style>
 
 <link id="tema-css" rel="stylesheet" href="">
-<script src="/static/main.js" defer></script>
-<script src="/static/api.js" defer></script>
-<script src="/static/pricing.js" defer></script>
-<script src="/static/ui.js" defer></script>
-<script src="/static/print.js" defer></script>
-<script src="/static/estruturas3d.js" defer></script>
+<script src="main.js" defer></script>
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/api.js" defer></script>
+<script src="pricing.js" defer></script>
+<script src="ui.js" defer></script>
+<script src="print.js" defer></script>
+<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/estruturas3d.js" defer></script>
 <script>
 window.addEventListener("DOMContentLoaded", () => {
   if (!window.TIPOLOGIAS) return;
   const camposRemovidos = new Set(["dobradicas", "dobradicas_alturas", "altura_puxador"]);
   Object.keys(TIPOLOGIAS).forEach((tipo) => {
-    const campos = TIPOLOGIAS[tipo] || [];
-    if (tipo === "deslizante" || tipo === "correr") {
-      TIPOLOGIAS[tipo] = campos.filter((campo) => !camposRemovidos.has(campo));
-      if (!TIPOLOGIAS[tipo].includes("sistema_correr")) {
-        TIPOLOGIAS[tipo].push("sistema_correr");
-      }
-    } else {
-      TIPOLOGIAS[tipo] = campos.filter((campo) => !camposRemovidos.has(campo));
-    }
+    TIPOLOGIAS[tipo] = TIPOLOGIAS[tipo].filter((campo) => !camposRemovidos.has(campo));
   });
-
-  let sistemasCorrer = [];
-
-  const normalizarTexto = (valor) => String(valor || "").trim().toLowerCase();
-
-  const possuiTagSistemaCorrer = (insumo) => {
-    const tagsArray = Array.isArray(insumo.tags)
-      ? insumo.tags
-      : String(insumo.tags || "")
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean);
-    const tagsExtras = [insumo.tag, insumo.categoria, insumo.tipo].filter(Boolean);
-    return [...tagsArray, ...tagsExtras]
-      .map(normalizarTexto)
-      .includes("sistemas de correr");
-  };
-
-  const carregarSistemasCorrer = async () => {
-    try {
-      const res = await fetch("https://colorglass.onrender.com/api/materiais");
-      const data = await res.json();
-      sistemasCorrer = Array.isArray(data)
-        ? data.filter((insumo) => possuiTagSistemaCorrer(insumo))
-        : [];
-    } catch (error) {
-      console.error("Erro ao carregar sistemas de correr:", error);
-      sistemasCorrer = [];
-    }
-  };
-
-  const renderSistemaCorrer = () => {
-    const tipo = document.getElementById("tipologia")?.value;
-    if (tipo !== "deslizante" && tipo !== "correr") return;
-
-    const camposContainer = document.getElementById("campos");
-    if (!camposContainer) return;
-
-    let wrapper = document.getElementById("sistema_correr_wrapper");
-    if (!wrapper) {
-      wrapper = document.createElement("label");
-      wrapper.id = "sistema_correr_wrapper";
-      wrapper.innerHTML = `Sistema de correr<select id="sistema_correr"></select>`;
-      camposContainer.appendChild(wrapper);
-    }
-
-    const select = wrapper.querySelector("select");
-    if (!select) return;
-    const valorAtual = select.value;
-    select.innerHTML = "<option value=\"\">Selecione</option>";
-    sistemasCorrer.forEach((insumo) => {
-      const nome = insumo.nome || insumo.descricao || `Insumo ${insumo.id || ""}`.trim();
-      const value = insumo.id != null ? String(insumo.id) : nome;
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = nome;
-      select.appendChild(option);
-    });
-    if (valorAtual) {
-      select.value = valorAtual;
-    }
-  };
 
   const removerCamposTecnicos = () => {
     const ids = ["dobradicas", "dobradicasContainer", "altura_puxador"];
@@ -544,7 +489,6 @@ window.addEventListener("DOMContentLoaded", () => {
     window.renderCampos = function (...args) {
       const resultado = originalRenderCampos.apply(this, args);
       removerCamposTecnicos();
-      renderSistemaCorrer();
       return resultado;
     };
   }
@@ -593,10 +537,7 @@ window.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  carregarSistemasCorrer().finally(() => {
-    removerCamposTecnicos();
-    renderSistemaCorrer();
-  });
+  removerCamposTecnicos();
 });
 </script>
 </head>
@@ -609,8 +550,6 @@ window.addEventListener("DOMContentLoaded", () => {
     </div>
 
     <div class="content">
-        <h1>Orçamento de Portas</h1>
-
         <div id="infoOrcamento"></div>
 
         <div class="door-layout">
@@ -686,5 +625,3 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
-
-
