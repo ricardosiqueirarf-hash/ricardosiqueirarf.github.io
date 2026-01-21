@@ -92,10 +92,14 @@ function gerarSvgOrdemProducao(porta) {
     const alturaTextY = doorY + doorHeight / 2;
     const larguraTextX = doorX + doorWidth / 2;
     const larguraTextY = doorY + doorHeight + 44;
+    const quantidadeTexto = `${porta.quantidade || 1}x`;
+    const quantidadeX = doorX + doorWidth / 2;
+    const quantidadeY = doorY + doorHeight / 2;
 
     return `
     <svg class="op-svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
       <rect x="${doorX}" y="${doorY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
+      <text x="${quantidadeX}" y="${quantidadeY}" class="op-quantity" text-anchor="middle" dominant-baseline="middle">${quantidadeTexto}</text>
 
       <line x1="${doorX - 16}" y1="${doorY}" x2="${doorX - 16}" y2="${doorY + doorHeight}" stroke="#333"/>
       <line x1="${doorX - 22}" y1="${doorY}" x2="${doorX}" y2="${doorY}" stroke="#333"/>
@@ -127,10 +131,19 @@ function atualizarResumoOrdem() {
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-");
         const observacaoProducao = p.dados.observacao_producao || "-";
+        const cabecalho = index === 0
+            ? `
+                <div class="op-header">
+                    <h2>Ordem de Produção</h2>
+                    <p>${obterIdentificacaoOrcamento()}</p>
+                </div>
+            `
+            : "";
 
         return `
             <div class="print-item op-page">
                 <div class="op-left">
+                    ${cabecalho}
                     <div class="op-title">O.P. ${index + 1} - ${p.tipo}</div>
                     ${gerarSvgOrdemProducao(p)}
                 </div>
@@ -157,11 +170,7 @@ function atualizarResumoOrdem() {
         `;
     }).join("");
 
-    container.innerHTML = `
-        <h2>Ordem de Produção</h2>
-        <p>${obterIdentificacaoOrcamento()}</p>
-        ${itens}
-    `;
+    container.innerHTML = itens;
 }
 
 function atualizarEtiquetasTermicas() {
@@ -247,6 +256,8 @@ window.atualizarEtiquetasTermicas = atualizarEtiquetasTermicas;
 window.imprimirOrcamento = imprimirOrcamento;
 window.imprimirOrdemProducao = imprimirOrdemProducao;
 window.imprimirEtiquetaTermica = imprimirEtiquetaTermica;
+
+
 
 
 
