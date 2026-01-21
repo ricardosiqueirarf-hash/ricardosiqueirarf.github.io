@@ -367,7 +367,7 @@ cost-details th{
 
 /* Ordem produção */
 .op-svg { border: 1px solid rgba(16,121,186,0.14); border-radius: 14px; background: #fff; width: 100%; height: auto; }
-.op-page { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; margin-bottom: 24px; }
+.op-page { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; margin-bottom: 24px; break-inside: avoid; page-break-inside: avoid; }
 .op-left { display: flex; flex-direction: column; gap: 12px; }
 .op-title { font-size: 22px; font-weight: 700; color: var(--cg-blue-dark); }
 .op-info { font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px; }
@@ -409,7 +409,7 @@ cost-details th{
   .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
   .print-area.active, .thermal-area.active { display: block; }
   .content { padding: 0; box-shadow: none; border: none; background: #fff; }
-  .op-page { page-break-after: always; min-height: 260mm; }
+  .op-page { page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; min-height: 260mm; }
   .thermal-label { page-break-after: always; border: none; }
   #printResumo svg { display: none !important; }
 }
@@ -615,5 +615,3 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
-
-
