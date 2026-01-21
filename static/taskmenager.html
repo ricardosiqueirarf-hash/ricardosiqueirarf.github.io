@@ -209,7 +209,14 @@
   </form>
 </section>
 
-<script>
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   const form = document.getElementById("tarefaForm");
   const dataInicio = document.getElementById("dataInicio");
   const dataFim = document.getElementById("dataFim");
@@ -264,15 +271,13 @@
     };
 
     try {
-      const res = await fetch("/api/tarefas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const { error } = await supabase
+        .from("tarefas")
+        .insert(payload)
+        .select();
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || "Erro ao salvar tarefa");
+      if (error) {
+        throw error;
       }
 
       exibirStatus("✅ Tarefa salva com sucesso!");
@@ -287,3 +292,4 @@
 
 </body>
 </html>
+
