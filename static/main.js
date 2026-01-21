@@ -27,14 +27,17 @@ const params = new URLSearchParams(window.location.search);
 const ORCAMENTO_UUID = params.get("orcamento_uuid");
 var orcamentoInfo = { cliente_nome: null, numero_pedido: null, cliente_cidade: null };
 
+const infoOrcamentoEl = document.getElementById("infoOrcamento");
 if (!ORCAMENTO_UUID) {
-    document.getElementById("infoOrcamento").innerHTML =
-        "<strong style='color:red'>UUID do orçamento não encontrado</strong>";
+    if (infoOrcamentoEl) {
+        infoOrcamentoEl.innerHTML = "<strong style='color:red'>UUID do orçamento não encontrado</strong>";
+    }
     throw new Error("orcamento_uuid ausente");
 }
 
-document.getElementById("infoOrcamento").innerHTML =
-    `Editando orçamento: <strong>${ORCAMENTO_UUID}</strong>`;
+if (infoOrcamentoEl) {
+    infoOrcamentoEl.textContent = "";
+}
 
 // =====================
 // ESTADO GLOBAL
@@ -70,3 +73,5 @@ window.go = go;
 window.authHeader = authHeader;
 window.formatarMoeda = formatarMoeda;
 window.initMain = initMain;
+
+
