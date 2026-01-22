@@ -28,17 +28,7 @@ HEADERS = {
 # =====================
 
 app = Flask(__name__)
-CORS(
-    app,
-    supports_credentials=True,
-    resources={
-        r"/api/*": {
-            "origins": [
-                "https://desenvolvimento-7dps.onrender.com"
-            ]
-        }
-    }
-)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -276,6 +266,7 @@ app.register_blueprint(clientes_api_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
