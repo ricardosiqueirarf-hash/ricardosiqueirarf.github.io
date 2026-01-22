@@ -3,8 +3,8 @@
 // =====================
 const TIPOLOGIAS = {
     giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    deslizante: ["largura", "altura", "perfil", "vidro", "trilho", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    correr: ["largura", "altura", "perfil", "vidro", "trilho", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    deslizante: ["largura", "altura", "perfil", "vidro", "trilho", "sistemas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    correr: ["largura", "altura", "perfil", "vidro", "trilho", "sistemas", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
     pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
 };
 
@@ -65,6 +65,7 @@ function renderCampos() {
             observacao_venda: `Observação de venda<textarea id="observacao_venda" rows="2"></textarea>`,
             observacao_producao: `Observação de produção<textarea id="observacao_producao" rows="2"></textarea>`,
             trilho: `Trilho<textarea id="trilho" rows="2"></textarea>`,
+            sistemas: `Sistemas<textarea id="sistemas" rows="2"></textarea>`,
             pivo: `Pivo<textarea id="pivo" rows="2"></textarea>`
         };
         if (map[c]) container.innerHTML += `<label>${map[c]}</label>`;
@@ -392,7 +393,7 @@ async function salvarPorta() {
     if (!quantidade) pendencias.push("Quantidade");
     if (!perfilSelecionado) pendencias.push("Perfil");
     if (!vidroSelecionado) pendencias.push("Vidro");
-    if (!puxadorSelecionado) pendencias.push("Puxador");
+    if (tipo !== "correr" && !puxadorSelecionado) pendencias.push("Puxador");
     if (tipo === "giro" && dobradicasQtd < 2) pendencias.push("Dobradiças (mínimo 2)");
     if (dobradicasQtd > 0 && alturasDobradicas.length !== dobradicasQtd) {
         pendencias.push("Alturas das dobradiças");
@@ -451,6 +452,9 @@ function renderPortas() {
         const puxadorNome = p.dados.puxador === "sem_puxador"
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido");
+        const puxadorLinha = p.tipo === "correr"
+            ? ""
+            : `Puxador: ${puxadorNome}<br>`;
         const valorAdicional = Number(p.dados.valor_adicional || 0);
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0;
         const dobradicasLinha = p.tipo === "giro"
@@ -462,7 +466,7 @@ function renderPortas() {
                 Quantidade: ${p.quantidade}<br>
                 Perfil: ${perfilNome}<br>
                 Vidro: ${vidroNome}<br>
-                Puxador: ${puxadorNome}<br>
+                ${puxadorLinha}
                 Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
                 ${dobradicasLinha}
                 Preço: R$ ${p.preco.toFixed(2)}<br>
@@ -546,6 +550,3 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
-
-
-
