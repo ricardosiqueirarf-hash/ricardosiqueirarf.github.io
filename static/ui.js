@@ -3,9 +3,9 @@
 // =====================
 const TIPOLOGIAS = {
     giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    deslizante: ["largura", "altura", "perfil", "vidro", "trilho", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    correr: ["largura", "altura", "perfil", "vidro", "trilho", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
+    deslizante: ["largura", "altura", "perfil", "vidro", "trilho", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    correr: ["largura", "altura", "perfil", "vidro", "trilho", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
 };
 
 // =====================
@@ -408,7 +408,12 @@ async function salvarPorta() {
         const el = document.getElementById(c);
         if (el) dados[c] = el.value;
     });
-    dados.dobradicas_alturas = obterAlturasDobradicas();
+    if (tipo === "giro") {
+        dados.dobradicas_alturas = obterAlturasDobradicas();
+    } else {
+        dados.dobradicas = "0";
+        dados.dobradicas_alturas = [];
+    }
 
     const porta = {
         id: editando ?? idCounter++,
@@ -448,6 +453,9 @@ function renderPortas() {
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido");
         const valorAdicional = Number(p.dados.valor_adicional || 0);
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0;
+        const dobradicasLinha = p.tipo === "giro"
+            ? `Dobradiças: ${quantidadeDobradicas}<br>`
+            : "";
         c.innerHTML += `
             <div>
                 <strong>${idx + 1}. ${p.tipo}</strong><br>
@@ -456,7 +464,7 @@ function renderPortas() {
                 Vidro: ${vidroNome}<br>
                 Puxador: ${puxadorNome}<br>
                 Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
-                Dobradiças: ${quantidadeDobradicas}<br>
+                ${dobradicasLinha}
                 Preço: R$ ${p.preco.toFixed(2)}<br>
                 ${p.svg}<br>
                 <button class="btn" onclick="copiarPorta(${p.id})">Copiar</button>
@@ -538,4 +546,6 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
+
+
 
