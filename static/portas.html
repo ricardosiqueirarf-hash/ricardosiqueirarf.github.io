@@ -405,21 +405,11 @@ cost-details th{
 
 /* PRINT mantém a regra original, só não muda mecânica */
 @media print {
-  @page { size: A4 portrait; margin: 10mm; }
   body { background: #fff; }
   .sidebar, .door-form, .door-preview, .section-card, .btn { display: none !important; }
   .print-area.active, .thermal-area.active { display: block; }
   .content { padding: 0; box-shadow: none; border: none; background: #fff; }
-  .op-page {
-    page-break-after: always;
-    break-after: page;
-    page-break-inside: avoid;
-    break-inside: avoid;
-    width: 190mm;
-    min-height: 277mm;
-    margin: 0 auto;
-    box-sizing: border-box;
-  }
+  .op-page { page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; min-height: 260mm; }
   .thermal-label { page-break-after: always; border: none; }
   #printResumo svg { display: none !important; }
 }
@@ -462,84 +452,6 @@ cost-details th{
 <script src="ui.js" defer></script>
 <script src="print.js" defer></script>
 <script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/estruturas3d.js" defer></script>
-<script>
-window.addEventListener("DOMContentLoaded", () => {
-  if (!window.TIPOLOGIAS) return;
-  const camposRemovidos = new Set(["dobradicas", "dobradicas_alturas", "altura_puxador"]);
-  Object.keys(TIPOLOGIAS).forEach((tipo) => {
-    TIPOLOGIAS[tipo] = TIPOLOGIAS[tipo].filter((campo) => !camposRemovidos.has(campo));
-  });
-
-  const removerCamposTecnicos = () => {
-    const ids = ["dobradicas", "dobradicasContainer", "altura_puxador"];
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const label = el.closest("label");
-      if (label) {
-        label.remove();
-      } else {
-        el.remove();
-      }
-    });
-  };
-
-  if (typeof window.renderCampos === "function") {
-    const originalRenderCampos = window.renderCampos;
-    window.renderCampos = function (...args) {
-      const resultado = originalRenderCampos.apply(this, args);
-      removerCamposTecnicos();
-      return resultado;
-    };
-  }
-
-  const garantirCamposTecnicosParaSalvar = () => {
-    const tipo = document.getElementById("tipologia")?.value || "";
-    const altura = parseFloat(document.getElementById("altura")?.value || "0");
-    let dobradicas = document.getElementById("dobradicas");
-    if (!dobradicas) {
-      dobradicas = document.createElement("input");
-      dobradicas.type = "hidden";
-      dobradicas.id = "dobradicas";
-      document.body.appendChild(dobradicas);
-    }
-
-    let container = document.getElementById("dobradicasContainer");
-    if (!container) {
-      container = document.createElement("div");
-      container.id = "dobradicasContainer";
-      container.style.display = "none";
-      document.body.appendChild(container);
-    }
-
-    container.innerHTML = "";
-    if (tipo === "giro") {
-      dobradicas.value = "2";
-      const alturaBase = altura > 0 ? altura : 2000;
-      const alturas = [Math.round(alturaBase * 0.2), Math.round(alturaBase * 0.8)];
-      alturas.forEach((valor) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.className = "dobradica-altura";
-        input.value = String(valor);
-        container.appendChild(input);
-      });
-    } else {
-      dobradicas.value = "0";
-    }
-  };
-
-  if (typeof window.salvarPorta === "function") {
-    const originalSalvarPorta = window.salvarPorta;
-    window.salvarPorta = function (...args) {
-      garantirCamposTecnicosParaSalvar();
-      return originalSalvarPorta.apply(this, args);
-    };
-  }
-
-  removerCamposTecnicos();
-});
-</script>
 </head>
 
 <body>
@@ -625,3 +537,4 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
