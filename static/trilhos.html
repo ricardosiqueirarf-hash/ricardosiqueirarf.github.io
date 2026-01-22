@@ -73,6 +73,30 @@
             color: #0d5d8c;
         }
 
+        .tipos-container {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .tipos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tipos label {
+            background: #f0f4fb;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+
         /* BOTÕES GERAIS */
         button {
             padding: 10px 16px;
@@ -106,6 +130,7 @@
         @media(max-width: 768px) {
             .form-perfil { grid-template-columns: 1fr; }
             .menu { flex-direction: column; }
+            .tipos { flex-direction: column; }
         }
     </style>
 </head>
@@ -127,6 +152,14 @@
         <input id="custo" type="number" step="0.01" placeholder="Custo">
         <input id="margem" type="number" step="0.01" placeholder="Margem %">
         <div id="precoFinal" class="preco-preview">Preço final: R$ 0,00</div>
+
+        <div class="tipos-container">
+            <h4>Tipo</h4>
+            <div class="tipos">
+                <label><input type="checkbox" value="superior"> Superior</label>
+                <label><input type="checkbox" value="inferior"> Inferior</label>
+            </div>
+        </div>
     </section>
 
     <section>
@@ -137,6 +170,7 @@
                     <th>Custo</th>
                     <th>Margem</th>
                     <th>Preço Final</th>
+                    <th>Tipo</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -160,6 +194,11 @@
         document.getElementById(id).addEventListener("input", atualizarPrecoFinal);
     });
 
+    function getTiposSelecionados() {
+        return Array.from(document.querySelectorAll(".tipos input:checked"))
+            .map((checkbox) => checkbox.value);
+    }
+
     async function carregar() {
         const res = await fetch(`${API_BASE}/api/trilhos`);
         const data = await res.json();
@@ -174,8 +213,9 @@
                 <td>R$ ${Number(trilho.custo).toFixed(2)}</td>
                 <td>${Number(trilho.margem).toFixed(2)}%</td>
                 <td>R$ ${Number(trilho.preco).toFixed(2)}</td>
+                <td>${(trilho.tipo || []).join(", ")}</td>
                 <td>
-                    <button onclick="editar('${trilho.id}','${trilho.nome}',${trilho.custo},${trilho.margem})">Editar</button>
+                    <button onclick='editar(${JSON.stringify(trilho)})'>Editar</button>
                     <button onclick="excluir('${trilho.id}')">Excluir</button>
                 </td>
             `;
@@ -189,13 +229,14 @@
         const custo = parseFloat(document.getElementById("custo").value);
         const margem = parseFloat(document.getElementById("margem").value);
         const preco = atualizarPrecoFinal();
+        const tipo = getTiposSelecionados();
 
-        if (!nome || isNaN(custo) || isNaN(margem)) {
-            alert("Preencha todos os campos corretamente");
+        if (!nome || isNaN(custo) || isNaN(margem) || tipo.length === 0) {
+            alert("Preencha todos os campos e selecione o tipo");
             return;
         }
 
-        const payload = { nome, custo, margem, preco };
+        const payload = { nome, custo, margem, preco, tipo };
         const url = id ? `${API_BASE}/api/trilhos/${id}` : `${API_BASE}/api/trilhos`;
         const method = id ? "PUT" : "POST";
 
@@ -209,12 +250,15 @@
         carregar();
     }
 
-    function editar(id, nome, custo, margem) {
-        document.getElementById("trilho_id").value = id;
-        document.getElementById("nome").value = nome;
-        document.getElementById("custo").value = custo;
-        document.getElementById("margem").value = margem;
+    function editar(trilho) {
+        document.getElementById("trilho_id").value = trilho.id;
+        document.getElementById("nome").value = trilho.nome;
+        document.getElementById("custo").value = trilho.custo;
+        document.getElementById("margem").value = trilho.margem;
         atualizarPrecoFinal();
+
+        document.querySelectorAll(".tipos input")
+            .forEach((checkbox) => checkbox.checked = trilho.tipo?.includes(checkbox.value));
     }
 
     async function excluir(id) {
@@ -231,6 +275,7 @@
         document.getElementById("custo").value = "";
         document.getElementById("margem").value = "";
         document.getElementById("precoFinal").textContent = "Preço final: R$ 0,00";
+        document.querySelectorAll(".tipos input").forEach((checkbox) => checkbox.checked = false);
     }
 
     carregar();
