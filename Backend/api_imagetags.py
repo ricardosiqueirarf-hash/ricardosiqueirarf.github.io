@@ -8,18 +8,17 @@ from flask_cors import CORS
 # =====================
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-# Use SERVICE_ROLE no backend. Se não tiver, cai no SUPABASE_KEY
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-    raise RuntimeError("SUPABASE_URL e SUPABASE_SERVICE_KEY (ou SUPABASE_KEY) não definidos")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("SUPABASE_URL e SUPABASE_KEY não definidos")
 
 imagetags_bp = Blueprint("imagetags_bp", __name__)
 CORS(imagetags_bp, resources={r"/api/*": {"origins": "*"}})
 
 HEADERS_JSON = {
-    "apikey": SUPABASE_SERVICE_KEY,
-    "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
     "Content-Type": "application/json",
 }
 
@@ -132,3 +131,4 @@ def list_imagetags():
 
     except requests.RequestException as exc:
         return jsonify({"error": f"Falha na requisição: {str(exc)}"}), 500
+
