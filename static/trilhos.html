@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trilhos | ColorGlass</title>
+
+    <style>
+        /* RESET BÁSICO */
+        * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f5f7fa; color: #333; padding: 20px; }
+
+        /* LAYOUT PRINCIPAL */
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 20px; }
+        h1 { color: #1079ba; margin-bottom: 10px; }
+
+        /* MENU SUPERIOR */
+        .menu {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .menu button {
+            padding: 10px 16px;
+            background: #1079ba;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .menu button:hover { background: #0d5d8c; transform: translateY(-2px); }
+
+        /* FORMULÁRIO */
+        .form-perfil {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        /* INPUTS */
+        .form-perfil input {
+            padding: 6px 10px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .form-perfil input:focus {
+            border-color: #1079ba;
+            box-shadow: 0 0 4px rgba(16,121,186,0.4);
+            outline: none;
+        }
+
+        .preco-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef4fb;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: 600;
+            color: #0d5d8c;
+        }
+
+        .tipos-container {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .tipos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tipos label {
+            background: #f0f4fb;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+
+        /* BOTÕES GERAIS */
+        button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            background: #1079ba;
+            color: #fff;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        button:hover { background: #0d5d8c; transform: translateY(-2px); }
+        .btn-danger { background: #e84118; }
+        .btn-danger:hover { background: #c23616; transform: translateY(-2px); }
+
+        /* TABELA */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        th, td { padding: 12px; text-align: center; border: 1px solid #dcdde1; }
+        th { background: #1079ba; color: #fff; }
+        tr:nth-child(even) { background: #f7f9fc; }
+        tr:hover { background: #e6f0fa; }
+
+        /* RESPONSIVO */
+        @media(max-width: 768px) {
+            .form-perfil { grid-template-columns: 1fr; }
+            .menu { flex-direction: column; }
+            .tipos { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Trilhos</h1>
+        <div class="menu">
+            <button onclick="window.location.href='/'">Voltar</button>
+            <button onclick="salvar()">Salvar</button>
+            <button onclick="cancelar()">Cancelar</button>
+        </div>
+    </header>
+
+    <section class="form-perfil">
+        <input type="hidden" id="trilho_id">
+        <input id="nome" placeholder="Nome">
+        <input id="custo" type="number" step="0.01" placeholder="Custo">
+        <input id="margem" type="number" step="0.01" placeholder="Margem %">
+        <div id="precoFinal" class="preco-preview">Preço final: R$ 0,00</div>
+
+        <div class="tipos-container">
+            <h4>Tipo</h4>
+            <div class="tipos">
+                <label><input type="checkbox" value="superior"> Superior</label>
+                <label><input type="checkbox" value="inferior"> Inferior</label>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Custo</th>
+                    <th>Margem</th>
+                    <th>Preço Final</th>
+                    <th>Tipo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+        </table>
+    </section>
+</div>
+
+<script>
+    const API_BASE = "https://colorglass.onrender.com";
+
+    function atualizarPrecoFinal() {
+        const custo = parseFloat(document.getElementById("custo").value) || 0;
+        const margem = parseFloat(document.getElementById("margem").value) || 0;
+        const preco = custo * (1 + margem / 100);
+        document.getElementById("precoFinal").textContent = `Preço final: R$ ${preco.toFixed(2)}`;
+        return preco;
+    }
+
+    ["custo", "margem"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", atualizarPrecoFinal);
+    });
+
+    function getTiposSelecionados() {
+        return Array.from(document.querySelectorAll(".tipos input:checked"))
+            .map((checkbox) => checkbox.value);
+    }
+
+    async function carregar() {
+        const res = await fetch(`${API_BASE}/api/trilhos`);
+        const data = await res.json();
+
+        const tbody = document.getElementById("tabela");
+        tbody.innerHTML = "";
+
+        if (!Array.isArray(data)) {
+            const mensagem = data?.error ? `Erro ao carregar trilhos: ${data.error}` : "Erro ao carregar trilhos.";
+            alert(mensagem);
+            return;
+        }
+
+        data.forEach((trilho) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${trilho.nome}</td>
+                <td>R$ ${Number(trilho.custo).toFixed(2)}</td>
+                <td>${Number(trilho.margem).toFixed(2)}%</td>
+                <td>R$ ${Number(trilho.preco).toFixed(2)}</td>
+                <td>${(trilho.tipo || []).join(", ")}</td>
+                <td>
+                    <button onclick='editar(${JSON.stringify(trilho)})'>Editar</button>
+                    <button onclick="excluir('${trilho.id}')">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function salvar() {
+        const id = document.getElementById("trilho_id").value;
+        const nome = document.getElementById("nome").value;
+        const custo = parseFloat(document.getElementById("custo").value);
+        const margem = parseFloat(document.getElementById("margem").value);
+        const preco = atualizarPrecoFinal();
+        const tipo = getTiposSelecionados();
+
+        if (!nome || isNaN(custo) || isNaN(margem) || tipo.length === 0) {
+            alert("Preencha todos os campos e selecione o tipo");
+            return;
+        }
+
+        const payload = { nome, custo, margem, preco, tipo };
+        const url = id ? `${API_BASE}/api/trilhos/${id}` : `${API_BASE}/api/trilhos`;
+        const method = id ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ? `Erro ao salvar trilho: ${data.error}` : "Erro ao salvar trilho.");
+            return;
+        }
+
+        cancelar();
+        carregar();
+    }
+
+    function editar(trilho) {
+        document.getElementById("trilho_id").value = trilho.id;
+        document.getElementById("nome").value = trilho.nome;
+        document.getElementById("custo").value = trilho.custo;
+        document.getElementById("margem").value = trilho.margem;
+        atualizarPrecoFinal();
+
+        document.querySelectorAll(".tipos input")
+            .forEach((checkbox) => checkbox.checked = trilho.tipo?.includes(checkbox.value));
+    }
+
+    async function excluir(id) {
+        if (!confirm("Excluir este trilho?")) return;
+        const res = await fetch(`${API_BASE}/api/trilhos/${id}`, {
+            method: "DELETE"
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert(data?.error ? `Erro ao excluir trilho: ${data.error}` : "Erro ao excluir trilho.");
+            return;
+        }
+        carregar();
+    }
+
+    function cancelar() {
+        document.getElementById("trilho_id").value = "";
+        document.getElementById("nome").value = "";
+        document.getElementById("custo").value = "";
+        document.getElementById("margem").value = "";
+        document.getElementById("precoFinal").textContent = "Preço final: R$ 0,00";
+        document.querySelectorAll(".tipos input").forEach((checkbox) => checkbox.checked = false);
+    }
+
+    carregar();
+</script>
+
+</body>
+</html>

@@ -350,9 +350,20 @@ function renderPortas() {
     const dados = porta.dados || {};
     const largura = dados.largura || "-";
     const altura = dados.altura || "-";
+    const exibirDobradicas = porta.tipo === "giro";
     const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
     const alturaPuxador = dados.altura_puxador || "";
     const svgPorta = porta.svg ? `<div class="tech-preview">${porta.svg}</div>` : "";
+    const dobradicasHtml = exibirDobradicas
+      ? `
+        <label>Quantidade de dobradiças
+          <input class="dobradicas-input" data-idx="${idx}" type="number" min="0" value="${quantidadeDobradicas}">
+        </label>
+        <label>Alturas das dobradiças
+          <div class="dobradicas-alturas" data-idx="${idx}"></div>
+        </label>
+      `
+      : "";
     return `
       <div class="tech-card">
         ${svgPorta}
@@ -361,12 +372,7 @@ function renderPortas() {
           <div><strong>Quantidade:</strong> ${porta.quantidade || 1}</div>
           <div><strong>Medidas:</strong> ${largura} x ${altura} mm</div>
         </div>
-        <label>Quantidade de dobradiças
-          <input class="dobradicas-input" data-idx="${idx}" type="number" min="0" value="${quantidadeDobradicas}">
-        </label>
-        <label>Alturas das dobradiças
-          <div class="dobradicas-alturas" data-idx="${idx}"></div>
-        </label>
+        ${dobradicasHtml}
         <label>Altura do puxador (mm)
           <input class="altura-puxador-input" data-idx="${idx}" type="number" min="0" value="${alturaPuxador}">
         </label>
@@ -421,8 +427,13 @@ async function salvarDadosTecnicos() {
     const qtd = parseInt(document.querySelector(`.dobradicas-input[data-idx="${idx}"]`)?.value || "0", 10) || 0;
     const alturaPuxador = document.querySelector(`.altura-puxador-input[data-idx="${idx}"]`)?.value || "";
     const alturas = getAlturasDobradicas(idx);
-    dados.dobradicas = String(qtd);
-    dados.dobradicas_alturas = alturas;
+    if (porta.tipo === "giro") {
+      dados.dobradicas = String(qtd);
+      dados.dobradicas_alturas = alturas;
+    } else {
+      dados.dobradicas = "0";
+      dados.dobradicas_alturas = [];
+    }
     dados.altura_puxador = alturaPuxador;
     return { ...porta, dados, orcamento_uuid: ORCAMENTO_UUID };
   });

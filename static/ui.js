@@ -3,9 +3,9 @@
 // =====================
 const TIPOLOGIAS = {
     giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    deslizante: ["largura", "altura", "perfil", "vidro", "trilho", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    correr: ["largura", "altura", "perfil", "vidro", "trilho", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
+    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    correr: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
 };
 
 // =====================
@@ -29,6 +29,59 @@ function atualizarVidrosSelect() {
     todosVidros.forEach(v => {
         vidroSelect.innerHTML += `<option value="${v.id}">${v.tipo} ${v.espessura || ""}mm - R$ ${v.preco}/m²</option>`;
     });
+}
+
+let sistemasLista = [];
+let sistemasCarregados = false;
+
+async function carregarSistemas() {
+    if (sistemasCarregados) return;
+    try {
+        const res = await fetch("https://colorglass.onrender.com/api/sistemas");
+        const data = await res.json();
+        sistemasLista = Array.isArray(data) ? data : [];
+        sistemasCarregados = true;
+        atualizarSistemasSelect();
+    } catch (err) {
+        console.error("Erro ao carregar sistemas:", err);
+    }
+}
+
+function atualizarSistemasSelect() {
+    const sistemasSelect = document.getElementById("sistemas");
+    if (!sistemasSelect) return;
+    const valorAtual = sistemasSelect.value;
+    sistemasSelect.innerHTML = "<option value=''>Selecione</option>";
+    sistemasLista.forEach((sistema) => {
+        const opt = document.createElement("option");
+        opt.value = sistema.id;
+        opt.textContent = sistema.nome;
+        sistemasSelect.appendChild(opt);
+    });
+    sistemasSelect.value = valorAtual;
+}
+
+function atualizarTrilhosDoSistema() {
+    const sistemasSelect = document.getElementById("sistemas");
+    if (!sistemasSelect) return;
+    const sistemaId = sistemasSelect.value;
+    const sistema = sistemasLista.find((item) => String(item.id) === String(sistemaId));
+    const trilhosSuperiorEl = document.getElementById("trilhos_superior");
+    const trilhosInferiorEl = document.getElementById("trilhos_inferior");
+    const trilhoResumoEl = document.getElementById("trilho");
+    const trilhosSuperior = sistema?.trilhos_superior || [];
+    const trilhosInferior = sistema?.trilhos_inferior || [];
+    const superiorTexto = trilhosSuperior.length ? trilhosSuperior.join(", ") : "";
+    const inferiorTexto = trilhosInferior.length ? trilhosInferior.join(", ") : "";
+
+    if (trilhosSuperiorEl) trilhosSuperiorEl.value = superiorTexto;
+    if (trilhosInferiorEl) trilhosInferiorEl.value = inferiorTexto;
+    if (trilhoResumoEl) {
+        const partes = [];
+        if (superiorTexto) partes.push(`Superiores: ${superiorTexto}`);
+        if (inferiorTexto) partes.push(`Inferiores: ${inferiorTexto}`);
+        trilhoResumoEl.value = partes.join(" | ");
+    }
 }
 
 function atualizarPuxadoresSelect() {
@@ -64,7 +117,10 @@ function renderCampos() {
             acessorio: `Acessório<textarea id="acessorio" rows="2"></textarea>`,
             observacao_venda: `Observação de venda<textarea id="observacao_venda" rows="2"></textarea>`,
             observacao_producao: `Observação de produção<textarea id="observacao_producao" rows="2"></textarea>`,
-            trilho: `Trilho<textarea id="trilho" rows="2"></textarea>`,
+            trilho: `<input id="trilho" type="hidden" value="">`,
+            trilhos_superior: `Trilhos superiores<textarea id="trilhos_superior" rows="2" readonly></textarea>`,
+            trilhos_inferior: `Trilhos inferiores<textarea id="trilhos_inferior" rows="2" readonly></textarea>`,
+            sistemas: `Sistema<select id="sistemas" data-required="true" onchange="atualizarTrilhosDoSistema(); atualizarCamposObrigatorios()"></select>`,
             pivo: `Pivo<textarea id="pivo" rows="2"></textarea>`
         };
         if (map[c]) container.innerHTML += `<label>${map[c]}</label>`;
@@ -74,6 +130,11 @@ function renderCampos() {
     atualizarPuxadoresSelect();
     atualizarPuxadorTipo();
     atualizarDobradicasInputs();
+    if (tipo === "deslizante" || tipo === "correr") {
+        carregarSistemas().then(() => {
+            atualizarTrilhosDoSistema();
+        });
+    }
     atualizarPrecoPorta();
     desenharPorta();
     atualizarCamposObrigatorios();
@@ -392,7 +453,7 @@ async function salvarPorta() {
     if (!quantidade) pendencias.push("Quantidade");
     if (!perfilSelecionado) pendencias.push("Perfil");
     if (!vidroSelecionado) pendencias.push("Vidro");
-    if (!puxadorSelecionado) pendencias.push("Puxador");
+    if (tipo !== "correr" && !puxadorSelecionado) pendencias.push("Puxador");
     if (tipo === "giro" && dobradicasQtd < 2) pendencias.push("Dobradiças (mínimo 2)");
     if (dobradicasQtd > 0 && alturasDobradicas.length !== dobradicasQtd) {
         pendencias.push("Alturas das dobradiças");
@@ -408,7 +469,12 @@ async function salvarPorta() {
         const el = document.getElementById(c);
         if (el) dados[c] = el.value;
     });
-    dados.dobradicas_alturas = obterAlturasDobradicas();
+    if (tipo === "giro") {
+        dados.dobradicas_alturas = obterAlturasDobradicas();
+    } else {
+        dados.dobradicas = "0";
+        dados.dobradicas_alturas = [];
+    }
 
     const porta = {
         id: editando ?? idCounter++,
@@ -446,17 +512,23 @@ function renderPortas() {
         const puxadorNome = p.dados.puxador === "sem_puxador"
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido");
+        const puxadorLinha = p.tipo === "correr"
+            ? ""
+            : `Puxador: ${puxadorNome}<br>`;
         const valorAdicional = Number(p.dados.valor_adicional || 0);
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0;
+        const dobradicasLinha = p.tipo === "giro"
+            ? `Dobradiças: ${quantidadeDobradicas}<br>`
+            : "";
         c.innerHTML += `
             <div>
                 <strong>${idx + 1}. ${p.tipo}</strong><br>
                 Quantidade: ${p.quantidade}<br>
                 Perfil: ${perfilNome}<br>
                 Vidro: ${vidroNome}<br>
-                Puxador: ${puxadorNome}<br>
+                ${puxadorLinha}
                 Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
-                Dobradiças: ${quantidadeDobradicas}<br>
+                ${dobradicasLinha}
                 Preço: R$ ${p.preco.toFixed(2)}<br>
                 ${p.svg}<br>
                 <button class="btn" onclick="copiarPorta(${p.id})">Copiar</button>
@@ -489,6 +561,13 @@ function editarPorta(id) {
     atualizarPuxadorTipo();
     atualizarPrecoPorta();
     desenharPorta();
+    if (porta.tipo === "deslizante" || porta.tipo === "correr") {
+        carregarSistemas().then(() => {
+            const sistemasSelect = document.getElementById("sistemas");
+            if (sistemasSelect) sistemasSelect.value = porta.dados.sistemas || "";
+            atualizarTrilhosDoSistema();
+        });
+    }
 }
 
 function copiarPorta(id) {
@@ -511,6 +590,13 @@ function copiarPorta(id) {
     atualizarPuxadorTipo();
     atualizarPrecoPorta();
     desenharPorta();
+    if (porta.tipo === "deslizante" || porta.tipo === "correr") {
+        carregarSistemas().then(() => {
+            const sistemasSelect = document.getElementById("sistemas");
+            if (sistemasSelect) sistemasSelect.value = porta.dados.sistemas || "";
+            atualizarTrilhosDoSistema();
+        });
+    }
 }
 
 function apagarPorta(id) {
@@ -525,6 +611,7 @@ window.atualizarVidrosSelect = atualizarVidrosSelect;
 window.atualizarPuxadoresSelect = atualizarPuxadoresSelect;
 window.renderCampos = renderCampos;
 window.atualizarPuxadorTipo = atualizarPuxadorTipo;
+window.atualizarTrilhosDoSistema = atualizarTrilhosDoSistema;
 window.atualizarDobradicasInputs = atualizarDobradicasInputs;
 window.obterAlturasDobradicas = obterAlturasDobradicas;
 window.atualizarLimiteDobradicas = atualizarLimiteDobradicas;
