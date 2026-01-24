@@ -71,17 +71,58 @@ function atualizarTrilhosDoSistema() {
     const trilhoResumoEl = document.getElementById("trilho");
     const trilhosSuperior = sistema?.trilhos_superior || [];
     const trilhosInferior = sistema?.trilhos_inferior || [];
-    const superiorTexto = trilhosSuperior.length ? trilhosSuperior.join(", ") : "";
-    const inferiorTexto = trilhosInferior.length ? trilhosInferior.join(", ") : "";
 
-    if (trilhosSuperiorEl) trilhosSuperiorEl.value = superiorTexto;
-    if (trilhosInferiorEl) trilhosInferiorEl.value = inferiorTexto;
+    if (trilhosSuperiorEl) {
+        const valorAtual = trilhosSuperiorEl.value;
+        trilhosSuperiorEl.innerHTML = "<option value=''>Selecione</option>";
+        trilhosSuperior.forEach((trilho) => {
+            const opt = document.createElement("option");
+            opt.value = trilho;
+            opt.textContent = trilho;
+            trilhosSuperiorEl.appendChild(opt);
+        });
+        if (valorAtual && trilhosSuperior.includes(valorAtual)) {
+            trilhosSuperiorEl.value = valorAtual;
+        } else if (trilhosSuperior.length === 1) {
+            trilhosSuperiorEl.value = trilhosSuperior[0];
+        }
+    }
+
+    if (trilhosInferiorEl) {
+        const valorAtual = trilhosInferiorEl.value;
+        trilhosInferiorEl.innerHTML = "<option value=''>Selecione</option>";
+        trilhosInferior.forEach((trilho) => {
+            const opt = document.createElement("option");
+            opt.value = trilho;
+            opt.textContent = trilho;
+            trilhosInferiorEl.appendChild(opt);
+        });
+        if (valorAtual && trilhosInferior.includes(valorAtual)) {
+            trilhosInferiorEl.value = valorAtual;
+        } else if (trilhosInferior.length === 1) {
+            trilhosInferiorEl.value = trilhosInferior[0];
+        }
+    }
+
     if (trilhoResumoEl) {
+        const superiorSelecionado = trilhosSuperiorEl?.value || "";
+        const inferiorSelecionado = trilhosInferiorEl?.value || "";
         const partes = [];
-        if (superiorTexto) partes.push(`Superiores: ${superiorTexto}`);
-        if (inferiorTexto) partes.push(`Inferiores: ${inferiorTexto}`);
+        if (superiorSelecionado) partes.push(`Superiores: ${superiorSelecionado}`);
+        if (inferiorSelecionado) partes.push(`Inferiores: ${inferiorSelecionado}`);
         trilhoResumoEl.value = partes.join(" | ");
     }
+}
+
+function atualizarResumoTrilhos() {
+    const trilhoResumoEl = document.getElementById("trilho");
+    if (!trilhoResumoEl) return;
+    const superiorSelecionado = document.getElementById("trilhos_superior")?.value || "";
+    const inferiorSelecionado = document.getElementById("trilhos_inferior")?.value || "";
+    const partes = [];
+    if (superiorSelecionado) partes.push(`Superiores: ${superiorSelecionado}`);
+    if (inferiorSelecionado) partes.push(`Inferiores: ${inferiorSelecionado}`);
+    trilhoResumoEl.value = partes.join(" | ");
 }
 
 function atualizarPuxadoresSelect() {
@@ -118,8 +159,8 @@ function renderCampos() {
             observacao_venda: `Observação de venda<textarea id="observacao_venda" rows="2"></textarea>`,
             observacao_producao: `Observação de produção<textarea id="observacao_producao" rows="2"></textarea>`,
             trilho: `<input id="trilho" type="hidden" value="">`,
-            trilhos_superior: `Trilhos superiores<textarea id="trilhos_superior" rows="2" readonly></textarea>`,
-            trilhos_inferior: `Trilhos inferiores<textarea id="trilhos_inferior" rows="2" readonly></textarea>`,
+            trilhos_superior: `Trilhos superiores<select id="trilhos_superior" data-required="true" onchange="atualizarResumoTrilhos(); atualizarCamposObrigatorios()"></select>`,
+            trilhos_inferior: `Trilhos inferiores<select id="trilhos_inferior" data-required="true" onchange="atualizarResumoTrilhos(); atualizarCamposObrigatorios()"></select>`,
             sistemas: `Sistema<select id="sistemas" data-required="true" onchange="atualizarTrilhosDoSistema(); atualizarCamposObrigatorios()"></select>`,
             pivo: `Pivo<textarea id="pivo" rows="2"></textarea>`
         };
@@ -566,6 +607,11 @@ function editarPorta(id) {
             const sistemasSelect = document.getElementById("sistemas");
             if (sistemasSelect) sistemasSelect.value = porta.dados.sistemas || "";
             atualizarTrilhosDoSistema();
+            const trilhosSuperiorSelect = document.getElementById("trilhos_superior");
+            const trilhosInferiorSelect = document.getElementById("trilhos_inferior");
+            if (trilhosSuperiorSelect) trilhosSuperiorSelect.value = porta.dados.trilhos_superior || "";
+            if (trilhosInferiorSelect) trilhosInferiorSelect.value = porta.dados.trilhos_inferior || "";
+            atualizarResumoTrilhos();
         });
     }
 }
@@ -595,6 +641,11 @@ function copiarPorta(id) {
             const sistemasSelect = document.getElementById("sistemas");
             if (sistemasSelect) sistemasSelect.value = porta.dados.sistemas || "";
             atualizarTrilhosDoSistema();
+            const trilhosSuperiorSelect = document.getElementById("trilhos_superior");
+            const trilhosInferiorSelect = document.getElementById("trilhos_inferior");
+            if (trilhosSuperiorSelect) trilhosSuperiorSelect.value = porta.dados.trilhos_superior || "";
+            if (trilhosInferiorSelect) trilhosInferiorSelect.value = porta.dados.trilhos_inferior || "";
+            atualizarResumoTrilhos();
         });
     }
 }
@@ -612,6 +663,7 @@ window.atualizarPuxadoresSelect = atualizarPuxadoresSelect;
 window.renderCampos = renderCampos;
 window.atualizarPuxadorTipo = atualizarPuxadorTipo;
 window.atualizarTrilhosDoSistema = atualizarTrilhosDoSistema;
+window.atualizarResumoTrilhos = atualizarResumoTrilhos;
 window.atualizarDobradicasInputs = atualizarDobradicasInputs;
 window.obterAlturasDobradicas = obterAlturasDobradicas;
 window.atualizarLimiteDobradicas = atualizarLimiteDobradicas;
@@ -625,4 +677,3 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
-
