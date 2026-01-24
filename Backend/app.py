@@ -235,6 +235,14 @@ def clientes_page():
 def clientes_html_page():
     return send_from_directory(ROOT_DIR, "clientes.html")
 
+@app.route("/promob_export")
+def promob_export_page():
+    return send_from_directory(BASE_DIR, "promob_export.html")
+
+@app.route("/promob_export.html")
+def promob_export_html_page():
+    return send_from_directory(BASE_DIR, "promob_export.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
@@ -278,4 +286,5 @@ app.register_blueprint(export_promob_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
