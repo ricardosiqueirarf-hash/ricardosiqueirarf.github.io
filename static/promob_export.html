@@ -60,39 +60,11 @@
   <div class="container">
     <h1>Exportar tabela de preços</h1>
     <p>Clique no botão para baixar o CSV com seus produtos.</p>
-    <button id="baixar">Baixar CSV</button>
+    <form action="/api/promob/export" method="get">
+      <button type="submit" id="baixar">Baixar CSV</button>
+    </form>
     <div class="status" id="status"></div>
   </div>
-
-  <script>
-    const button = document.getElementById("baixar");
-    const statusEl = document.getElementById("status");
-
-    button.addEventListener("click", async () => {
-      statusEl.textContent = "";
-      button.disabled = true;
-
-      try {
-        const response = await fetch("/api/promob/export", { method: "GET" });
-        if (!response.ok) {
-          throw new Error("Falha ao gerar CSV.");
-        }
-
-        const blob = await response.blob();
-        const filename = response.headers.get("Content-Disposition")?.split("filename=")?.[1]?.replace(/\"/g, "") || "promob.csv";
-        const link = document.createElement("a");
-        link.href = window.URL.createObjectURL(blob);
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        statusEl.textContent = "Download iniciado.";
-      } catch (error) {
-        statusEl.textContent = "Não foi possível baixar o CSV.";
-      } finally {
-        button.disabled = false;
-      }
-    });
-  </script>
 </body>
 </html>
+
