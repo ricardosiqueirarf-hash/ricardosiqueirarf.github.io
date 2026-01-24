@@ -35,8 +35,10 @@ def listar_sistemas():
         r = requests.get(
             f"{SUPABASE_URL}/rest/v1/sistemas?select=*&order=nome.asc",
             headers=HEADERS,
+            timeout=20,
         )
-        r.raise_for_status()
+        if not r.ok:
+            return jsonify({"error": r.text, "status": r.status_code}), r.status_code
         return jsonify(r.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -46,10 +48,14 @@ def listar_sistemas():
 def criar_sistema():
     try:
         data = request.json or {}
+        nome = (data.get("nome") or "").strip()
         preco = float(data.get("preco", 0))
 
+        if not nome:
+            return jsonify({"error": "Nome é obrigatório"}), 400
+
         payload = {
-            "nome": data["nome"],
+            "nome": nome,
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
@@ -61,8 +67,10 @@ def criar_sistema():
             f"{SUPABASE_URL}/rest/v1/sistemas",
             headers=HEADERS,
             json=payload,
+            timeout=20,
         )
-        r.raise_for_status()
+        if not r.ok:
+            return jsonify({"error": r.text, "status": r.status_code}), r.status_code
 
         return jsonify({"status": "ok"})
     except Exception as e:
@@ -73,10 +81,14 @@ def criar_sistema():
 def editar_sistema(id):
     try:
         data = request.json or {}
+        nome = (data.get("nome") or "").strip()
         preco = float(data.get("preco", 0))
 
+        if not nome:
+            return jsonify({"error": "Nome é obrigatório"}), 400
+
         payload = {
-            "nome": data["nome"],
+            "nome": nome,
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
@@ -88,8 +100,10 @@ def editar_sistema(id):
             f"{SUPABASE_URL}/rest/v1/sistemas?id=eq.{id}",
             headers=HEADERS,
             json=payload,
+            timeout=20,
         )
-        r.raise_for_status()
+        if not r.ok:
+            return jsonify({"error": r.text, "status": r.status_code}), r.status_code
 
         return jsonify({"status": "updated"})
     except Exception as e:
@@ -102,8 +116,10 @@ def deletar_sistema(id):
         r = requests.delete(
             f"{SUPABASE_URL}/rest/v1/sistemas?id=eq.{id}",
             headers=HEADERS,
+            timeout=20,
         )
-        r.raise_for_status()
+        if not r.ok:
+            return jsonify({"error": r.text, "status": r.status_code}), r.status_code
 
         return jsonify({"status": "deleted"})
     except Exception as e:
