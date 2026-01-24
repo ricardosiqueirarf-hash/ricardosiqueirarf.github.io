@@ -235,6 +235,14 @@ def clientes_page():
 def clientes_html_page():
     return send_from_directory(ROOT_DIR, "clientes.html")
 
+@app.route("/promob_export")
+def promob_export_page():
+    return send_from_directory(BASE_DIR, "promob_export.html")
+
+@app.route("/promob_export.html")
+def promob_export_html_page():
+    return send_from_directory(BASE_DIR, "promob_export.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
@@ -255,6 +263,7 @@ from api_imagetags import imagetags_bp
 from api_financeiro import api_financeiro_bp
 from api_task import api_task
 from api_clientes import clientes_api_bp
+from api_export_promob import export_promob_bp
 
 
 app.register_blueprint(perfis_bp)
@@ -273,9 +282,11 @@ app.register_blueprint(imagetags_bp)
 app.register_blueprint(api_financeiro_bp)
 app.register_blueprint(api_task)
 app.register_blueprint(clientes_api_bp)
+app.register_blueprint(export_promob_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
