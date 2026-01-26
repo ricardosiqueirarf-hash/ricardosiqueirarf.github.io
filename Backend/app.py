@@ -30,12 +30,9 @@ HEADERS = {
 app = Flask(__name__)
 CORS(
     app,
-    supports_credentials=True,
     resources={
         r"/api/*": {
-            "origins": [
-                "https://desenvolvimento-7dps.onrender.com"
-            ]
+            "origins": "*"
         }
     }
 )
@@ -286,5 +283,6 @@ app.register_blueprint(export_promob_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
