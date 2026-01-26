@@ -197,7 +197,9 @@ tr:hover { background: #e6f0fa; }
 </div>
 
 <script>
-const BASE_URL = "https://colorglass.onrender.com";
+const BASE_URL = window.location.origin.includes("colorglassfortaleza.com.br")
+    ? window.location.origin
+    : "https://colorglass.onrender.com";
 
 let trilhosLista = [];
 
@@ -403,3 +405,4 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
