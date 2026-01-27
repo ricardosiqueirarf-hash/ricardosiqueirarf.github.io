@@ -432,6 +432,7 @@ function renderPortas() {
     }
     const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
     centralizarPuxadorSvg(svgEl);
+    atualizarSvgDobradicas(idx);
   });
 
   document.querySelectorAll(".dobradicas-input").forEach((input) => {
@@ -440,6 +441,14 @@ function renderPortas() {
       const valoresAtuais = getAlturasDobradicas(idx);
       const qtd = parseInt(event.target.value || "0", 10) || 0;
       renderAlturasDobradicas(idx, qtd, valoresAtuais);
+      atualizarSvgDobradicas(idx);
+    });
+  });
+
+  document.querySelectorAll(".dobradica-altura").forEach((input) => {
+    input.addEventListener("input", (event) => {
+      const idx = event.target.dataset.idx;
+      atualizarSvgDobradicas(idx);
     });
   });
 }
@@ -482,6 +491,49 @@ function centralizarPuxadorSvg(svgEl) {
   const handleH = parseFloat(handleRect.getAttribute("height")) || 0;
   const newY = doorY + (doorH - handleH) / 2;
   handleRect.setAttribute("y", newY);
+}
+
+function atualizarSvgDobradicas(idx) {
+  const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
+  if (!svgEl) return;
+  const doorRect = svgEl.querySelector('rect[stroke="#1079ba"]');
+  if (!doorRect) return;
+  const svgNS = "http://www.w3.org/2000/svg";
+  const doorY = parseFloat(doorRect.getAttribute("y")) || 0;
+  const doorH = parseFloat(doorRect.getAttribute("height")) || 0;
+  const doorX = parseFloat(doorRect.getAttribute("x")) || 0;
+  const doorW = parseFloat(doorRect.getAttribute("width")) || 0;
+  const larguraPorta = parseFloat(portas[idx]?.dados?.largura || 0);
+  const alturaPorta = parseFloat(portas[idx]?.dados?.altura || 0);
+  const scale = alturaPorta ? doorH / alturaPorta : 1;
+
+  svgEl.querySelectorAll(".dobradica-marca").forEach((el) => el.remove());
+
+  if (portas[idx]?.tipo !== "giro") return;
+  const alturas = getAlturasDobradicas(idx);
+  alturas.forEach((valor) => {
+    const alturaNum = parseFloat(valor);
+    if (!alturaNum) return;
+    const yPos = doorY + doorH - alturaNum * scale;
+    const cx = doorX + 6;
+    const cy = Math.max(doorY + 4, Math.min(doorY + doorH - 4, yPos));
+    const circle = document.createElementNS(svgNS, "circle");
+    circle.setAttribute("class", "dobradica-marca");
+    circle.setAttribute("cx", String(cx));
+    circle.setAttribute("cy", String(cy));
+    circle.setAttribute("r", "4");
+    circle.setAttribute("fill", "#0d5d8c");
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("class", "dobradica-marca");
+    line.setAttribute("x1", String(cx));
+    line.setAttribute("y1", String(cy));
+    line.setAttribute("x2", String(Math.min(doorX + doorW, cx + 18)));
+    line.setAttribute("y2", String(cy));
+    line.setAttribute("stroke", "#0d5d8c");
+    line.setAttribute("stroke-width", "2");
+    svgEl.appendChild(circle);
+    svgEl.appendChild(line);
+  });
 }
 
 async function carregarPortas() {
@@ -557,4 +609,5 @@ carregarPortas();
 </script>
 </body>
 </html>
+
 
