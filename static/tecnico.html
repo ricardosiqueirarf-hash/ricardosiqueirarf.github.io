@@ -372,6 +372,8 @@ function renderPortas() {
     const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
     const furacoesPosicao = dados.furacoes_posicao || "";
     const puxadorPosicao = dados.puxador_posicao || "";
+    const puxadorNome = dados.puxador || "";
+    const puxadorMedida = normalizarNumeroEntrada(dados.medida_puxador);
     const vaoTrilhosSuperior = normalizarNumeroEntrada(dados.vao_trilhos_superior);
     const vaoTrilhosInferior = normalizarNumeroEntrada(dados.vao_trilhos_inferior);
     const svgPorta = gerarSvgPorta(largura, altura);
@@ -418,6 +420,12 @@ function renderPortas() {
             <option value="esquerda" ${puxadorPosicao === "esquerda" ? "selected" : ""}>Esquerda</option>
             <option value="direita" ${puxadorPosicao === "direita" ? "selected" : ""}>Direita</option>
           </select>
+        </label>
+        <label>Puxador
+          <input class="puxador-nome-input" data-idx="${idx}" type="text" value="${puxadorNome}" placeholder="Ex: Puxador 60cm">
+        </label>
+        <label>Medida do puxador (mm)
+          <input class="puxador-medida-input" data-idx="${idx}" type="number" min="0" value="${puxadorMedida}">
         </label>
       </div>
     `;
@@ -628,10 +636,14 @@ async function salvarDadosTecnicos() {
     const vaoTrilhosInferior = document.querySelector(`.vao-trilho-inferior-input[data-idx="${idx}"]`)?.value || "";
     const furacoesPosicao = document.querySelector(`.furacoes-posicao-input[data-idx="${idx}"]`)?.value || "";
     const puxadorPosicao = document.querySelector(`.puxador-posicao-input[data-idx="${idx}"]`)?.value || "";
+    const puxadorNome = document.querySelector(`.puxador-nome-input[data-idx="${idx}"]`)?.value || "";
+    const puxadorMedida = document.querySelector(`.puxador-medida-input[data-idx="${idx}"]`)?.value || "";
     dados.dobradicas = String(qtd);
     dados.dobradicas_alturas = alturas;
     dados.furacoes_posicao = furacoesPosicao;
     dados.puxador_posicao = puxadorPosicao;
+    dados.puxador = puxadorNome;
+    dados.medida_puxador = puxadorMedida;
     if (porta.tipo === "deslizante" || porta.tipo === "correr") {
       dados.vao_trilhos_superior = vaoTrilhosSuperior;
       dados.vao_trilhos_inferior = vaoTrilhosInferior;
@@ -668,4 +680,5 @@ carregarPortas();
 </script>
 </body>
 </html>
+
 
