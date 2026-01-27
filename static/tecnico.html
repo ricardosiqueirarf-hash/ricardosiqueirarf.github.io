@@ -517,21 +517,37 @@ function atualizarSvgPuxador(idx) {
 
   let novoX = doorX + doorW - 18;
   let novoY = doorY + (doorH - handleH) / 2;
+  let novoW = handleW || 8;
+  let novoH = handleH || Math.max(20, doorH * 0.4);
 
   if (posicao === "esquerda") {
     novoX = doorX + 10;
+    novoY = doorY + (doorH - novoH) / 2;
+    novoW = 8;
+    novoH = handleH || Math.max(20, doorH * 0.4);
   } else if (posicao === "direita") {
     novoX = doorX + doorW - 18;
+    novoY = doorY + (doorH - novoH) / 2;
+    novoW = 8;
+    novoH = handleH || Math.max(20, doorH * 0.4);
   }
 
   if (posicao === "cima") {
+    novoW = Math.max(40, doorW * 0.4);
+    novoH = 8;
+    novoX = doorX + (doorW - novoW) / 2;
     novoY = doorY + 10;
   } else if (posicao === "baixo") {
-    novoY = doorY + doorH - handleH - 10;
+    novoW = Math.max(40, doorW * 0.4);
+    novoH = 8;
+    novoX = doorX + (doorW - novoW) / 2;
+    novoY = doorY + doorH - novoH - 10;
   }
 
   handleRect.setAttribute("x", String(novoX));
   handleRect.setAttribute("y", String(novoY));
+  handleRect.setAttribute("width", String(novoW));
+  handleRect.setAttribute("height", String(novoH));
 }
 
 function atualizarSvgDobradicas(idx) {
@@ -650,5 +666,3 @@ carregarPortas();
 </script>
 </body>
 </html>
-
-
