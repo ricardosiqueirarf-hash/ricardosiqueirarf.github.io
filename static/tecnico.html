@@ -354,6 +354,20 @@ function renderPuxadoresOptions(selecionado) {
   return options.join("");
 }
 
+function calcularCustoPuxador(puxadorId, medidaMm, quantidadePortas) {
+  if (!puxadorId || puxadorId === "sem_puxador") return 0;
+  const puxador = puxadores.find((item) => String(item.id) === String(puxadorId));
+  if (!puxador) return 0;
+  const tipoMedida = puxador.tipo_medida;
+  let quantidade = 0;
+  if (tipoMedida === "metro_linear") {
+    quantidade = (Number(medidaMm) || 0) / 1000;
+  } else {
+    quantidade = Number(quantidadePortas) || 1;
+  }
+  return (Number(puxador.preco) || 0) * quantidade;
+}
+
 function getAlturasDobradicas(idx) {
   const inputs = document.querySelectorAll(`.dobradica-altura[data-idx="${idx}"]`);
   return Array.from(inputs)
@@ -671,6 +685,13 @@ async function salvarDadosTecnicos() {
     const puxadorPosicao = document.querySelector(`.puxador-posicao-input[data-idx="${idx}"]`)?.value || "";
     const puxadorNome = document.querySelector(`.puxador-nome-input[data-idx="${idx}"]`)?.value || "";
     const puxadorMedida = document.querySelector(`.puxador-medida-input[data-idx="${idx}"]`)?.value || "";
+    const puxadorAnterior = dados.puxador || "";
+    const medidaAnterior = normalizarNumeroEntrada(dados.medida_puxador);
+    const quantidadePortas = Number(porta.quantidade) || 1;
+    const custoAnterior = calcularCustoPuxador(puxadorAnterior, medidaAnterior, quantidadePortas);
+    const custoNovo = calcularCustoPuxador(puxadorNome, puxadorMedida, quantidadePortas);
+    const precoBase = Number(porta.preco || 0) - custoAnterior;
+    const precoAtualizado = precoBase + custoNovo;
     dados.dobradicas = String(qtd);
     dados.dobradicas_alturas = alturas;
     dados.furacoes_posicao = furacoesPosicao;
@@ -681,7 +702,12 @@ async function salvarDadosTecnicos() {
       dados.vao_trilhos_superior = vaoTrilhosSuperior;
       dados.vao_trilhos_inferior = vaoTrilhosInferior;
     }
-    return { ...porta, dados, orcamento_uuid: ORCAMENTO_UUID };
+    return {
+      ...porta,
+      dados,
+      preco: Number(precoAtualizado.toFixed(2)),
+      orcamento_uuid: ORCAMENTO_UUID
+    };
   });
 
   try {
@@ -715,6 +741,7 @@ Promise.resolve()
 </script>
 </body>
 </html>
+
 
 
 
