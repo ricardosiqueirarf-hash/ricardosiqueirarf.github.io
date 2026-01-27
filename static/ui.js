@@ -69,8 +69,8 @@ function atualizarTrilhosDoSistema() {
     const trilhosSuperiorEl = document.getElementById("trilhos_superior");
     const trilhosInferiorEl = document.getElementById("trilhos_inferior");
     const trilhoResumoEl = document.getElementById("trilho");
-    const trilhosSuperior = sistema?.trilhos_superior || [];
-    const trilhosInferior = sistema?.trilhos_inferior || [];
+    const trilhosSuperior = sistema?.trilhossup || [];
+    const trilhosInferior = sistema?.trilhosinf || [];
 
     if (trilhosSuperiorEl) {
         const valorAtual = trilhosSuperiorEl.value;
@@ -677,5 +677,3 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
-
-
