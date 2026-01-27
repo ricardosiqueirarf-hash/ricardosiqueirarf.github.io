@@ -352,7 +352,11 @@ function renderPortas() {
     const altura = dados.altura || "-";
     const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
     const alturaPuxador = dados.altura_puxador || "";
+    const vaoTrilhosSuperior = dados.vao_trilhos_superior || "";
+    const vaoTrilhosInferior = dados.vao_trilhos_inferior || "";
     const svgPorta = porta.svg ? `<div class="tech-preview">${porta.svg}</div>` : "";
+    const mostrarDobradicas = porta.tipo === "giro";
+    const mostrarVaoTrilhos = porta.tipo === "deslizante" || porta.tipo === "correr";
     return `
       <div class="tech-card">
         ${svgPorta}
@@ -361,12 +365,22 @@ function renderPortas() {
           <div><strong>Quantidade:</strong> ${porta.quantidade || 1}</div>
           <div><strong>Medidas:</strong> ${largura} x ${altura} mm</div>
         </div>
-        <label>Quantidade de dobradiças
-          <input class="dobradicas-input" data-idx="${idx}" type="number" min="0" value="${quantidadeDobradicas}">
-        </label>
-        <label>Alturas das dobradiças
-          <div class="dobradicas-alturas" data-idx="${idx}"></div>
-        </label>
+        ${mostrarDobradicas ? `
+          <label>Quantidade de dobradiças
+            <input class="dobradicas-input" data-idx="${idx}" type="number" min="0" value="${quantidadeDobradicas}">
+          </label>
+          <label>Alturas das dobradiças
+            <div class="dobradicas-alturas" data-idx="${idx}"></div>
+          </label>
+        ` : ""}
+        ${mostrarVaoTrilhos ? `
+          <label>Vão dos trilhos superiores (mm)
+            <input class="vao-trilho-superior-input" data-idx="${idx}" type="number" min="0" value="${vaoTrilhosSuperior}">
+          </label>
+          <label>Vão dos trilhos inferiores (mm)
+            <input class="vao-trilho-inferior-input" data-idx="${idx}" type="number" min="0" value="${vaoTrilhosInferior}">
+          </label>
+        ` : ""}
         <label>Altura do puxador (mm)
           <input class="altura-puxador-input" data-idx="${idx}" type="number" min="0" value="${alturaPuxador}">
         </label>
@@ -378,7 +392,9 @@ function renderPortas() {
     const dados = porta.dados || {};
     const qtd = parseInt(dados.dobradicas || "0", 10) || 0;
     const alturas = normalizarAlturasDobradicas(dados.dobradicas_alturas);
-    renderAlturasDobradicas(idx, qtd, alturas);
+    if (porta.tipo === "giro") {
+      renderAlturasDobradicas(idx, qtd, alturas);
+    }
   });
 
   document.querySelectorAll(".dobradicas-input").forEach((input) => {
@@ -421,9 +437,15 @@ async function salvarDadosTecnicos() {
     const qtd = parseInt(document.querySelector(`.dobradicas-input[data-idx="${idx}"]`)?.value || "0", 10) || 0;
     const alturaPuxador = document.querySelector(`.altura-puxador-input[data-idx="${idx}"]`)?.value || "";
     const alturas = getAlturasDobradicas(idx);
+    const vaoTrilhosSuperior = document.querySelector(`.vao-trilho-superior-input[data-idx="${idx}"]`)?.value || "";
+    const vaoTrilhosInferior = document.querySelector(`.vao-trilho-inferior-input[data-idx="${idx}"]`)?.value || "";
     dados.dobradicas = String(qtd);
     dados.dobradicas_alturas = alturas;
     dados.altura_puxador = alturaPuxador;
+    if (porta.tipo === "deslizante" || porta.tipo === "correr") {
+      dados.vao_trilhos_superior = vaoTrilhosSuperior;
+      dados.vao_trilhos_inferior = vaoTrilhosInferior;
+    }
     return { ...porta, dados, orcamento_uuid: ORCAMENTO_UUID };
   });
 
@@ -456,3 +478,4 @@ carregarPortas();
 </script>
 </body>
 </html>
+
