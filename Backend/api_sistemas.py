@@ -59,6 +59,7 @@ def criar_sistema():
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
+            "tipo": data.get("tipo", []),
             "trilhossup": data.get("trilhossup", []),
             "trilhosinf": data.get("trilhosinf", []),
         }
@@ -92,6 +93,7 @@ def editar_sistema(id):
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
+            "tipo": data.get("tipo", []),
             "trilhossup": data.get("trilhossup", []),
             "trilhosinf": data.get("trilhosinf", []),
         }
@@ -124,5 +126,6 @@ def deletar_sistema(id):
         return jsonify({"status": "deleted"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
