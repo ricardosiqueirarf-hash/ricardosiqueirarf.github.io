@@ -197,17 +197,32 @@ tr:hover { background: #e6f0fa; }
 </div>
 
 <script>
-const BASE_URL = window.location.origin.includes("colorglassfortaleza.com.br")
+const FALLBACK_API_URL = "https://colorglass.onrender.com";
+const API_HOSTS_WITH_BACKEND = new Set(["localhost", "127.0.0.1", "colorglass.onrender.com"]);
+const BASE_URL = API_HOSTS_WITH_BACKEND.has(window.location.hostname)
     ? window.location.origin
-    : "https://colorglass.onrender.com";
+    : FALLBACK_API_URL;
 
 let trilhosLista = [];
 
 async function carregarTrilhos() {
-    const res = await fetch(`${BASE_URL}/api/trilhos`);
-    const data = await res.json();
-    trilhosLista = data.map((trilho) => trilho.nome);
-    atualizarSelects();
+    try {
+        const data = await fetchJson(`${BASE_URL}/api/trilhos`);
+        trilhosLista = data.map((trilho) => trilho.nome);
+        atualizarSelects();
+    } catch (error) {
+        console.error("Erro ao carregar trilhos:", error);
+        alert("Não foi possível carregar os trilhos. Verifique o endereço da API.");
+    }
+}
+
+async function fetchJson(url, options = {}) {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Erro ${res.status}: ${errorText || res.statusText}`);
+    }
+    return res.json();
 }
 
 function atualizarSelects() {
@@ -248,8 +263,13 @@ function getTrilhosSelecionados(group) {
 }
 
 async function carregar() {
-    const res = await fetch(`${BASE_URL}/api/sistemas`);
-    const data = await res.json();
+    let data = [];
+    try {
+        data = await fetchJson(`${BASE_URL}/api/sistemas`);
+    } catch (error) {
+        console.error("Erro ao carregar sistemas:", error);
+        alert("Não foi possível carregar os sistemas. Verifique o endereço da API.");
+    }
 
     const tbody = document.getElementById("tabela");
     tbody.innerHTML = "";
@@ -304,11 +324,17 @@ async function salvar() {
     const url = id ? `${BASE_URL}/api/sistemas/${id}` : `${BASE_URL}/api/sistemas`;
     const method = id ? "PUT" : "POST";
 
-    await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    try {
+        await fetchJson(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+    } catch (error) {
+        console.error("Erro ao salvar sistema:", error);
+        alert("Não foi possível salvar o sistema. Verifique o endereço da API.");
+        return;
+    }
 
     cancelar();
     carregar();
@@ -365,8 +391,13 @@ function editar(sistema) {
 
 async function excluir(id) {
     if (!confirm("Excluir este sistema?")) return;
-    await fetch(`${BASE_URL}/api/sistemas/${id}`, { method: "DELETE" });
-    carregar();
+    try {
+        await fetchJson(`${BASE_URL}/api/sistemas/${id}`, { method: "DELETE" });
+        carregar();
+    } catch (error) {
+        console.error("Erro ao excluir sistema:", error);
+        alert("Não foi possível excluir o sistema. Verifique o endereço da API.");
+    }
 }
 
 function cancelar() {
@@ -405,4 +436,3 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
-
