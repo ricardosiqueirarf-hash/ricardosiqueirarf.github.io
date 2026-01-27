@@ -1,682 +1,617 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portas Técnicas | ColorGlass</title>
-<meta name="description" content="Especificações técnicas das portas ColorGlass.">
-<meta name="robots" content="index, follow">
+// =====================
+// TIPOLOGIAS
+// =====================
+const TIPOLOGIAS = {
+    giro: ["largura", "altura", "perfil", "vidro", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"],
+    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"],
+    correr: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"],
+    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"]
+};
 
-<!-- SEO LOCAL -->
-<meta name="geo.region" content="BR-CE">
-<meta name="geo.placename" content="Fortaleza">
-<meta name="geo.position" content="-3.7319;-38.5267">
-<meta name="ICBM" content="-3.7319, -38.5267">
-
-<!-- CANONICAL -->
-<link rel="canonical" href="https://www.colorglassfortaleza.com.br/">
-
-<!-- OPEN GRAPH -->
-<meta property="og:title" content="Portas Técnicas | ColorGlass">
-<meta property="og:description" content="Especificações técnicas das portas ColorGlass.">
-<meta property="og:url" content="https://www.colorglassfortaleza.com.br/">
-<meta property="og:type" content="website">
-
-<style>
-:root {
-  --cg-blue: #1079ba;
-  --cg-blue-dark: #0d5d8c;
-  --cg-blue-soft: #e7f3fb;
-  --cg-gold: #f0c24c;
-  --cg-white: #ffffff;
-  --cg-text: #1f2933;
-  --cg-muted: #6b7280;
-  --cg-border: rgba(16, 121, 186, 0.12);
-  --cg-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
-  --cg-shadow-soft: 0 10px 24px rgba(15, 44, 62, 0.10);
+// =====================
+// UI
+// =====================
+function atualizarPerfisSelect() {
+    const tipo = document.getElementById("tipologia").value;
+    const perfilSelect = document.getElementById("perfil");
+    if (!perfilSelect) return;
+    perfilSelect.innerHTML = "<option value=''>Selecione</option>";
+    todosPerfis.filter(p => p.tipologias.includes(tipo))
+        .forEach(p => {
+            perfilSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/m</option>`;
+        });
 }
 
-* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-body {
-  background:
-    radial-gradient(circle at top, rgba(16,121,186,0.15), transparent 55%),
-    linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
-  color: var(--cg-text);
-  min-height: 100vh;
+function atualizarVidrosSelect() {
+    const vidroSelect = document.getElementById("vidro");
+    if (!vidroSelect) return;
+    vidroSelect.innerHTML = "<option value=''>Selecione</option>";
+    todosVidros.forEach(v => {
+        vidroSelect.innerHTML += `<option value="${v.id}">${v.tipo} ${v.espessura || ""}mm - R$ ${v.preco}/m²</option>`;
+    });
 }
 
-.app {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  min-height: 100vh;
-  gap: 18px;
-  padding: 18px;
-  animation: fadeIn 0.75s ease;
+let sistemasLista = [];
+let sistemasCarregados = false;
+
+async function carregarSistemas() {
+    if (sistemasCarregados) return;
+    try {
+        const res = await fetch("https://colorglass.onrender.com/api/sistemas");
+        const data = await res.json();
+        sistemasLista = Array.isArray(data) ? data : [];
+        sistemasCarregados = true;
+        atualizarSistemasSelect();
+    } catch (err) {
+        console.error("Erro ao carregar sistemas:", err);
+    }
 }
 
-.sidebar {
-  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
-  color: #fff;
-  padding: 22px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border-radius: 18px;
-  box-shadow: var(--cg-shadow);
-  position: sticky;
-  top: 18px;
-  height: calc(100vh - 36px);
-  overflow: hidden;
+function atualizarSistemasSelect() {
+    const sistemasSelect = document.getElementById("sistemas");
+    if (!sistemasSelect) return;
+    const tipologiaAtual = document.getElementById("tipologia")?.value;
+    const valorAtual = sistemasSelect.value;
+    sistemasSelect.innerHTML = "<option value=''>Selecione</option>";
+    const sistemasFiltrados = tipologiaAtual
+        ? sistemasLista.filter((sistema) => {
+            const tipos = sistema.tipo || [];
+            return tipos.includes(tipologiaAtual) || tipos.length === 0;
+        })
+        : sistemasLista;
+
+    sistemasFiltrados.forEach((sistema) => {
+        const opt = document.createElement("option");
+        opt.value = sistema.id;
+        opt.textContent = sistema.nome;
+        sistemasSelect.appendChild(opt);
+    });
+    sistemasSelect.value = valorAtual;
 }
 
-.sidebar::after{
-  content:"";
-  position:absolute;
-  right:-90px;
-  top:-120px;
-  width:260px;
-  height:260px;
-  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 60%);
-  pointer-events:none;
+function atualizarTrilhosDoSistema() {
+    const sistemasSelect = document.getElementById("sistemas");
+    if (!sistemasSelect) return;
+    const sistemaId = sistemasSelect.value;
+    const sistema = sistemasLista.find((item) => String(item.id) === String(sistemaId));
+    const trilhosSuperiorEl = document.getElementById("trilhos_superior");
+    const trilhosInferiorEl = document.getElementById("trilhos_inferior");
+    const trilhoResumoEl = document.getElementById("trilho");
+    const trilhosSuperior = sistema?.trilhossup || [];
+    const trilhosInferior = sistema?.trilhosinf || [];
+
+    if (trilhosSuperiorEl) {
+        const valorAtual = trilhosSuperiorEl.value;
+        trilhosSuperiorEl.innerHTML = "<option value=''>Selecione</option>";
+        trilhosSuperior.forEach((trilho) => {
+            const opt = document.createElement("option");
+            opt.value = trilho;
+            opt.textContent = trilho;
+            trilhosSuperiorEl.appendChild(opt);
+        });
+        if (valorAtual && trilhosSuperior.includes(valorAtual)) {
+            trilhosSuperiorEl.value = valorAtual;
+        } else if (trilhosSuperior.length === 1) {
+            trilhosSuperiorEl.value = trilhosSuperior[0];
+        }
+    }
+
+    if (trilhosInferiorEl) {
+        const valorAtual = trilhosInferiorEl.value;
+        trilhosInferiorEl.innerHTML = "<option value=''>Selecione</option>";
+        trilhosInferior.forEach((trilho) => {
+            const opt = document.createElement("option");
+            opt.value = trilho;
+            opt.textContent = trilho;
+            trilhosInferiorEl.appendChild(opt);
+        });
+        if (valorAtual && trilhosInferior.includes(valorAtual)) {
+            trilhosInferiorEl.value = valorAtual;
+        } else if (trilhosInferior.length === 1) {
+            trilhosInferiorEl.value = trilhosInferior[0];
+        }
+    }
+
+    if (trilhoResumoEl) {
+        const superiorSelecionado = trilhosSuperiorEl?.value || "";
+        const inferiorSelecionado = trilhosInferiorEl?.value || "";
+        const partes = [];
+        if (superiorSelecionado) partes.push(`Superiores: ${superiorSelecionado}`);
+        if (inferiorSelecionado) partes.push(`Inferiores: ${inferiorSelecionado}`);
+        trilhoResumoEl.value = partes.join(" | ");
+    }
 }
 
-.sidebar h3 {
-  margin-bottom: 8px;
-  font-size: 1.25rem;
-  letter-spacing: 0.6px;
-  position: relative;
-  z-index: 1;
+function atualizarResumoTrilhos() {
+    const trilhoResumoEl = document.getElementById("trilho");
+    if (!trilhoResumoEl) return;
+    const superiorSelecionado = document.getElementById("trilhos_superior")?.value || "";
+    const inferiorSelecionado = document.getElementById("trilhos_inferior")?.value || "";
+    const partes = [];
+    if (superiorSelecionado) partes.push(`Superiores: ${superiorSelecionado}`);
+    if (inferiorSelecionado) partes.push(`Inferiores: ${inferiorSelecionado}`);
+    trilhoResumoEl.value = partes.join(" | ");
 }
 
-.sidebar button {
-  padding: 12px 12px;
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 12px;
-  background: rgba(255,255,255,0.14);
-  color: #fff;
-  cursor: pointer;
-  text-align: left;
-  font-weight: 700;
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
-  z-index: 1;
+function atualizarPuxadoresSelect() {
+    const puxadorSelect = document.getElementById("puxador");
+    if (!puxadorSelect) return;
+    puxadorSelect.innerHTML = "<option value=''>Selecione</option>";
+    puxadorSelect.innerHTML += "<option value='sem_puxador'>Sem puxador</option>";
+    todosPuxadores.forEach(p => {
+        const unidade = p.tipo_medida === "metro_linear" ? "m" : "un";
+        puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/${unidade}</option>`;
+    });
 }
 
-.sidebar button:hover {
-  background: rgba(255,255,255,0.22);
-  transform: translateX(4px);
-  box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+function renderCampos() {
+    const tipo = document.getElementById("tipologia").value;
+    const container = document.getElementById("campos");
+    container.innerHTML = "";
+    if (!TIPOLOGIAS[tipo]) return;
+
+    TIPOLOGIAS[tipo].forEach(c => {
+        const map = {
+            largura: `Largura (mm)<input id="largura" type="number" value="800" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
+            altura: `Altura (mm)<input id="altura" type="number" value="2000" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
+            perfil: `Perfil<select id="perfil" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
+            vidro: `Vidro<select id="vidro" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
+            valor_adicional: `Valor adicional (R$)<input id="valor_adicional" type="number" value="0" min="0" step="0.01" oninput="atualizarPrecoPorta()">`,
+            acessorio: `Acessório<textarea id="acessorio" rows="2"></textarea>`,
+            observacao_venda: `Observação de venda<textarea id="observacao_venda" rows="2"></textarea>`,
+            observacao_producao: `Observação de produção<textarea id="observacao_producao" rows="2"></textarea>`,
+            trilho: `<input id="trilho" type="hidden" value="">`,
+            trilhos_superior: `Trilhos superiores<select id="trilhos_superior" data-required="true" onchange="atualizarResumoTrilhos(); atualizarCamposObrigatorios()"></select>`,
+            trilhos_inferior: `Trilhos inferiores<select id="trilhos_inferior" data-required="true" onchange="atualizarResumoTrilhos(); atualizarCamposObrigatorios()"></select>`,
+            sistemas: `Sistema<select id="sistemas" data-required="true" onchange="atualizarTrilhosDoSistema(); atualizarCamposObrigatorios()"></select>`,
+            pivo: `Pivo<textarea id="pivo" rows="2"></textarea>`
+        };
+        if (map[c]) container.innerHTML += `<label>${map[c]}</label>`;
+    });
+    atualizarPerfisSelect();
+    atualizarVidrosSelect();
+    if (tipo === "deslizante" || tipo === "correr") {
+        carregarSistemas().then(() => {
+            atualizarTrilhosDoSistema();
+        });
+    }
+    atualizarPrecoPorta();
+    desenharPorta();
+    atualizarCamposObrigatorios();
 }
 
-.content {
-  padding: 22px;
-  overflow-y: auto;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.55);
-  border: 1px solid rgba(16,121,186,0.10);
-  box-shadow: var(--cg-shadow-soft);
-  backdrop-filter: blur(10px);
-  animation: floatIn 0.65s ease;
+function atualizarPuxadorTipo() {
+    const puxadorId = document.getElementById("puxador")?.value;
+    const medidaInput = document.getElementById("medida_puxador");
+    if (!medidaInput) return;
+
+    if (puxadorId === "sem_puxador") {
+        medidaInput.disabled = true;
+        medidaInput.value = "0";
+        return;
+    }
+
+    const puxador = todosPuxadores.find(p => p.id == puxadorId);
+    if (!puxador) {
+        medidaInput.disabled = false;
+        return;
+    }
+
+    if (puxador.tipo_medida === "metro_linear") {
+        medidaInput.disabled = false;
+    } else {
+        medidaInput.disabled = true;
+        medidaInput.value = "0";
+    }
 }
 
-.content h1 {
-  color: var(--cg-blue-dark);
-  margin-bottom: 10px;
-  font-size: 1.65rem;
+function atualizarDobradicasInputs() {
+    const container = document.getElementById("dobradicasContainer");
+    if (!container) return;
+    const qtd = parseInt(document.getElementById("dobradicas")?.value || "0", 10) || 0;
+    if (qtd <= 0) {
+        container.innerHTML = "<span class='helper-text'>Defina a quantidade para gerar os campos.</span>";
+        return;
+    }
+
+    container.innerHTML = "";
+    for (let i = 0; i < qtd; i++) {
+        container.innerHTML += `
+            <input class="dobradica-altura" type="number" placeholder="Altura ${i + 1} (mm)" min="0" oninput="desenharPorta()">
+        `;
+    }
 }
 
-.content h2{
-  color: var(--cg-blue);
-  margin-bottom: 10px;
-  font-size: 1.15rem;
+function obterAlturasDobradicas() {
+    const inputs = document.querySelectorAll(".dobradica-altura");
+    return Array.from(inputs)
+        .map(input => input.value)
+        .filter(valor => valor !== "");
 }
 
-#infoOrcamento{
-  background: var(--cg-white);
-  border: 1px solid var(--cg-border);
-  box-shadow: var(--cg-shadow-soft);
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin-bottom: 14px;
+function atualizarLimiteDobradicas() {
+    const altura = +document.getElementById("altura")?.value || 0;
+    const qtd = Math.max(0, Math.floor(altura / 700));
+    const input = document.getElementById("dobradicas");
+    if (input && qtd > 0) {
+        input.max = qtd;
+    }
 }
 
-.status{
-  margin-bottom: 14px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  font-weight: 600;
-  background: rgba(16,121,186,0.08);
-  border: 1px solid rgba(16,121,186,0.2);
-  color: var(--cg-blue-dark);
-  display: none;
+function atualizarCamposObrigatorios() {
+    const camposObrigatorios = document.querySelectorAll("[data-required='true']");
+    camposObrigatorios.forEach(campo => {
+        if (!campo.value) {
+            campo.style.border = "1px solid red";
+        } else {
+            campo.style.border = "";
+        }
+    });
 }
 
-.status.erro{
-  display: block;
-  background: rgba(220,53,69,0.12);
-  border-color: rgba(220,53,69,0.4);
-  color: #b02a37;
+function desenharPorta() {
+    const svg = document.getElementById("portaSVG");
+    if (!svg) return;
+    const largura = +document.getElementById("largura")?.value || 0;
+    const altura = +document.getElementById("altura")?.value || 0;
+
+    svg.setAttribute("viewBox", "0 0 400 600");
+    svg.innerHTML = "";
+
+    if (largura <= 0 || altura <= 0) {
+        svg.innerHTML = "<text x='50%' y='50%' text-anchor='middle'>Informe largura e altura</text>";
+        return;
+    }
+
+    const scale = Math.min(320 / largura, 520 / altura);
+    const doorWidth = largura * scale;
+    const doorHeight = altura * scale;
+
+    const x = (400 - doorWidth) / 2;
+    const y = (600 - doorHeight) / 2;
+
+    svg.innerHTML += `<rect x="${x}" y="${y}" width="${doorWidth}" height="${doorHeight}" fill="#e7f3fb" stroke="#1079ba" stroke-width="4" rx="8" />`;
+
 }
 
-.status.ok{
-  display: block;
-  background: rgba(25,135,84,0.12);
-  border-color: rgba(25,135,84,0.4);
-  color: #0f5132;
+function atualizarPrecoPorta() {
+    const preco = calcularPrecoPorta();
+    const precoEl = document.getElementById("precoPorta");
+    if (precoEl) {
+        precoEl.textContent = `Preço estimado: R$ ${preco.toFixed(2)}`;
+    }
+    atualizarDetalhesCusto();
+    desenharPorta();
 }
 
-.section-card{
-  background: var(--cg-white);
-  border-radius: 18px;
-  border: 1px solid var(--cg-border);
-  box-shadow: var(--cg-shadow);
-  padding: 16px;
-  margin-top: 18px;
+function toggleDetalhesCustos() {
+    const detalhes = document.getElementById("detalhesCustos");
+    const toggle = document.getElementById("toggleCustos");
+    if (!detalhes || !toggle) return;
+    detalhes.style.display = toggle.checked ? "block" : "none";
+    if (toggle.checked) {
+        atualizarDetalhesCusto();
+    }
 }
 
-.tech-card{
-  border: 1px solid rgba(16,121,186,0.15);
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 14px;
-  background: rgba(231,243,251,0.35);
+function atualizarDetalhesCusto() {
+    const detalhes = document.getElementById("detalhesCustos");
+    const toggle = document.getElementById("toggleCustos");
+    if (!detalhes || !toggle || !toggle.checked) return;
+
+    const largura = (+document.getElementById("largura")?.value || 0) / 1000;
+    const altura = (+document.getElementById("altura")?.value || 0) / 1000;
+    const valorAdicional = +document.getElementById("valor_adicional")?.value || 0;
+    const perimetro = 2 * (largura + altura);
+
+    const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value);
+    const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value);
+    const insumos = (perfil?.insumos || [])
+        .map((nome) => todosInsumos.find((insumo) => insumo.nome === nome))
+        .filter(Boolean);
+
+    const puxadorInfo = obterDadosPuxador();
+    const medidas = calcularMedidasPorta();
+    const tagAplicada = calcularTagAplicada(obterTagCorrespondente(), medidas);
+
+    if (!perfil && !vidro && insumos.length === 0 && !puxadorInfo && valorAdicional <= 0) {
+        detalhes.innerHTML = "<em>Selecione perfil, vidro e tipologia para ver os custos.</em>";
+        return;
+    }
+
+    const linhas = [];
+    let custoTotal = 0;
+    let precoTotal = 0;
+
+    if (perfil) {
+        const custoPerfil = (perfil.custo || 0) * perimetro;
+        const precoPerfil = (perfil.preco || 0) * perimetro;
+        custoTotal += custoPerfil;
+        precoTotal += precoPerfil;
+        linhas.push({
+            item: `Perfil (${perfil.nome})`,
+            quantidade: `${perimetro.toFixed(2)} m`,
+            custo: custoPerfil,
+            preco: precoPerfil
+        });
+    }
+
+    if (vidro) {
+        const area = largura * altura;
+        const custoVidro = (vidro.custo || 0) * area;
+        const precoVidro = (vidro.preco || 0) * area;
+        custoTotal += custoVidro;
+        precoTotal += precoVidro;
+        linhas.push({
+            item: `Vidro (${vidro.tipo})`,
+            quantidade: `${area.toFixed(2)} m²`,
+            custo: custoVidro,
+            preco: precoVidro
+        });
+    }
+
+    insumos.forEach((insumo) => {
+        const tipo = insumo.tipo_medida;
+        let quantidadeInsumo = 0;
+        if (tipo === "metro_linear") {
+            quantidadeInsumo = perimetro;
+        } else if (tipo === "unidade") {
+            quantidadeInsumo = 1;
+        } else {
+            return;
+        }
+
+        const custoInsumo = (insumo.custo || 0) * quantidadeInsumo;
+        const precoInsumo = (insumo.preco || 0) * quantidadeInsumo;
+        custoTotal += custoInsumo;
+        precoTotal += precoInsumo;
+        linhas.push({
+            item: `Insumo (${insumo.nome})`,
+            quantidade: tipo === "metro_linear"
+                ? `${quantidadeInsumo.toFixed(2)} m`
+                : `${quantidadeInsumo} un`,
+            custo: custoInsumo,
+            preco: precoInsumo
+        });
+    });
+
+    if (puxadorInfo) {
+        const custoPuxador = (puxadorInfo.puxador.custo || 0) * puxadorInfo.quantidade;
+        const precoPuxador = (puxadorInfo.puxador.preco || 0) * puxadorInfo.quantidade;
+        custoTotal += custoPuxador;
+        precoTotal += precoPuxador;
+        linhas.push({
+            item: `Puxador (${puxadorInfo.puxador.nome})`,
+            quantidade: puxadorInfo.tipoMedida === "metro_linear"
+                ? `${puxadorInfo.quantidade.toFixed(2)} m`
+                : `${puxadorInfo.quantidade} un`,
+            custo: custoPuxador,
+            preco: precoPuxador
+        });
+    }
+
+    if (valorAdicional > 0) {
+        custoTotal += valorAdicional;
+        precoTotal += valorAdicional;
+        linhas.push({
+            item: "Valor adicional",
+            quantidade: "1 un",
+            custo: valorAdicional,
+            preco: valorAdicional
+        });
+    }
+
+    if (tagAplicada) {
+        custoTotal += tagAplicada.total;
+        precoTotal += tagAplicada.total;
+        const unidadeTexto = tagAplicada.tag.medida === "m2"
+            ? "m²"
+            : tagAplicada.tag.medida === "perimetro"
+                ? "m"
+                : "un";
+        const tagNome = Array.isArray(tagAplicada.tag.tags) && tagAplicada.tag.tags.length
+            ? tagAplicada.tag.tags.join(", ")
+            : [tagAplicada.tag.perfis, tagAplicada.tag.vidros].filter(Boolean).join(" - ") || "Tag aplicada";
+        linhas.push({
+            item: `Tag (${tagNome})`,
+            quantidade: `${tagAplicada.quantidade.toFixed(2)} ${unidadeTexto}`,
+            custo: tagAplicada.total,
+            preco: tagAplicada.total
+        });
+    }
+
+    detalhes.innerHTML = `
+        <strong>Detalhamento de custos e preços</strong>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Custo</th>
+                    <th>Preço</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${linhas.map((linha) => `
+                    <tr>
+                        <td>${linha.item}</td>
+                        <td>${linha.quantidade}</td>
+                        <td>${formatarMoeda(linha.custo)}</td>
+                        <td>${formatarMoeda(linha.preco)}</td>
+                    </tr>
+                `).join("")}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Totais</th>
+                    <th>${formatarMoeda(custoTotal)}</th>
+                    <th>${formatarMoeda(precoTotal)}</th>
+                </tr>
+            </tfoot>
+        </table>
+    `;
 }
 
-.tech-preview{
-  border: 1px solid rgba(16,121,186,0.12);
-  border-radius: 14px;
-  padding: 10px;
-  background: #fff;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: center;
-}
+// =====================
+// CRUD PORTAS
+// =====================
+async function salvarPorta() {
+    const tipo = document.getElementById("tipologia").value;
+    if (!tipo) return alert("Selecione a tipologia");
 
-.tech-preview svg{
-  width: 100%;
-  max-width: 320px;
-  height: auto;
-  max-height: 240px;
-  display: block;
-}
+    const medidas = calcularMedidasPorta();
+    const largura = medidas.larguraMm;
+    const altura = medidas.alturaMm;
+    const quantidade = +document.getElementById("quantidade")?.value || 0;
+    const perfilSelecionado = document.getElementById("perfil")?.value;
+    const vidroSelecionado = document.getElementById("vidro")?.value;
+    const pendencias = [];
+    if (!largura) pendencias.push("Largura");
+    if (!altura) pendencias.push("Altura");
+    if (!quantidade) pendencias.push("Quantidade");
+    if (!perfilSelecionado) pendencias.push("Perfil");
+    if (!vidroSelecionado) pendencias.push("Vidro");
 
-.tech-meta{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 8px 16px;
-  margin-bottom: 10px;
-  color: #374151;
-  font-size: 0.95rem;
-}
+    if (pendencias.length > 0) {
+        alert(`Preencha os campos obrigatórios: ${pendencias.join(", ")}`);
+        return;
+    }
 
-label { display:flex; flex-direction:column; font-size:0.92rem; gap:7px; color:#374151; margin-bottom: 10px; }
-input, textarea{
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  border-radius: 12px;
-  border: 1px solid #d4d9df;
-  width: 100%;
-  background: #fdfefe;
-}
+    const dados = {};
+    TIPOLOGIAS[tipo].forEach(c => {
+        const el = document.getElementById(c);
+        if (el) dados[c] = el.value;
+    });
 
-.helper-text{
-  font-size: 0.85rem;
-  color: var(--cg-muted);
-}
-
-.btn{
-  background: linear-gradient(120deg, var(--cg-blue), var(--cg-blue-dark));
-  color: #fff;
-  border: none;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-
-.btn:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(16,121,186,0.25);
-}
-
-@media (max-width: 1024px) {
-  .app { grid-template-columns: 1fr; }
-  .sidebar {
-    position: relative;
-    top: 0;
-    height: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .sidebar button { text-align: center; flex: 1; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes floatIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-</style>
-</head>
-
-<body>
-<div class="app">
-  <div class="sidebar">
-    <h3>ColorGlass</h3>
-    <button id="voltarBtn">Voltar ao orçamento</button>
-  </div>
-
-  <div class="content">
-    <h1>Portas - Dados Técnicos</h1>
-    <div id="infoOrcamento"></div>
-    <div id="status" class="status"></div>
-
-    <div class="section-card">
-      <h2>Especificações técnicas</h2>
-      <div id="portasTecnicas"></div>
-      <button class="btn" id="salvarBtn">Salvar dados técnicos</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const API_BASE = "https://colorglass.onrender.com";
-const params = new URLSearchParams(window.location.search);
-const ORCAMENTO_UUID = params.get("orcamento_uuid");
-
-const infoOrcamento = document.getElementById("infoOrcamento");
-const statusEl = document.getElementById("status");
-const portasContainer = document.getElementById("portasTecnicas");
-const salvarBtn = document.getElementById("salvarBtn");
-const voltarBtn = document.getElementById("voltarBtn");
-
-let portas = [];
-
-function setStatus(mensagem, tipo = "") {
-  if (!mensagem) {
-    statusEl.textContent = "";
-    statusEl.className = "status";
-    statusEl.style.display = "none";
-    return;
-  }
-  statusEl.textContent = mensagem;
-  statusEl.className = `status ${tipo}`.trim();
-}
-
-function normalizarAlturasDobradicas(entrada) {
-  if (Array.isArray(entrada)) {
-    return entrada
-      .flatMap((valor) => String(valor).split(","))
-      .map((valor) => valor.replace(/[\[\]'"]/g, "").trim())
-      .filter(Boolean);
-  }
-  if (!entrada) return [];
-  return String(entrada)
-    .replace(/[\[\]]/g, "")
-    .split(",")
-    .map((valor) => valor.replace(/['"]/g, "").trim())
-    .filter(Boolean);
-}
-
-function normalizarNumeroEntrada(entrada) {
-  if (Array.isArray(entrada)) return String(entrada[0] ?? "");
-  if (!entrada) return "";
-  return String(entrada)
-    .replace(/[\[\]]/g, "")
-    .split(",")[0]
-    .replace(/['"]/g, "")
-    .trim();
-}
-
-function getAlturasDobradicas(idx) {
-  const inputs = document.querySelectorAll(`.dobradica-altura[data-idx="${idx}"]`);
-  return Array.from(inputs)
-    .map((input) => input.value.trim())
-    .filter(Boolean);
-}
-
-function renderAlturasDobradicas(idx, quantidade, valores = []) {
-  const container = document.querySelector(`.dobradicas-alturas[data-idx="${idx}"]`);
-  if (!container) return;
-  if (quantidade <= 0) {
-    container.innerHTML = "<span class='helper-text'>Defina a quantidade para gerar os campos.</span>";
-    return;
-  }
-  const campos = [];
-  for (let i = 0; i < quantidade; i++) {
-    const valor = valores[i] ? String(valores[i]) : "";
-    campos.push(
-      `<input class="dobradica-altura" data-idx="${idx}" type="number" min="0" placeholder="Altura ${i + 1} (mm)" value="${valor}">`
-    );
-  }
-  container.innerHTML = campos.join("");
+    const porta = {
+        id: editando ?? idCounter++,
+        tipo,
+        dados,
+        quantidade,
+        m2: Number(medidas.area.toFixed(4)),
+        metro_linear: Number(medidas.perimetro.toFixed(4)),
+        tag_aplicada: calcularTagAplicada(obterTagCorrespondente(), medidas),
+        preco: calcularPrecoPorta(),
+        svg: portaSVG.outerHTML
+    };
+    const nextPortas = editando === null
+        ? [...portas, porta]
+        : portas.map(p => (p.id === editando ? porta : p));
+    const portasComUUID = nextPortas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
+    try {
+        await salvarPortasBackend(portasComUUID);
+        alert("Porta salva com sucesso!");
+        portas = nextPortas;
+        editando = null;
+        renderPortas();
+    } catch (err) {
+        console.error(err);
+        alert("Erro ao salvar porta: " + err.message);
+    }
 }
 
 function renderPortas() {
-  if (!portas.length) {
-    portasContainer.innerHTML = "<p class='helper-text'>Nenhuma porta encontrada para este orçamento.</p>";
-    return;
-  }
+    const c = document.getElementById("portasSalvas");
+    c.innerHTML = "";
+    portas.forEach((p, idx) => {
+        const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "Perfil não definido";
+        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "Vidro não definido";
+        const valorAdicional = Number(p.dados.valor_adicional || 0);
+        c.innerHTML += `
+            <div>
+                <strong>${idx + 1}. ${p.tipo}</strong><br>
+                Quantidade: ${p.quantidade}<br>
+                Perfil: ${perfilNome}<br>
+                Vidro: ${vidroNome}<br>
+                Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
+                Preço: R$ ${p.preco.toFixed(2)}<br>
+                ${p.svg}<br>
+                <button class="btn" onclick="copiarPorta(${p.id})">Copiar</button>
+                <button class="btn" onclick="editarPorta(${p.id})">Editar</button>
+                <button class="btn btn-danger" onclick="apagarPorta(${p.id})">Apagar</button>
+            </div>
+        `;
+    });
+    atualizarResumoImpressao();
+    atualizarResumoOrdem();
+}
 
-  portasContainer.innerHTML = portas.map((porta, idx) => {
-    const dados = porta.dados || {};
-    const largura = dados.largura || "-";
-    const altura = dados.altura || "-";
-    const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
-    const furacoesPosicao = dados.furacoes_posicao || "";
-    const puxadorPosicao = dados.puxador_posicao || "";
-    const puxadorNome = dados.puxador || "";
-    const puxadorMedida = normalizarNumeroEntrada(dados.medida_puxador);
-    const vaoTrilhosSuperior = normalizarNumeroEntrada(dados.vao_trilhos_superior);
-    const vaoTrilhosInferior = normalizarNumeroEntrada(dados.vao_trilhos_inferior);
-    const svgPorta = gerarSvgPorta(largura, altura);
-    const mostrarDobradicas = porta.tipo === "giro";
-    const mostrarVaoTrilhos = porta.tipo === "deslizante" || porta.tipo === "correr";
-    return `
-      <div class="tech-card">
-        ${svgPorta}
-        <div class="tech-meta">
-          <div><strong>Tipologia:</strong> ${porta.tipo || "-"}</div>
-          <div><strong>Quantidade:</strong> ${porta.quantidade || 1}</div>
-          <div><strong>Medidas:</strong> ${largura} x ${altura} mm</div>
-        </div>
-        ${mostrarDobradicas ? `
-          <label>Quantidade de dobradiças
-            <input class="dobradicas-input" data-idx="${idx}" type="number" min="0" value="${quantidadeDobradicas}">
-          </label>
-          <label>Alturas das dobradiças
-            <div class="dobradicas-alturas" data-idx="${idx}"></div>
-          </label>
-        ` : ""}
-        ${mostrarVaoTrilhos ? `
-          <label>Vão dos trilhos superiores (mm)
-            <input class="vao-trilho-superior-input" data-idx="${idx}" type="number" min="0" value="${vaoTrilhosSuperior}">
-          </label>
-          <label>Vão dos trilhos inferiores (mm)
-            <input class="vao-trilho-inferior-input" data-idx="${idx}" type="number" min="0" value="${vaoTrilhosInferior}">
-          </label>
-        ` : ""}
-        <label>Posição das furações
-          <select class="furacoes-posicao-input" data-idx="${idx}">
-            <option value="">Selecione</option>
-            <option value="cima" ${furacoesPosicao === "cima" ? "selected" : ""}>Cima</option>
-            <option value="baixo" ${furacoesPosicao === "baixo" ? "selected" : ""}>Baixo</option>
-            <option value="esquerda" ${furacoesPosicao === "esquerda" ? "selected" : ""}>Esquerda</option>
-            <option value="direita" ${furacoesPosicao === "direita" ? "selected" : ""}>Direita</option>
-          </select>
-        </label>
-        <label>Posição do puxador
-          <select class="puxador-posicao-input" data-idx="${idx}">
-            <option value="">Selecione</option>
-            <option value="cima" ${puxadorPosicao === "cima" ? "selected" : ""}>Cima</option>
-            <option value="baixo" ${puxadorPosicao === "baixo" ? "selected" : ""}>Baixo</option>
-            <option value="esquerda" ${puxadorPosicao === "esquerda" ? "selected" : ""}>Esquerda</option>
-            <option value="direita" ${puxadorPosicao === "direita" ? "selected" : ""}>Direita</option>
-          </select>
-        </label>
-        <label>Puxador
-          <input class="puxador-nome-input" data-idx="${idx}" type="text" value="${puxadorNome}" placeholder="Ex: Puxador 60cm">
-        </label>
-        <label>Medida do puxador (mm)
-          <input class="puxador-medida-input" data-idx="${idx}" type="number" min="0" value="${puxadorMedida}">
-        </label>
-      </div>
-    `;
-  }).join("");
-
-  portas.forEach((porta, idx) => {
-    const dados = porta.dados || {};
-    const qtd = parseInt(dados.dobradicas || "0", 10) || 0;
-    const alturas = normalizarAlturasDobradicas(dados.dobradicas_alturas);
-    if (porta.tipo === "giro") {
-      renderAlturasDobradicas(idx, qtd, alturas);
+function editarPorta(id) {
+    const porta = portas.find(p => p.id === id);
+    if (!porta) return;
+    editando = id;
+    document.getElementById("tipologia").value = porta.tipo;
+    document.getElementById("quantidade").value = porta.quantidade;
+    renderCampos();
+    for (const k in porta.dados) {
+        const el = document.getElementById(k);
+        if (el) el.value = porta.dados[k];
     }
-    const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
-    centralizarPuxadorSvg(svgEl);
-    atualizarSvgDobradicas(idx);
-    atualizarSvgPuxador(idx);
-  });
-
-  document.querySelectorAll(".dobradicas-input").forEach((input) => {
-    input.addEventListener("input", (event) => {
-      const idx = event.target.dataset.idx;
-      const valoresAtuais = getAlturasDobradicas(idx);
-      const qtd = parseInt(event.target.value || "0", 10) || 0;
-      renderAlturasDobradicas(idx, qtd, valoresAtuais);
-      atualizarSvgDobradicas(idx);
-    });
-  });
-
-  document.querySelectorAll(".dobradica-altura").forEach((input) => {
-    input.addEventListener("input", (event) => {
-      const idx = event.target.dataset.idx;
-      atualizarSvgDobradicas(idx);
-    });
-  });
-
-  document.querySelectorAll(".puxador-posicao-input").forEach((input) => {
-    input.addEventListener("change", (event) => {
-      const idx = event.target.dataset.idx;
-      atualizarSvgPuxador(idx);
-    });
-  });
-}
-
-function gerarSvgPorta(largura, altura) {
-  const larguraNum = parseFloat(largura);
-  const alturaNum = parseFloat(altura);
-  if (!larguraNum || !alturaNum) {
-    return `<div class="tech-preview"><div class="helper-text">Sem prévia disponível</div></div>`;
-  }
-
-  const viewBoxWidth = 400;
-  const viewBoxHeight = 600;
-  const scale = Math.min(320 / larguraNum, 520 / alturaNum);
-  const doorWidth = larguraNum * scale;
-  const doorHeight = alturaNum * scale;
-  const x = (viewBoxWidth - doorWidth) / 2;
-  const y = (viewBoxHeight - doorHeight) / 2;
-  const handleHeight = doorHeight * 0.4;
-  const handleX = x + doorWidth - 18;
-  const handleY = y + (doorHeight - handleHeight) / 2;
-
-  return `
-    <div class="tech-preview">
-      <svg viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}" xmlns="http://www.w3.org/2000/svg">
-        <rect x="${x}" y="${y}" width="${doorWidth}" height="${doorHeight}" fill="#e7f3fb" stroke="#1079ba" stroke-width="4" rx="8"></rect>
-        <rect x="${handleX}" y="${handleY}" width="8" height="${handleHeight}" fill="#f0c24c"></rect>
-      </svg>
-    </div>
-  `;
-}
-
-function centralizarPuxadorSvg(svgEl) {
-  if (!svgEl) return;
-  const doorRect = svgEl.querySelector('rect[stroke="#1079ba"]');
-  const handleRect = svgEl.querySelector('rect[fill="#f0c24c"]');
-  if (!doorRect || !handleRect) return;
-  const doorY = parseFloat(doorRect.getAttribute("y")) || 0;
-  const doorH = parseFloat(doorRect.getAttribute("height")) || 0;
-  const handleH = parseFloat(handleRect.getAttribute("height")) || 0;
-  const newY = doorY + (doorH - handleH) / 2;
-  handleRect.setAttribute("y", newY);
-}
-
-function atualizarSvgPuxador(idx) {
-  const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
-  if (!svgEl) return;
-  const doorRect = svgEl.querySelector('rect[stroke="#1079ba"]');
-  const handleRect = svgEl.querySelector('rect[fill="#f0c24c"]');
-  if (!doorRect || !handleRect) return;
-  const doorX = parseFloat(doorRect.getAttribute("x")) || 0;
-  const doorY = parseFloat(doorRect.getAttribute("y")) || 0;
-  const doorW = parseFloat(doorRect.getAttribute("width")) || 0;
-  const doorH = parseFloat(doorRect.getAttribute("height")) || 0;
-  const handleW = parseFloat(handleRect.getAttribute("width")) || 0;
-  const handleH = parseFloat(handleRect.getAttribute("height")) || 0;
-  const posicao = document.querySelector(`.puxador-posicao-input[data-idx="${idx}"]`)?.value || "";
-  const comprimentoVertical = Math.max(20, doorH * 0.4);
-  const comprimentoHorizontal = Math.max(40, doorW * 0.4);
-
-  let novoX = doorX + doorW - 18;
-  let novoY = doorY + (doorH - handleH) / 2;
-  let novoW = handleW || 8;
-  let novoH = handleH || comprimentoVertical;
-
-  if (posicao === "esquerda") {
-    novoX = doorX + 10;
-    novoW = 8;
-    novoH = comprimentoVertical;
-    novoY = doorY + (doorH - novoH) / 2;
-  } else if (posicao === "direita") {
-    novoX = doorX + doorW - 18;
-    novoW = 8;
-    novoH = comprimentoVertical;
-    novoY = doorY + (doorH - novoH) / 2;
-  }
-
-  if (posicao === "cima") {
-    novoW = comprimentoHorizontal;
-    novoH = 8;
-    novoX = doorX + (doorW - novoW) / 2;
-    novoY = doorY + 10;
-  } else if (posicao === "baixo") {
-    novoW = comprimentoHorizontal;
-    novoH = 8;
-    novoX = doorX + (doorW - novoW) / 2;
-    novoY = doorY + doorH - novoH - 10;
-  }
-
-  handleRect.setAttribute("x", String(novoX));
-  handleRect.setAttribute("y", String(novoY));
-  handleRect.setAttribute("width", String(novoW));
-  handleRect.setAttribute("height", String(novoH));
-}
-
-function atualizarSvgDobradicas(idx) {
-  const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
-  if (!svgEl) return;
-  const doorRect = svgEl.querySelector('rect[stroke="#1079ba"]');
-  if (!doorRect) return;
-  const svgNS = "http://www.w3.org/2000/svg";
-  const doorY = parseFloat(doorRect.getAttribute("y")) || 0;
-  const doorH = parseFloat(doorRect.getAttribute("height")) || 0;
-  const doorX = parseFloat(doorRect.getAttribute("x")) || 0;
-  const doorW = parseFloat(doorRect.getAttribute("width")) || 0;
-  const larguraPorta = parseFloat(portas[idx]?.dados?.largura || 0);
-  const alturaPorta = parseFloat(portas[idx]?.dados?.altura || 0);
-  const scale = alturaPorta ? doorH / alturaPorta : 1;
-
-  svgEl.querySelectorAll(".dobradica-marca").forEach((el) => el.remove());
-
-  if (portas[idx]?.tipo !== "giro") return;
-  const alturas = getAlturasDobradicas(idx);
-  alturas.forEach((valor) => {
-    const alturaNum = parseFloat(valor);
-    if (!alturaNum) return;
-    const yPos = doorY + doorH - alturaNum * scale;
-    const cx = doorX + 6;
-    const cy = Math.max(doorY + 4, Math.min(doorY + doorH - 4, yPos));
-    const circle = document.createElementNS(svgNS, "circle");
-    circle.setAttribute("class", "dobradica-marca");
-    circle.setAttribute("cx", String(cx));
-    circle.setAttribute("cy", String(cy));
-    circle.setAttribute("r", "4");
-    circle.setAttribute("fill", "#0d5d8c");
-    const line = document.createElementNS(svgNS, "line");
-    line.setAttribute("class", "dobradica-marca");
-    line.setAttribute("x1", String(cx));
-    line.setAttribute("y1", String(cy));
-    line.setAttribute("x2", String(Math.min(doorX + doorW, cx + 18)));
-    line.setAttribute("y2", String(cy));
-    line.setAttribute("stroke", "#0d5d8c");
-    line.setAttribute("stroke-width", "2");
-    svgEl.appendChild(circle);
-    svgEl.appendChild(line);
-  });
-}
-
-async function carregarPortas() {
-  if (!ORCAMENTO_UUID) {
-    infoOrcamento.innerHTML = "<strong style='color:red'>UUID do orçamento não encontrado</strong>";
-    setStatus("UUID do orçamento não encontrado na URL.", "erro");
-    salvarBtn.disabled = true;
-    return;
-  }
-  infoOrcamento.innerHTML = `Orçamento: <strong>${ORCAMENTO_UUID}</strong>`;
-  setStatus("Carregando portas...", "ok");
-  try {
-    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(ORCAMENTO_UUID)}/portas`);
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || "Erro ao carregar portas.");
-    portas = Array.isArray(data.portas) ? data.portas : [];
-    setStatus("", "");
-    renderPortas();
-  } catch (err) {
-    console.error(err);
-    setStatus(`Erro ao carregar portas: ${err.message}`, "erro");
-  }
-}
-
-async function salvarDadosTecnicos() {
-  if (!ORCAMENTO_UUID) return;
-  setStatus("Salvando dados técnicos...", "ok");
-  const portasAtualizadas = portas.map((porta, idx) => {
-    const dados = { ...(porta.dados || {}) };
-    const qtd = parseInt(document.querySelector(`.dobradicas-input[data-idx="${idx}"]`)?.value || "0", 10) || 0;
-    const alturas = getAlturasDobradicas(idx);
-    const vaoTrilhosSuperior = document.querySelector(`.vao-trilho-superior-input[data-idx="${idx}"]`)?.value || "";
-    const vaoTrilhosInferior = document.querySelector(`.vao-trilho-inferior-input[data-idx="${idx}"]`)?.value || "";
-    const furacoesPosicao = document.querySelector(`.furacoes-posicao-input[data-idx="${idx}"]`)?.value || "";
-    const puxadorPosicao = document.querySelector(`.puxador-posicao-input[data-idx="${idx}"]`)?.value || "";
-    const puxadorNome = document.querySelector(`.puxador-nome-input[data-idx="${idx}"]`)?.value || "";
-    const puxadorMedida = document.querySelector(`.puxador-medida-input[data-idx="${idx}"]`)?.value || "";
-    dados.dobradicas = String(qtd);
-    dados.dobradicas_alturas = alturas;
-    dados.furacoes_posicao = furacoesPosicao;
-    dados.puxador_posicao = puxadorPosicao;
-    dados.puxador = puxadorNome;
-    dados.medida_puxador = puxadorMedida;
+    atualizarPrecoPorta();
+    desenharPorta();
     if (porta.tipo === "deslizante" || porta.tipo === "correr") {
-      dados.vao_trilhos_superior = vaoTrilhosSuperior;
-      dados.vao_trilhos_inferior = vaoTrilhosInferior;
+        carregarSistemas().then(() => {
+            const sistemasSelect = document.getElementById("sistemas");
+            if (sistemasSelect) sistemasSelect.value = porta.dados.sistemas || "";
+            atualizarTrilhosDoSistema();
+            const trilhosSuperiorSelect = document.getElementById("trilhos_superior");
+            const trilhosInferiorSelect = document.getElementById("trilhos_inferior");
+            if (trilhosSuperiorSelect) trilhosSuperiorSelect.value = porta.dados.trilhos_superior || "";
+            if (trilhosInferiorSelect) trilhosInferiorSelect.value = porta.dados.trilhos_inferior || "";
+            atualizarResumoTrilhos();
+        });
     }
-    return { ...porta, dados, orcamento_uuid: ORCAMENTO_UUID };
-  });
-
-  try {
-    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(ORCAMENTO_UUID)}/portas`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ portas: portasAtualizadas })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || "Erro ao salvar dados técnicos.");
-    setStatus("Dados técnicos salvos com sucesso!", "ok");
-  } catch (err) {
-    console.error(err);
-    setStatus(`Erro ao salvar dados técnicos: ${err.message}`, "erro");
-  }
 }
 
-voltarBtn.addEventListener("click", () => {
-  if (!ORCAMENTO_UUID) {
-    window.location.href = "portas.html";
-    return;
-  }
-  window.location.href = `portas.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}`;
-});
+function copiarPorta(id) {
+    const porta = portas.find(p => p.id === id);
+    if (!porta) return;
+    editando = null;
+    document.getElementById("tipologia").value = porta.tipo;
+    document.getElementById("quantidade").value = porta.quantidade;
+    renderCampos();
+    for (const k in porta.dados) {
+        const el = document.getElementById(k);
+        if (el) el.value = porta.dados[k];
+    }
+    atualizarPrecoPorta();
+    desenharPorta();
+    if (porta.tipo === "deslizante" || porta.tipo === "correr") {
+        carregarSistemas().then(() => {
+            const sistemasSelect = document.getElementById("sistemas");
+            if (sistemasSelect) sistemasSelect.value = porta.dados.sistemas || "";
+            atualizarTrilhosDoSistema();
+            const trilhosSuperiorSelect = document.getElementById("trilhos_superior");
+            const trilhosInferiorSelect = document.getElementById("trilhos_inferior");
+            if (trilhosSuperiorSelect) trilhosSuperiorSelect.value = porta.dados.trilhos_superior || "";
+            if (trilhosInferiorSelect) trilhosInferiorSelect.value = porta.dados.trilhos_inferior || "";
+            atualizarResumoTrilhos();
+        });
+    }
+}
 
-salvarBtn.addEventListener("click", salvarDadosTecnicos);
+function apagarPorta(id) {
+    if (!confirm("Tem certeza que deseja apagar esta porta?")) return;
+    portas = portas.filter(p => p.id !== id);
+    renderPortas();
+}
 
-carregarPortas();
-</script>
-</body>
-</html>
+window.TIPOLOGIAS = TIPOLOGIAS;
+window.atualizarPerfisSelect = atualizarPerfisSelect;
+window.atualizarVidrosSelect = atualizarVidrosSelect;
+window.renderCampos = renderCampos;
+window.atualizarTrilhosDoSistema = atualizarTrilhosDoSistema;
+window.atualizarResumoTrilhos = atualizarResumoTrilhos;
+window.atualizarCamposObrigatorios = atualizarCamposObrigatorios;
+window.desenharPorta = desenharPorta;
+window.atualizarPrecoPorta = atualizarPrecoPorta;
+window.toggleDetalhesCustos = toggleDetalhesCustos;
+window.atualizarDetalhesCusto = atualizarDetalhesCusto;
+window.salvarPorta = salvarPorta;
+window.renderPortas = renderPortas;
+window.editarPorta = editarPorta;
+window.copiarPorta = copiarPorta;
+window.apagarPorta = apagarPorta;
+
+
+
