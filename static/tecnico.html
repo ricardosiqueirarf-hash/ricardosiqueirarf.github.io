@@ -311,7 +311,12 @@ function setStatus(mensagem, tipo = "") {
 }
 
 function normalizarAlturasDobradicas(entrada) {
-  if (Array.isArray(entrada)) return entrada.map(String);
+  if (Array.isArray(entrada)) {
+    return entrada
+      .flatMap((valor) => String(valor).split(","))
+      .map((valor) => valor.replace(/[\[\]'"]/g, "").trim())
+      .filter(Boolean);
+  }
   if (!entrada) return [];
   return String(entrada)
     .replace(/[\[\]]/g, "")
@@ -552,3 +557,4 @@ carregarPortas();
 </script>
 </body>
 </html>
+
