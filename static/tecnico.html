@@ -433,6 +433,7 @@ function renderPortas() {
     const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
     centralizarPuxadorSvg(svgEl);
     atualizarSvgDobradicas(idx);
+    atualizarSvgPuxador(idx);
   });
 
   document.querySelectorAll(".dobradicas-input").forEach((input) => {
@@ -449,6 +450,13 @@ function renderPortas() {
     input.addEventListener("input", (event) => {
       const idx = event.target.dataset.idx;
       atualizarSvgDobradicas(idx);
+    });
+  });
+
+  document.querySelectorAll(".puxador-posicao-input").forEach((input) => {
+    input.addEventListener("change", (event) => {
+      const idx = event.target.dataset.idx;
+      atualizarSvgPuxador(idx);
     });
   });
 }
@@ -491,6 +499,39 @@ function centralizarPuxadorSvg(svgEl) {
   const handleH = parseFloat(handleRect.getAttribute("height")) || 0;
   const newY = doorY + (doorH - handleH) / 2;
   handleRect.setAttribute("y", newY);
+}
+
+function atualizarSvgPuxador(idx) {
+  const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
+  if (!svgEl) return;
+  const doorRect = svgEl.querySelector('rect[stroke="#1079ba"]');
+  const handleRect = svgEl.querySelector('rect[fill="#f0c24c"]');
+  if (!doorRect || !handleRect) return;
+  const doorX = parseFloat(doorRect.getAttribute("x")) || 0;
+  const doorY = parseFloat(doorRect.getAttribute("y")) || 0;
+  const doorW = parseFloat(doorRect.getAttribute("width")) || 0;
+  const doorH = parseFloat(doorRect.getAttribute("height")) || 0;
+  const handleW = parseFloat(handleRect.getAttribute("width")) || 0;
+  const handleH = parseFloat(handleRect.getAttribute("height")) || 0;
+  const posicao = document.querySelector(`.puxador-posicao-input[data-idx="${idx}"]`)?.value || "";
+
+  let novoX = doorX + doorW - 18;
+  let novoY = doorY + (doorH - handleH) / 2;
+
+  if (posicao === "esquerda") {
+    novoX = doorX + 10;
+  } else if (posicao === "direita") {
+    novoX = doorX + doorW - 18;
+  }
+
+  if (posicao === "cima") {
+    novoY = doorY + 10;
+  } else if (posicao === "baixo") {
+    novoY = doorY + doorH - handleH - 10;
+  }
+
+  handleRect.setAttribute("x", String(novoX));
+  handleRect.setAttribute("y", String(novoY));
 }
 
 function atualizarSvgDobradicas(idx) {
