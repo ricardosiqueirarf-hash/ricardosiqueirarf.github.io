@@ -189,11 +189,15 @@ body {
   padding: 10px;
   background: #fff;
   margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
 }
 
 .tech-preview svg{
   width: 100%;
+  max-width: 320px;
   height: auto;
+  max-height: 240px;
   display: block;
 }
 
@@ -351,7 +355,8 @@ function renderPortas() {
     const largura = dados.largura || "-";
     const altura = dados.altura || "-";
     const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
-    const alturaPuxador = dados.altura_puxador || "";
+    const furacoesPosicao = dados.furacoes_posicao || "";
+    const puxadorPosicao = dados.puxador_posicao || "";
     const vaoTrilhosSuperior = dados.vao_trilhos_superior || "";
     const vaoTrilhosInferior = dados.vao_trilhos_inferior || "";
     const svgPorta = porta.svg ? `<div class="tech-preview">${porta.svg}</div>` : "";
@@ -381,8 +386,23 @@ function renderPortas() {
             <input class="vao-trilho-inferior-input" data-idx="${idx}" type="number" min="0" value="${vaoTrilhosInferior}">
           </label>
         ` : ""}
-        <label>Altura do puxador (mm)
-          <input class="altura-puxador-input" data-idx="${idx}" type="number" min="0" value="${alturaPuxador}">
+        <label>Posição das furações
+          <select class="furacoes-posicao-input" data-idx="${idx}">
+            <option value="">Selecione</option>
+            <option value="cima" ${furacoesPosicao === "cima" ? "selected" : ""}>Cima</option>
+            <option value="baixo" ${furacoesPosicao === "baixo" ? "selected" : ""}>Baixo</option>
+            <option value="esquerda" ${furacoesPosicao === "esquerda" ? "selected" : ""}>Esquerda</option>
+            <option value="direita" ${furacoesPosicao === "direita" ? "selected" : ""}>Direita</option>
+          </select>
+        </label>
+        <label>Posição do puxador
+          <select class="puxador-posicao-input" data-idx="${idx}">
+            <option value="">Selecione</option>
+            <option value="cima" ${puxadorPosicao === "cima" ? "selected" : ""}>Cima</option>
+            <option value="baixo" ${puxadorPosicao === "baixo" ? "selected" : ""}>Baixo</option>
+            <option value="esquerda" ${puxadorPosicao === "esquerda" ? "selected" : ""}>Esquerda</option>
+            <option value="direita" ${puxadorPosicao === "direita" ? "selected" : ""}>Direita</option>
+          </select>
         </label>
       </div>
     `;
@@ -395,6 +415,8 @@ function renderPortas() {
     if (porta.tipo === "giro") {
       renderAlturasDobradicas(idx, qtd, alturas);
     }
+    const svgEl = document.querySelectorAll(".tech-preview svg")[idx];
+    centralizarPuxadorSvg(svgEl);
   });
 
   document.querySelectorAll(".dobradicas-input").forEach((input) => {
@@ -405,6 +427,18 @@ function renderPortas() {
       renderAlturasDobradicas(idx, qtd, valoresAtuais);
     });
   });
+}
+
+function centralizarPuxadorSvg(svgEl) {
+  if (!svgEl) return;
+  const doorRect = svgEl.querySelector('rect[stroke="#1079ba"]');
+  const handleRect = svgEl.querySelector('rect[fill="#f0c24c"]');
+  if (!doorRect || !handleRect) return;
+  const doorY = parseFloat(doorRect.getAttribute("y")) || 0;
+  const doorH = parseFloat(doorRect.getAttribute("height")) || 0;
+  const handleH = parseFloat(handleRect.getAttribute("height")) || 0;
+  const newY = doorY + (doorH - handleH) / 2;
+  handleRect.setAttribute("y", newY);
 }
 
 async function carregarPortas() {
@@ -435,13 +469,15 @@ async function salvarDadosTecnicos() {
   const portasAtualizadas = portas.map((porta, idx) => {
     const dados = { ...(porta.dados || {}) };
     const qtd = parseInt(document.querySelector(`.dobradicas-input[data-idx="${idx}"]`)?.value || "0", 10) || 0;
-    const alturaPuxador = document.querySelector(`.altura-puxador-input[data-idx="${idx}"]`)?.value || "";
     const alturas = getAlturasDobradicas(idx);
     const vaoTrilhosSuperior = document.querySelector(`.vao-trilho-superior-input[data-idx="${idx}"]`)?.value || "";
     const vaoTrilhosInferior = document.querySelector(`.vao-trilho-inferior-input[data-idx="${idx}"]`)?.value || "";
+    const furacoesPosicao = document.querySelector(`.furacoes-posicao-input[data-idx="${idx}"]`)?.value || "";
+    const puxadorPosicao = document.querySelector(`.puxador-posicao-input[data-idx="${idx}"]`)?.value || "";
     dados.dobradicas = String(qtd);
     dados.dobradicas_alturas = alturas;
-    dados.altura_puxador = alturaPuxador;
+    dados.furacoes_posicao = furacoesPosicao;
+    dados.puxador_posicao = puxadorPosicao;
     if (porta.tipo === "deslizante" || porta.tipo === "correr") {
       dados.vao_trilhos_superior = vaoTrilhosSuperior;
       dados.vao_trilhos_inferior = vaoTrilhosInferior;
@@ -478,4 +514,3 @@ carregarPortas();
 </script>
 </body>
 </html>
-
