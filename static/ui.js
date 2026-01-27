@@ -2,10 +2,10 @@
 // TIPOLOGIAS
 // =====================
 const TIPOLOGIAS = {
-    giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    correr: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
+    giro: ["largura", "altura", "perfil", "vidro", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"],
+    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"],
+    correr: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"],
+    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "valor_adicional", "acessorio", "observacao_venda", "observacao_producao"]
 };
 
 // =====================
@@ -152,17 +152,11 @@ function renderCampos() {
 
     TIPOLOGIAS[tipo].forEach(c => {
         const map = {
-            largura: `Largura (mm)<input id="largura" type="number" value="800" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas(); atualizarCamposObrigatorios()">`,
-            altura: `Altura (mm)<input id="altura" type="number" value="2000" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarLimiteDobradicas(); atualizarCamposObrigatorios()">`,
+            largura: `Largura (mm)<input id="largura" type="number" value="800" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
+            altura: `Altura (mm)<input id="altura" type="number" value="2000" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
             perfil: `Perfil<select id="perfil" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
             vidro: `Vidro<select id="vidro" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
-            dobradicas: `Quantidade de dobradiças<input id="dobradicas" type="number" value="0" min="0" oninput="atualizarDobradicasInputs(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
-            dobradicas_alturas: `Alturas das dobradiças<div id="dobradicasContainer" class="helper-text">Defina a quantidade para gerar os campos.</div>`,
-            puxador: `Puxador<select id="puxador" data-required="true" onchange="atualizarPuxadorTipo(); atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
-            altura_puxador: `Altura do puxador (mm)<input id="altura_puxador" type="number" value="1000" min="0" oninput="desenharPorta()">`,
-            medida_puxador: `Tamanho do puxador (mm)<input id="medida_puxador" type="number" value="0" min="0" oninput="atualizarPrecoPorta(); desenharPorta()">`,
             valor_adicional: `Valor adicional (R$)<input id="valor_adicional" type="number" value="0" min="0" step="0.01" oninput="atualizarPrecoPorta()">`,
-            puxadores: `Descrição do puxador<input id="puxadores" type="text" placeholder="Ex: puxador 60cm">`,
             acessorio: `Acessório<textarea id="acessorio" rows="2"></textarea>`,
             observacao_venda: `Observação de venda<textarea id="observacao_venda" rows="2"></textarea>`,
             observacao_producao: `Observação de produção<textarea id="observacao_producao" rows="2"></textarea>`,
@@ -176,9 +170,6 @@ function renderCampos() {
     });
     atualizarPerfisSelect();
     atualizarVidrosSelect();
-    atualizarPuxadoresSelect();
-    atualizarPuxadorTipo();
-    atualizarDobradicasInputs();
     if (tipo === "deslizante" || tipo === "correr") {
         carregarSistemas().then(() => {
             atualizarTrilhosDoSistema();
@@ -281,24 +272,6 @@ function desenharPorta() {
 
     svg.innerHTML += `<rect x="${x}" y="${y}" width="${doorWidth}" height="${doorHeight}" fill="#e7f3fb" stroke="#1079ba" stroke-width="4" rx="8" />`;
 
-    const puxadorId = document.getElementById("puxador")?.value;
-    const deveDesenharPuxador = puxadorId && puxadorId !== "sem_puxador";
-    if (deveDesenharPuxador) {
-        const handleLength = (+document.getElementById("medida_puxador")?.value || 0) * scale;
-        const handlePos = (+document.getElementById("altura_puxador")?.value || 0) * scale;
-        const handleHeight = handleLength > 0 ? handleLength : doorHeight * 0.4;
-        const handleX = x + doorWidth - 18;
-        const handleY = y + doorHeight - handlePos - handleHeight / 2;
-        svg.innerHTML += `<rect x="${handleX}" y="${handleY}" width="8" height="${handleHeight}" fill="#f0c24c" />`;
-    }
-
-    const alturasDobradicas = obterAlturasDobradicas();
-    alturasDobradicas.forEach((alturaDobradica) => {
-        const pos = (+alturaDobradica || 0) * scale;
-        const yPos = y + doorHeight - pos;
-        svg.innerHTML += `<circle cx="${x + 6}" cy="${yPos}" r="4" fill="#0d5d8c" />`;
-        svg.innerHTML += `<line x1="${x + 6}" y1="${yPos}" x2="${x + 24}" y2="${yPos}" stroke="#0d5d8c" stroke-width="2" />`;
-    });
 }
 
 function atualizarPrecoPorta() {
@@ -492,21 +465,12 @@ async function salvarPorta() {
     const quantidade = +document.getElementById("quantidade")?.value || 0;
     const perfilSelecionado = document.getElementById("perfil")?.value;
     const vidroSelecionado = document.getElementById("vidro")?.value;
-    const puxadorSelecionado = document.getElementById("puxador")?.value;
-    const dobradicasQtd = parseInt(document.getElementById("dobradicas")?.value || "0", 10) || 0;
-    const alturasDobradicas = obterAlturasDobradicas();
-
     const pendencias = [];
     if (!largura) pendencias.push("Largura");
     if (!altura) pendencias.push("Altura");
     if (!quantidade) pendencias.push("Quantidade");
     if (!perfilSelecionado) pendencias.push("Perfil");
     if (!vidroSelecionado) pendencias.push("Vidro");
-    if (tipo !== "correr" && !puxadorSelecionado) pendencias.push("Puxador");
-    if (tipo === "giro" && dobradicasQtd < 2) pendencias.push("Dobradiças (mínimo 2)");
-    if (dobradicasQtd > 0 && alturasDobradicas.length !== dobradicasQtd) {
-        pendencias.push("Alturas das dobradiças");
-    }
 
     if (pendencias.length > 0) {
         alert(`Preencha os campos obrigatórios: ${pendencias.join(", ")}`);
@@ -518,12 +482,6 @@ async function salvarPorta() {
         const el = document.getElementById(c);
         if (el) dados[c] = el.value;
     });
-    if (tipo === "giro") {
-        dados.dobradicas_alturas = obterAlturasDobradicas();
-    } else {
-        dados.dobradicas = "0";
-        dados.dobradicas_alturas = [];
-    }
 
     const porta = {
         id: editando ?? idCounter++,
@@ -558,26 +516,14 @@ function renderPortas() {
     portas.forEach((p, idx) => {
         const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "Perfil não definido";
         const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "Vidro não definido";
-        const puxadorNome = p.dados.puxador === "sem_puxador"
-            ? "Sem puxador"
-            : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "Puxador não definido");
-        const puxadorLinha = p.tipo === "correr"
-            ? ""
-            : `Puxador: ${puxadorNome}<br>`;
         const valorAdicional = Number(p.dados.valor_adicional || 0);
-        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0;
-        const dobradicasLinha = p.tipo === "giro"
-            ? `Dobradiças: ${quantidadeDobradicas}<br>`
-            : "";
         c.innerHTML += `
             <div>
                 <strong>${idx + 1}. ${p.tipo}</strong><br>
                 Quantidade: ${p.quantidade}<br>
                 Perfil: ${perfilNome}<br>
                 Vidro: ${vidroNome}<br>
-                ${puxadorLinha}
                 Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
-                ${dobradicasLinha}
                 Preço: R$ ${p.preco.toFixed(2)}<br>
                 ${p.svg}<br>
                 <button class="btn" onclick="copiarPorta(${p.id})">Copiar</button>
@@ -601,13 +547,6 @@ function editarPorta(id) {
         const el = document.getElementById(k);
         if (el) el.value = porta.dados[k];
     }
-    if (Array.isArray(porta.dados.dobradicas_alturas)) {
-        const inputs = document.querySelectorAll(".dobradica-altura");
-        porta.dados.dobradicas_alturas.forEach((altura, idx) => {
-            if (inputs[idx]) inputs[idx].value = altura;
-        });
-    }
-    atualizarPuxadorTipo();
     atualizarPrecoPorta();
     desenharPorta();
     if (porta.tipo === "deslizante" || porta.tipo === "correr") {
@@ -635,13 +574,6 @@ function copiarPorta(id) {
         const el = document.getElementById(k);
         if (el) el.value = porta.dados[k];
     }
-    if (Array.isArray(porta.dados.dobradicas_alturas)) {
-        const inputs = document.querySelectorAll(".dobradica-altura");
-        porta.dados.dobradicas_alturas.forEach((altura, idx) => {
-            if (inputs[idx]) inputs[idx].value = altura;
-        });
-    }
-    atualizarPuxadorTipo();
     atualizarPrecoPorta();
     desenharPorta();
     if (porta.tipo === "deslizante" || porta.tipo === "correr") {
@@ -667,14 +599,9 @@ function apagarPorta(id) {
 window.TIPOLOGIAS = TIPOLOGIAS;
 window.atualizarPerfisSelect = atualizarPerfisSelect;
 window.atualizarVidrosSelect = atualizarVidrosSelect;
-window.atualizarPuxadoresSelect = atualizarPuxadoresSelect;
 window.renderCampos = renderCampos;
-window.atualizarPuxadorTipo = atualizarPuxadorTipo;
 window.atualizarTrilhosDoSistema = atualizarTrilhosDoSistema;
 window.atualizarResumoTrilhos = atualizarResumoTrilhos;
-window.atualizarDobradicasInputs = atualizarDobradicasInputs;
-window.obterAlturasDobradicas = obterAlturasDobradicas;
-window.atualizarLimiteDobradicas = atualizarLimiteDobradicas;
 window.atualizarCamposObrigatorios = atualizarCamposObrigatorios;
 window.desenharPorta = desenharPorta;
 window.atualizarPrecoPorta = atualizarPrecoPorta;
@@ -685,3 +612,5 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
+
+
