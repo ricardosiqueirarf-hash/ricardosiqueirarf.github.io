@@ -50,9 +50,17 @@ async function carregarSistemas() {
 function atualizarSistemasSelect() {
     const sistemasSelect = document.getElementById("sistemas");
     if (!sistemasSelect) return;
+    const tipologiaAtual = document.getElementById("tipologia")?.value;
     const valorAtual = sistemasSelect.value;
     sistemasSelect.innerHTML = "<option value=''>Selecione</option>";
-    sistemasLista.forEach((sistema) => {
+    const sistemasFiltrados = tipologiaAtual
+        ? sistemasLista.filter((sistema) => {
+            const tipos = sistema.tipo || [];
+            return tipos.includes(tipologiaAtual) || tipos.length === 0;
+        })
+        : sistemasLista;
+
+    sistemasFiltrados.forEach((sistema) => {
         const opt = document.createElement("option");
         opt.value = sistema.id;
         opt.textContent = sistema.nome;
