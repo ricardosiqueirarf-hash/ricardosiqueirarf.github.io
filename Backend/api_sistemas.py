@@ -59,8 +59,8 @@ def criar_sistema():
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
-            "trilhos_superior": data.get("trilhos_superior", []),
-            "trilhos_inferior": data.get("trilhos_inferior", []),
+            "trilhossup": data.get("trilhossup", []),
+            "trilhosinf": data.get("trilhosinf", []),
         }
 
         r = requests.post(
@@ -92,8 +92,8 @@ def editar_sistema(id):
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
-            "trilhos_superior": data.get("trilhos_superior", []),
-            "trilhos_inferior": data.get("trilhos_inferior", []),
+            "trilhossup": data.get("trilhossup", []),
+            "trilhosinf": data.get("trilhosinf", []),
         }
 
         r = requests.patch(
@@ -124,4 +124,5 @@ def deletar_sistema(id):
         return jsonify({"status": "deleted"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
