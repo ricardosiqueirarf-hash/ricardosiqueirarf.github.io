@@ -514,31 +514,33 @@ function atualizarSvgPuxador(idx) {
   const handleW = parseFloat(handleRect.getAttribute("width")) || 0;
   const handleH = parseFloat(handleRect.getAttribute("height")) || 0;
   const posicao = document.querySelector(`.puxador-posicao-input[data-idx="${idx}"]`)?.value || "";
+  const comprimentoVertical = Math.max(20, doorH * 0.4);
+  const comprimentoHorizontal = Math.max(40, doorW * 0.4);
 
   let novoX = doorX + doorW - 18;
   let novoY = doorY + (doorH - handleH) / 2;
   let novoW = handleW || 8;
-  let novoH = handleH || Math.max(20, doorH * 0.4);
+  let novoH = handleH || comprimentoVertical;
 
   if (posicao === "esquerda") {
     novoX = doorX + 10;
-    novoY = doorY + (doorH - novoH) / 2;
     novoW = 8;
-    novoH = handleH || Math.max(20, doorH * 0.4);
+    novoH = comprimentoVertical;
+    novoY = doorY + (doorH - novoH) / 2;
   } else if (posicao === "direita") {
     novoX = doorX + doorW - 18;
-    novoY = doorY + (doorH - novoH) / 2;
     novoW = 8;
-    novoH = handleH || Math.max(20, doorH * 0.4);
+    novoH = comprimentoVertical;
+    novoY = doorY + (doorH - novoH) / 2;
   }
 
   if (posicao === "cima") {
-    novoW = Math.max(40, doorW * 0.4);
+    novoW = comprimentoHorizontal;
     novoH = 8;
     novoX = doorX + (doorW - novoW) / 2;
     novoY = doorY + 10;
   } else if (posicao === "baixo") {
-    novoW = Math.max(40, doorW * 0.4);
+    novoW = comprimentoHorizontal;
     novoH = 8;
     novoX = doorX + (doorW - novoW) / 2;
     novoY = doorY + doorH - novoH - 10;
@@ -666,3 +668,4 @@ carregarPortas();
 </script>
 </body>
 </html>
+
