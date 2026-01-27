@@ -298,6 +298,7 @@ const salvarBtn = document.getElementById("salvarBtn");
 const voltarBtn = document.getElementById("voltarBtn");
 
 let portas = [];
+let puxadores = [];
 
 function setStatus(mensagem, tipo = "") {
   if (!mensagem) {
@@ -333,6 +334,24 @@ function normalizarNumeroEntrada(entrada) {
     .split(",")[0]
     .replace(/['"]/g, "")
     .trim();
+}
+
+function renderPuxadoresOptions(selecionado) {
+  const options = [
+    `<option value="">Selecione</option>`,
+    `<option value="sem_puxador">Sem puxador</option>`
+  ];
+  puxadores.forEach((puxador) => {
+    const unidade = puxador.tipo_medida === "metro_linear" ? "m" : "un";
+    const selectedAttr = String(selecionado) === String(puxador.id) ? "selected" : "";
+    options.push(
+      `<option value="${puxador.id}" ${selectedAttr}>${puxador.nome} - R$ ${puxador.preco}/${unidade}</option>`
+    );
+  });
+  if (selecionado && !puxadores.some((puxador) => String(puxador.id) === String(selecionado))) {
+    options.push(`<option value="${selecionado}" selected>${selecionado}</option>`);
+  }
+  return options.join("");
 }
 
 function getAlturasDobradicas(idx) {
@@ -372,7 +391,7 @@ function renderPortas() {
     const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
     const furacoesPosicao = dados.furacoes_posicao || "";
     const puxadorPosicao = dados.puxador_posicao || "";
-    const puxadorNome = dados.puxador || "";
+    const puxadorSelecionado = dados.puxador || "";
     const puxadorMedida = normalizarNumeroEntrada(dados.medida_puxador);
     const vaoTrilhosSuperior = normalizarNumeroEntrada(dados.vao_trilhos_superior);
     const vaoTrilhosInferior = normalizarNumeroEntrada(dados.vao_trilhos_inferior);
@@ -422,7 +441,9 @@ function renderPortas() {
           </select>
         </label>
         <label>Puxador
-          <input class="puxador-nome-input" data-idx="${idx}" type="text" value="${puxadorNome}" placeholder="Ex: Puxador 60cm">
+          <select class="puxador-nome-input" data-idx="${idx}">
+            ${renderPuxadoresOptions(puxadorSelecionado)}
+          </select>
         </label>
         <label>Medida do puxador (mm)
           <input class="puxador-medida-input" data-idx="${idx}" type="number" min="0" value="${puxadorMedida}">
@@ -625,6 +646,18 @@ async function carregarPortas() {
   }
 }
 
+async function carregarPuxadores() {
+  try {
+    const res = await fetch(`${API_BASE}/api/puxadores`);
+    if (!res.ok) throw new Error("Falha ao carregar puxadores.");
+    const data = await res.json();
+    puxadores = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error(err);
+    puxadores = [];
+  }
+}
+
 async function salvarDadosTecnicos() {
   if (!ORCAMENTO_UUID) return;
   setStatus("Salvando dados técnicos...", "ok");
@@ -676,9 +709,12 @@ voltarBtn.addEventListener("click", () => {
 
 salvarBtn.addEventListener("click", salvarDadosTecnicos);
 
-carregarPortas();
+Promise.resolve()
+  .then(carregarPuxadores)
+  .then(carregarPortas);
 </script>
 </body>
 </html>
+
 
 
