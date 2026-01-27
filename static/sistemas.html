@@ -281,8 +281,8 @@ async function carregar() {
             <td>R$ ${Number(sistema.custo).toFixed(2)}</td>
             <td>${Number(sistema.margem).toFixed(2)}%</td>
             <td><b>R$ ${Number(sistema.preco).toFixed(2)}</b></td>
-            <td>${(sistema.trilhos_superior || []).join(", ")}</td>
-            <td>${(sistema.trilhos_inferior || []).join(", ")}</td>
+            <td>${(sistema.trilhossup || []).join(", ")}</td>
+            <td>${(sistema.trilhosinf || []).join(", ")}</td>
             <td>
                 <button onclick='editar(${JSON.stringify(sistema)})'>Editar</button>
                 <button onclick="excluir('${sistema.id}')">Excluir</button>
@@ -312,15 +312,15 @@ async function salvar() {
     const custo = parseFloat(custoInput.value);
     const margem = parseFloat(margemInput.value);
     const preco = atualizarPrecoPreview();
-    const trilhos_superior = getTrilhosSelecionados("superior");
-    const trilhos_inferior = getTrilhosSelecionados("inferior");
+    const trilhossup = getTrilhosSelecionados("superior");
+    const trilhosinf = getTrilhosSelecionados("inferior");
 
     if (!nome || isNaN(custo) || isNaN(margem)) {
         alert("Preencha todos os campos corretamente");
         return;
     }
 
-    const payload = { nome, custo, margem, preco, trilhos_superior, trilhos_inferior };
+    const payload = { nome, custo, margem, preco, trilhossup, trilhosinf };
     const url = id ? `${BASE_URL}/api/sistemas/${id}` : `${BASE_URL}/api/sistemas`;
     const method = id ? "PUT" : "POST";
 
@@ -347,8 +347,8 @@ function editar(sistema) {
     margemInput.value = sistema.margem;
     atualizarPrecoPreview();
 
-    const superiores = sistema.trilhos_superior?.length ? sistema.trilhos_superior : [""];
-    const inferiores = sistema.trilhos_inferior?.length ? sistema.trilhos_inferior : [""];
+    const superiores = sistema.trilhossup?.length ? sistema.trilhossup : [""];
+    const inferiores = sistema.trilhosinf?.length ? sistema.trilhosinf : [""];
 
     const containerSuperior = document.getElementById("trilhos-superiores");
     containerSuperior.innerHTML = "";
@@ -380,12 +380,12 @@ function editar(sistema) {
 
     document.querySelectorAll('.trilho-select[data-group="superior"]')
         .forEach((select, index) => {
-            select.value = sistema.trilhos_superior?.[index] || "";
+            select.value = sistema.trilhossup?.[index] || "";
         });
 
     document.querySelectorAll('.trilho-select[data-group="inferior"]')
         .forEach((select, index) => {
-            select.value = sistema.trilhos_inferior?.[index] || "";
+            select.value = sistema.trilhosinf?.[index] || "";
         });
 }
 
