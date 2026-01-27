@@ -320,6 +320,16 @@ function normalizarAlturasDobradicas(entrada) {
     .filter(Boolean);
 }
 
+function normalizarNumeroEntrada(entrada) {
+  if (Array.isArray(entrada)) return String(entrada[0] ?? "");
+  if (!entrada) return "";
+  return String(entrada)
+    .replace(/[\[\]]/g, "")
+    .split(",")[0]
+    .replace(/['"]/g, "")
+    .trim();
+}
+
 function getAlturasDobradicas(idx) {
   const inputs = document.querySelectorAll(`.dobradica-altura[data-idx="${idx}"]`);
   return Array.from(inputs)
@@ -357,9 +367,9 @@ function renderPortas() {
     const quantidadeDobradicas = parseInt(dados.dobradicas || "0", 10) || 0;
     const furacoesPosicao = dados.furacoes_posicao || "";
     const puxadorPosicao = dados.puxador_posicao || "";
-    const vaoTrilhosSuperior = dados.vao_trilhos_superior || "";
-    const vaoTrilhosInferior = dados.vao_trilhos_inferior || "";
-    const svgPorta = porta.svg ? `<div class="tech-preview">${porta.svg}</div>` : "";
+    const vaoTrilhosSuperior = normalizarNumeroEntrada(dados.vao_trilhos_superior);
+    const vaoTrilhosInferior = normalizarNumeroEntrada(dados.vao_trilhos_inferior);
+    const svgPorta = gerarSvgPorta(largura, altura);
     const mostrarDobradicas = porta.tipo === "giro";
     const mostrarVaoTrilhos = porta.tipo === "deslizante" || porta.tipo === "correr";
     return `
@@ -427,6 +437,34 @@ function renderPortas() {
       renderAlturasDobradicas(idx, qtd, valoresAtuais);
     });
   });
+}
+
+function gerarSvgPorta(largura, altura) {
+  const larguraNum = parseFloat(largura);
+  const alturaNum = parseFloat(altura);
+  if (!larguraNum || !alturaNum) {
+    return `<div class="tech-preview"><div class="helper-text">Sem prévia disponível</div></div>`;
+  }
+
+  const viewBoxWidth = 400;
+  const viewBoxHeight = 600;
+  const scale = Math.min(320 / larguraNum, 520 / alturaNum);
+  const doorWidth = larguraNum * scale;
+  const doorHeight = alturaNum * scale;
+  const x = (viewBoxWidth - doorWidth) / 2;
+  const y = (viewBoxHeight - doorHeight) / 2;
+  const handleHeight = doorHeight * 0.4;
+  const handleX = x + doorWidth - 18;
+  const handleY = y + (doorHeight - handleHeight) / 2;
+
+  return `
+    <div class="tech-preview">
+      <svg viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}" xmlns="http://www.w3.org/2000/svg">
+        <rect x="${x}" y="${y}" width="${doorWidth}" height="${doorHeight}" fill="#e7f3fb" stroke="#1079ba" stroke-width="4" rx="8"></rect>
+        <rect x="${handleX}" y="${handleY}" width="8" height="${handleHeight}" fill="#f0c24c"></rect>
+      </svg>
+    </div>
+  `;
 }
 
 function centralizarPuxadorSvg(svgEl) {
