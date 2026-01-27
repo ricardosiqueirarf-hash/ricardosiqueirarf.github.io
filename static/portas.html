@@ -300,31 +300,6 @@ input:hover, select:hover, textarea:hover{
   border: 1px solid rgba(16,121,186,0.14);
 }
 
-/* Cost toggle/details */
-.cost-toggle{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.92rem;
-  color: #374151;
-}
-cost-details table{
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 8px;
-  overflow: hidden;
-  border-radius: 12px;
-}
-.cost-details th,
-.cost-details td{
-  border: 1px solid rgba(220,221,225,0.85);
-  padding: 8px;
-  text-align: left;
-}
-cost-details th{
-  background: rgba(231,243,251,0.9);
-}
-
 /* Cards internos */
 #portasSalvas div,
 #printResumo .print-item,
@@ -486,11 +461,6 @@ cost-details th{
 
                 <div id="campos"></div>
                 <div class="price-preview" id="precoPorta">Preço estimado: R$ 0,00</div>
-                <label class="cost-toggle">
-                    <input type="checkbox" id="toggleCustos" onchange="toggleDetalhesCustos()">
-                    Mostrar custos e preços detalhados
-                </label>
-                <div class="cost-details" id="detalhesCustos" style="display: none;"></div>
                 <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
             </div>
 
@@ -537,4 +507,5 @@ cost-details th{
 </script>
 </body>
 </html>
+
 
