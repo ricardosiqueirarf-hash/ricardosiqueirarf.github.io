@@ -500,7 +500,45 @@ async function salvarPorta() {
     const nextPortas = editando === null
         ? [...portas, porta]
         : portas.map(p => (p.id === editando ? porta : p));
-    const portasComUUID = nextPortas.map(p => ({ ...p, orcamento_uuid: ORCAMENTO_UUID }));
+    let portasExistentes = [];
+    try {
+        const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(ORCAMENTO_UUID)}/portas`, {
+            headers: typeof authHeader === "function" ? authHeader() : {}
+        });
+        const data = await res.json();
+        portasExistentes = Array.isArray(data.portas) ? data.portas : [];
+    } catch (err) {
+        console.error("Erro ao buscar portas existentes:", err);
+    }
+
+    const camposTecnicos = [
+        "puxador",
+        "medida_puxador",
+        "puxador_posicao",
+        "dobradicas",
+        "dobradicas_alturas",
+        "furacoes_posicao",
+        "vao_trilhos_superior",
+        "vao_trilhos_inferior"
+    ];
+
+    const portasComUUID = nextPortas.map((p) => {
+        const existente = portasExistentes.find((item) => String(item.id) === String(p.id));
+        const dadosExistentes = existente?.dados || {};
+        const dadosAtualizados = { ...(p.dados || {}) };
+        camposTecnicos.forEach((campo) => {
+            const valorAtual = dadosAtualizados[campo];
+            const valorExistente = dadosExistentes[campo];
+            const devePreservar = valorAtual === undefined
+                || valorAtual === null
+                || valorAtual === ""
+                || (Array.isArray(valorAtual) && valorAtual.length === 0);
+            if (devePreservar && valorExistente !== undefined) {
+                dadosAtualizados[campo] = valorExistente;
+            }
+        });
+        return { ...p, dados: dadosAtualizados, orcamento_uuid: ORCAMENTO_UUID };
+    });
     try {
         await salvarPortasBackend(portasComUUID);
         alert("Porta salva com sucesso!");
