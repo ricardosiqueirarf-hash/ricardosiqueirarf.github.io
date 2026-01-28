@@ -2,10 +2,10 @@
 // TIPOLOGIAS
 // =====================
 const TIPOLOGIAS = {
-    giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_alturas", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_posicao", "dobradicas_alturas", "puxador", "puxador_posicao", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "puxador", "puxador_posicao", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
     correr: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
+    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "puxador_posicao", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
 };
 
 // =====================
@@ -157,8 +157,20 @@ function renderCampos() {
             perfil: `Perfil<select id="perfil" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
             vidro: `Vidro<select id="vidro" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
             dobradicas: `Quantidade de dobradiças<input id="dobradicas" type="number" value="0" min="0" oninput="atualizarDobradicasInputs(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
+            dobradicas_posicao: `Lado das dobradiças<select id="dobradicas_posicao" data-required="true" onchange="desenharPorta(); atualizarCamposObrigatorios()">
+                <option value="">Selecione</option>
+                <option value="esquerda">Esquerda</option>
+                <option value="direita">Direita</option>
+            </select>`,
             dobradicas_alturas: `Alturas das dobradiças<div id="dobradicasContainer" class="helper-text">Defina a quantidade para gerar os campos.</div>`,
             puxador: `Puxador<select id="puxador" data-required="true" onchange="atualizarPuxadorTipo(); atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
+            puxador_posicao: `Lado do puxador<select id="puxador_posicao" data-required="true" onchange="desenharPorta(); atualizarCamposObrigatorios()">
+                <option value="">Selecione</option>
+                <option value="esquerda">Esquerda</option>
+                <option value="direita">Direita</option>
+                <option value="cima">Cima</option>
+                <option value="baixo">Baixo</option>
+            </select>`,
             altura_puxador: `Altura do puxador (mm)<input id="altura_puxador" type="number" value="1000" min="0" oninput="desenharPorta()">`,
             medida_puxador: `Tamanho do puxador (mm)<input id="medida_puxador" type="number" value="0" min="0" oninput="atualizarPrecoPorta(); desenharPorta()">`,
             valor_adicional: `Valor adicional (R$)<input id="valor_adicional" type="number" value="0" min="0" step="0.01" oninput="atualizarPrecoPorta()">`,
@@ -282,6 +294,49 @@ function desenharPorta() {
 
     svg.innerHTML += `<rect x="${x}" y="${y}" width="${doorWidth}" height="${doorHeight}" fill="#e7f3fb" stroke="#1079ba" stroke-width="4" rx="8" />`;
 
+    const puxadorId = document.getElementById("puxador")?.value;
+    const deveDesenharPuxador = puxadorId && puxadorId !== "sem_puxador";
+    if (deveDesenharPuxador) {
+        const posicao = document.getElementById("puxador_posicao")?.value || "direita";
+        const handleThickness = 8;
+        const handleLengthVertical = Math.max(20, doorHeight * 0.4);
+        const handleLengthHorizontal = Math.max(40, doorWidth * 0.4);
+        let handleW = handleThickness;
+        let handleH = handleLengthVertical;
+        let handleX = x + doorWidth - 18;
+        let handleY = y + (doorHeight - handleH) / 2;
+
+        if (posicao === "esquerda") {
+            handleX = x + 10;
+        } else if (posicao === "direita") {
+            handleX = x + doorWidth - 18;
+        } else if (posicao === "cima") {
+            handleW = handleLengthHorizontal;
+            handleH = handleThickness;
+            handleX = x + (doorWidth - handleW) / 2;
+            handleY = y + 10;
+        } else if (posicao === "baixo") {
+            handleW = handleLengthHorizontal;
+            handleH = handleThickness;
+            handleX = x + (doorWidth - handleW) / 2;
+            handleY = y + doorHeight - handleH - 10;
+        }
+
+        svg.innerHTML += `<rect x="${handleX}" y="${handleY}" width="${handleW}" height="${handleH}" fill="#f0c24c" />`;
+    }
+
+    const ladoDobradicas = document.getElementById("dobradicas_posicao")?.value || "esquerda";
+    const alturasDobradicas = obterAlturasDobradicas();
+    const dobradicaX = ladoDobradicas === "direita" ? x + doorWidth - 6 : x + 6;
+    const dobradicaLinhaFim = ladoDobradicas === "direita"
+        ? Math.max(x, dobradicaX - 18)
+        : Math.min(x + doorWidth, dobradicaX + 18);
+    alturasDobradicas.forEach((alturaDobradica) => {
+        const pos = (+alturaDobradica || 0) * scale;
+        const yPos = y + doorHeight - pos;
+        svg.innerHTML += `<circle cx="${dobradicaX}" cy="${yPos}" r="4" fill="#0d5d8c" />`;
+        svg.innerHTML += `<line x1="${dobradicaX}" y1="${yPos}" x2="${dobradicaLinhaFim}" y2="${yPos}" stroke="#0d5d8c" stroke-width="2" />`;
+    });
 }
 
 function atualizarPrecoPorta() {
@@ -489,6 +544,12 @@ async function salvarPorta() {
     if (dobradicasQtd > 0 && alturasDobradicas.length !== dobradicasQtd) {
         pendencias.push("Alturas das dobradiças");
     }
+    if (tipo === "giro" && !document.getElementById("dobradicas_posicao")?.value) {
+        pendencias.push("Lado das dobradiças");
+    }
+    if (tipo !== "correr" && !document.getElementById("puxador_posicao")?.value) {
+        pendencias.push("Lado do puxador");
+    }
 
     if (pendencias.length > 0) {
         alert(`Preencha os campos obrigatórios: ${pendencias.join(", ")}`);
@@ -671,3 +732,5 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
+
+
