@@ -477,7 +477,10 @@ async function salvarPorta() {
         return;
     }
 
-    const dados = {};
+    const portaExistente = editando !== null
+        ? portas.find(p => p.id === editando)
+        : null;
+    const dados = portaExistente?.dados ? { ...portaExistente.dados } : {};
     TIPOLOGIAS[tipo].forEach(c => {
         const el = document.getElementById(c);
         if (el) dados[c] = el.value;
@@ -612,6 +615,3 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
-
-
-
