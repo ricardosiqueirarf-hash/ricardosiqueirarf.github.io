@@ -9,17 +9,24 @@ import datetime
 # =====================
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
+
+# chave antiga mantida (caso você use em JWT ou outro ponto)
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# NOVO: service role (backend)
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
 SUPABASE_TABLE_ESTRUTURAS3D = os.getenv("SUPABASE_TABLE_ESTRUTURAS3D", "estruturas")
 TOKEN_DO_ADMIN = os.getenv("tokendoadmin") or os.getenv("TOKENDOADMIN")
 JWT_SECRET = os.getenv("JWT_SECRET") or SUPABASE_KEY
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não definidos")
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+    raise RuntimeError("SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não definidos")
 
+# HEADERS agora usam SERVICE ROLE (bypass RLS)
 HEADERS = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "apikey": SUPABASE_SERVICE_ROLE_KEY,
+    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
     "Content-Type": "application/json"
 }
 
@@ -264,7 +271,6 @@ from api_export_promob import export_promob_bp
 from api_sistemas import sistemas_bp
 from api_trilhos import trilhos_bp
 
-
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
 app.register_blueprint(insumos_bp)
@@ -287,6 +293,7 @@ app.register_blueprint(trilhos_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
