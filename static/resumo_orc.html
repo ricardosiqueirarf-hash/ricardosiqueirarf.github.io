@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resumo do Orçamento | ColorGlass</title>
+<meta name="description" content="Resumo simplificado do orçamento da ColorGlass.">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="/favicon.ico?v=4" sizes="any">
+<link rel="shortcut icon" href="/favicon.ico?v=4">
+<style>
+:root{
+  --cg-blue:#1079ba;
+  --cg-blue-dark:#0d5d8c;
+  --cg-blue-soft:#e7f3fb;
+  --cg-gold:#f0c24c;
+  --cg-white:#ffffff;
+  --cg-text:#1f2933;
+  --cg-muted:#6b7280;
+  --cg-border:rgba(16,121,186,0.12);
+  --cg-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
+  --cg-shadow-soft: 0 10px 24px rgba(15,44,62,0.10);
+}
+
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+body{
+  min-height: 100vh;
+  display: flex;
+  background:
+    radial-gradient(circle at top, rgba(16,121,186,0.16), transparent 55%),
+    linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+  color: var(--cg-text);
+}
+
+.app {
+  display: flex;
+  width: 100%;
+  gap: 18px;
+  padding: 18px;
+  animation: fadeIn 0.7s ease;
+}
+
+.sidebar{
+  width: 240px;
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 18px;
+  gap: 12px;
+  border-radius: 18px;
+  box-shadow: var(--cg-shadow);
+  position: sticky;
+  top: 18px;
+  height: calc(100vh - 36px);
+  overflow: hidden;
+}
+
+.sidebar::after{
+  content:"";
+  position:absolute;
+  right:-90px;
+  top:-120px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 60%);
+  pointer-events:none;
+}
+
+.sidebar h3{
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+  letter-spacing: 0.8px;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar button{
+  background: rgba(255,255,255,0.14);
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  cursor: pointer;
+  text-align: left;
+  font-weight: 600;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar button:hover{
+  background: rgba(255,255,255,0.22);
+  transform: translateX(4px);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+}
+
+.content{
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(16,121,186,0.10);
+  box-shadow: var(--cg-shadow-soft);
+  backdrop-filter: blur(10px);
+  animation: floatIn 0.6s ease;
+}
+
+.content h1{
+  color: var(--cg-blue-dark);
+  font-size: 1.6rem;
+  margin-bottom: 14px;
+}
+
+.card{
+  background: var(--cg-white);
+  border: 1px solid var(--cg-border);
+  border-radius: 18px;
+  box-shadow: var(--cg-shadow-soft);
+  padding: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, rgba(16,121,186,0.10), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events:none;
+}
+
+.card:hover::before{ opacity: 1; }
+
+.form-grid{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+label{ display:flex; flex-direction:column; font-size:0.95rem; gap:7px; color:#374151; }
+input{
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d4d9df;
+  background: #fdfefe;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus{
+  border-color: var(--cg-blue);
+  box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
+  outline: none;
+}
+
+.btn{
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+  color: #fff;
+  font-weight: 800;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  box-shadow: 0 10px 18px rgba(16,121,186,0.22);
+  white-space: nowrap;
+}
+
+.btn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(16,121,186,0.26);
+}
+
+.status-pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(231,243,251,0.75);
+  border: 1px solid rgba(16,121,186,0.16);
+  color: var(--cg-muted);
+  font-size: 0.9rem;
+}
+
+.summary-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.summary-item{
+  background: rgba(231,243,251,0.6);
+  border: 1px solid rgba(16,121,186,0.14);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.summary-item strong{
+  display: block;
+  color: var(--cg-blue-dark);
+  font-size: 1.05rem;
+  margin-top: 6px;
+}
+
+.table-wrap{ overflow-x: auto; }
+
+.table-wrap table{
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--cg-shadow-soft);
+  border: 1px solid rgba(16,121,186,0.10);
+}
+
+.table-wrap th,
+.table-wrap td{
+  border: 1px solid rgba(220,221,225,0.85);
+  padding: 12px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.table-wrap th{
+  background: linear-gradient(135deg, rgba(231,243,251,0.95), rgba(231,243,251,0.65));
+  color: #1f2933;
+  font-weight: 800;
+}
+
+.empty-state{
+  padding: 16px;
+  color: var(--cg-muted);
+  font-style: italic;
+}
+
+.content::-webkit-scrollbar { width: 10px; }
+.content::-webkit-scrollbar-thumb { background: var(--cg-blue); border-radius: 999px; }
+.content::-webkit-scrollbar-track { background: rgba(255,255,255,0.0); }
+
+@keyframes fadeIn{
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatIn{
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px), (orientation: portrait){
+  body{ display: block; }
+  .app{ flex-direction: column; padding: 14px; }
+  .sidebar{ width: 100%; height: auto; position: relative; top: 0; border-radius: 18px; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+  .sidebar button{ text-align: center; flex: 1; }
+  .content{ padding: 18px 14px 22px; border-radius: 18px; }
+  .form-grid{ grid-template-columns: 1fr; }
+  .btn{ width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <h3>COLOR GLASS</h3>
+    <button onclick="go('index_loja.html')">Orçamentos</button>
+  </div>
+
+  <div class="content">
+    <h1>Resumo do Orçamento</h1>
+
+    <div class="card">
+      <div class="form-grid">
+        <label>Número do orçamento
+          <input type="text" id="numeroOrcamento" placeholder="Ex.: 1024">
+        </label>
+        <button class="btn" type="button" id="btnCarregar">Carregar</button>
+      </div>
+      <div style="margin-top: 12px;">
+        <span class="status-pill" id="statusResumo">Informe o número do orçamento.</span>
+      </div>
+    </div>
+
+    <div class="card" id="infoCard" style="display: none;">
+      <div class="summary-grid">
+        <div class="summary-item">
+          Pedido
+          <strong id="resumoPedido">--</strong>
+        </div>
+        <div class="summary-item">
+          Cliente
+          <strong id="resumoCliente">--</strong>
+        </div>
+        <div class="summary-item">
+          Quantidade de portas
+          <strong id="resumoQuantidade">0</strong>
+        </div>
+        <div class="summary-item">
+          Custo total (R$)
+          <strong id="resumoCustoTotal">--</strong>
+        </div>
+        <div class="summary-item">
+          Valor total (R$)
+          <strong id="resumoValorTotal">0,00</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="color: var(--cg-blue); font-size: 1.15rem;">Itens do orçamento</h2>
+      <div class="table-wrap" id="tabelaItens">
+        <div class="empty-state">Nenhum item carregado.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BACKEND_URL = "https://colorglass.onrender.com";
+
+function getUserToken() {
+  return localStorage.getItem("USER_TOKEN");
+}
+
+function buildUrlComToken(url) {
+  const token = getUserToken();
+  if (!token) return url;
+
+  try {
+    const target = new URL(url, window.location.origin);
+    if (!target.searchParams.get("token")) {
+      target.searchParams.set("token", token);
+    }
+    return target.toString();
+  } catch (error) {
+    console.error("URL inválida:", error);
+    return url;
+  }
+}
+
+function go(url){
+  window.location.href = buildUrlComToken(url);
+}
+
+async function validarSessao() {
+  const USER_TOKEN = getUserToken();
+  if (!USER_TOKEN) {
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/auth/validar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      }
+    });
+
+    if (!res.ok) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    const data = await res.json();
+    if (!data.success) {
+      window.location.href = "login.html";
+      return false;
+    }
+
+    if (data.redirect && !window.location.pathname.endsWith(data.redirect)) {
+      window.location.href = data.redirect;
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao validar sessão:", err);
+    window.location.href = "login.html";
+    return false;
+  }
+}
+
+function atualizarStatus(mensagem) {
+  const status = document.getElementById("statusResumo");
+  if (status) status.textContent = mensagem;
+}
+
+function formatarDinheiroBR(valor) {
+  if (valor === null || valor === undefined || valor === "--") return "--";
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return "--";
+  return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function normalizarTexto(valor) {
+  return valor ? String(valor) : "-";
+}
+
+let cachePerfis = [];
+let cacheVidros = [];
+let cachePuxadores = [];
+
+async function carregarListas() {
+  const USER_TOKEN = getUserToken();
+  const headers = USER_TOKEN ? { "Authorization": `Bearer ${USER_TOKEN}` } : {};
+
+  const [perfisRes, vidrosRes, puxadoresRes] = await Promise.all([
+    fetch(`${BACKEND_URL}/api/perfis`),
+    fetch(`${BACKEND_URL}/api/vidros`),
+    fetch(`${BACKEND_URL}/api/puxadores`, { headers })
+  ]);
+
+  cachePerfis = perfisRes.ok ? await perfisRes.json() : [];
+  cacheVidros = vidrosRes.ok ? await vidrosRes.json() : [];
+  cachePuxadores = puxadoresRes.ok ? await puxadoresRes.json() : [];
+}
+
+function obterNomePerfil(id) {
+  const perfil = cachePerfis.find((p) => String(p.id) === String(id));
+  return perfil?.nome || "-";
+}
+
+function obterNomeVidro(id) {
+  const vidro = cacheVidros.find((v) => String(v.id) === String(id));
+  if (!vidro) return "-";
+  const espessura = vidro.espessura ? `${vidro.espessura}mm` : "";
+  return `${vidro.tipo} ${espessura}`.trim();
+}
+
+function obterNomePuxador(id) {
+  if (id === "sem_puxador" || id === "") return "Sem puxador";
+  const puxador = cachePuxadores.find((p) => String(p.id) === String(id));
+  return puxador?.nome || "-";
+}
+
+function renderizarTabela(portas) {
+  const container = document.getElementById("tabelaItens");
+  if (!container) return;
+
+  if (!Array.isArray(portas) || portas.length === 0) {
+    container.innerHTML = '<div class="empty-state">Nenhum item encontrado.</div>';
+    return;
+  }
+
+  const linhas = portas.map((porta) => {
+    const quantidade = Number(porta.quantidade) || 1;
+    const perfil = obterNomePerfil(porta?.dados?.perfil);
+    const vidro = obterNomeVidro(porta?.dados?.vidro);
+    const puxador = obterNomePuxador(porta?.dados?.puxador);
+    const custo = porta.custo ?? porta.custo_total ?? porta.custo_item;
+    const valor = porta.preco ?? porta.valor ?? 0;
+
+    return `
+      <tr>
+        <td>${quantidade}</td>
+        <td>${normalizarTexto(perfil)}</td>
+        <td>${normalizarTexto(vidro)}</td>
+        <td>${normalizarTexto(puxador)}</td>
+        <td>${custo === undefined || custo === null ? "--" : formatarDinheiroBR(custo)}</td>
+        <td>${formatarDinheiroBR(valor)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Quantidade</th>
+          <th>Perfil</th>
+          <th>Vidro</th>
+          <th>Puxador</th>
+          <th>Custo do item (R$)</th>
+          <th>Valor do item (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${linhas}
+      </tbody>
+    </table>
+  `;
+}
+
+function atualizarResumo(info, portas) {
+  const infoCard = document.getElementById("infoCard");
+  infoCard.style.display = "block";
+
+  document.getElementById("resumoPedido").textContent = info?.numero_pedido ?? "--";
+  document.getElementById("resumoCliente").textContent = info?.cliente_nome ?? "--";
+
+  let quantidadeTotal = 0;
+  let valorTotal = 0;
+  let custoTotal = 0;
+  let possuiCusto = false;
+
+  portas.forEach((porta) => {
+    const quantidade = Number(porta.quantidade) || 1;
+    quantidadeTotal += quantidade;
+
+    const valor = Number(porta.preco ?? porta.valor ?? 0);
+    if (Number.isFinite(valor)) {
+      valorTotal += valor;
+    }
+
+    const custo = porta.custo ?? porta.custo_total ?? porta.custo_item;
+    const custoNumero = Number(custo);
+    if (Number.isFinite(custoNumero)) {
+      custoTotal += custoNumero;
+      possuiCusto = true;
+    }
+  });
+
+  document.getElementById("resumoQuantidade").textContent = quantidadeTotal;
+  document.getElementById("resumoValorTotal").textContent = formatarDinheiroBR(valorTotal);
+  document.getElementById("resumoCustoTotal").textContent = possuiCusto
+    ? formatarDinheiroBR(custoTotal)
+    : "--";
+}
+
+async function buscarOrcamento() {
+  const numero = document.getElementById("numeroOrcamento").value.trim();
+  if (!numero) {
+    atualizarStatus("Digite o número do orçamento.");
+    return;
+  }
+
+  try {
+    atualizarStatus("Carregando orçamento...");
+
+    const USER_TOKEN = getUserToken();
+    const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
+      headers: {
+        "Authorization": `Bearer ${USER_TOKEN}`
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const orcamentos = data.orcamentos || [];
+    const encontrado = orcamentos.find((o) => String(o.numero_pedido) === numero);
+
+    if (!encontrado) {
+      atualizarStatus("Orçamento não encontrado.");
+      renderizarTabela([]);
+      document.getElementById("infoCard").style.display = "none";
+      return;
+    }
+
+    const portasRes = await fetch(`${BACKEND_URL}/api/orcamento/${encontrado.id}/portas`, {
+      headers: {
+        "Authorization": `Bearer ${USER_TOKEN}`
+      }
+    });
+
+    if (!portasRes.ok) {
+      throw new Error(`HTTP ${portasRes.status}`);
+    }
+
+    const portasData = await portasRes.json();
+    const portas = portasData.portas || [];
+
+    renderizarTabela(portas);
+    atualizarResumo(encontrado, portas);
+    atualizarStatus(`Orçamento #${encontrado.numero_pedido} carregado.`);
+  } catch (err) {
+    console.error("Erro ao carregar orçamento:", err);
+    atualizarStatus("Erro ao carregar orçamento.");
+    renderizarTabela([]);
+  }
+}
+
+function inicializarFormulario() {
+  const btn = document.getElementById("btnCarregar");
+  btn.addEventListener("click", buscarOrcamento);
+
+  const input = document.getElementById("numeroOrcamento");
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      buscarOrcamento();
+    }
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const numeroParam = params.get("numero");
+  if (numeroParam) {
+    input.value = numeroParam;
+    buscarOrcamento();
+  }
+}
+
+validarSessao().then((ok) => {
+  if (!ok) return;
+  carregarListas().then(inicializarFormulario).catch((error) => {
+    console.error("Erro ao carregar listas:", error);
+    inicializarFormulario();
+  });
+});
+</script>
+</body>
+</html>
