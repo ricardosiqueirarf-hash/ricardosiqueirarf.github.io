@@ -325,16 +325,13 @@ input:focus{
 <script>
 const BACKEND_URL = "https://colorglass.onrender.com";
 
-function salvarTokenDaUrl() {
+function getTokenFromUrl() {
   const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
-  if (token) {
-    localStorage.setItem("USER_TOKEN", token);
-  }
+  return params.get("token") || "";
 }
 
 function getUserToken() {
-  return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN");
+  return getTokenFromUrl() || localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN");
 }
 
 function buildUrlComToken(url) {
@@ -360,7 +357,7 @@ function go(url){
 async function validarSessao() {
   const USER_TOKEN = getUserToken();
   if (!USER_TOKEN) {
-    window.location.href = "login.html";
+    atualizarStatus("Sessão não encontrada. Faça login e tente novamente.");
     return false;
   }
 
@@ -374,13 +371,13 @@ async function validarSessao() {
     });
 
     if (!res.ok) {
-      window.location.href = "login.html";
+      atualizarStatus("Sessão inválida. Faça login novamente.");
       return false;
     }
 
     const data = await res.json();
     if (!data.success) {
-      window.location.href = "login.html";
+      atualizarStatus("Sessão inválida. Faça login novamente.");
       return false;
     }
 
@@ -392,7 +389,7 @@ async function validarSessao() {
     return true;
   } catch (err) {
     console.error("Erro ao validar sessão:", err);
-    window.location.href = "login.html";
+    atualizarStatus("Erro ao validar sessão.");
     return false;
   }
 }
@@ -541,10 +538,15 @@ async function buscarOrcamento() {
     return;
   }
 
+  const USER_TOKEN = getUserToken();
+  if (!USER_TOKEN) {
+    atualizarStatus("Sessão não encontrada. Faça login e tente novamente.");
+    return;
+  }
+
   try {
     atualizarStatus("Carregando orçamento...");
 
-    const USER_TOKEN = getUserToken();
     const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
       headers: {
         "Authorization": `Bearer ${USER_TOKEN}`
@@ -615,8 +617,6 @@ function inicializarFormulario() {
   }
 }
 
-salvarTokenDaUrl();
-
 validarSessao().then((ok) => {
   if (!ok) return;
   carregarListas().then(inicializarFormulario).catch((error) => {
@@ -627,4 +627,5 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
+
 
