@@ -325,8 +325,16 @@ input:focus{
 <script>
 const BACKEND_URL = "https://colorglass.onrender.com";
 
+function salvarTokenDaUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+  if (token) {
+    localStorage.setItem("USER_TOKEN", token);
+  }
+}
+
 function getUserToken() {
-  return localStorage.getItem("USER_TOKEN");
+  return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN");
 }
 
 function buildUrlComToken(url) {
@@ -549,7 +557,13 @@ async function buscarOrcamento() {
 
     const data = await res.json();
     const orcamentos = data.orcamentos || [];
-    const encontrado = orcamentos.find((o) => String(o.numero_pedido) === numero);
+    const numeroNormalizado = numero.trim();
+    const numeroNumerico = Number(numeroNormalizado);
+    const encontrado = orcamentos.find((o) => {
+      const pedido = o.numero_pedido ?? "";
+      return String(pedido) === numeroNormalizado
+        || (Number.isFinite(numeroNumerico) && Number(pedido) === numeroNumerico);
+    });
 
     if (!encontrado) {
       atualizarStatus("Orçamento não encontrado.");
@@ -601,6 +615,8 @@ function inicializarFormulario() {
   }
 }
 
+salvarTokenDaUrl();
+
 validarSessao().then((ok) => {
   if (!ok) return;
   carregarListas().then(inicializarFormulario).catch((error) => {
@@ -611,3 +627,4 @@ validarSessao().then((ok) => {
 </script>
 </body>
 </html>
+
