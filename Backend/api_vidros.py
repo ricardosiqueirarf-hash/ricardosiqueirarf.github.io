@@ -1,22 +1,11 @@
-import os
 import requests
 from flask import Blueprint, request, jsonify
 
 # =====================
-# CONFIG SUPABASE (LOCAL)
+# IMPORTA CONFIG CENTRAL
 # =====================
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não configurados")
-
-HEADERS = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
-    "Content-Type": "application/json"
-}
+from app import SUPABASE_URL, HEADERS
 
 # =====================
 # BLUEPRINT
@@ -40,8 +29,12 @@ def calcular_preco(custo, margem, perda):
 def listar_vidros():
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc",
-            headers=HEADERS
+            f"{SUPABASE_URL}/rest/v1/vidros",
+            headers=HEADERS,
+            params={
+                "select": "*",
+                "order": "tipo.asc"
+            }
         )
         r.raise_for_status()
         return jsonify(r.json())
@@ -102,8 +95,9 @@ def editar_vidro(id):
         }
 
         r = requests.patch(
-            f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}",
+            f"{SUPABASE_URL}/rest/v1/vidros",
             headers=HEADERS,
+            params={"id": f"eq.{id}"},
             json=payload
         )
         r.raise_for_status()
@@ -117,8 +111,9 @@ def editar_vidro(id):
 def deletar_vidro(id):
     try:
         r = requests.delete(
-            f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}",
-            headers=HEADERS
+            f"{SUPABASE_URL}/rest/v1/vidros",
+            headers=HEADERS,
+            params={"id": f"eq.{id}"}
         )
         r.raise_for_status()
 
