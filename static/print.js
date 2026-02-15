@@ -177,9 +177,13 @@ function atualizarResumoOrdem() {
     const itens = portas.map((p, index) => {
         const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-";
         const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-";
-        const puxadorNome = p.dados.puxador === "sem_puxador"
+        const ladoPuxador = p.dados.puxador_posicao || "-";
+        const puxadorNomeBase = p.dados.puxador === "sem_puxador"
             ? "Sem puxador"
             : (todosPuxadores.find(puxador => puxador.id == p.dados.puxador)?.nome || "-");
+        const puxadorNome = puxadorNomeBase === "Sem puxador"
+            ? puxadorNomeBase
+            : `${puxadorNomeBase}/${ladoPuxador}`;
         const observacaoProducao = p.dados.observacao_producao || "-";
         const cabecalho = index === 0
             ? `
@@ -306,6 +310,9 @@ window.atualizarEtiquetasTermicas = atualizarEtiquetasTermicas;
 window.imprimirOrcamento = imprimirOrcamento;
 window.imprimirOrdemProducao = imprimirOrdemProducao;
 window.imprimirEtiquetaTermica = imprimirEtiquetaTermica;
+
+
+
 
 
 
