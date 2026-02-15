@@ -141,7 +141,7 @@ function gerarSvgOrdemProducao(porta) {
         return `
           <circle cx="${dobradicaX}" cy="${yPos}" r="4" fill="#0d5d8c" />
           <line x1="${dobradicaX}" y1="${yPos}" x2="${dobradicaLinhaFim}" y2="${yPos}" stroke="#0d5d8c" stroke-width="2" />
-          <text x="${textoX}" y="${yPos - 4}" font-size="12" fill="#0d5d8c" text-anchor="${textoAnchor}">${alturaLimitada} mm</text>
+          <text x="${textoX}" y="${yPos - 4}" font-size="18" font-weight="700" fill="#0d5d8c" stroke="#ffffff" stroke-width="0.9" paint-order="stroke" text-anchor="${textoAnchor}">${alturaLimitada} mm</text>
         `;
     }).join("");
 
@@ -310,6 +310,8 @@ window.atualizarEtiquetasTermicas = atualizarEtiquetasTermicas;
 window.imprimirOrcamento = imprimirOrcamento;
 window.imprimirOrdemProducao = imprimirOrdemProducao;
 window.imprimirEtiquetaTermica = imprimirEtiquetaTermica;
+
+
 
 
 
