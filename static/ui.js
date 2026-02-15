@@ -247,8 +247,47 @@ function atualizarDobradicasInputs() {
 function obterAlturasDobradicas() {
     const inputs = document.querySelectorAll(".dobradica-altura");
     return Array.from(inputs)
-        .map(input => input.value)
-        .filter(valor => valor !== "");
+        .map((input) => input.value)
+        .filter((valor) => valor !== "");
+}
+
+function normalizarAlturasDobradicas(valor) {
+    if (Array.isArray(valor)) {
+        return valor.map((item) => String(item)).filter((item) => item !== "");
+    }
+    if (typeof valor === "string") {
+        const texto = valor.trim();
+        if (!texto) return [];
+        try {
+            const parsed = JSON.parse(texto);
+            if (Array.isArray(parsed)) {
+                return parsed.map((item) => String(item)).filter((item) => item !== "");
+            }
+        } catch (_) {
+            // Ignora erro de parsing e segue com separadores simples.
+        }
+        return texto
+            .split(/[;,|]/)
+            .map((item) => item.trim())
+            .filter((item) => item !== "");
+    }
+    return [];
+}
+
+function preencherAlturasDobradicas(dadosPorta) {
+    const alturas = normalizarAlturasDobradicas(dadosPorta?.dobradicas_alturas);
+    const inputQtd = document.getElementById("dobradicas");
+    if (!inputQtd || alturas.length === 0) return;
+
+    inputQtd.value = String(alturas.length);
+    atualizarDobradicasInputs();
+
+    const inputs = document.querySelectorAll(".dobradica-altura");
+    alturas.forEach((altura, index) => {
+        if (inputs[index]) {
+            inputs[index].value = altura;
+        }
+    });
 }
 
 function atualizarLimiteDobradicas() {
@@ -564,6 +603,7 @@ async function salvarPorta() {
         const el = document.getElementById(c);
         if (el) dados[c] = el.value;
     });
+    dados.dobradicas_alturas = obterAlturasDobradicas();
 
     const porta = {
         id: editando ?? idCounter++,
@@ -667,6 +707,7 @@ function editarPorta(id) {
         const el = document.getElementById(k);
         if (el) el.value = porta.dados[k];
     }
+    preencherAlturasDobradicas(porta.dados);
     atualizarPrecoPorta();
     desenharPorta();
     if (porta.tipo === "deslizante" || porta.tipo === "correr") {
@@ -694,6 +735,7 @@ function copiarPorta(id) {
         const el = document.getElementById(k);
         if (el) el.value = porta.dados[k];
     }
+    preencherAlturasDobradicas(porta.dados);
     atualizarPrecoPorta();
     desenharPorta();
     if (porta.tipo === "deslizante" || porta.tipo === "correr") {
@@ -732,5 +774,7 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
+
+
 
 
