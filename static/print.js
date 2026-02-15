@@ -25,6 +25,37 @@ function obterDataHoje() {
     return new Date().toLocaleDateString("pt-BR");
 }
 
+function normalizarAlturasDobradicas(dobradicasAlturas) {
+    if (Array.isArray(dobradicasAlturas)) {
+        return dobradicasAlturas
+            .map((valor) => Number(valor))
+            .filter((valor) => Number.isFinite(valor) && valor > 0);
+    }
+
+    if (typeof dobradicasAlturas === "string") {
+        const texto = dobradicasAlturas.trim();
+        if (!texto) return [];
+
+        try {
+            const parsed = JSON.parse(texto);
+            if (Array.isArray(parsed)) {
+                return parsed
+                    .map((valor) => Number(valor))
+                    .filter((valor) => Number.isFinite(valor) && valor > 0);
+            }
+        } catch (_) {
+            // Se não for JSON válido, segue para parsing por separadores.
+        }
+
+        return texto
+            .split(/[;,|]/)
+            .map((valor) => Number(valor.trim()))
+            .filter((valor) => Number.isFinite(valor) && valor > 0);
+    }
+
+    return [];
+}
+
 function atualizarResumoImpressao() {
     const resumo = document.getElementById("printResumo");
     if (!resumo) return;
@@ -95,10 +126,29 @@ function gerarSvgOrdemProducao(porta) {
     const quantidadeTexto = `${porta.quantidade || 1}x`;
     const quantidadeX = doorX + doorWidth / 2;
     const quantidadeY = doorY + doorHeight / 2;
+    const ladoDobradicas = porta?.dados?.dobradicas_posicao === "direita" ? "direita" : "esquerda";
+    const alturasDobradicas = normalizarAlturasDobradicas(porta?.dados?.dobradicas_alturas);
+    const dobradicaX = ladoDobradicas === "direita" ? doorX + doorWidth - 6 : doorX + 6;
+    const dobradicaLinhaFim = ladoDobradicas === "direita"
+        ? Math.max(doorX, dobradicaX - 20)
+        : Math.min(doorX + doorWidth, dobradicaX + 20);
+
+    const dobradicasSvg = alturasDobradicas.map((alturaDobradica) => {
+        const alturaLimitada = Math.max(0, Math.min(altura, alturaDobradica));
+        const yPos = doorY + doorHeight - (alturaLimitada * scale);
+        const textoX = ladoDobradicas === "direita" ? dobradicaLinhaFim - 8 : dobradicaLinhaFim + 8;
+        const textoAnchor = ladoDobradicas === "direita" ? "end" : "start";
+        return `
+          <circle cx="${dobradicaX}" cy="${yPos}" r="4" fill="#0d5d8c" />
+          <line x1="${dobradicaX}" y1="${yPos}" x2="${dobradicaLinhaFim}" y2="${yPos}" stroke="#0d5d8c" stroke-width="2" />
+          <text x="${textoX}" y="${yPos - 4}" font-size="12" fill="#0d5d8c" text-anchor="${textoAnchor}">${alturaLimitada} mm</text>
+        `;
+    }).join("");
 
     return `
     <svg class="op-svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
       <rect x="${doorX}" y="${doorY}" width="${doorWidth}" height="${doorHeight}" fill="#f4f8ff" stroke="#1079ba" stroke-width="3"/>
+      ${dobradicasSvg}
       <text x="${quantidadeX}" y="${quantidadeY}" class="op-quantity" text-anchor="middle" dominant-baseline="middle">${quantidadeTexto}</text>
 
       <line x1="${doorX - 16}" y1="${doorY}" x2="${doorX - 16}" y2="${doorY + doorHeight}" stroke="#333"/>
@@ -256,6 +306,7 @@ window.atualizarEtiquetasTermicas = atualizarEtiquetasTermicas;
 window.imprimirOrcamento = imprimirOrcamento;
 window.imprimirOrdemProducao = imprimirOrdemProducao;
 window.imprimirEtiquetaTermica = imprimirEtiquetaTermica;
+
 
 
 
