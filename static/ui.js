@@ -2,10 +2,10 @@
 // TIPOLOGIAS
 // =====================
 const TIPOLOGIAS = {
-    giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_posicao", "dobradicas_alturas", "puxador", "puxador_posicao", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "puxador", "puxador_posicao", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    giro: ["largura", "altura", "perfil", "vidro", "dobradicas", "dobradicas_posicao", "dobradicas_alturas", "puxador", "puxador_posicao", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
+    deslizante: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "vao_trilhos_superior", "vao_trilhos_inferior", "trilho", "puxador", "puxador_posicao", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
     correr: ["largura", "altura", "perfil", "vidro", "sistemas", "trilhos_superior", "trilhos_inferior", "trilho", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"],
-    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "puxador_posicao", "altura_puxador", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
+    pivotante: ["largura", "altura", "perfil", "vidro", "pivo", "puxador", "puxador_posicao", "medida_puxador", "valor_adicional", "puxadores", "acessorio", "observacao_venda", "observacao_producao"]
 };
 
 // =====================
@@ -171,7 +171,6 @@ function renderCampos() {
                 <option value="cima">Cima</option>
                 <option value="baixo">Baixo</option>
             </select>`,
-            altura_puxador: `Altura do puxador (mm)<input id="altura_puxador" type="number" value="1000" min="0" oninput="desenharPorta()">`,
             medida_puxador: `Tamanho do puxador (mm)<input id="medida_puxador" type="number" value="0" min="0" oninput="atualizarPrecoPorta(); desenharPorta()">`,
             valor_adicional: `Valor adicional (R$)<input id="valor_adicional" type="number" value="0" min="0" step="0.01" oninput="atualizarPrecoPorta()">`,
             puxadores: `Descrição do puxador<input id="puxadores" type="text" placeholder="Ex: puxador 60cm">`,
@@ -181,6 +180,8 @@ function renderCampos() {
             trilho: `<input id="trilho" type="hidden" value="">`,
             trilhos_superior: `Trilhos superiores<select id="trilhos_superior" data-required="true" onchange="atualizarResumoTrilhos(); atualizarCamposObrigatorios()"></select>`,
             trilhos_inferior: `Trilhos inferiores<select id="trilhos_inferior" data-required="true" onchange="atualizarResumoTrilhos(); atualizarCamposObrigatorios()"></select>`,
+            vao_trilhos_superior: `Tamanho do vão superior (mm)<input id="vao_trilhos_superior" type="number" min="0" value="0">`,
+            vao_trilhos_inferior: `Tamanho do vão inferior (mm)<input id="vao_trilhos_inferior" type="number" min="0" value="0">`,
             sistemas: `Sistema<select id="sistemas" data-required="true" onchange="atualizarTrilhosDoSistema(); atualizarCamposObrigatorios()"></select>`,
             pivo: `Pivo<textarea id="pivo" rows="2"></textarea>`
         };
@@ -774,6 +775,8 @@ window.renderPortas = renderPortas;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
 window.apagarPorta = apagarPorta;
+
+
 
 
 
