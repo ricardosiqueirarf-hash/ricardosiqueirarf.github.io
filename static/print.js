@@ -185,6 +185,28 @@ function atualizarResumoOrdem() {
             ? puxadorNomeBase
             : `${puxadorNomeBase}/${ladoPuxador}`;
         const observacaoProducao = p.dados.observacao_producao || "-";
+        const sistemaNome = p.dados.sistema_nome || p.dados.sistemas || "-";
+        const trilhoNome = p.dados.trilho
+            || [p.dados.trilhos_superior, p.dados.trilhos_inferior].filter(Boolean).join(" | ")
+            || "-";
+        const tamanhoVaoBase = p.dados.vao_trilhos_superior || p.dados.vao_trilhos_inferior || "-";
+        const tamanhoVao = tamanhoVaoBase === "-" ? "-" : `${tamanhoVaoBase} mm`;
+        const detalhesDeslizante = p.tipo === "deslizante"
+            ? `
+                    <div class="op-info-row">
+                        <span>Sistema</span>
+                        <strong>${sistemaNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Trilho</span>
+                        <strong>${trilhoNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Tamanho do vão</span>
+                        <strong>${tamanhoVao}</strong>
+                    </div>
+            `
+            : "";
         const cabecalho = index === 0
             ? `
                 <div class="op-header">
@@ -215,6 +237,7 @@ function atualizarResumoOrdem() {
                         <span>Puxador</span>
                         <strong>${puxadorNome}</strong>
                     </div>
+                    ${detalhesDeslizante}
                     <div class="op-info-row">
                         <span>Observação de produção</span>
                         <strong>${observacaoProducao}</strong>
@@ -310,6 +333,8 @@ window.atualizarEtiquetasTermicas = atualizarEtiquetasTermicas;
 window.imprimirOrcamento = imprimirOrcamento;
 window.imprimirOrdemProducao = imprimirOrdemProducao;
 window.imprimirEtiquetaTermica = imprimirEtiquetaTermica;
+
+
 
 
 
