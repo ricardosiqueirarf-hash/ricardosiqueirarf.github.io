@@ -314,6 +314,7 @@ async function logar() {
         }
         localStorage.removeItem("USER_TOKEN");
         localStorage.removeItem("ADMIN_TOKEN");
+        sessionStorage.setItem("AUTH_TOKEN", data.token || "");
         setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
 
         const resAuth = await fetch(`${API_BASE}/api/auth/validar`, { //VERIFICA SE USUARIO POSSUI PERMISSAO
