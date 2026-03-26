@@ -333,7 +333,7 @@ async function logar() {
         }
 
         setTimeout(() => {
-            window.location.href = dataAuth.redirect || "index_loja.html"; // DECIDE SE MANDA PRO INDEX OU INDEX_LOJA
+            window.location.href = dataAuth.redirect || "/index_loja.html"; // DECIDE SE MANDA PRO INDEX OU INDEX_LOJA
         }, 400); // TEMPO DE ESPERA PARA O REDIRECIONAMENTO EM MILISEGUNDOS
     } catch (err) {
         console.error(err);
