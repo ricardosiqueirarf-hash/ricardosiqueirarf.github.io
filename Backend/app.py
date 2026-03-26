@@ -73,6 +73,7 @@ def options_api(_path):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
+STATIC_DIR = os.path.join(ROOT_DIR, "static")
 
 # =====================
 # HEALTH CHECK
@@ -96,31 +97,31 @@ def inicio_html_page():
 
 @app.route("/login.html")
 def login_html_page():
-    return send_from_directory(BASE_DIR, "login.html")
+    return send_from_directory(STATIC_DIR, "login.html")
 
 @app.route("/login")
 def login_page():
-    return send_from_directory(BASE_DIR, "login.html")
+    return send_from_directory(STATIC_DIR, "login.html")
 
 @app.route("/logincadastro.html")
 def login_cadastro_html_page():
-    return send_from_directory(BASE_DIR, "login.html")
+    return send_from_directory(STATIC_DIR, "login.html")
 
 @app.route("/cadastro.html")
 def cadastro_html_page():
-    return send_from_directory(BASE_DIR, "cadastro.html")
+    return send_from_directory(STATIC_DIR, "cadastro.html")
 
 @app.route("/cadastro")
 def cadastro_page():
-    return send_from_directory(BASE_DIR, "cadastro.html")
+    return send_from_directory(STATIC_DIR, "cadastro.html")
 
 @app.route("/taskmenager.html")
 def taskmenager_html_page():
-    return send_from_directory(BASE_DIR, "taskmenager.html")
+    return send_from_directory(STATIC_DIR, "taskmenager.html")
 
 @app.route("/taskmenager")
 def taskmenager_page():
-    return send_from_directory(BASE_DIR, "taskmenager.html")
+    return send_from_directory(STATIC_DIR, "taskmenager.html")
 
 # =====================
 # ROTAS
@@ -128,11 +129,11 @@ def taskmenager_page():
 
 @app.route("/loja")
 def index_loja_page():
-    return send_from_directory(BASE_DIR, "index_loja.html")
+    return send_from_directory(STATIC_DIR, "index_loja.html")
 
 @app.route("/index_loja.html")
 def index_loja_html_page():
-    return send_from_directory(BASE_DIR, "index_loja.html")
+    return send_from_directory(STATIC_DIR, "index_loja.html")
 
 @app.route("/index.html")
 def index_admin_page():
@@ -152,15 +153,15 @@ def index_admin_page():
     if level != 3:
         return redirect("/login.html")
 
-    return send_from_directory(BASE_DIR, "index.html")
+    return send_from_directory(STATIC_DIR, "index.html")
 
 @app.route("/portas")
 def portas_page():
-    return send_from_directory(BASE_DIR, "portas.html")
+    return send_from_directory(STATIC_DIR, "portas.html")
 
 @app.route("/portas.html")
 def portas_html_page():
-    return send_from_directory(BASE_DIR, "portas.html")
+    return send_from_directory(STATIC_DIR, "portas.html")
 
 @app.route("/catalogo3d")
 def catalogo3d_page():
@@ -276,11 +277,11 @@ def task_html_page():
 
 @app.route("/clientes")
 def clientes_page():
-    return send_from_directory(ROOT_DIR, "clientes.html")
+    return send_from_directory(STATIC_DIR, "clientes.html")
 
 @app.route("/clientes.html")
 def clientes_html_page():
-    return send_from_directory(ROOT_DIR, "clientes.html")
+    return send_from_directory(STATIC_DIR, "clientes.html")
 
 @app.route("/promob_export")
 def promob_export_page():
