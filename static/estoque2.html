@@ -44,7 +44,8 @@
       font-size: 0.95rem;
     }
 
-    .field input {
+    .field input,
+    .field textarea {
       border: 1px solid #ccd6e0;
       border-radius: 8px;
       padding: 10px 12px;
@@ -53,7 +54,13 @@
       transition: border-color 0.2s ease;
     }
 
-    .field input:focus { border-color: #1079ba; }
+    .field textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus { border-color: #1079ba; }
 
     .btn {
       border: none;
@@ -170,14 +177,14 @@
   <div class="container">
     <header>
       <h1>Consumo de Estoque por Pedido</h1>
-      <p class="subtitle">Informe o ID/Número do pedido para gerar a lista consolidada de uso de estoque (perfis, vidros, insumos e puxadores).</p>
+      <p class="subtitle">Informe um ou mais ID/Número(s) de pedido para gerar a lista consolidada de uso de estoque (perfis, vidros, insumos e puxadores).</p>
     </header>
 
     <section class="panel">
       <div class="toolbar">
         <div class="field">
-          <label for="pedidoInput">ID/Número do pedido</label>
-          <input id="pedidoInput" type="text" placeholder="Ex: 1024" />
+          <label for="pedidoInput">ID/Número(s) do pedido</label>
+          <textarea id="pedidoInput" placeholder="Ex: 1024, 1025, 1026"></textarea>
         </div>
         <button class="btn btn-primary" id="btnCalcular">Calcular consumo</button>
         <button class="btn btn-secondary" id="btnVoltar">Voltar</button>
@@ -188,7 +195,7 @@
     <section class="panel">
       <div class="cards">
         <div class="card">
-          <h3>Pedido</h3>
+          <h3>Pedidos</h3>
           <div id="resumoPedido" class="value">--</div>
         </div>
         <div class="card">
@@ -340,6 +347,13 @@
       }) || null;
     }
 
+    function extrairPedidosInformados(texto) {
+      return String(texto || "")
+        .split(/[\n,;]+/g)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
     async function carregarPortas(orcamentoId) {
       const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(orcamentoId)}/portas`, { headers: getHeaders() });
       if (!res.ok) {
@@ -349,8 +363,8 @@
       return json.portas || [];
     }
 
-    function consolidarConsumo(portas, bases) {
-      const mapa = new Map();
+    function consolidarConsumo(portas, bases, mapaCompartilhado = null) {
+      const mapa = mapaCompartilhado || new Map();
       let totalPortas = 0;
 
       portas.forEach((porta) => {
@@ -435,9 +449,9 @@
       return { itens, totalPortas };
     }
 
-    function renderizarResumo(orcamento, totalPortas, itens) {
-      refs.resumoPedido.textContent = orcamento?.numero_pedido ?? "--";
-      refs.resumoCliente.textContent = orcamento?.cliente_nome || "--";
+    function renderizarResumo(infoPedidos, totalPortas, itens) {
+      refs.resumoPedido.textContent = infoPedidos?.pedidosTexto || "--";
+      refs.resumoCliente.textContent = infoPedidos?.clientesTexto || "--";
       refs.resumoPortas.textContent = String(totalPortas || 0);
       refs.resumoItens.textContent = String(itens.length || 0);
     }
@@ -468,9 +482,9 @@
     }
 
     async function calcularConsumoPedido() {
-      const pedido = refs.pedidoInput.value.trim();
-      if (!pedido) {
-        setStatus("Informe um ID/número de pedido.", "warn");
+      const pedidosInformados = extrairPedidosInformados(refs.pedidoInput.value);
+      if (!pedidosInformados.length) {
+        setStatus("Informe ao menos um ID/número de pedido.", "warn");
         refs.pedidoInput.focus();
         return;
       }
@@ -478,21 +492,42 @@
       try {
         setStatus("Carregando dados...", "");
         const bases = await carregarBases();
-        const orcamento = encontrarOrcamentoPorPedido(bases.orcamentos, pedido);
+        const mapaConsumoGlobal = new Map();
+        const pedidosEncontrados = [];
+        const clientes = new Set();
+        let totalPortasGeral = 0;
 
-        if (!orcamento) {
+        for (const pedido of pedidosInformados) {
+          const orcamento = encontrarOrcamentoPorPedido(bases.orcamentos, pedido);
+          if (!orcamento) continue;
+
+          const portas = await carregarPortas(orcamento.id);
+          const { totalPortas } = consolidarConsumo(portas, bases, mapaConsumoGlobal);
+          totalPortasGeral += totalPortas;
+          pedidosEncontrados.push(String(orcamento.numero_pedido ?? pedido));
+          if (orcamento.cliente_nome) clientes.add(orcamento.cliente_nome);
+        }
+
+        const itens = Array.from(mapaConsumoGlobal.values()).sort((a, b) => a.item.localeCompare(b.item, "pt-BR"));
+        if (!pedidosEncontrados.length) {
           renderizarResumo(null, 0, []);
           renderizarTabela([]);
-          setStatus("Pedido não encontrado.", "warn");
+          setStatus("Nenhum pedido informado foi encontrado.", "warn");
           return;
         }
 
-        const portas = await carregarPortas(orcamento.id);
-        const { itens, totalPortas } = consolidarConsumo(portas, bases);
+        const infoPedidos = {
+          pedidosTexto: pedidosEncontrados.join(", "),
+          clientesTexto: clientes.size ? Array.from(clientes).join(", ") : "--"
+        };
 
-        renderizarResumo(orcamento, totalPortas, itens);
+        renderizarResumo(infoPedidos, totalPortasGeral, itens);
         renderizarTabela(itens);
-        setStatus(`Consumo calculado para o pedido #${orcamento.numero_pedido}.`, "ok");
+        const faltantes = pedidosInformados.length - pedidosEncontrados.length;
+        const statusFinal = faltantes > 0
+          ? `Consumo calculado para ${pedidosEncontrados.length} pedido(s). ${faltantes} não encontrado(s).`
+          : `Consumo calculado para ${pedidosEncontrados.length} pedido(s).`;
+        setStatus(statusFinal, faltantes > 0 ? "warn" : "ok");
       } catch (erro) {
         console.error("Erro no cálculo de estoque:", erro);
         setStatus(`Erro ao calcular consumo: ${erro.message}`, "err");
@@ -504,8 +539,10 @@
 
     refs.pedidoInput.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") {
-        ev.preventDefault();
-        calcularConsumoPedido();
+        if (!ev.shiftKey) {
+          ev.preventDefault();
+          calcularConsumoPedido();
+        }
       }
     });
 
