@@ -1,9 +1,8 @@
 import os
-from flask import Flask, jsonify, send_from_directory, redirect, request
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import jwt
 import datetime
-from auth_utils import extrair_token, buscar_usuario_por_token
 
 # =====================
 # CONFIG GLOBAL
@@ -35,45 +34,18 @@ HEADERS = {
 # APP
 # =====================
 
-ALLOWED_ORIGINS = {
-    "https://www.colorglassfortaleza.com.br",
-    "https://colorglassfortaleza.com.br",
-    "https://colorglass.onrender.com",
-    "http://localhost:3000",
-    "http://localhost:5173"
-}
-
 app = Flask(__name__)
 CORS(
     app,
     resources={
         r"/api/*": {
-            "origins": list(ALLOWED_ORIGINS)
+            "origins": "*"
         }
-    },
-    supports_credentials=True
+    }
 )
-
-
-@app.after_request
-def add_cors_headers(response):
-    origin = request.headers.get("Origin")
-    if origin in ALLOWED_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Auth-Token"
-        response.headers["Vary"] = "Origin"
-    return response
-
-
-@app.route("/api/<path:_path>", methods=["OPTIONS"])
-def options_api(_path):
-    return ("", 204)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
-STATIC_DIR = os.path.join(ROOT_DIR, "static")
 
 # =====================
 # HEALTH CHECK
@@ -97,31 +69,31 @@ def inicio_html_page():
 
 @app.route("/login.html")
 def login_html_page():
-    return send_from_directory(STATIC_DIR, "login.html")
+    return send_from_directory(BASE_DIR, "login.html")
 
 @app.route("/login")
 def login_page():
-    return send_from_directory(STATIC_DIR, "login.html")
+    return send_from_directory(BASE_DIR, "login.html")
 
 @app.route("/logincadastro.html")
 def login_cadastro_html_page():
-    return send_from_directory(STATIC_DIR, "login.html")
+    return send_from_directory(BASE_DIR, "login.html")
 
 @app.route("/cadastro.html")
 def cadastro_html_page():
-    return send_from_directory(STATIC_DIR, "cadastro.html")
+    return send_from_directory(BASE_DIR, "cadastro.html")
 
 @app.route("/cadastro")
 def cadastro_page():
-    return send_from_directory(STATIC_DIR, "cadastro.html")
+    return send_from_directory(BASE_DIR, "cadastro.html")
 
 @app.route("/taskmenager.html")
 def taskmenager_html_page():
-    return send_from_directory(STATIC_DIR, "taskmenager.html")
+    return send_from_directory(BASE_DIR, "taskmenager.html")
 
 @app.route("/taskmenager")
 def taskmenager_page():
-    return send_from_directory(STATIC_DIR, "taskmenager.html")
+    return send_from_directory(BASE_DIR, "taskmenager.html")
 
 # =====================
 # ROTAS
@@ -129,39 +101,23 @@ def taskmenager_page():
 
 @app.route("/loja")
 def index_loja_page():
-    return send_from_directory(STATIC_DIR, "index_loja.html")
+    return send_from_directory(BASE_DIR, "index_loja.html")
 
 @app.route("/index_loja.html")
 def index_loja_html_page():
-    return send_from_directory(STATIC_DIR, "index_loja.html")
+    return send_from_directory(BASE_DIR, "index_loja.html")
 
 @app.route("/index.html")
 def index_admin_page():
-    token = extrair_token(request)
-    if not token:
-        return redirect("/login.html")
-
-    usuario = buscar_usuario_por_token(token)
-    if not usuario:
-        return redirect("/login.html")
-
-    try:
-        level = int(usuario.get("level") or 0)
-    except (TypeError, ValueError):
-        level = 0
-
-    if level != 3:
-        return redirect("/login.html")
-
-    return send_from_directory(STATIC_DIR, "index.html")
+    return send_from_directory(BASE_DIR, "index.html")
 
 @app.route("/portas")
 def portas_page():
-    return send_from_directory(STATIC_DIR, "portas.html")
+    return send_from_directory(BASE_DIR, "portas.html")
 
 @app.route("/portas.html")
 def portas_html_page():
-    return send_from_directory(STATIC_DIR, "portas.html")
+    return send_from_directory(BASE_DIR, "portas.html")
 
 @app.route("/catalogo3d")
 def catalogo3d_page():
@@ -277,11 +233,11 @@ def task_html_page():
 
 @app.route("/clientes")
 def clientes_page():
-    return send_from_directory(STATIC_DIR, "clientes.html")
+    return send_from_directory(ROOT_DIR, "clientes.html")
 
 @app.route("/clientes.html")
 def clientes_html_page():
-    return send_from_directory(STATIC_DIR, "clientes.html")
+    return send_from_directory(ROOT_DIR, "clientes.html")
 
 @app.route("/promob_export")
 def promob_export_page():
@@ -337,6 +293,11 @@ app.register_blueprint(trilhos_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+
+
+
 
 
 
