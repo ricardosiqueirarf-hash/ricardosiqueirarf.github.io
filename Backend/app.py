@@ -1,8 +1,9 @@
 import os
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, redirect, request
 from flask_cors import CORS
 import jwt
 import datetime
+from auth_utils import extrair_token, buscar_usuario_por_token
 
 # =====================
 # CONFIG GLOBAL
@@ -109,6 +110,22 @@ def index_loja_html_page():
 
 @app.route("/index.html")
 def index_admin_page():
+    token = extrair_token(request)
+    if not token:
+        return redirect("/login.html")
+
+    usuario = buscar_usuario_por_token(token)
+    if not usuario:
+        return redirect("/login.html")
+
+    try:
+        level = int(usuario.get("level") or 0)
+    except (TypeError, ValueError):
+        level = 0
+
+    if level != 3:
+        return redirect("/login.html")
+
     return send_from_directory(BASE_DIR, "index.html")
 
 @app.route("/portas")
