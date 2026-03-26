@@ -279,7 +279,7 @@ input:focus {
 </div>
 
 <script>
-const API_BASE = "https://colorglass.onrender.com";
+const API_BASE = window.location.origin;
 
 function setStatus(elementId, message, tipo) {
     const el = document.getElementById(elementId);
@@ -315,7 +315,7 @@ async function logar() {
         localStorage.removeItem("USER_TOKEN");
         localStorage.removeItem("ADMIN_TOKEN");
         sessionStorage.setItem("AUTH_TOKEN", data.token || "");
-        setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
+        setStatus("loginStatus", "Login autorizado. Sessão ativa.", "ok");
 
         const resAuth = await fetch(`${API_BASE}/api/auth/validar`, { //VERIFICA SE USUARIO POSSUI PERMISSAO
             method: "POST",
@@ -332,9 +332,9 @@ async function logar() {
             return;
         }
 
-        setTimeout(() => {
-            window.location.href = dataAuth.redirect || "/index_loja.html"; // DECIDE SE MANDA PRO INDEX OU INDEX_LOJA
-        }, 400); // TEMPO DE ESPERA PARA O REDIRECIONAMENTO EM MILISEGUNDOS
+        // REDIRECT REMOVIDO: manter usuário na tela após login bem-sucedido.
+        // A navegação passa a ser manual para evitar loops inesperados.
+        setStatus("loginStatus", "Login autorizado. Sessão ativa. Abra a página desejada no menu.", "ok");
     } catch (err) {
         console.error(err);
         setStatus("loginStatus", "Erro inesperado, Contate o suporte.", "erro"); //DEBUG CASO DE ALGUM ERRO IMPREVISTO
