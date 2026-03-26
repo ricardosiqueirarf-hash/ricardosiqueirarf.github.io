@@ -307,6 +307,16 @@ function setStatus(elementId, message, tipo) {
     if (tipo) el.classList.add(tipo);
 }
 
+async function safeReadJson(response) {
+    const raw = await response.text();
+    if (!raw || !raw.trim()) return {};
+    try {
+        return JSON.parse(raw);
+    } catch (_) {
+        return {};
+    }
+}
+
 // ==================== LOGIN ====================
 
 async function logar() { 
@@ -325,9 +335,10 @@ async function logar() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ user, pass })
         });
-        const data = await res.json();
 
-        if (!data.success) { // SE API NEGAR MOSTRA ERRO
+        const data = await safeReadJson(res);
+
+        if (!res.ok || !data.success) { // SE API NEGAR MOSTRA ERRO
             setStatus("loginStatus", data.error || "Login inválido.", "erro");
             return;
         }
@@ -343,9 +354,10 @@ async function logar() {
                 "Authorization": `Bearer ${data.token}`
             }
         });
-        const dataAuth = await resAuth.json();
 
-        if (!dataAuth.success) { // SE NAO TIVER PERMISSAO NEGA 
+        const dataAuth = await safeReadJson(resAuth);
+
+        if (!resAuth.ok || !dataAuth.success) { // SE NAO TIVER PERMISSAO NEGA 
             setStatus("loginStatus", dataAuth.error || "Sessão inválida.", "erro");
             return;
         }
