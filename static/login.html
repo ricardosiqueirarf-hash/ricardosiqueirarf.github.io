@@ -298,23 +298,13 @@ input:focus {
 </div>
 
 <script>
-const API_BASE = window.location.origin;
+const API_BASE = "https://colorglass.onrender.com";
 
 function setStatus(elementId, message, tipo) {
     const el = document.getElementById(elementId);
     el.textContent = message;
     el.classList.remove("ok", "erro");
     if (tipo) el.classList.add(tipo);
-}
-
-async function safeReadJson(response) {
-    const raw = await response.text();
-    if (!raw || !raw.trim()) return {};
-    try {
-        return JSON.parse(raw);
-    } catch (_) {
-        return {};
-    }
 }
 
 // ==================== LOGIN ====================
@@ -331,40 +321,37 @@ async function logar() {
         setStatus("loginStatus", "Verificando...");
         const res = await fetch(`${API_BASE}/api/usuarios/login`, {
             method: "POST",
-            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ user, pass })
         });
+        const data = await res.json();
 
-        const data = await safeReadJson(res);
-
-        if (!res.ok || !data.success) { // SE API NEGAR MOSTRA ERRO
+        if (!data.success) { // SE API NEGAR MOSTRA ERRO
             setStatus("loginStatus", data.error || "Login inválido.", "erro");
             return;
         }
-        localStorage.removeItem("USER_TOKEN");
-        localStorage.removeItem("ADMIN_TOKEN");
-        sessionStorage.setItem("AUTH_TOKEN", data.token || "");
+// SALVAR TOKEN LOCALMENTE, VERIFICAR A REAL NECESSIDADE DISSO
+        localStorage.setItem("USER_TOKEN", data.token);
+        localStorage.setItem("ADMIN_TOKEN", data.token);
+        setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
 
         const resAuth = await fetch(`${API_BASE}/api/auth/validar`, { //VERIFICA SE USUARIO POSSUI PERMISSAO
             method: "POST",
-            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${data.token}`
             }
         });
+        const dataAuth = await resAuth.json();
 
-        const dataAuth = await safeReadJson(resAuth);
-
-        if (!resAuth.ok || !dataAuth.success) { // SE NAO TIVER PERMISSAO NEGA 
+        if (!dataAuth.success) { // SE NAO TIVER PERMISSAO NEGA 
             setStatus("loginStatus", dataAuth.error || "Sessão inválida.", "erro");
             return;
         }
 
-        // REDIRECT REMOVIDO: manter usuário na tela após login bem-sucedido.
-        // A navegação passa a ser manual para evitar loops inesperados.
-        setStatus("loginStatus", "Login autorizado. Sessão ativa. Abra a página desejada no menu.", "ok");
+        setTimeout(() => {
+            window.location.href = dataAuth.redirect || "index_loja.html"; // DECIDE SE MANDA PRO INDEX OU INDEX_LOJA
+        }, 400); // TEMPO DE ESPERA PARA O REDIRECIONAMENTO EM MILISEGUNDOS
     } catch (err) {
         console.error(err);
         setStatus("loginStatus", "Erro inesperado, Contate o suporte.", "erro"); //DEBUG CASO DE ALGUM ERRO IMPREVISTO
@@ -373,6 +360,13 @@ async function logar() {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
