@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consumo de Estoque por Pedido | ColorGlass</title>
+  <meta name="description" content="Calcula o consumo de estoque por pedido considerando perfis, vidros, insumos e puxadores." />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f5f7fa; color: #1f2d3d; padding: 22px; }
+
+    .container { max-width: 1180px; margin: 0 auto; }
+    header { margin-bottom: 18px; }
+    h1 { color: #1079ba; margin-bottom: 6px; }
+    .subtitle { color: #5f6b7a; margin-bottom: 14px; }
+
+    .panel {
+      background: #fff;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      margin-bottom: 18px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 240px;
+      flex: 1;
+    }
+
+    .field label {
+      font-weight: 600;
+      color: #32445a;
+      font-size: 0.95rem;
+    }
+
+    .field input {
+      border: 1px solid #ccd6e0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      outline: none;
+      font-size: 0.95rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .field input:focus { border-color: #1079ba; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #1079ba;
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: #0d5d8c; transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: #e9eef5;
+      color: #1f2d3d;
+    }
+
+    .btn-secondary:hover { background: #d8e1ec; }
+
+    .status {
+      font-size: 0.92rem;
+      margin-top: 8px;
+      color: #435568;
+    }
+
+    .status.ok { color: #1e874b; }
+    .status.warn { color: #b07d0a; }
+    .status.err { color: #c0392b; }
+
+    .cards {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .card {
+      border-radius: 10px;
+      background: #f8fbff;
+      border: 1px solid #d8e7f7;
+      padding: 12px;
+    }
+
+    .card h3 {
+      color: #4a6078;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .card .value {
+      font-size: 1.35rem;
+      color: #12395f;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #dce4ec;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.93rem;
+    }
+
+    th {
+      background: #1079ba;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) { background: #f8fafd; }
+
+    .section-title {
+      margin: 14px 0 6px;
+      color: #1079ba;
+      font-size: 1.1rem;
+    }
+
+    .empty {
+      background: #fff;
+      border: 1px dashed #b9c8d8;
+      border-radius: 10px;
+      text-align: center;
+      padding: 20px;
+      color: #58697c;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .field { min-width: 100%; }
+      .btn { width: 100%; }
+      th, td { font-size: 0.86rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Consumo de Estoque por Pedido</h1>
+      <p class="subtitle">Informe o ID/Número do pedido para gerar a lista consolidada de uso de estoque (perfis, vidros, insumos e puxadores).</p>
+    </header>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div class="field">
+          <label for="pedidoInput">ID/Número do pedido</label>
+          <input id="pedidoInput" type="text" placeholder="Ex: 1024" />
+        </div>
+        <button class="btn btn-primary" id="btnCalcular">Calcular consumo</button>
+        <button class="btn btn-secondary" id="btnVoltar">Voltar</button>
+      </div>
+      <div id="statusMsg" class="status">Pronto para consulta.</div>
+    </section>
+
+    <section class="panel">
+      <div class="cards">
+        <div class="card">
+          <h3>Pedido</h3>
+          <div id="resumoPedido" class="value">--</div>
+        </div>
+        <div class="card">
+          <h3>Cliente</h3>
+          <div id="resumoCliente" class="value">--</div>
+        </div>
+        <div class="card">
+          <h3>Total de portas</h3>
+          <div id="resumoPortas" class="value">0</div>
+        </div>
+        <div class="card">
+          <h3>Itens consolidados</h3>
+          <div id="resumoItens" class="value">0</div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Lista consolidada de consumo</h2>
+      <table id="tabelaConsumo" hidden>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Categoria</th>
+            <th>Unidade</th>
+            <th>Quantidade total</th>
+            <th>Regra de cálculo</th>
+          </tr>
+        </thead>
+        <tbody id="consumoBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty">Nenhum cálculo realizado.</div>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE = "https://colorglass.onrender.com";
+
+    const refs = {
+      pedidoInput: document.getElementById("pedidoInput"),
+      btnCalcular: document.getElementById("btnCalcular"),
+      btnVoltar: document.getElementById("btnVoltar"),
+      statusMsg: document.getElementById("statusMsg"),
+      resumoPedido: document.getElementById("resumoPedido"),
+      resumoCliente: document.getElementById("resumoCliente"),
+      resumoPortas: document.getElementById("resumoPortas"),
+      resumoItens: document.getElementById("resumoItens"),
+      tabelaConsumo: document.getElementById("tabelaConsumo"),
+      consumoBody: document.getElementById("consumoBody"),
+      emptyState: document.getElementById("emptyState")
+    };
+
+    function getHeaders() {
+      const token = localStorage.getItem("token") || localStorage.getItem("user_token") || "";
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
+    function setStatus(texto, tipo = "") {
+      refs.statusMsg.textContent = texto;
+      refs.statusMsg.className = `status ${tipo}`.trim();
+    }
+
+    function parseNumero(valor) {
+      if (valor === null || valor === undefined || valor === "") return 0;
+      if (typeof valor === "number") return Number.isFinite(valor) ? valor : 0;
+      const limpo = String(valor).replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, "");
+      const num = Number(limpo);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    function formatarQuantidade(valor) {
+      return new Intl.NumberFormat("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 3
+      }).format(valor);
+    }
+
+    function normalizarUnidade(tipoMedida) {
+      const t = String(tipoMedida || "").toLowerCase().trim();
+      if (["metro_linear", "m", "ml", "perimetro"].includes(t)) return { sigla: "m", tipo: "metro_linear" };
+      if (["metro_quadrado", "m2", "area"].includes(t)) return { sigla: "m²", tipo: "metro_quadrado" };
+      return { sigla: "un", tipo: "unidade" };
+    }
+
+    function adicionarConsumo(mapa, chave, payload) {
+      if (!mapa.has(chave)) {
+        mapa.set(chave, {
+          item: payload.item,
+          categoria: payload.categoria,
+          unidade: payload.unidade,
+          quantidade: 0,
+          regra: payload.regra
+        });
+      }
+      const atual = mapa.get(chave);
+      atual.quantidade += payload.quantidade;
+    }
+
+    function calcularMedidasDaPorta(porta) {
+      const dados = porta?.dados || {};
+      const larguraMm = parseNumero(dados.largura);
+      const alturaMm = parseNumero(dados.altura);
+      const larguraM = larguraMm / 1000;
+      const alturaM = alturaMm / 1000;
+      return {
+        larguraM,
+        alturaM,
+        perimetro: 2 * (larguraM + alturaM),
+        area: larguraM * alturaM
+      };
+    }
+
+    function aplicarPerda(base, perdaPercentual) {
+      const perda = parseNumero(perdaPercentual);
+      if (perda <= 0) return base;
+      return base * (1 + (perda / 100));
+    }
+
+    async function carregarBases() {
+      const headers = getHeaders();
+      const [perfisRes, vidrosRes, materiaisRes, puxadoresRes, orcamentosRes] = await Promise.all([
+        fetch(`${API_BASE}/api/perfis`, { headers }),
+        fetch(`${API_BASE}/api/vidros`, { headers }),
+        fetch(`${API_BASE}/api/materiais`, { headers }),
+        fetch(`${API_BASE}/api/puxadores`, { headers }),
+        fetch(`${API_BASE}/api/orcamentos`, { headers })
+      ]);
+
+      if (!perfisRes.ok || !vidrosRes.ok || !materiaisRes.ok || !puxadoresRes.ok || !orcamentosRes.ok) {
+        throw new Error("Falha ao carregar listas de referência.");
+      }
+
+      return {
+        perfis: await perfisRes.json(),
+        vidros: await vidrosRes.json(),
+        materiais: await materiaisRes.json(),
+        puxadores: await puxadoresRes.json(),
+        orcamentos: (await orcamentosRes.json()).orcamentos || []
+      };
+    }
+
+    function encontrarOrcamentoPorPedido(orcamentos, pedidoInformado) {
+      const pedidoTxt = String(pedidoInformado || "").trim();
+      const pedidoNum = Number(pedidoTxt);
+      return orcamentos.find((orc) => {
+        const numero = orc?.numero_pedido;
+        if (String(numero) === pedidoTxt) return true;
+        if (Number.isFinite(pedidoNum) && Number(numero) === pedidoNum) return true;
+        if (String(orc?.id || "") === pedidoTxt) return true;
+        return false;
+      }) || null;
+    }
+
+    async function carregarPortas(orcamentoId) {
+      const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(orcamentoId)}/portas`, { headers: getHeaders() });
+      if (!res.ok) {
+        throw new Error(`Falha ao buscar portas do orçamento (${res.status}).`);
+      }
+      const json = await res.json();
+      return json.portas || [];
+    }
+
+    function consolidarConsumo(portas, bases) {
+      const mapa = new Map();
+      let totalPortas = 0;
+
+      portas.forEach((porta) => {
+        const dados = porta?.dados || {};
+        const qtdPortas = Math.max(1, Math.trunc(parseNumero(porta.quantidade) || 1));
+        totalPortas += qtdPortas;
+
+        const medidas = calcularMedidasDaPorta(porta);
+        const perfil = bases.perfis.find((p) => String(p.id) === String(dados.perfil));
+        const vidro = bases.vidros.find((v) => String(v.id) === String(dados.vidro));
+
+        if (perfil) {
+          const perfilComPerda = aplicarPerda(medidas.perimetro, perfil.perda) * qtdPortas;
+          adicionarConsumo(mapa, `perfil-${perfil.id}`, {
+            item: perfil.nome,
+            categoria: "Perfil da porta",
+            unidade: "m",
+            quantidade: perfilComPerda,
+            regra: "Perímetro (m linear) + perda do perfil"
+          });
+
+          const insumosPerfil = Array.isArray(perfil.insumos) ? perfil.insumos : [];
+          insumosPerfil.forEach((nomeInsumo) => {
+            const insumo = bases.materiais.find((m) => m.nome === nomeInsumo);
+            if (!insumo) return;
+
+            const unidade = normalizarUnidade(insumo.tipo_medida);
+            let baseQtd = 1;
+            if (unidade.tipo === "metro_linear") baseQtd = medidas.perimetro;
+            if (unidade.tipo === "metro_quadrado") baseQtd = medidas.area;
+
+            const consumo = aplicarPerda(baseQtd, insumo.perda) * qtdPortas;
+            adicionarConsumo(mapa, `insumo-${insumo.id}-${unidade.tipo}`, {
+              item: insumo.nome,
+              categoria: "Insumo do perfil",
+              unidade: unidade.sigla,
+              quantidade: consumo,
+              regra: `${unidade.tipo === "metro_linear" ? "m linear" : unidade.tipo === "metro_quadrado" ? "m²" : "unidade"} + perda do insumo`
+            });
+          });
+        }
+
+        if (vidro) {
+          const vidroComPerda = aplicarPerda(medidas.area, vidro.perda) * qtdPortas;
+          const espessura = vidro.espessura ? ` ${vidro.espessura}mm` : "";
+          adicionarConsumo(mapa, `vidro-${vidro.id}`, {
+            item: `${vidro.tipo}${espessura}`.trim(),
+            categoria: "Vidro da porta",
+            unidade: "m²",
+            quantidade: vidroComPerda,
+            regra: "Área (m²) + perda do vidro"
+          });
+        }
+
+        const puxadorId = dados.puxador;
+        if (puxadorId && puxadorId !== "sem_puxador") {
+          const puxador = bases.puxadores.find((p) => String(p.id) === String(puxadorId));
+          if (puxador) {
+            const unidade = normalizarUnidade(puxador.tipo_medida);
+            const medidaPuxadorMm = parseNumero(dados.medida_puxador);
+            let baseQtd = 1;
+
+            if (unidade.tipo === "metro_linear") {
+              baseQtd = medidaPuxadorMm / 1000;
+            } else if (unidade.tipo === "metro_quadrado") {
+              baseQtd = (medidaPuxadorMm / 1000) * (medidas.alturaM || 0);
+            }
+
+            const consumoPuxador = aplicarPerda(baseQtd, puxador.perda) * qtdPortas;
+            adicionarConsumo(mapa, `puxador-${puxador.id}-${unidade.tipo}`, {
+              item: puxador.nome,
+              categoria: "Puxador",
+              unidade: unidade.sigla,
+              quantidade: consumoPuxador,
+              regra: "Quantidade do puxador conforme unidade + perda"
+            });
+          }
+        }
+      });
+
+      const itens = Array.from(mapa.values()).sort((a, b) => a.item.localeCompare(b.item, "pt-BR"));
+      return { itens, totalPortas };
+    }
+
+    function renderizarResumo(orcamento, totalPortas, itens) {
+      refs.resumoPedido.textContent = orcamento?.numero_pedido ?? "--";
+      refs.resumoCliente.textContent = orcamento?.cliente_nome || "--";
+      refs.resumoPortas.textContent = String(totalPortas || 0);
+      refs.resumoItens.textContent = String(itens.length || 0);
+    }
+
+    function renderizarTabela(itens) {
+      refs.consumoBody.innerHTML = "";
+      if (!itens.length) {
+        refs.tabelaConsumo.hidden = true;
+        refs.emptyState.hidden = false;
+        refs.emptyState.textContent = "Não foi encontrado consumo para o pedido informado.";
+        return;
+      }
+
+      itens.forEach((item) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.item}</td>
+          <td>${item.categoria}</td>
+          <td>${item.unidade}</td>
+          <td>${formatarQuantidade(item.quantidade)}</td>
+          <td>${item.regra}</td>
+        `;
+        refs.consumoBody.appendChild(tr);
+      });
+
+      refs.tabelaConsumo.hidden = false;
+      refs.emptyState.hidden = true;
+    }
+
+    async function calcularConsumoPedido() {
+      const pedido = refs.pedidoInput.value.trim();
+      if (!pedido) {
+        setStatus("Informe um ID/número de pedido.", "warn");
+        refs.pedidoInput.focus();
+        return;
+      }
+
+      try {
+        setStatus("Carregando dados...", "");
+        const bases = await carregarBases();
+        const orcamento = encontrarOrcamentoPorPedido(bases.orcamentos, pedido);
+
+        if (!orcamento) {
+          renderizarResumo(null, 0, []);
+          renderizarTabela([]);
+          setStatus("Pedido não encontrado.", "warn");
+          return;
+        }
+
+        const portas = await carregarPortas(orcamento.id);
+        const { itens, totalPortas } = consolidarConsumo(portas, bases);
+
+        renderizarResumo(orcamento, totalPortas, itens);
+        renderizarTabela(itens);
+        setStatus(`Consumo calculado para o pedido #${orcamento.numero_pedido}.`, "ok");
+      } catch (erro) {
+        console.error("Erro no cálculo de estoque:", erro);
+        setStatus(`Erro ao calcular consumo: ${erro.message}`, "err");
+      }
+    }
+
+    refs.btnCalcular.addEventListener("click", calcularConsumoPedido);
+    refs.btnVoltar.addEventListener("click", () => { window.location.href = "/"; });
+
+    refs.pedidoInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        calcularConsumoPedido();
+      }
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const pedidoParam = params.get("pedido") || params.get("numero");
+    if (pedidoParam) {
+      refs.pedidoInput.value = pedidoParam;
+      calcularConsumoPedido();
+    }
+  </script>
+</body>
+</html>
