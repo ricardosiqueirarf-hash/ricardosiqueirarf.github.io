@@ -35,15 +35,41 @@ HEADERS = {
 # APP
 # =====================
 
+ALLOWED_ORIGINS = {
+    "https://www.colorglassfortaleza.com.br",
+    "https://colorglassfortaleza.com.br",
+    "https://colorglass.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:5173"
+}
+
 app = Flask(__name__)
 CORS(
     app,
     resources={
         r"/api/*": {
-            "origins": "*"
+            "origins": list(ALLOWED_ORIGINS)
         }
-    }
+    },
+    supports_credentials=True
 )
+
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Auth-Token"
+        response.headers["Vary"] = "Origin"
+    return response
+
+
+@app.route("/api/<path:_path>", methods=["OPTIONS"])
+def options_api(_path):
+    return ("", 204)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
