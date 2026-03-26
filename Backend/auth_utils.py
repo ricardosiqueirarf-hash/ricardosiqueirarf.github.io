@@ -54,10 +54,10 @@ def pagina_por_nivel(level):
         level = 0
 
     if level == 3:
-        return "index.html"
+        return "/index.html"
     if level in (1, 2):
-        return "index_loja.html"
-    return "login.html"
+        return "/index_loja.html"
+    return "/login.html"
 
 
 
