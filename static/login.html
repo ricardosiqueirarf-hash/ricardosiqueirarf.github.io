@@ -4,7 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login | ColorGlass</title>
+<!-- =====================
+     FAVICON DEFINITIVO
+     ===================== -->
+
+ <!-- Principal (Render - raiz do site) -->
+<link rel="icon" href="/favicon.ico?v=4" sizes="any">
+<link rel="shortcut icon" href="/favicon.ico?v=4">
+  
+  <!-- Backup em PNG (Supabase) -->
+<link rel="icon" type="image/png" sizes="512x512"
+        href="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo-512.png?v=4">
+  
+<link rel="apple-touch-icon" sizes="180x180"
+        href="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo-512.png?v=4">
+  
+<!-- Cor do navegador (mobile / Android) -->
+<meta name="theme-color" content="#1079ba">
+
 <meta name="description" content="Login de usuários ColorGlass.">
+<script src="global.js"></script>
 <style>
 :root {
     --cg-blue: #1079ba;
@@ -315,7 +334,6 @@ async function logar() {
         localStorage.removeItem("USER_TOKEN");
         localStorage.removeItem("ADMIN_TOKEN");
         sessionStorage.setItem("AUTH_TOKEN", data.token || "");
-        setStatus("loginStatus", "Login autorizado. Sessão ativa.", "ok");
 
         const resAuth = await fetch(`${API_BASE}/api/auth/validar`, { //VERIFICA SE USUARIO POSSUI PERMISSAO
             method: "POST",
