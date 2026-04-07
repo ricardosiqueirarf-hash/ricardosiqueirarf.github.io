@@ -218,6 +218,7 @@ hr {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 0;
+  padding: 8px 0;
   color: #374151;
 }
 .summary-row strong { color: var(--cg-text); }
@@ -360,6 +361,10 @@ hr {
       </div>
 
       <hr>
+
+      <label>Senha de aprovação
+        <input id="aprova_senha" type="password" placeholder="Digite a senha de aprovação" autocomplete="off">
+      </label>
 
       <button class="btn" id="btnAprovar" onclick="aprovarPedido()">✅ Aprovar pedido</button>
       <button class="btn btn-outline" style="margin-top:10px;" onclick="voltar()">Voltar</button>
@@ -514,6 +519,7 @@ async function carregarDadosDoOrcamento(uuid) {
       return;
     }
 
+
     document.getElementById("numero_pedido").value = (orc.numero_pedido ?? "");
     document.getElementById("cliente_nome").value = (orc.cliente_nome ?? "");
     const valorTotal = parseValorTotal(orc.valor_total);
@@ -536,19 +542,22 @@ async function aprovarPedido() {
   const token = getToken();
 
   const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
+  const aprovaSenha = document.getElementById("aprova_senha").value.trim();
   
   if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
   if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
+  if (!aprovaSenha) { setStatus("Informe a senha de aprovação para aprovar o pedido.", "erro"); return; }
 
   try {
     btn.disabled = true;
     setStatus("Aprovando pedido...");
 
-    const statusAtualizado = await atualizarStatusOrcamento(orcamento_uuid, token);
-    if (statusAtualizado) {
+    const resultado = await atualizarStatusOrcamento(orcamento_uuid, token, aprovaSenha);
+    if (resultado.success) {
       setStatus("Pedido aprovado! Status atualizado.", "ok");
+      document.getElementById("aprova_senha").value = "";
     } else {
-      setStatus("Não foi possível atualizar o status do pedido.", "erro");
+      setStatus(resultado.error || "Não foi possível atualizar o status do pedido.", "erro");
     }
     btn.disabled = false;
 
@@ -559,7 +568,7 @@ async function aprovarPedido() {
   }
 }
 
-async function atualizarStatusOrcamento(uuid, token) {
+async function atualizarStatusOrcamento(uuid, token, aprovaSenha) {
   try {
     const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(uuid)}/status`, {
       method: "POST",
@@ -567,19 +576,20 @@ async function atualizarStatusOrcamento(uuid, token) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify({ status: 2 })
+      body: JSON.stringify({ status: 2, aprova_senha: aprovaSenha })
     });
 
     const data = await res.json();
-    if (!data.success) {
-      console.warn("Falha ao atualizar status do orçamento:", data.error);
-      return false;
+    if (!res.ok || !data.success) {
+      const erro = data?.error || "Falha ao atualizar status do orçamento.";
+      console.warn("Falha ao atualizar status do orçamento:", erro);
+      return { success: false, error: erro };
     }
 
-    return true;
+    return { success: true, error: null };
   } catch (err) {
     console.error("Erro ao atualizar status do orçamento:", err);
-    return false;
+    return { success: false, error: "Erro de conexão ao aprovar pedido." };
   }
 }
 
