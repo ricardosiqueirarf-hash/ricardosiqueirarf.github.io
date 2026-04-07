@@ -218,29 +218,41 @@ function atualizarResumoOrdem() {
 
         return `
             <div class="print-item op-page">
-                <div class="op-left">
-                    ${cabecalho}
-                    <div class="op-title">O.P. ${index + 1} - ${p.tipo}</div>
-                    ${gerarSvgOrdemProducao(p)}
-                </div>
-                <div class="op-info">
-                    <div class="op-info-title">Detalhes</div>
-                    <div class="op-info-row">
-                        <span>Perfil</span>
-                        <strong>${perfilNome}</strong>
+                ${cabecalho}
+                <div class="op-content">
+                    <div class="op-svg-wrap">
+                        ${gerarSvgOrdemProducao(p)}
                     </div>
-                    <div class="op-info-row">
-                        <span>Vidro</span>
-                        <strong>${vidroNome}</strong>
-                    </div>
-                    <div class="op-info-row">
-                        <span>Puxador</span>
-                        <strong>${puxadorNome}</strong>
-                    </div>
-                    ${detalhesDeslizante}
-                    <div class="op-info-row">
-                        <span>Observação de produção</span>
-                        <strong>${observacaoProducao}</strong>
+                    <div class="op-info">
+                        <div class="op-info-row">
+                            <span>Item</span>
+                            <strong>${index + 1}</strong>
+                        </div>
+                        <div class="op-info-row">
+                            <span>Quantidade</span>
+                            <strong>${p.quantidade || 1}</strong>
+                        </div>
+                        <div class="op-info-row">
+                            <span>Tipologia</span>
+                            <strong>${p.tipo || "-"}</strong>
+                        </div>
+                        <div class="op-info-row">
+                            <span>Perfil</span>
+                            <strong>${perfilNome}</strong>
+                        </div>
+                        <div class="op-info-row">
+                            <span>Vidro</span>
+                            <strong>${vidroNome}</strong>
+                        </div>
+                        <div class="op-info-row">
+                            <span>Puxador</span>
+                            <strong>${puxadorNome}</strong>
+                        </div>
+                        ${detalhesDeslizante}
+                        <div class="op-info-row">
+                            <span>Observação de produção</span>
+                            <strong>${observacaoProducao}</strong>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -306,7 +318,35 @@ function imprimirOrcamento() {
     window.print();
 }
 
-function imprimirOrdemProducao() {
+async function podeImprimirOrdemProducao() {
+    if (!ORCAMENTO_UUID) return false;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/orcamentos`, {
+            headers: authHeader()
+        });
+
+        const data = await res.json();
+        if (!data.success || !Array.isArray(data.orcamentos)) return false;
+
+        const orcamentoAtual = data.orcamentos.find((o) => String(o.id) === String(ORCAMENTO_UUID));
+        if (!orcamentoAtual) return false;
+
+        const statusAtual = Number(orcamentoAtual.status);
+        return Number.isFinite(statusAtual) && statusAtual >= 2;
+    } catch (error) {
+        console.error("Erro ao validar status para impressão da OP:", error);
+        return false;
+    }
+}
+
+async function imprimirOrdemProducao() {
+    const permitido = await podeImprimirOrdemProducao();
+    if (!permitido) {
+        alert("A Ordem de Produção só pode ser impressa após aprovação do pedido (status 2 ou superior).");
+        return;
+    }
+
     atualizarResumoOrdem();
     document.getElementById("printOrdem").classList.add("active");
     document.getElementById("printResumo").classList.remove("active");
