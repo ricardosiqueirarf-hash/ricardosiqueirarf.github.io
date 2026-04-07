@@ -177,6 +177,10 @@
           <h3>Custo total materiais</h3>
           <div id="resumoCustoTotal" class="value">R$ 0,00</div>
         </div>
+        <div class="card">
+          <h3>Valor total (com margem)</h3>
+          <div id="resumoValorTotal" class="value">R$ 0,00</div>
+        </div>
       </div>
 
       <h2 class="section-title">Lista consolidada de consumo e custo</h2>
@@ -189,6 +193,7 @@
             <th>Quantidade total</th>
             <th>Custo unitário</th>
             <th>Custo total</th>
+            <th>Valor total</th>
             <th>Regra de cálculo</th>
           </tr>
         </thead>
@@ -211,6 +216,7 @@
       resumoPortas: document.getElementById("resumoPortas"),
       resumoItens: document.getElementById("resumoItens"),
       resumoCustoTotal: document.getElementById("resumoCustoTotal"),
+      resumoValorTotal: document.getElementById("resumoValorTotal"),
       tabelaConsumo: document.getElementById("tabelaConsumo"),
       consumoBody: document.getElementById("consumoBody"),
       emptyState: document.getElementById("emptyState")
@@ -229,8 +235,34 @@
     function parseNumero(valor) {
       if (valor === null || valor === undefined || valor === "") return 0;
       if (typeof valor === "number") return Number.isFinite(valor) ? valor : 0;
-      const limpo = String(valor).replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, "");
-      const num = Number(limpo);
+
+      let texto = String(valor).trim();
+      if (!texto) return 0;
+
+      texto = texto.replace(/\s/g, "").replace(/R\$/gi, "");
+      texto = texto.replace(/[^0-9,.-]/g, "");
+      if (!texto) return 0;
+
+      const temPonto = texto.includes(".");
+      const temVirgula = texto.includes(",");
+
+      if (temPonto && temVirgula) {
+        texto = texto.replace(/\./g, "").replace(",", ".");
+      } else if (temVirgula) {
+        const partes = texto.split(",");
+        const ultimaParte = partes[partes.length - 1] || "";
+        const virgulaComoMilhar = partes.length > 1 && ultimaParte.length === 3;
+        texto = virgulaComoMilhar ? texto.replace(/,/g, "") : texto.replace(",", ".");
+      } else if (temPonto) {
+        const partes = texto.split(".");
+        const ultimaParte = partes[partes.length - 1] || "";
+        const pontoComoMilhar = partes.length > 1 && ultimaParte.length === 3;
+        if (pontoComoMilhar) {
+          texto = texto.replace(/\./g, "");
+        }
+      }
+
+      const num = Number(texto);
       return Number.isFinite(num) ? num : 0;
     }
 
@@ -255,6 +287,15 @@
       return { sigla: "un", tipo: "unidade" };
     }
 
+    function extrairMargemPercentual(origem) {
+      const possiveisCampos = ["margem", "margem_percentual", "markup", "lucro", "percentual_lucro"];
+      for (const campo of possiveisCampos) {
+        const valor = parseNumero(origem?.[campo]);
+        if (valor > 0) return valor;
+      }
+      return 0;
+    }
+
     function extrairPedidosInformados(texto) {
       return String(texto || "")
         .split(/[\n,;]+/g)
@@ -271,6 +312,9 @@
           quantidade: 0,
           custoUnitario: payload.custoUnitario,
           custoTotal: 0,
+          margemPercentual: payload.margemPercentual || 0,
+          valorUnitario: payload.valorUnitario || payload.custoUnitario,
+          valorTotal: 0,
           regra: payload.regra
         });
       }
@@ -278,6 +322,7 @@
       const atual = mapa.get(chave);
       atual.quantidade += payload.quantidade;
       atual.custoTotal += payload.custoTotal;
+      atual.valorTotal += payload.valorTotal || 0;
     }
 
     function calcularMedidasDaPorta(porta) {
@@ -360,6 +405,8 @@
         if (perfil) {
           const quantidadePerfil = aplicarPerda(medidas.perimetro, perfil.perda) * qtdPortas;
           const custoUnitPerfil = parseNumero(perfil.custo);
+          const margemPerfil = extrairMargemPercentual(perfil);
+          const valorUnitPerfil = custoUnitPerfil * (1 + (margemPerfil / 100));
           adicionarConsumo(mapa, `perfil-${perfil.id}`, {
             item: perfil.nome,
             categoria: "Perfil da porta",
@@ -367,6 +414,9 @@
             quantidade: quantidadePerfil,
             custoUnitario: custoUnitPerfil,
             custoTotal: quantidadePerfil * custoUnitPerfil,
+            margemPercentual: margemPerfil,
+            valorUnitario: valorUnitPerfil,
+            valorTotal: quantidadePerfil * valorUnitPerfil,
             regra: "Perímetro (m linear) + perda do perfil"
           });
 
@@ -382,6 +432,8 @@
 
             const quantidadeInsumo = aplicarPerda(baseQtd, insumo.perda) * qtdPortas;
             const custoUnitInsumo = parseNumero(insumo.custo);
+            const margemInsumo = extrairMargemPercentual(insumo);
+            const valorUnitInsumo = custoUnitInsumo * (1 + (margemInsumo / 100));
             adicionarConsumo(mapa, `insumo-${insumo.id}-${unidade.tipo}`, {
               item: insumo.nome,
               categoria: "Insumo do perfil",
@@ -389,6 +441,9 @@
               quantidade: quantidadeInsumo,
               custoUnitario: custoUnitInsumo,
               custoTotal: quantidadeInsumo * custoUnitInsumo,
+              margemPercentual: margemInsumo,
+              valorUnitario: valorUnitInsumo,
+              valorTotal: quantidadeInsumo * valorUnitInsumo,
               regra: `${unidade.tipo === "metro_linear" ? "m linear" : unidade.tipo === "metro_quadrado" ? "m²" : "unidade"} + perda do insumo`
             });
           });
@@ -397,6 +452,8 @@
         if (vidro) {
           const quantidadeVidro = aplicarPerda(medidas.area, vidro.perda) * qtdPortas;
           const custoUnitVidro = parseNumero(vidro.custo);
+          const margemVidro = extrairMargemPercentual(vidro);
+          const valorUnitVidro = custoUnitVidro * (1 + (margemVidro / 100));
           const espessura = vidro.espessura ? ` ${vidro.espessura}mm` : "";
           adicionarConsumo(mapa, `vidro-${vidro.id}`, {
             item: `${vidro.tipo}${espessura}`.trim(),
@@ -405,7 +462,10 @@
             quantidade: quantidadeVidro,
             custoUnitario: custoUnitVidro,
             custoTotal: quantidadeVidro * custoUnitVidro,
-            regra: "rea (m²) + perda do vidro"
+            margemPercentual: margemVidro,
+            valorUnitario: valorUnitVidro,
+            valorTotal: quantidadeVidro * valorUnitVidro,
+            regra: "Área (m²) + perda do vidro"
           });
         }
 
@@ -425,6 +485,8 @@
 
             const quantidadePuxador = aplicarPerda(baseQtd, puxador.perda) * qtdPortas;
             const custoUnitPuxador = parseNumero(puxador.custo);
+            const margemPuxador = extrairMargemPercentual(puxador);
+            const valorUnitPuxador = custoUnitPuxador * (1 + (margemPuxador / 100));
             adicionarConsumo(mapa, `puxador-${puxador.id}-${unidade.tipo}`, {
               item: puxador.nome,
               categoria: "Puxador",
@@ -432,6 +494,9 @@
               quantidade: quantidadePuxador,
               custoUnitario: custoUnitPuxador,
               custoTotal: quantidadePuxador * custoUnitPuxador,
+              margemPercentual: margemPuxador,
+              valorUnitario: valorUnitPuxador,
+              valorTotal: quantidadePuxador * valorUnitPuxador,
               regra: "Quantidade do puxador conforme unidade + perda"
             });
           }
@@ -444,11 +509,13 @@
 
     function renderizarResumo(infoPedidos, totalPortas, itens) {
       const custoTotalGeral = itens.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
+      const valorTotalGeral = itens.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0);
       refs.resumoPedido.textContent = infoPedidos?.pedidosTexto || "--";
       refs.resumoCliente.textContent = infoPedidos?.clientesTexto || "--";
       refs.resumoPortas.textContent = String(totalPortas || 0);
       refs.resumoItens.textContent = String(itens.length || 0);
       refs.resumoCustoTotal.textContent = formatarMoeda(custoTotalGeral);
+      refs.resumoValorTotal.textContent = formatarMoeda(valorTotalGeral);
     }
 
     function renderizarTabela(gruposPedido, itensTotais) {
@@ -464,7 +531,7 @@
       gruposPedido.forEach((grupo) => {
         const trTitulo = document.createElement("tr");
         trTitulo.className = "group-title";
-        trTitulo.innerHTML = `<td colspan="7">Pedido ${grupo.pedido} ${grupo.cliente ? `• Cliente: ${grupo.cliente}` : ""}</td>`;
+        trTitulo.innerHTML = `<td colspan="8">Pedido ${grupo.pedido} ${grupo.cliente ? `• Cliente: ${grupo.cliente}` : ""}</td>`;
         refs.consumoBody.appendChild(trTitulo);
 
         grupo.itens.forEach((item) => {
@@ -476,17 +543,21 @@
             <td>${formatarQuantidade(item.quantidade)}</td>
             <td>${formatarMoeda(item.custoUnitario)}</td>
             <td>${formatarMoeda(item.custoTotal)}</td>
+            <td>${formatarMoeda(item.valorTotal)}</td>
             <td>${item.regra}</td>
           `;
           refs.consumoBody.appendChild(tr);
         });
 
         const custoGrupo = grupo.itens.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
+        const valorGrupo = grupo.itens.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0);
         const trTotalPedido = document.createElement("tr");
         trTotalPedido.className = "group-total";
         trTotalPedido.innerHTML = `
-          <td colspan="5">Subtotal do pedido ${grupo.pedido}</td>
+          <td colspan="4">Subtotal do pedido ${grupo.pedido}</td>
+          <td>--</td>
           <td>${formatarMoeda(custoGrupo)}</td>
+          <td>${formatarMoeda(valorGrupo)}</td>
           <td>${grupo.totalPortas} porta(s)</td>
         `;
         refs.consumoBody.appendChild(trTotalPedido);
@@ -496,8 +567,10 @@
       const trGlobal = document.createElement("tr");
       trGlobal.className = "global-total";
       trGlobal.innerHTML = `
-        <td colspan="5">TOTAL GERAL (soma de todos os pedidos)</td>
+        <td colspan="4">TOTAL GERAL (soma de todos os pedidos)</td>
+        <td>--</td>
         <td>${formatarMoeda(custoGlobal)}</td>
+        <td>${formatarMoeda(itensTotais.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0))}</td>
         <td>${itensTotais.length} item(ns) consolidados</td>
       `;
       refs.consumoBody.appendChild(trGlobal);
