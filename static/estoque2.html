@@ -79,6 +79,7 @@
     }
 
     .card .value { font-size: 1.2rem; color: #12395f; font-weight: 700; }
+    .card .subvalue { font-size: 0.82rem; color: #5d6f83; margin-top: 4px; }
 
     table {
       width: 100%;
@@ -126,6 +127,51 @@
       padding: 20px;
       color: #58697c;
       margin-top: 10px;
+    }
+
+    .cost-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      margin-bottom: 14px;
+    }
+    .cost-box {
+      background: #f8fbff;
+      border: 1px solid #d8e7f7;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .cost-box h3 { color: #335573; font-size: 0.95rem; margin-bottom: 8px; }
+    .cost-inputs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .cost-inputs input {
+      border: 1px solid #ccd6e0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      flex: 1;
+      min-width: 120px;
+    }
+    .cost-list { display: flex; flex-direction: column; gap: 6px; }
+    .cost-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #dce4ec;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+    }
+    .cost-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-mini {
+      border: none;
+      background: #ffe7e7;
+      color: #8f1f1f;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-weight: 700;
     }
 
     @media (max-width: 768px) {
@@ -181,6 +227,11 @@
           <h3>Valor total (com margem)</h3>
           <div id="resumoValorTotal" class="value">R$ 0,00</div>
         </div>
+        <div class="card">
+          <h3>Margem total</h3>
+          <div id="resumoMargemTotal" class="value">R$ 0,00</div>
+          <div id="resumoMargemPerc" class="subvalue">0,00%</div>
+        </div>
       </div>
 
       <h2 class="section-title">Lista consolidada de consumo e custo</h2>
@@ -194,12 +245,57 @@
             <th>Custo unitário</th>
             <th>Custo total</th>
             <th>Valor total</th>
+            <th>Margem</th>
             <th>Regra de cálculo</th>
           </tr>
         </thead>
         <tbody id="consumoBody"></tbody>
       </table>
       <div id="emptyState" class="empty">Nenhum cálculo realizado.</div>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">Custos fixos e variáveis do mês</h2>
+      <div class="cost-grid">
+        <div class="cost-box">
+          <h3>Custos fixos</h3>
+          <div class="cost-inputs">
+            <input id="fixoNomeInput" type="text" placeholder="Nome do custo fixo" />
+            <input id="fixoValorInput" type="text" placeholder="Valor (ex: 1500,00)" />
+            <button class="btn btn-primary" id="btnAddCustoFixo">Adicionar custo fixo</button>
+          </div>
+          <div id="listaCustosFixos" class="cost-list"></div>
+        </div>
+        <div class="cost-box">
+          <h3>Custos variáveis</h3>
+          <div class="cost-inputs">
+            <input id="variavelNomeInput" type="text" placeholder="Nome do custo variável" />
+            <input id="variavelValorInput" type="text" placeholder="Valor (ex: 850,75)" />
+            <button class="btn btn-primary" id="btnAddCustoVariavel">Adicionar custo variável</button>
+          </div>
+          <div id="listaCustosVariaveis" class="cost-list"></div>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <h3>Total custos fixos</h3>
+          <div id="resumoCustosFixos" class="value">R$ 0,00</div>
+        </div>
+        <div class="card">
+          <h3>Total custos variáveis</h3>
+          <div id="resumoCustosVariaveis" class="value">R$ 0,00</div>
+        </div>
+        <div class="card">
+          <h3>Total custos do mês</h3>
+          <div id="resumoCustosMes" class="value">R$ 0,00</div>
+        </div>
+        <div class="card">
+          <h3>Lucro líquido do mês</h3>
+          <div id="resumoLucroLiquido" class="value">R$ 0,00</div>
+          <div id="resumoLucroPerc" class="subvalue">0,00%</div>
+        </div>
+      </div>
     </section>
   </div>
 
@@ -217,9 +313,34 @@
       resumoItens: document.getElementById("resumoItens"),
       resumoCustoTotal: document.getElementById("resumoCustoTotal"),
       resumoValorTotal: document.getElementById("resumoValorTotal"),
+      resumoMargemTotal: document.getElementById("resumoMargemTotal"),
+      resumoMargemPerc: document.getElementById("resumoMargemPerc"),
       tabelaConsumo: document.getElementById("tabelaConsumo"),
       consumoBody: document.getElementById("consumoBody"),
-      emptyState: document.getElementById("emptyState")
+      emptyState: document.getElementById("emptyState"),
+      fixoNomeInput: document.getElementById("fixoNomeInput"),
+      fixoValorInput: document.getElementById("fixoValorInput"),
+      variavelNomeInput: document.getElementById("variavelNomeInput"),
+      variavelValorInput: document.getElementById("variavelValorInput"),
+      btnAddCustoFixo: document.getElementById("btnAddCustoFixo"),
+      btnAddCustoVariavel: document.getElementById("btnAddCustoVariavel"),
+      listaCustosFixos: document.getElementById("listaCustosFixos"),
+      listaCustosVariaveis: document.getElementById("listaCustosVariaveis"),
+      resumoCustosFixos: document.getElementById("resumoCustosFixos"),
+      resumoCustosVariaveis: document.getElementById("resumoCustosVariaveis"),
+      resumoCustosMes: document.getElementById("resumoCustosMes"),
+      resumoLucroLiquido: document.getElementById("resumoLucroLiquido"),
+      resumoLucroPerc: document.getElementById("resumoLucroPerc")
+    };
+
+    const custosState = {
+      fixos: [],
+      variaveis: []
+    };
+    let ultimoResumoMateriais = {
+      custoTotal: 0,
+      valorTotal: 0,
+      margemTotal: 0
     };
 
     function getHeaders() {
@@ -280,6 +401,18 @@
       }).format(Number(valor) || 0);
     }
 
+    function formatarPercentual(valor) {
+      return `${new Intl.NumberFormat("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(Number(valor) || 0)}%`;
+    }
+
+    function calcularPercentual(parte, total) {
+      if (!total) return 0;
+      return (parte / total) * 100;
+    }
+
     function normalizarUnidade(tipoMedida) {
       const t = String(tipoMedida || "").toLowerCase().trim();
       if (["metro_linear", "m", "ml", "perimetro"].includes(t)) return { sigla: "m", tipo: "metro_linear" };
@@ -323,6 +456,75 @@
       atual.quantidade += payload.quantidade;
       atual.custoTotal += payload.custoTotal;
       atual.valorTotal += payload.valorTotal || 0;
+    }
+
+    function atualizarResumoMensal() {
+      const totalFixos = custosState.fixos.reduce((acc, item) => acc + item.valor, 0);
+      const totalVariaveis = custosState.variaveis.reduce((acc, item) => acc + item.valor, 0);
+      const totalCustosMes = totalFixos + totalVariaveis;
+      const lucroLiquido = (ultimoResumoMateriais.valorTotal || 0) - totalCustosMes;
+      const lucroPerc = calcularPercentual(lucroLiquido, ultimoResumoMateriais.valorTotal || 0);
+
+      refs.resumoCustosFixos.textContent = formatarMoeda(totalFixos);
+      refs.resumoCustosVariaveis.textContent = formatarMoeda(totalVariaveis);
+      refs.resumoCustosMes.textContent = formatarMoeda(totalCustosMes);
+      refs.resumoLucroLiquido.textContent = formatarMoeda(lucroLiquido);
+      refs.resumoLucroPerc.textContent = formatarPercentual(lucroPerc);
+    }
+
+    function renderizarCustos(tipo) {
+      const listaRef = tipo === "fixo" ? refs.listaCustosFixos : refs.listaCustosVariaveis;
+      const dados = tipo === "fixo" ? custosState.fixos : custosState.variaveis;
+      listaRef.innerHTML = "";
+
+      if (!dados.length) {
+        const vazio = document.createElement("div");
+        vazio.className = "cost-row";
+        vazio.innerHTML = "<span>Nenhum custo adicionado.</span>";
+        listaRef.appendChild(vazio);
+        return;
+      }
+
+      dados.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "cost-row";
+        row.innerHTML = `
+          <span>${item.nome}</span>
+          <span class="cost-actions">
+            <strong>${formatarMoeda(item.valor)}</strong>
+            <button class="btn-mini" data-tipo="${tipo}" data-idx="${idx}">X</button>
+          </span>
+        `;
+        listaRef.appendChild(row);
+      });
+    }
+
+    function adicionarCusto(tipo) {
+      const nomeInput = tipo === "fixo" ? refs.fixoNomeInput : refs.variavelNomeInput;
+      const valorInput = tipo === "fixo" ? refs.fixoValorInput : refs.variavelValorInput;
+      const nome = String(nomeInput.value || "").trim();
+      const valor = parseNumero(valorInput.value);
+
+      if (!nome) {
+        setStatus("Informe o nome do custo.", "warn");
+        nomeInput.focus();
+        return;
+      }
+      if (!(valor > 0)) {
+        setStatus("Informe um valor válido para o custo.", "warn");
+        valorInput.focus();
+        return;
+      }
+
+      if (tipo === "fixo") custosState.fixos.push({ nome, valor });
+      else custosState.variaveis.push({ nome, valor });
+
+      nomeInput.value = "";
+      valorInput.value = "";
+
+      renderizarCustos(tipo);
+      atualizarResumoMensal();
+      setStatus(`Custo ${tipo === "fixo" ? "fixo" : "variável"} adicionado com sucesso.`, "ok");
     }
 
     function calcularMedidasDaPorta(porta) {
@@ -510,12 +712,23 @@
     function renderizarResumo(infoPedidos, totalPortas, itens) {
       const custoTotalGeral = itens.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
       const valorTotalGeral = itens.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0);
+      const margemTotalGeral = valorTotalGeral - custoTotalGeral;
+      const margemPerc = calcularPercentual(margemTotalGeral, valorTotalGeral);
       refs.resumoPedido.textContent = infoPedidos?.pedidosTexto || "--";
       refs.resumoCliente.textContent = infoPedidos?.clientesTexto || "--";
       refs.resumoPortas.textContent = String(totalPortas || 0);
       refs.resumoItens.textContent = String(itens.length || 0);
       refs.resumoCustoTotal.textContent = formatarMoeda(custoTotalGeral);
       refs.resumoValorTotal.textContent = formatarMoeda(valorTotalGeral);
+      refs.resumoMargemTotal.textContent = formatarMoeda(margemTotalGeral);
+      refs.resumoMargemPerc.textContent = formatarPercentual(margemPerc);
+
+      ultimoResumoMateriais = {
+        custoTotal: custoTotalGeral,
+        valorTotal: valorTotalGeral,
+        margemTotal: margemTotalGeral
+      };
+      atualizarResumoMensal();
     }
 
     function renderizarTabela(gruposPedido, itensTotais) {
@@ -531,7 +744,7 @@
       gruposPedido.forEach((grupo) => {
         const trTitulo = document.createElement("tr");
         trTitulo.className = "group-title";
-        trTitulo.innerHTML = `<td colspan="8">Pedido ${grupo.pedido} ${grupo.cliente ? `• Cliente: ${grupo.cliente}` : ""}</td>`;
+        trTitulo.innerHTML = `<td colspan="9">Pedido ${grupo.pedido} ${grupo.cliente ? `• Cliente: ${grupo.cliente}` : ""}</td>`;
         refs.consumoBody.appendChild(trTitulo);
 
         grupo.itens.forEach((item) => {
@@ -544,6 +757,7 @@
             <td>${formatarMoeda(item.custoUnitario)}</td>
             <td>${formatarMoeda(item.custoTotal)}</td>
             <td>${formatarMoeda(item.valorTotal)}</td>
+            <td>${formatarMoeda((Number(item.valorTotal) || 0) - (Number(item.custoTotal) || 0))}</td>
             <td>${item.regra}</td>
           `;
           refs.consumoBody.appendChild(tr);
@@ -551,6 +765,7 @@
 
         const custoGrupo = grupo.itens.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
         const valorGrupo = grupo.itens.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0);
+        const margemGrupo = valorGrupo - custoGrupo;
         const trTotalPedido = document.createElement("tr");
         trTotalPedido.className = "group-total";
         trTotalPedido.innerHTML = `
@@ -558,19 +773,23 @@
           <td>--</td>
           <td>${formatarMoeda(custoGrupo)}</td>
           <td>${formatarMoeda(valorGrupo)}</td>
+          <td>${formatarMoeda(margemGrupo)}</td>
           <td>${grupo.totalPortas} porta(s)</td>
         `;
         refs.consumoBody.appendChild(trTotalPedido);
       });
 
       const custoGlobal = itensTotais.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
+      const valorGlobal = itensTotais.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0);
+      const margemGlobal = valorGlobal - custoGlobal;
       const trGlobal = document.createElement("tr");
       trGlobal.className = "global-total";
       trGlobal.innerHTML = `
         <td colspan="4">TOTAL GERAL (soma de todos os pedidos)</td>
         <td>--</td>
         <td>${formatarMoeda(custoGlobal)}</td>
-        <td>${formatarMoeda(itensTotais.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0))}</td>
+        <td>${formatarMoeda(valorGlobal)}</td>
+        <td>${formatarMoeda(margemGlobal)}</td>
         <td>${itensTotais.length} item(ns) consolidados</td>
       `;
       refs.consumoBody.appendChild(trGlobal);
@@ -650,6 +869,8 @@
 
     refs.btnCalcular.addEventListener("click", calcularConsumoPedido);
     refs.btnVoltar.addEventListener("click", () => { window.location.href = "/"; });
+    refs.btnAddCustoFixo.addEventListener("click", () => adicionarCusto("fixo"));
+    refs.btnAddCustoVariavel.addEventListener("click", () => adicionarCusto("variavel"));
 
     refs.pedidoInput.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter" && !ev.shiftKey) {
@@ -657,6 +878,34 @@
         calcularConsumoPedido();
       }
     });
+    refs.fixoValorInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") adicionarCusto("fixo");
+    });
+    refs.variavelValorInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") adicionarCusto("variavel");
+    });
+    refs.listaCustosFixos.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button[data-tipo][data-idx]");
+      if (!btn) return;
+      const idx = Number(btn.dataset.idx);
+      if (!Number.isInteger(idx) || idx < 0) return;
+      custosState.fixos.splice(idx, 1);
+      renderizarCustos("fixo");
+      atualizarResumoMensal();
+    });
+    refs.listaCustosVariaveis.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button[data-tipo][data-idx]");
+      if (!btn) return;
+      const idx = Number(btn.dataset.idx);
+      if (!Number.isInteger(idx) || idx < 0) return;
+      custosState.variaveis.splice(idx, 1);
+      renderizarCustos("variavel");
+      atualizarResumoMensal();
+    });
+
+    renderizarCustos("fixo");
+    renderizarCustos("variavel");
+    atualizarResumoMensal();
 
     const params = new URLSearchParams(window.location.search);
     const pedidoParam = params.get("pedido") || params.get("numero");
