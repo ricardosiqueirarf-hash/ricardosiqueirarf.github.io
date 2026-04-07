@@ -297,6 +297,25 @@
         </div>
       </div>
     </section>
+
+    <section class="panel">
+      <h2 class="section-title">Materiais por participação no custo (decrescente)</h2>
+      <table id="tabelaRankingMateriais" hidden>
+        <thead>
+          <tr>
+            <th>Posição</th>
+            <th>Material</th>
+            <th>Categoria</th>
+            <th>Custo total</th>
+            <th>% do custo total</th>
+            <th>Valor total</th>
+            <th>Margem</th>
+          </tr>
+        </thead>
+        <tbody id="rankingMateriaisBody"></tbody>
+      </table>
+      <div id="emptyRankingMateriais" class="empty">Nenhum ranking calculado.</div>
+    </section>
   </div>
 
   <script>
@@ -330,7 +349,10 @@
       resumoCustosVariaveis: document.getElementById("resumoCustosVariaveis"),
       resumoCustosMes: document.getElementById("resumoCustosMes"),
       resumoLucroLiquido: document.getElementById("resumoLucroLiquido"),
-      resumoLucroPerc: document.getElementById("resumoLucroPerc")
+      resumoLucroPerc: document.getElementById("resumoLucroPerc"),
+      tabelaRankingMateriais: document.getElementById("tabelaRankingMateriais"),
+      rankingMateriaisBody: document.getElementById("rankingMateriaisBody"),
+      emptyRankingMateriais: document.getElementById("emptyRankingMateriais")
     };
 
     const custosState = {
@@ -798,6 +820,42 @@
       refs.emptyState.hidden = true;
     }
 
+    function renderizarRankingMateriais(itensTotais) {
+      refs.rankingMateriaisBody.innerHTML = "";
+
+      if (!itensTotais.length) {
+        refs.tabelaRankingMateriais.hidden = true;
+        refs.emptyRankingMateriais.hidden = false;
+        refs.emptyRankingMateriais.textContent = "Nenhum ranking calculado.";
+        return;
+      }
+
+      const totalCusto = itensTotais.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
+      const ordenados = [...itensTotais].sort((a, b) => (Number(b.custoTotal) || 0) - (Number(a.custoTotal) || 0));
+
+      ordenados.forEach((item, idx) => {
+        const custo = Number(item.custoTotal) || 0;
+        const valor = Number(item.valorTotal) || 0;
+        const margem = valor - custo;
+        const perc = calcularPercentual(custo, totalCusto);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${item.item}</td>
+          <td>${item.categoria}</td>
+          <td>${formatarMoeda(custo)}</td>
+          <td>${formatarPercentual(perc)}</td>
+          <td>${formatarMoeda(valor)}</td>
+          <td>${formatarMoeda(margem)}</td>
+        `;
+        refs.rankingMateriaisBody.appendChild(tr);
+      });
+
+      refs.tabelaRankingMateriais.hidden = false;
+      refs.emptyRankingMateriais.hidden = true;
+    }
+
     async function calcularConsumoPedido() {
       const pedidosInformados = extrairPedidosInformados(refs.pedidoInput.value);
       if (!pedidosInformados.length) {
@@ -843,6 +901,7 @@
         if (!pedidosEncontrados.length) {
           renderizarResumo(null, 0, []);
           renderizarTabela([], []);
+          renderizarRankingMateriais([]);
           setStatus("Nenhum pedido informado foi encontrado.", "warn");
           return;
         }
@@ -854,6 +913,7 @@
 
         renderizarResumo(infoPedidos, totalPortasGeral, itens);
         renderizarTabela(gruposPedido, itens);
+        renderizarRankingMateriais(itens);
 
         const faltantes = pedidosInformados.length - pedidosEncontrados.length;
         const statusFinal = faltantes > 0
@@ -906,6 +966,7 @@
     renderizarCustos("fixo");
     renderizarCustos("variavel");
     atualizarResumoMensal();
+    renderizarRankingMateriais([]);
 
     const params = new URLSearchParams(window.location.search);
     const pedidoParam = params.get("pedido") || params.get("numero");
