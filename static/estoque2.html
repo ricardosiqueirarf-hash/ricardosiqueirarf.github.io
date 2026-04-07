@@ -100,6 +100,22 @@
 
     th { background: #1079ba; color: #fff; font-weight: 700; }
     tr:nth-child(even) { background: #f8fafd; }
+    tr.group-title td {
+      background: #eaf4ff !important;
+      color: #0b4f7a;
+      font-weight: 700;
+      border-top: 2px solid #c6def4;
+    }
+    tr.group-total td {
+      background: #f4f8fc !important;
+      font-weight: 700;
+    }
+    tr.global-total td {
+      background: #dff0ff !important;
+      color: #0a4367;
+      font-weight: 800;
+      border-top: 2px solid #8ec3eb;
+    }
 
     .section-title { margin: 14px 0 6px; color: #1079ba; font-size: 1.1rem; }
     .empty {
@@ -389,7 +405,7 @@
             quantidade: quantidadeVidro,
             custoUnitario: custoUnitVidro,
             custoTotal: quantidadeVidro * custoUnitVidro,
-            regra: "Área (m²) + perda do vidro"
+            regra: "rea (m²) + perda do vidro"
           });
         }
 
@@ -435,29 +451,56 @@
       refs.resumoCustoTotal.textContent = formatarMoeda(custoTotalGeral);
     }
 
-    function renderizarTabela(itens) {
+    function renderizarTabela(gruposPedido, itensTotais) {
       refs.consumoBody.innerHTML = "";
 
-      if (!itens.length) {
+      if (!gruposPedido.length) {
         refs.tabelaConsumo.hidden = true;
         refs.emptyState.hidden = false;
         refs.emptyState.textContent = "Não foi encontrado consumo para o pedido informado.";
         return;
       }
 
-      itens.forEach((item) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.item}</td>
-          <td>${item.categoria}</td>
-          <td>${item.unidade}</td>
-          <td>${formatarQuantidade(item.quantidade)}</td>
-          <td>${formatarMoeda(item.custoUnitario)}</td>
-          <td>${formatarMoeda(item.custoTotal)}</td>
-          <td>${item.regra}</td>
+      gruposPedido.forEach((grupo) => {
+        const trTitulo = document.createElement("tr");
+        trTitulo.className = "group-title";
+        trTitulo.innerHTML = `<td colspan="7">Pedido ${grupo.pedido} ${grupo.cliente ? `• Cliente: ${grupo.cliente}` : ""}</td>`;
+        refs.consumoBody.appendChild(trTitulo);
+
+        grupo.itens.forEach((item) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.item}</td>
+            <td>${item.categoria}</td>
+            <td>${item.unidade}</td>
+            <td>${formatarQuantidade(item.quantidade)}</td>
+            <td>${formatarMoeda(item.custoUnitario)}</td>
+            <td>${formatarMoeda(item.custoTotal)}</td>
+            <td>${item.regra}</td>
+          `;
+          refs.consumoBody.appendChild(tr);
+        });
+
+        const custoGrupo = grupo.itens.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
+        const trTotalPedido = document.createElement("tr");
+        trTotalPedido.className = "group-total";
+        trTotalPedido.innerHTML = `
+          <td colspan="5">Subtotal do pedido ${grupo.pedido}</td>
+          <td>${formatarMoeda(custoGrupo)}</td>
+          <td>${grupo.totalPortas} porta(s)</td>
         `;
-        refs.consumoBody.appendChild(tr);
+        refs.consumoBody.appendChild(trTotalPedido);
       });
+
+      const custoGlobal = itensTotais.reduce((acc, item) => acc + (Number(item.custoTotal) || 0), 0);
+      const trGlobal = document.createElement("tr");
+      trGlobal.className = "global-total";
+      trGlobal.innerHTML = `
+        <td colspan="5">TOTAL GERAL (soma de todos os pedidos)</td>
+        <td>${formatarMoeda(custoGlobal)}</td>
+        <td>${itensTotais.length} item(ns) consolidados</td>
+      `;
+      refs.consumoBody.appendChild(trGlobal);
 
       refs.tabelaConsumo.hidden = false;
       refs.emptyState.hidden = true;
@@ -476,6 +519,7 @@
         const bases = await carregarBases();
         const mapaConsumoGlobal = new Map();
         const pedidosEncontrados = [];
+        const gruposPedido = [];
         const clientes = new Set();
         let totalPortasGeral = 0;
 
@@ -484,9 +528,21 @@
           if (!orcamento) continue;
 
           const portas = await carregarPortas(orcamento.id);
-          const { totalPortas } = consolidarConsumo(portas, bases, mapaConsumoGlobal);
+          const mapaPedido = new Map();
+          const { itens: itensPedido, totalPortas } = consolidarConsumo(portas, bases, mapaPedido);
+          itensPedido.forEach((item) => {
+            const chaveGlobal = `${item.categoria}|${item.item}|${item.unidade}|${item.regra}`;
+            adicionarConsumo(mapaConsumoGlobal, chaveGlobal, item);
+          });
           totalPortasGeral += totalPortas;
-          pedidosEncontrados.push(String(orcamento.numero_pedido ?? pedido));
+          const numeroPedido = String(orcamento.numero_pedido ?? pedido);
+          pedidosEncontrados.push(numeroPedido);
+          gruposPedido.push({
+            pedido: numeroPedido,
+            cliente: orcamento.cliente_nome || "",
+            totalPortas,
+            itens: itensPedido
+          });
           if (orcamento.cliente_nome) clientes.add(orcamento.cliente_nome);
         }
 
@@ -494,7 +550,7 @@
 
         if (!pedidosEncontrados.length) {
           renderizarResumo(null, 0, []);
-          renderizarTabela([]);
+          renderizarTabela([], []);
           setStatus("Nenhum pedido informado foi encontrado.", "warn");
           return;
         }
@@ -505,7 +561,7 @@
         };
 
         renderizarResumo(infoPedidos, totalPortasGeral, itens);
-        renderizarTabela(itens);
+        renderizarTabela(gruposPedido, itens);
 
         const faltantes = pedidosInformados.length - pedidosEncontrados.length;
         const statusFinal = faltantes > 0
