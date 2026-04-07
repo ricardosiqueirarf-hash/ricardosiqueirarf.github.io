@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 import requests
+import os
 
 from auth_utils import buscar_usuario_por_token, extrair_token
 
@@ -245,6 +246,15 @@ def atualizar_status(uuid):
 
         # Regra: só pode ir para status 2 se estiver em 1
         if novo_status == 2:
+            senha_aprovacao_recebida = (data.get("aprova_senha") or "").strip()
+            senha_aprovacao_ambiente = (os.getenv("aprova_senha") or "").strip()
+
+            if not senha_aprovacao_ambiente:
+                return jsonify({"success": False, "error": "Senha de aprovação não configurada no ambiente."}), 500
+
+            if senha_aprovacao_recebida != senha_aprovacao_ambiente:
+                return jsonify({"success": False, "error": "Senha de aprovação inválida."}), 403
+
             try:
                 if int(status_atual) != 1:
                     return jsonify({"success": False, "error": "Orçamento não está no status de orçamento."}), 400
@@ -296,5 +306,3 @@ def atualizar_status(uuid):
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
