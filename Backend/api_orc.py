@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify
 import requests
 
-orc_bp = Blueprint("orc_bp", __name__)
+orc_bp = Blueprint("orc_bp", __name__) 
 
 @orc_bp.route("/api/orcamento/<uuid:orcamento_uuid>/finalizar", methods=["POST"])
 def finalizar_orcamento(orcamento_uuid):
