@@ -3,7 +3,7 @@ import requests
 from functools import wraps
 
 perfis_bp = Blueprint("perfis_bp", __name__)
-
+ 
 # ===================== UTIL =====================
 def calcular_preco(custo, margem, perda):
     custo_com_perda = custo * (1 + perda / 100)
