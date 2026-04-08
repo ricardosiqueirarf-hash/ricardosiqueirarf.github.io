@@ -4,7 +4,7 @@ import os
 
 from auth_utils import buscar_usuario_por_token, extrair_token
 
-orcamentos_bp = Blueprint("orcamentos_bp", __name__)
+orcamentos_bp = Blueprint("orcamentos_bp", __name__) 
 
 # =====================
 # API ORÇAMENTOS (apenas STATUS)
