@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerenciar Pedidos Aprovados | ColorGlass</title>
+  <meta name="description" content="Gestão de pedidos aprovados (status 2) com alteração para status acima de 2." />
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    :root {
+      --cg-blue: #1079ba;
+      --cg-blue-dark: #0d5d8c;
+      --cg-blue-soft: #e7f3fb;
+      --cg-border: rgba(16, 121, 186, 0.12);
+      --cg-text: #1f2933;
+      --cg-muted: #6b7280;
+      --cg-white: #ffffff;
+      --ok: #0c7c3c;
+      --err: #c23616;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, rgba(16,121,186,0.14), transparent 52%),
+        linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+      color: var(--cg-text);
+      padding: 28px 16px;
+    }
+
+    .page {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--cg-white);
+      border: 1px solid var(--cg-border);
+      border-radius: 16px;
+      box-shadow: 0 12px 28px rgba(15, 44, 62, 0.12);
+      padding: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand h1 {
+      color: var(--cg-blue-dark);
+      font-size: 1.45rem;
+      margin-bottom: 4px;
+    }
+
+    .brand p {
+      color: #4b5563;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--cg-blue-soft);
+      color: var(--cg-blue-dark);
+      font-size: 0.84rem;
+      margin-bottom: 10px;
+    }
+
+    .pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f0c24c;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(16, 121, 186, 0.22);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--cg-blue-dark);
+      border: 1px solid rgba(16,121,186,0.25);
+    }
+
+    .btn-row {
+      background: rgba(16,121,186,0.1);
+      color: var(--cg-blue-dark);
+      border: 1px solid rgba(16,121,186,0.2);
+      padding: 8px 10px;
+      font-size: 0.88rem;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .status {
+      margin-top: 12px;
+      font-size: 0.93rem;
+      min-height: 20px;
+      color: #4b5563;
+    }
+    .status.ok { color: var(--ok); }
+    .status.erro { color: var(--err); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 16px;
+      border: 1px solid rgba(16,121,186,0.14);
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 890px;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 11px 10px;
+      border-bottom: 1px solid rgba(16,121,186,0.08);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--cg-blue-dark);
+      background: rgba(231, 243, 251, 0.55);
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .muted { color: var(--cg-muted); }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(16,121,186,0.12);
+      color: var(--cg-blue-dark);
+      white-space: nowrap;
+    }
+
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--cg-muted);
+      font-size: 0.95rem;
+    }
+
+    select {
+      width: 100%;
+      min-width: 170px;
+      border: 1px solid #d4d9df;
+      border-radius: 9px;
+      padding: 8px 9px;
+      background: #fff;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 700px) {
+      .brand h1 { font-size: 1.2rem; }
+      .brand p { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="pill">Gestão de status</div>
+      <div class="brand">
+        <div>
+          <h1>Pedidos aprovados (status 2)</h1>
+          <p>
+            Esta tela lista somente pedidos com status <b>Aprovado (2)</b> e permite mudar apenas para
+            <b>Em Produção (3)</b>, <b>Separado (4)</b> ou <b>Entregue (5)</b>.
+            O status <b>1 (Orçamento)</b> não aparece como opção.
+          </p>
+        </div>
+        <div class="toolbar">
+          <button class="btn-outline" onclick="voltar()">Voltar</button>
+          <button class="btn-primary" id="btnRecarregar" onclick="carregarPedidosAprovados()">Recarregar</button>
+        </div>
+      </div>
+      <div id="statusGlobal" class="status"></div>
+    </section>
+
+    <section class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Cliente</th>
+              <th>UUID</th>
+              <th>Total</th>
+              <th>Status atual</th>
+              <th>Novo status</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPedidos">
+            <tr>
+              <td colspan="7" class="empty">Carregando pedidos aprovados...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = "https://colorglass.onrender.com";
+
+    const STATUS_ACIMA_DE_2 = [
+      { value: 3, label: "3 - Em Produção" },
+      { value: 4, label: "4 - Separado" },
+      { value: 5, label: "5 - Entregue" }
+    ];
+
+    function getToken() {
+      return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+    }
+
+    function setStatusGlobal(msg, tipo = "") {
+      const el = document.getElementById("statusGlobal");
+      el.textContent = msg;
+      el.className = "status " + tipo;
+    }
+
+    function moneyBR(valor) {
+      const n = Number(valor || 0);
+      return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    function parseValorTotal(valor) {
+      if (valor === null || valor === undefined) return 0;
+      if (typeof valor === "number") return valor;
+      const bruto = String(valor).trim();
+      if (!bruto) return 0;
+      let normalizado = bruto.replace(/[^0-9,.-]/g, "");
+      if (normalizado.includes(",")) {
+        normalizado = normalizado.replace(/\./g, "").replace(",", ".");
+      } else {
+        normalizado = normalizado.replace(/,/g, "");
+      }
+      const parsed = Number(normalizado);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function renderTabela(pedidos) {
+      const tbody = document.getElementById("tbodyPedidos");
+      if (!pedidos.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum pedido com status 2 (Aprovado) encontrado.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = pedidos.map((p, idx) => {
+        const valor = parseValorTotal(p.valor_total);
+        const selectId = `novo_status_${idx}`;
+        const btnId = `btn_salvar_${idx}`;
+
+        return `
+          <tr>
+            <td><b>#${p.numero_pedido ?? "-"}</b></td>
+            <td>${p.cliente_nome || "-"}</td>
+            <td class="muted" style="font-size:0.85rem; word-break:break-all;">${p.id || "-"}</td>
+            <td>${moneyBR(valor)}</td>
+            <td><span class="tag">2 - Aprovado</span></td>
+            <td>
+              <select id="${selectId}" aria-label="Novo status do pedido ${p.numero_pedido ?? ""}">
+                ${STATUS_ACIMA_DE_2.map(s => `<option value="${s.value}">${s.label}</option>`).join("")}
+              </select>
+            </td>
+            <td>
+              <button class="btn-row" id="${btnId}" onclick="atualizarStatus('${p.id}', '${selectId}', '${btnId}')">Salvar status</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function carregarPedidosAprovados() {
+      const token = getToken();
+      const btn = document.getElementById("btnRecarregar");
+      const tbody = document.getElementById("tbodyPedidos");
+
+      if (!token) {
+        setStatusGlobal("Sessão não encontrada. Faça login novamente.", "erro");
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Token ausente para consulta.</td></tr>';
+        return;
+      }
+
+      btn.disabled = true;
+      setStatusGlobal("Buscando pedidos aprovados...");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/orcamentos`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success || !Array.isArray(data.orcamentos)) {
+          throw new Error(data?.error || "Falha ao carregar orçamentos.");
+        }
+
+        const aprovados = data.orcamentos.filter(o => Number(o.status) === 2);
+        renderTabela(aprovados);
+        setStatusGlobal(`Foram encontrados ${aprovados.length} pedido(s) com status 2.`, "ok");
+      } catch (err) {
+        console.error(err);
+        setStatusGlobal(err.message || "Erro ao buscar pedidos aprovados.", "erro");
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Não foi possível carregar os pedidos.</td></tr>';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function atualizarStatus(uuid, selectId, btnId) {
+      const token = getToken();
+      const select = document.getElementById(selectId);
+      const btn = document.getElementById(btnId);
+
+      if (!token) {
+        setStatusGlobal("Sessão não encontrada. Faça login novamente.", "erro");
+        return;
+      }
+
+      const novoStatus = Number(select.value);
+
+      if (!STATUS_ACIMA_DE_2.some(s => s.value === novoStatus)) {
+        setStatusGlobal("Status inválido. Selecione apenas status acima de 2.", "erro");
+        return;
+      }
+
+      btn.disabled = true;
+      setStatusGlobal(`Atualizando pedido ${uuid} para status ${novoStatus}...`);
+
+      try {
+        const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(uuid)}/status`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: novoStatus })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data?.error || "Falha ao atualizar status.");
+        }
+
+        setStatusGlobal(`Pedido ${uuid} atualizado com sucesso para ${data.status_label || novoStatus}.`, "ok");
+        await carregarPedidosAprovados();
+      } catch (err) {
+        console.error(err);
+        setStatusGlobal(err.message || "Erro ao atualizar status do pedido.", "erro");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function voltar() {
+      history.back();
+    }
+
+    carregarPedidosAprovados();
+  </script>
+</body>
+</html>
