@@ -154,6 +154,15 @@
       return Number.isFinite(n) ? n : 0;
     }
 
+    function normalizarPerfilNome(nome) {
+      return String(nome || "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
     function extrairPedidosInformados(texto) {
       return String(texto || "")
         .split(/[\n,;]+/g)
@@ -213,7 +222,9 @@
         totalPortas += qtdPortas;
 
         const perfil = perfis.find((p) => String(p.id) === String(dados?.perfil));
-        const perfilNome = perfil?.nome || `Perfil ${dados?.perfil || "não definido"}`;
+        const perfilNomeOriginal = perfil?.nome || `Perfil ${dados?.perfil || "não definido"}`;
+        const perfilNomeExibicao = String(perfilNomeOriginal).replace(/\s+/g, " ").trim();
+        const perfilNomeNormalizado = normalizarPerfilNome(perfilNomeExibicao);
 
         const pecas = [
           { comprimento: alturaMm, multiplicadorBase: 2, origem: "altura" },
@@ -223,11 +234,12 @@
         pecas.forEach((peca) => {
           const quantidade = peca.multiplicadorBase * qtdPortas;
           totalPecas += quantidade;
-          const chave = `${perfilNome}__${peca.comprimento}__${peca.origem}`;
+          const chave = `${perfilNomeNormalizado}__${peca.comprimento}__${peca.origem}`;
 
           if (!mapa.has(chave)) {
             mapa.set(chave, {
-              perfilNome,
+              perfilNome: perfilNomeExibicao,
+              perfilNomeNormalizado,
               comprimento: peca.comprimento,
               quantidade: 0,
               origem: peca.origem,
@@ -241,8 +253,10 @@
 
       const lista = Array.from(mapa.values());
       lista.sort((a, b) => {
+        if (a.perfilNomeNormalizado !== b.perfilNomeNormalizado) {
+          return a.perfilNomeNormalizado.localeCompare(b.perfilNomeNormalizado, "pt-BR");
+        }
         if (b.comprimento !== a.comprimento) return b.comprimento - a.comprimento;
-        if (a.perfilNome !== b.perfilNome) return a.perfilNome.localeCompare(b.perfilNome, "pt-BR");
         return a.origem.localeCompare(b.origem, "pt-BR");
       });
 
@@ -261,11 +275,11 @@
       let perfilAtual = null;
 
       lista.forEach((item) => {
-        if (item.perfilNome !== perfilAtual) {
-          perfilAtual = item.perfilNome;
+        if (item.perfilNomeNormalizado !== perfilAtual) {
+          perfilAtual = item.perfilNomeNormalizado;
           const groupRow = document.createElement("tr");
           groupRow.className = "group-row";
-          groupRow.innerHTML = `<td colspan="5">${perfilAtual}</td>`;
+          groupRow.innerHTML = `<td colspan="5">${item.perfilNome}</td>`;
           refs.corteBody.appendChild(groupRow);
         }
 
