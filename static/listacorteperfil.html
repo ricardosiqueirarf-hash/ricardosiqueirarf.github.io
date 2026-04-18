@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Corte por Perfil | ColorGlass</title>
+  <style>
+    * { box-sizing: border-box; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+    body { margin: 0; background: #f4f7fb; color: #1f2d3d; padding: 20px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 5px 16px rgba(0,0,0,.08);
+    }
+    h1 { margin: 0 0 8px; color: #0d6da8; }
+    .subtitle { margin: 0; color: #5e6f81; }
+    .toolbar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-top: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 260px; }
+    label { font-weight: 700; color: #32475a; }
+    textarea, input {
+      border: 1px solid #ccd6e0;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: .95rem;
+      outline: none;
+    }
+    textarea:focus, input:focus { border-color: #0d6da8; }
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-primary { background: #0d6da8; color: #fff; }
+    .btn-primary:hover { background: #0a5685; }
+    .btn-secondary { background: #e7edf5; color: #1f2d3d; }
+    .btn-secondary:hover { background: #d8e2ee; }
+    .status { margin-top: 10px; color: #45607a; }
+    .status.ok { color: #1f8d4d; }
+    .status.warn { color: #aa770c; }
+    .status.err { color: #bc2f2f; }
+
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 10px; }
+    .meta {
+      background: #f7fbff;
+      border: 1px solid #d7e6f4;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .meta h3 { margin: 0 0 6px; font-size: .8rem; text-transform: uppercase; color: #526a81; }
+    .meta .v { font-size: 1.1rem; color: #103a5d; font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td {
+      border: 1px solid #dce5ef;
+      padding: 9px;
+      font-size: .9rem;
+      text-align: left;
+    }
+    th { background: #0d6da8; color: white; }
+    tbody tr:nth-child(even) { background: #f8fbff; }
+    .group-row td { background: #eaf4ff !important; color: #0d4f79; font-weight: 800; }
+    .empty { text-align:center; padding: 20px; border: 1px dashed #b6c8da; border-radius: 8px; color: #607487; margin-top: 8px; }
+
+    @media print {
+      @page { size: A4 portrait; margin: 10mm; }
+      body { background: #fff; padding: 0; }
+      .no-print { display: none !important; }
+      .panel { box-shadow: none; border: 1px solid #d2dbe6; break-inside: avoid; }
+      th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    @media (max-width: 768px) {
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="panel no-print">
+      <h1>Lista de Corte por Perfil</h1>
+      <p class="subtitle">Informe o número/ID do pedido e gere a lista de corte dos perfis (ordem: maior para menor), pronta para impressão A4.</p>
+      <div class="toolbar">
+        <div class="field">
+          <label for="pedidoInput">Número(s) do pedido</label>
+          <textarea id="pedidoInput" rows="2" placeholder="Ex: 1024, 1025"></textarea>
+        </div>
+        <button class="btn btn-primary" id="btnGerar">Gerar lista de corte</button>
+        <button class="btn btn-secondary" id="btnImprimir">Imprimir A4</button>
+      </div>
+      <div class="status" id="statusMsg">Pronto para consulta.</div>
+    </section>
+
+    <section class="panel">
+      <div class="meta-grid">
+        <div class="meta"><h3>Pedido(s)</h3><div class="v" id="metaPedidos">--</div></div>
+        <div class="meta"><h3>Cliente</h3><div class="v" id="metaCliente">--</div></div>
+        <div class="meta"><h3>Portas totais</h3><div class="v" id="metaPortas">0</div></div>
+        <div class="meta"><h3>Peças de perfil</h3><div class="v" id="metaPecas">0</div></div>
+      </div>
+
+      <table id="tabelaCorte" hidden>
+        <thead>
+          <tr>
+            <th>Perfil</th>
+            <th>Comprimento (mm)</th>
+            <th>Quantidade</th>
+            <th>Origem (largura/altura)</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody id="corteBody"></tbody>
+      </table>
+      <div class="empty" id="emptyState">Nenhum cálculo realizado.</div>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE = "https://colorglass.onrender.com";
+
+    const refs = {
+      pedidoInput: document.getElementById("pedidoInput"),
+      btnGerar: document.getElementById("btnGerar"),
+      btnImprimir: document.getElementById("btnImprimir"),
+      statusMsg: document.getElementById("statusMsg"),
+      metaPedidos: document.getElementById("metaPedidos"),
+      metaCliente: document.getElementById("metaCliente"),
+      metaPortas: document.getElementById("metaPortas"),
+      metaPecas: document.getElementById("metaPecas"),
+      tabelaCorte: document.getElementById("tabelaCorte"),
+      corteBody: document.getElementById("corteBody"),
+      emptyState: document.getElementById("emptyState")
+    };
+
+    function getHeaders() {
+      const token = localStorage.getItem("token") || localStorage.getItem("user_token") || "";
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
+    function setStatus(msg, tipo = "") {
+      refs.statusMsg.textContent = msg;
+      refs.statusMsg.className = `status ${tipo}`.trim();
+    }
+
+    function parseNumero(v) {
+      if (v == null || v === "") return 0;
+      const txt = String(v).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+      const n = Number(txt);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function extrairPedidosInformados(texto) {
+      return String(texto || "")
+        .split(/[\n,;]+/g)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function encontrarOrcamentoPorPedido(orcamentos, pedidoInformado) {
+      const pedidoTxt = String(pedidoInformado || "").trim();
+      const pedidoNum = Number(pedidoTxt);
+      return orcamentos.find((orc) => {
+        const numero = orc?.numero_pedido;
+        if (String(numero) === pedidoTxt) return true;
+        if (Number.isFinite(pedidoNum) && Number(numero) === pedidoNum) return true;
+        if (String(orc?.id || "") === pedidoTxt) return true;
+        return false;
+      }) || null;
+    }
+
+    async function carregarBases() {
+      const headers = getHeaders();
+      const [orcRes, perfisRes] = await Promise.all([
+        fetch(`${API_BASE}/api/orcamentos`, { headers }),
+        fetch(`${API_BASE}/api/perfis`, { headers })
+      ]);
+
+      if (!orcRes.ok || !perfisRes.ok) {
+        throw new Error("Falha ao carregar orçamentos/perfis.");
+      }
+
+      return {
+        orcamentos: (await orcRes.json()).orcamentos || [],
+        perfis: await perfisRes.json()
+      };
+    }
+
+    async function carregarPortas(orcamentoId) {
+      const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(orcamentoId)}/portas`, { headers: getHeaders() });
+      if (!res.ok) throw new Error(`Falha ao buscar portas do orçamento ${orcamentoId}.`);
+      const json = await res.json();
+      return json.portas || [];
+    }
+
+    function consolidarListaCorte(portas, perfis) {
+      const mapa = new Map();
+      let totalPortas = 0;
+      let totalPecas = 0;
+
+      portas.forEach((porta) => {
+        const dados = porta?.dados || {};
+        const qtdPortas = Math.max(1, Math.trunc(parseNumero(porta?.quantidade) || 1));
+        const larguraMm = Math.max(0, Math.round(parseNumero(dados?.largura)));
+        const alturaMm = Math.max(0, Math.round(parseNumero(dados?.altura)));
+
+        if (!larguraMm || !alturaMm) return;
+
+        totalPortas += qtdPortas;
+
+        const perfil = perfis.find((p) => String(p.id) === String(dados?.perfil));
+        const perfilNome = perfil?.nome || `Perfil ${dados?.perfil || "não definido"}`;
+
+        const pecas = [
+          { comprimento: alturaMm, multiplicadorBase: 2, origem: "altura" },
+          { comprimento: larguraMm, multiplicadorBase: 2, origem: "largura" }
+        ];
+
+        pecas.forEach((peca) => {
+          const quantidade = peca.multiplicadorBase * qtdPortas;
+          totalPecas += quantidade;
+          const chave = `${perfilNome}__${peca.comprimento}__${peca.origem}`;
+
+          if (!mapa.has(chave)) {
+            mapa.set(chave, {
+              perfilNome,
+              comprimento: peca.comprimento,
+              quantidade: 0,
+              origem: peca.origem,
+              observacao: `2 peças de ${peca.origem} por porta × ${qtdPortas} porta(s)`
+            });
+          }
+
+          mapa.get(chave).quantidade += quantidade;
+        });
+      });
+
+      const lista = Array.from(mapa.values());
+      lista.sort((a, b) => {
+        if (b.comprimento !== a.comprimento) return b.comprimento - a.comprimento;
+        if (a.perfilNome !== b.perfilNome) return a.perfilNome.localeCompare(b.perfilNome, "pt-BR");
+        return a.origem.localeCompare(b.origem, "pt-BR");
+      });
+
+      return { lista, totalPortas, totalPecas };
+    }
+
+    function renderizarTabela(lista) {
+      refs.corteBody.innerHTML = "";
+
+      if (!lista.length) {
+        refs.tabelaCorte.hidden = true;
+        refs.emptyState.hidden = false;
+        return;
+      }
+
+      let perfilAtual = null;
+
+      lista.forEach((item) => {
+        if (item.perfilNome !== perfilAtual) {
+          perfilAtual = item.perfilNome;
+          const groupRow = document.createElement("tr");
+          groupRow.className = "group-row";
+          groupRow.innerHTML = `<td colspan="5">${perfilAtual}</td>`;
+          refs.corteBody.appendChild(groupRow);
+        }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.perfilNome}</td>
+          <td>${item.comprimento}</td>
+          <td>${item.quantidade}</td>
+          <td>${item.origem}</td>
+          <td>${item.observacao}</td>
+        `;
+        refs.corteBody.appendChild(tr);
+      });
+
+      refs.tabelaCorte.hidden = false;
+      refs.emptyState.hidden = true;
+    }
+
+    async function gerarLista() {
+      const pedidosInformados = extrairPedidosInformados(refs.pedidoInput.value);
+      if (!pedidosInformados.length) {
+        setStatus("Informe ao menos um número/ID de pedido.", "warn");
+        return;
+      }
+
+      try {
+        setStatus("Carregando dados...", "");
+        const bases = await carregarBases();
+
+        const portasDeTodosPedidos = [];
+        const pedidosEncontrados = [];
+
+        for (const pedidoTxt of pedidosInformados) {
+          const orc = encontrarOrcamentoPorPedido(bases.orcamentos, pedidoTxt);
+          if (!orc) continue;
+          const portas = await carregarPortas(orc.id);
+          portasDeTodosPedidos.push(...portas);
+          pedidosEncontrados.push(orc);
+        }
+
+        if (!pedidosEncontrados.length) {
+          setStatus("Nenhum pedido encontrado para os números informados.", "warn");
+          refs.metaPedidos.textContent = "--";
+          refs.metaCliente.textContent = "--";
+          refs.metaPortas.textContent = "0";
+          refs.metaPecas.textContent = "0";
+          renderizarTabela([]);
+          return;
+        }
+
+        const { lista, totalPortas, totalPecas } = consolidarListaCorte(portasDeTodosPedidos, bases.perfis);
+
+        refs.metaPedidos.textContent = pedidosEncontrados.map((p) => p.numero_pedido || p.id).join(", ");
+        const clientes = [...new Set(pedidosEncontrados.map((p) => p.cliente_nome || "Sem cliente"))];
+        refs.metaCliente.textContent = clientes.join(" / ");
+        refs.metaPortas.textContent = String(totalPortas);
+        refs.metaPecas.textContent = String(totalPecas);
+
+        renderizarTabela(lista);
+        setStatus(`Lista de corte gerada com sucesso (${lista.length} item(ns)).`, "ok");
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || "Erro ao gerar a lista de corte.", "err");
+      }
+    }
+
+    refs.btnGerar.addEventListener("click", gerarLista);
+    refs.btnImprimir.addEventListener("click", () => window.print());
+
+    refs.pedidoInput.value = new URLSearchParams(window.location.search).get("pedido") || "";
+    if (refs.pedidoInput.value.trim()) {
+      gerarLista();
+    }
+  </script>
+</body>
+</html>
