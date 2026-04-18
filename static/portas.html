@@ -300,48 +300,6 @@ input:hover, select:hover, textarea:hover{
   border: 1px solid rgba(16,121,186,0.14);
 }
 
-/* Cost toggle/details */
-.cost-toggle{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.92rem;
-  color: #374151;
-}
-.cost-toggle input[type="checkbox"]{
-  width: 18px;
-  height: 18px;
-  transform: translateY(1px);
-}
-
-.cost-details{
-  background: rgba(255,255,255,0.92);
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 10px 18px rgba(15,44,62,0.10);
-  font-size: 0.9rem;
-  border: 1px solid rgba(16,121,186,0.12);
-}
-
-cost-details table{
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 8px;
-  overflow: hidden;
-  border-radius: 12px;
-}
-
-.cost-details th,
-.cost-details td{
-  border: 1px solid rgba(220,221,225,0.85);
-  padding: 8px;
-  text-align: left;
-}
-
-cost-details th{
-  background: rgba(231,243,251,0.9);
-}
-
 /* Cards internos */
 #portasSalvas div,
 #printResumo .print-item,
@@ -395,6 +353,13 @@ cost-details th{
   box-sizing: border-box;
   padding: 10mm;
 }
+.op-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: center;
+}
+.op-svg-wrap { min-width: 0; }
 .op-info { font-size: 15px; line-height: 1.45; }
 .op-info-row {
   display: grid;
@@ -414,7 +379,6 @@ cost-details th{
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-.op-quantity { font-size: 28px; font-weight: 700; fill: var(--cg-blue-dark); }
 .op-measure { font-size: 20px; fill: #333; }
 
 /* Etiqueta térmica (mantida) */
@@ -465,6 +429,12 @@ cost-details th{
     padding: 10mm;
     gap: 12mm;
     break-inside: avoid;
+    page-break-after: always;
+    break-after: page;
+  }
+  .op-content {
+    grid-template-columns: 2fr 1fr;
+    gap: 12mm;
   }
   .op-info { font-size: 13px; line-height: 1.35; }
   .op-info-row {
@@ -472,7 +442,6 @@ cost-details th{
     gap: 3mm;
     margin-bottom: 2.5mm;
   }
-  .op-page { page-break-after: always; }
   .thermal-label { page-break-after: always; border: none; }
   #printResumo svg { display: none !important; }
 }
@@ -509,11 +478,11 @@ cost-details th{
 </style>
 
 <link id="tema-css" rel="stylesheet" href="">
-<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/main.js" defer></script>
+<script src="main.js" defer></script>
 <script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/api.js" defer></script>
-<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/pricing.js" defer></script>
-<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/ui.js" defer></script>
-<script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/print.js" defer></script>
+<script src="pricing.js" defer></script>
+<script src="ui.js" defer></script>
+<script src="print.js" defer></script>
 <script src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/estruturas3d.js" defer></script>
 </head>
 
@@ -525,8 +494,6 @@ cost-details th{
     </div>
 
     <div class="content">
-        <h1>Orçamento de Portas</h1>
-
         <div id="infoOrcamento"></div>
 
         <div class="door-layout">
@@ -540,22 +507,12 @@ cost-details th{
                         <option value="pivotante">Pivotante</option>
                     </select>
                 </label>
-
-                <button class="btn" onclick="abrirEstrutura3D()">
-                    🧱 Orçar Estrutura 3D
-                </button>
-
                 <label>Quantidade
                     <input type="number" id="quantidade" value="1" min="1" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()">
                 </label>
 
                 <div id="campos"></div>
                 <div class="price-preview" id="precoPorta">Preço estimado: R$ 0,00</div>
-                <label class="cost-toggle">
-                    <input type="checkbox" id="toggleCustos" onchange="toggleDetalhesCustos()">
-                    Mostrar custos e preços detalhados
-                </label>
-                <div class="cost-details" id="detalhesCustos" style="display: none;"></div>
                 <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
             </div>
 
@@ -571,6 +528,10 @@ cost-details th{
                 <button class="btn" onclick="imprimirOrcamento()">Imprimir Orçamento</button>
                 <button class="btn" onclick="imprimirOrdemProducao()">Imprimir Ordem de Produção</button>
                 <button class="btn" onclick="imprimirEtiquetaTermica()">Etiqueta térmica</button>
+                <button class="btn" id="btnPortasTecnico">Portas técnico</button>
+            </div>
+            <div class="helper-text" style="margin-top:8px;">
+                A Ordem de Produção só pode ser impressa com pedido aprovado (status 2 ou superior).
             </div>
         </div>
 
@@ -585,6 +546,20 @@ cost-details th{
     </div>
 </div>
 
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const botao = document.getElementById("btnPortasTecnico");
+    if (!botao) return;
+    botao.addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      const uuid = window.ORCAMENTO_UUID || params.get("orcamento_uuid");
+      const destino = uuid
+        ? `tecnico.html?orcamento_uuid=${encodeURIComponent(uuid)}`
+        : "tecnico.html";
+      window.location.href = destino;
+    });
+  });
+</script>
 </body>
 </html>
 
