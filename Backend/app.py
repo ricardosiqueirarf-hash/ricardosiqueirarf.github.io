@@ -247,6 +247,14 @@ def promob_export_page():
 def promob_export_html_page():
     return send_from_directory(BASE_DIR, "promob_export.html")
 
+@app.route("/listacorteperfil")
+def listacorteperfil_page():
+    return send_from_directory(BASE_DIR, "listacorteperfil.html")
+
+@app.route("/listacorteperfil.html")
+def listacorteperfil_html_page():
+    return send_from_directory(BASE_DIR, "listacorteperfil.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
