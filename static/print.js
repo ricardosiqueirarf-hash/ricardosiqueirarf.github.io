@@ -224,14 +224,12 @@ function atualizarResumoOrdem() {
                     </div>
             `
             : "";
-        const cabecalho = index === 0
-            ? `
-                <div class="op-header">
-                    <h2>Ordem de Produção</h2>
-                    <p>${obterIdentificacaoOrcamento()}</p>
-                </div>
-            `
-            : "";
+        const cabecalho = `
+            <div class="op-header">
+                <h2>Ordem de Produção</h2>
+                <p>${obterIdentificacaoOrcamento()}</p>
+            </div>
+        `;
 
         return `
             <div class="print-item op-page">
