@@ -199,8 +199,6 @@ function obterTagCorrespondente() {
     return match
 }
 
-
-
 function calcularMedidasPorta() {
     const larguraMm = +document.getElementById("largura")?.value || 0
     const alturaMm = +document.getElementById("altura")?.value || 0
@@ -892,6 +890,25 @@ function gerarSvgOrdemProducao(porta) {
     `
 }
 
+function normalizarAlturasDobradicas(dobradicasAlturas) {
+    if (Array.isArray(dobradicasAlturas)) {
+        return dobradicasAlturas
+            .map((valor) => parseFloat(String(valor).replace(",", ".")))
+            .filter((valor) => Number.isFinite(valor) && valor > 0)
+    }
+
+    if (typeof dobradicasAlturas === "string") {
+        const numeros = dobradicasAlturas
+            .match(/-?\d+(?:[.,]\d+)?/g)
+            ?.map((valor) => parseFloat(valor.replace(",", ".")))
+            .filter((valor) => Number.isFinite(valor) && valor > 0)
+
+        return Array.isArray(numeros) ? numeros : []
+    }
+
+    return []
+}
+
 function atualizarResumoOrdem() {
     const container = document.getElementById("printOrdem")
     if (!container) return
@@ -910,8 +927,12 @@ function atualizarResumoOrdem() {
         const observacaoVenda = p.dados.observacao_venda || "-"
         const observacaoProducao = p.dados.observacao_producao || "-"
         const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0
-        const alturasDobradicas = Array.isArray(p.dados.dobradicas_alturas) && p.dados.dobradicas_alturas.length
-            ? `${p.dados.dobradicas_alturas.join(" mm, ")} mm`
+        const alturasDobradicas = normalizarAlturasDobradicas(p.dados.dobradicas_alturas)
+        const alturasDobradicasTexto = alturasDobradicas.length
+            ? `${alturasDobradicas.map((altura) => `${altura} mm`).join(", ")}`
+            : "-"
+        const dobradicasTexto = quantidadeDobradicas > 0
+            ? `${quantidadeDobradicas} (alturas: ${alturasDobradicasTexto})`
             : "-"
         const alturaPorta = parseFloat(p.dados.altura || 0)
         const alturaPuxador = parseFloat(p.dados.altura_puxador || 0)
@@ -926,15 +947,42 @@ function atualizarResumoOrdem() {
                     ${gerarSvgOrdemProducao(p)}
                 </div>
                 <div class="op-info">
-                    <div><strong>O.P. ${index + 1} - ${p.tipo}</strong></div>
-                    <div>Perfil: ${perfilNome}</div>
-                    <div>Vidro: ${vidroNome}</div>
-                    <div>Puxador: ${puxadorNome}</div>
-                    <div>Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</div>
-                    <div>Observação de venda: ${observacaoVenda}</div>
-                    <div>Observação de produção: ${observacaoProducao}</div>
-                    <div>Dobradiças: ${quantidadeDobradicas} (alturas: ${alturasDobradicas})</div>
-                    <div>Vão do puxador: ${vaoPuxador}</div>
+                    <div class="op-info-row">
+                        <span>O.P.</span>
+                        <strong>${index + 1} - ${p.tipo}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Perfil</span>
+                        <strong>${perfilNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Vidro</span>
+                        <strong>${vidroNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Puxador</span>
+                        <strong>${puxadorNome}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Valor adicional</span>
+                        <strong>${valorAdicional ? formatarMoeda(valorAdicional) : "-"}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Observação de venda</span>
+                        <strong>${observacaoVenda}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Observação de produção</span>
+                        <strong>${observacaoProducao}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Dobradiças</span>
+                        <strong>${dobradicasTexto}</strong>
+                    </div>
+                    <div class="op-info-row">
+                        <span>Vão do puxador</span>
+                        <strong>${vaoPuxador}</strong>
+                    </div>
                 </div>
             </div>
         `
@@ -1107,4 +1155,5 @@ carregarTags()
 carregarPortas()
 carregarEstruturas3D()
 carregarOrcamentoInfo()
+
 
