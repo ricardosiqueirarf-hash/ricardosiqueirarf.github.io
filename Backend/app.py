@@ -135,6 +135,14 @@ def aprovacao_page():
 def aprovacao_html_page():
     return send_from_directory(BASE_DIR, "aprovacao.html")
 
+@app.route("/controle")
+def controle_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gerenciar_aprovados.html")
+
+@app.route("/controle.html")
+def controle_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gerenciar_aprovados.html")
+
 @app.route("/tags")
 def tags_page():
     return send_from_directory(BASE_DIR, "tags.html")
@@ -246,14 +254,6 @@ def promob_export_page():
 @app.route("/promob_export.html")
 def promob_export_html_page():
     return send_from_directory(BASE_DIR, "promob_export.html")
-
-@app.route("/listacorteperfil")
-def listacorteperfil_page():
-    return send_from_directory(BASE_DIR, "listacorteperfil.html")
-
-@app.route("/listacorteperfil.html")
-def listacorteperfil_html_page():
-    return send_from_directory(BASE_DIR, "listacorteperfil.html")
 
 # =====================
 # BLUEPRINTS
