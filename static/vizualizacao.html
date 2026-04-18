@@ -406,7 +406,25 @@ cost-details th{
   box-sizing: border-box;
   padding: 10mm;
 }
-.op-info { font-size: 20px; line-height: 1.6; }
+.op-info { font-size: 15px; line-height: 1.45; }
+.op-info-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 40%) 1fr;
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+.op-info-row span {
+  font-weight: 700;
+  color: #1f2933;
+}
+.op-info-row strong {
+  font-weight: 500;
+  color: #1f2933;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .op-quantity { font-size: 28px; font-weight: 700; fill: var(--cg-blue-dark); }
 .op-measure { font-size: 20px; fill: #333; }
 
@@ -458,6 +476,12 @@ cost-details th{
     padding: 10mm;
     gap: 12mm;
     break-inside: avoid;
+  }
+  .op-info { font-size: 13px; line-height: 1.35; }
+  .op-info-row {
+    grid-template-columns: minmax(35mm, 42mm) 1fr;
+    gap: 3mm;
+    margin-bottom: 2.5mm;
   }
   .op-page { page-break-after: always; }
   .thermal-label { page-break-after: always; border: none; }
