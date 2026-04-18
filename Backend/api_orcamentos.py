@@ -21,6 +21,8 @@ STATUS_LABELS = {
     5: "Entregue",
 }
 
+TABELA_PAGAMENTOS = os.getenv("SUPABASE_TABLE_PAGAMENTOS", "pagamentos")
+
 
 def status_label(valor):
     """Converte status numérico em texto amigável."""
@@ -29,6 +31,34 @@ def status_label(valor):
     except (TypeError, ValueError):
         return "Desconhecido"
     return STATUS_LABELS.get(v, "Desconhecido")
+
+
+def _usuario_por_request():
+    token = extrair_token(request)
+    usuario = None
+    if token:
+        try:
+            usuario = buscar_usuario_por_token(token)
+        except Exception as e:
+            raise RuntimeError(str(e))
+    return token, (usuario or {})
+
+
+def _normalizar_pagamentos(raw):
+    if isinstance(raw, list):
+        return raw
+    if isinstance(raw, dict):
+        itens = raw.get("itens")
+        if isinstance(itens, list):
+            return itens
+    return []
+
+
+def _valor_float(valor):
+    try:
+        return float(valor)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 @orcamentos_bp.route("/api/orcamento", methods=["POST"])
@@ -304,5 +334,140 @@ def atualizar_status(uuid):
             "registro": atualizado
         })
 
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@orcamentos_bp.route("/api/pagamentos", methods=["GET"])
+def listar_pagamentos_em_lote():
+    from app import SUPABASE_URL, HEADERS
+
+    try:
+        _usuario_por_request()
+    except RuntimeError as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    ids_raw = (request.args.get("orcamentoids") or "").strip()
+    if not ids_raw:
+        return jsonify({"success": True, "pagamentos": {}})
+
+    ids = [item.strip() for item in ids_raw.split(",") if item.strip()]
+    if not ids:
+        return jsonify({"success": True, "pagamentos": {}})
+
+    try:
+        filtro_ids = ",".join(ids)
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?select=orcamentoid,pagamentos&orcamentoid=in.({filtro_ids})",
+            headers=HEADERS
+        )
+        r.raise_for_status()
+        rows = r.json() or []
+        payload = {}
+        for row in rows:
+            oid = str(row.get("orcamentoid") or "").strip()
+            if not oid:
+                continue
+            pagamentos = _normalizar_pagamentos(row.get("pagamentos"))
+            total_pago = round(sum(_valor_float(p.get("valor")) for p in pagamentos), 2)
+            payload[oid] = {
+                "pagamentos": pagamentos,
+                "total_pago": total_pago
+            }
+
+        return jsonify({"success": True, "pagamentos": payload})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@orcamentos_bp.route("/api/orcamento/<uuid>/pagamentos", methods=["GET"])
+def obter_pagamentos_orcamento(uuid):
+    from app import SUPABASE_URL, HEADERS
+    try:
+        _usuario_por_request()
+    except RuntimeError as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?select=id,orcamentoid,pagamentos&orcamentoid=eq.{uuid}&limit=1",
+            headers=HEADERS
+        )
+        r.raise_for_status()
+        rows = r.json() or []
+        if not rows:
+            return jsonify({"success": True, "orcamentoid": uuid, "pagamentos": [], "total_pago": 0})
+
+        pagamentos = _normalizar_pagamentos(rows[0].get("pagamentos"))
+        total_pago = round(sum(_valor_float(p.get("valor")) for p in pagamentos), 2)
+        return jsonify({
+            "success": True,
+            "orcamentoid": uuid,
+            "pagamentos": pagamentos,
+            "total_pago": total_pago
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@orcamentos_bp.route("/api/orcamento/<uuid>/pagamentos", methods=["POST"])
+def adicionar_pagamento_orcamento(uuid):
+    from app import SUPABASE_URL, HEADERS
+    try:
+        _usuario_por_request()
+    except RuntimeError as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    data = request.json or {}
+    prazo_pagamento = (data.get("prazo_pagamento") or "").strip()
+    valor = data.get("valor")
+    valor_float = _valor_float(valor)
+
+    if valor_float <= 0:
+        return jsonify({"success": False, "error": "Valor do pagamento deve ser maior que zero."}), 400
+
+    novo_pagamento = {
+        "prazo_pagamento": prazo_pagamento,
+        "valor": round(valor_float, 2)
+    }
+
+    try:
+        r_get = requests.get(
+            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?select=id,pagamentos&orcamentoid=eq.{uuid}&limit=1",
+            headers=HEADERS
+        )
+        r_get.raise_for_status()
+        rows = r_get.json() or []
+
+        if rows:
+            row = rows[0]
+            pid = row.get("id")
+            pagamentos = _normalizar_pagamentos(row.get("pagamentos"))
+            pagamentos.append(novo_pagamento)
+            r_patch = requests.patch(
+                f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?id=eq.{pid}",
+                headers={**HEADERS, "Prefer": "return=representation"},
+                json={"pagamentos": pagamentos}
+            )
+            r_patch.raise_for_status()
+            atualizado = r_patch.json() or []
+            pagamentos_atualizados = _normalizar_pagamentos((atualizado[0] if atualizado else {}).get("pagamentos"))
+        else:
+            r_post = requests.post(
+                f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}",
+                headers={**HEADERS, "Prefer": "return=representation"},
+                json={"orcamentoid": uuid, "pagamentos": [novo_pagamento]}
+            )
+            r_post.raise_for_status()
+            criado = r_post.json() or []
+            pagamentos_atualizados = _normalizar_pagamentos((criado[0] if criado else {}).get("pagamentos"))
+
+        total_pago = round(sum(_valor_float(p.get("valor")) for p in pagamentos_atualizados), 2)
+        return jsonify({
+            "success": True,
+            "orcamentoid": uuid,
+            "pagamentos": pagamentos_atualizados,
+            "total_pago": total_pago
+        })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
