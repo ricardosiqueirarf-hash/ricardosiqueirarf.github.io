@@ -25,35 +25,44 @@ function obterDataHoje() {
     return new Date().toLocaleDateString("pt-BR");
 }
 
-function normalizarAlturasDobradicas(dobradicasAlturas) {
-    if (Array.isArray(dobradicasAlturas)) {
-        return dobradicasAlturas
-            .map((valor) => Number(valor))
-            .filter((valor) => Number.isFinite(valor) && valor > 0);
+function parseAlturasDobradicasRecursivo(valor, profundidade = 0) {
+    if (profundidade > 4 || valor == null) return [];
+
+    if (Array.isArray(valor)) {
+        return valor.flatMap((item) => parseAlturasDobradicasRecursivo(item, profundidade + 1));
     }
 
-    if (typeof dobradicasAlturas === "string") {
-        const texto = dobradicasAlturas.trim();
+    if (typeof valor === "number") {
+        return Number.isFinite(valor) && valor > 0 ? [valor] : [];
+    }
+
+    if (typeof valor === "string") {
+        const texto = valor.trim();
         if (!texto) return [];
 
         try {
             const parsed = JSON.parse(texto);
-            if (Array.isArray(parsed)) {
-                return parsed
-                    .map((valor) => Number(valor))
-                    .filter((valor) => Number.isFinite(valor) && valor > 0);
+            if (parsed !== valor) {
+                const recursivo = parseAlturasDobradicasRecursivo(parsed, profundidade + 1);
+                if (recursivo.length) return recursivo;
             }
         } catch (_) {
-            // Se não for JSON válido, segue para parsing por separadores.
+            // segue parsing por regex
         }
 
-        return texto
-            .split(/[;,|]/)
-            .map((valor) => Number(valor.trim()))
-            .filter((valor) => Number.isFinite(valor) && valor > 0);
+        return (texto.match(/-?\d+(?:[.,]\d+)?/g) || [])
+            .map((numero) => parseFloat(numero.replace(",", ".")))
+            .filter((numero) => Number.isFinite(numero) && numero > 0);
     }
 
     return [];
+}
+
+function normalizarAlturasDobradicas(dobradicasAlturas) {
+    const lista = parseAlturasDobradicasRecursivo(dobradicasAlturas);
+    return lista
+        .map((valor) => Number(valor))
+        .filter((valor) => Number.isFinite(valor) && valor > 0);
 }
 
 function atualizarResumoImpressao() {
@@ -185,6 +194,14 @@ function atualizarResumoOrdem() {
             ? puxadorNomeBase
             : `${puxadorNomeBase}/${ladoPuxador}`;
         const observacaoProducao = p.dados.observacao_producao || "-";
+        const observacaoVenda = p.dados.observacao_venda || "-";
+        const quantidadeDobradicas = parseInt(p.dados.dobradicas || "0", 10) || 0;
+        const alturasDobradicas = normalizarAlturasDobradicas(p.dados.dobradicas_alturas);
+        const alturasDobradicasTexto = alturasDobradicas.length
+            ? alturasDobradicas
+                .map((altura, idx) => `${idx + 1} - ${altura} mm`)
+                .join("<br>")
+            : "-";
         const sistemaNome = p.dados.sistema_nome || p.dados.sistemas || "-";
         const trilhoNome = p.dados.trilho
             || [p.dados.trilhos_superior, p.dados.trilhos_inferior].filter(Boolean).join(" | ")
@@ -248,7 +265,19 @@ function atualizarResumoOrdem() {
                             <span>Puxador</span>
                             <strong>${puxadorNome}</strong>
                         </div>
+                        <div class="op-info-row">
+                            <span>Observação de venda</span>
+                            <strong>${observacaoVenda}</strong>
+                        </div>
                         ${detalhesDeslizante}
+                        <div class="op-info-row">
+                            <span>Dobradiças</span>
+                            <strong>${quantidadeDobradicas > 0 ? quantidadeDobradicas : "-"}</strong>
+                        </div>
+                        <div class="op-info-row">
+                            <span>Altura das dobradiças</span>
+                            <strong>${alturasDobradicasTexto}</strong>
+                        </div>
                         <div class="op-info-row">
                             <span>Observação de produção</span>
                             <strong>${observacaoProducao}</strong>
