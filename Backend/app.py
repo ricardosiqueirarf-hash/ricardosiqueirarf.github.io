@@ -251,17 +251,27 @@ def clientes_html_page():
 def promob_export_page():
     return send_from_directory(BASE_DIR, "promob_export.html")
 
+def _crm_directory():
+    static_crm_dir = os.path.join(ROOT_DIR, "static", "crm")
+    if os.path.exists(os.path.join(static_crm_dir, "index.html")):
+        return static_crm_dir
+    return os.path.join(ROOT_DIR, "CRM")
+
+@app.route("/crm")
+@app.route("/crm/")
+def crm_page():
+    return send_from_directory(_crm_directory(), "index.html")
+
+@app.route("/crm/index.html")
+@app.route("/CRM")
+@app.route("/CRM/index.html")
+def crm_index_html_page():
+    return send_from_directory(_crm_directory(), "index.html")
+
 @app.route("/promob_export.html")
 def promob_export_html_page():
     return send_from_directory(BASE_DIR, "promob_export.html")
 
-@app.route("/crm")
-def crm_page():
-    return send_from_directory(ROOT_DIR, "crm.html")
-
-@app.route("/crm.html")
-def crm_html_page():
-    return send_from_directory(ROOT_DIR, "crm.html")
 # =====================
 # BLUEPRINTS
 # =====================
@@ -309,7 +319,6 @@ app.register_blueprint(trilhos_bp)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
-
 
 
 
