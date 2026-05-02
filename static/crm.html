@@ -11,6 +11,7 @@
     h1 { margin: 0 0 12px; }
     .small { font-size: 13px; color: #475569; }
     .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+    input { border: 1px solid #cbd5e1; border-radius: 8px; padding: 9px 10px; min-width: 260px; }
     button { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; vertical-align: top; }
@@ -22,12 +23,13 @@
   <div class="wrap">
     <div class="card">
       <h1>/CRM - Usuários do Supabase</h1>
-      <p class="small">Lista completa da tabela <code>usuarios</code>, incluindo o campo <code>storeid</code>.</p>
+      <p class="small">Mesmo padrão do index: carrega via API e mostra usuários da tabela <code>usuarios</code> (incluindo <code>storeid</code>).</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
         <button id="reloadBtn" type="button">Recarregar</button>
+        <input id="searchInput" type="text" placeholder="Filtrar por UserID, StoreID, nome ou email" />
         <span id="status" class="small">Carregando...</span>
       </div>
 
@@ -47,6 +49,8 @@
   </div>
 
   <script>
+    let usuariosCache = [];
+
     function escapeHtml(value) {
       return String(value ?? '')
         .replaceAll('&', '&amp;')
@@ -59,7 +63,7 @@
     function pick(row, keys) {
       for (const key of keys) {
         if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
-          return row[key];
+          return String(row[key]).trim();
         }
       }
       return '-';
@@ -78,6 +82,28 @@
       `).join('');
     }
 
+    function applyFilter() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!q) {
+        renderUsuarios(usuariosCache);
+        document.getElementById('status').textContent = `Total de usuários: ${usuariosCache.length}`;
+        return;
+      }
+
+      const filtered = usuariosCache.filter((row) => {
+        const text = [
+          pick(row, ['userid', 'user_id', 'id']),
+          pick(row, ['storeid', 'store_id', 'StoreID']),
+          pick(row, ['nome', 'name']),
+          pick(row, ['email'])
+        ].join(' ').toLowerCase();
+        return text.includes(q);
+      });
+
+      renderUsuarios(filtered);
+      document.getElementById('status').textContent = `Filtrados: ${filtered.length} de ${usuariosCache.length}`;
+    }
+
     async function loadUsuarios() {
       const status = document.getElementById('status');
       status.textContent = 'Carregando...';
@@ -90,15 +116,17 @@
           throw new Error(payload?.error || `Erro HTTP ${response.status}`);
         }
 
-        renderUsuarios(payload.usuarios);
-        status.textContent = `Total de usuários: ${payload.usuarios.length}`;
+        usuariosCache = payload.usuarios;
+        applyFilter();
       } catch (error) {
+        usuariosCache = [];
         document.getElementById('tbody').innerHTML = '';
         status.textContent = `Erro ao carregar usuários: ${error.message}`;
       }
     }
 
     document.getElementById('reloadBtn').addEventListener('click', loadUsuarios);
+    document.getElementById('searchInput').addEventListener('input', applyFilter);
     loadUsuarios();
   </script>
 </body>
