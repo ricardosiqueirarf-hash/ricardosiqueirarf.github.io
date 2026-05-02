@@ -10,7 +10,7 @@
     .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 16px; margin-bottom: 16px; }
     h1 { margin: 0 0 12px; }
     .small { font-size: 13px; color: #475569; }
-    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
     input { border: 1px solid #cbd5e1; border-radius: 8px; padding: 9px 10px; min-width: 260px; }
     button { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -23,7 +23,7 @@
   <div class="wrap">
     <div class="card">
       <h1>/CRM - Usuários do Supabase</h1>
-      <p class="small">Mesmo padrão do index: carrega via API e mostra usuários da tabela <code>usuarios</code> (incluindo <code>storeid</code>).</p>
+      <p class="small">Carrega usuários da tabela <code>usuarios</code> (incluindo <code>storeid</code>) no mesmo fluxo de API usado no index.</p>
     </div>
 
     <div class="card">
@@ -49,6 +49,10 @@
   </div>
 
   <script>
+    const BACKEND_URL = window.location.origin.includes('onrender.com')
+      ? window.location.origin
+      : 'https://colorglass.onrender.com';
+
     let usuariosCache = [];
 
     function escapeHtml(value) {
@@ -109,7 +113,10 @@
       status.textContent = 'Carregando...';
 
       try {
-        const response = await fetch('/api/usuarios');
+        const token = localStorage.getItem('USER_TOKEN') || localStorage.getItem('ADMIN_TOKEN') || '';
+        const response = await fetch(`${BACKEND_URL}/api/usuarios`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         const payload = await response.json();
 
         if (!response.ok || !Array.isArray(payload.usuarios)) {
