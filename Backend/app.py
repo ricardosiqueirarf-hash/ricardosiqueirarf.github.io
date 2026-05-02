@@ -255,6 +255,13 @@ def promob_export_page():
 def promob_export_html_page():
     return send_from_directory(BASE_DIR, "promob_export.html")
 
+@app.route("/crm")
+def crm_page():
+    return send_from_directory(ROOT_DIR, "crm.html")
+
+@app.route("/crm.html")
+def crm_html_page():
+    return send_from_directory(ROOT_DIR, "crm.html")
 # =====================
 # BLUEPRINTS
 # =====================
