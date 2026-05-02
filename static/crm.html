@@ -1,322 +1,65 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRM LojaID</title>
-  <style>
-    :root { color-scheme: light; }
-    body { font-family: Arial, sans-serif; margin: 0; background: #f4f6fb; color: #1f2937; }
-    .wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
-    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 16px; margin-bottom: 16px; }
-    h1, h2 { margin: 0 0 12px; }
-    form { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
-    input, select, button, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-    input, select, textarea { background: #fff; }
-    button { background: #2563eb; color: #fff; border: none; cursor: pointer; }
-    button.secondary { background: #64748b; }
-    button.danger { background: #dc2626; }
-    .span-2 { grid-column: span 2; }
-    .span-6 { grid-column: span 6; }
-    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; vertical-align: top; }
-    th { background: #f8fafc; }
-    .badge { padding: 3px 8px; border-radius: 999px; color: #fff; font-size: 12px; display: inline-block; }
-    .ativo { background: #16a34a; }
-    .inativo { background: #ef4444; }
-    .lead { background: #f59e0b; }
-    .small { font-size: 12px; color: #475569; }
-    @media (max-width: 900px) {
-      form { grid-template-columns: 1fr; }
-      .span-2,.span-6 { grid-column: span 1; }
-      .toolbar { flex-direction: column; }
-    }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card">
-      <h1>CRM - Gestão de LojaID</h1>
-      <p class="small">Busque LojaIDs já existentes no banco e gerencie os detalhes localmente.</p>
-    </div>
+from flask import Blueprint, jsonify, request
+import requests
 
-    <div class="card">
-      <h2>Cadastro / Edição de Loja</h2>
-      <form id="crmForm">
-        <input class="span-2" type="text" id="lojaId" placeholder="LojaID (obrigatório)" required />
-        <input class="span-2" type="text" id="nomeLoja" placeholder="Nome da loja" required />
-        <input class="span-2" type="text" id="responsavel" placeholder="Responsável" />
-        <input class="span-2" type="email" id="email" placeholder="E-mail" />
-        <input class="span-2" type="tel" id="telefone" placeholder="Telefone" />
-        <select class="span-2" id="status">
-          <option value="lead">Lead</option>
-          <option value="ativo">Ativo</option>
-          <option value="inativo">Inativo</option>
-        </select>
-        <textarea class="span-6" id="observacoes" placeholder="Observações" rows="3"></textarea>
-        <button type="submit" id="saveBtn">Salvar Loja</button>
-        <button type="button" class="secondary" id="resetBtn">Limpar</button>
-      </form>
-    </div>
+from auth_utils import buscar_usuario_por_token, extrair_token
 
-    <div class="card">
-      <div class="toolbar">
-        <input type="text" id="search" placeholder="Buscar por LojaID, nome ou responsável" />
-        <select id="filterStatus">
-          <option value="">Todos os status</option>
-          <option value="lead">Lead</option>
-          <option value="ativo">Ativo</option>
-          <option value="inativo">Inativo</option>
-        </select>
-        <button class="secondary" id="syncLojaIdsBtn">Trazer LojaIDs do Banco</button>
-        <button class="secondary" id="exportBtn">Exportar JSON</button>
-        <input type="file" id="importFile" accept="application/json" />
-      </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>LojaID</th>
-            <th>Loja</th>
-            <th>Contato</th>
-            <th>Status</th>
-            <th>Observações</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-  </div>
+clientes_api_bp = Blueprint("clientes_api_bp", __name__)
 
-  <script>
-    const STORAGE_KEY = 'crm_lojaid_v1';
-    const form = document.getElementById('crmForm');
-    const tbody = document.getElementById('tbody');
-    const search = document.getElementById('search');
-    const filterStatus = document.getElementById('filterStatus');
 
-    const fields = {
-      lojaId: document.getElementById('lojaId'),
-      nomeLoja: document.getElementById('nomeLoja'),
-      responsavel: document.getElementById('responsavel'),
-      email: document.getElementById('email'),
-      telefone: document.getElementById('telefone'),
-      status: document.getElementById('status'),
-      observacoes: document.getElementById('observacoes')
-    };
+def _tem_permissao():
+    token = extrair_token(request)
+    usuario = buscar_usuario_por_token(token) if token else None
+    nivel = int((usuario or {}).get("level") or 0)
+    return nivel in (2, 3)
 
-    let editingId = null;
 
-    function loadData() {
-      try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      } catch {
-        return [];
-      }
-    }
+@clientes_api_bp.route("/api/clientes/storeids", methods=["GET"])
+@clientes_api_bp.route("/api/usuarios/storeids", methods=["GET"])
+def listar_storeids():
+    if not _tem_permissao():
+        return jsonify({"error": "Acesso negado"}), 403
 
-    function saveData(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
+    from app import SUPABASE_URL, HEADERS
 
-    function escapeHtml(str = '') {
-      return str
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-    }
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/usuarios?select=storeid&storeid=not.is.null",
+            headers=HEADERS,
+            timeout=20,
+        )
+        r.raise_for_status()
+        rows = r.json()
+    except Exception as exc:
+        return jsonify({"error": "Falha ao consultar usuários", "details": str(exc)}), 500
 
-    function render() {
-      const q = search.value.trim().toLowerCase();
-      const statusFilter = filterStatus.value;
-      const data = loadData();
-
-      const filtered = data.filter(item => {
-        const matchesSearch = [item.lojaId, item.nomeLoja, item.responsavel].join(' ').toLowerCase().includes(q);
-        const matchesStatus = !statusFilter || item.status === statusFilter;
-        return matchesSearch && matchesStatus;
-      });
-
-      tbody.innerHTML = filtered.map(item => `
-        <tr>
-          <td><strong>${escapeHtml(item.lojaId)}</strong></td>
-          <td>${escapeHtml(item.nomeLoja)}</td>
-          <td>
-            ${escapeHtml(item.responsavel || '-')}<br>
-            <span class="small">${escapeHtml(item.email || '-')} | ${escapeHtml(item.telefone || '-')}</span>
-          </td>
-          <td><span class="badge ${escapeHtml(item.status)}">${escapeHtml(item.status.toUpperCase())}</span></td>
-          <td>${escapeHtml(item.observacoes || '-')}</td>
-          <td>
-            <button onclick="editItem('${escapeHtml(item.lojaId)}')">Editar</button>
-            <button class="danger" onclick="deleteItem('${escapeHtml(item.lojaId)}')">Excluir</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    function clearForm() {
-      editingId = null;
-      form.reset();
-      fields.status.value = 'lead';
-      document.getElementById('saveBtn').textContent = 'Salvar Loja';
-    }
-
-    async function syncLojaIdsFromDatabase() {
-      const btn = document.getElementById('syncLojaIdsBtn');
-      const originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = 'Sincronizando...';
-
-      try {
-        const endpoints = ['/api/clientes/storeids', '/api/storeids', '/clientes/storeids'];
-        let payload = null;
-        let lastError = null;
-
-        for (const endpoint of endpoints) {
-          try {
-            const response = await fetch(endpoint);
-            if (!response.ok) {
-              lastError = `HTTP ${response.status} em ${endpoint}`;
-              continue;
-            }
-            const body = await response.json();
-            if (Array.isArray(body.storeIds)) {
-              payload = body;
-              break;
-            }
-            lastError = `Resposta inválida em ${endpoint}`;
-          } catch (err) {
-            lastError = `${endpoint}: ${err.message}`;
-          }
+    store_ids = sorted(
+        {
+            str(row.get("storeid")).strip()
+            for row in rows
+            if row.get("storeid") is not None and str(row.get("storeid")).strip()
         }
+    )
 
-        if (!payload) {
-          throw new Error(lastError || 'Falha ao carregar StoreIDs da tabela usuarios (Supabase).');
-        }
+    return jsonify({"storeIds": store_ids})
 
-        const lojaIds = [...new Set(
-          payload.storeIds
-            .map(id => String(id || '').trim())
-            .filter(Boolean)
-        )];
 
-        const data = loadData();
-        const existingIds = new Set(data.map(item => item.lojaId));
-        const newEntries = lojaIds
-          .filter(id => !existingIds.has(id))
-          .map(id => ({
-            lojaId: id,
-            nomeLoja: `Loja ${id}`,
-            responsavel: '',
-            email: '',
-            telefone: '',
-            status: 'lead',
-            observacoes: 'Importado automaticamente da tabela usuarios do Supabase (coluna storeid).'
-          }));
+@clientes_api_bp.route("/api/usuarios", methods=["GET"])
+def listar_usuarios():
+    if not _tem_permissao():
+        return jsonify({"error": "Acesso negado"}), 403
 
-        if (newEntries.length > 0) {
-          saveData([...data, ...newEntries]);
-          render();
-        }
+    from app import SUPABASE_URL, HEADERS
 
-        alert(`Sincronização concluída. ${newEntries.length} LojaID(s) adicionados.`);
-      } catch (error) {
-        alert(`Erro ao sincronizar LojaIDs: ${error.message}`);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
-      }
-    }
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/usuarios?select=*&order=userid.asc.nullslast",
+            headers=HEADERS,
+            timeout=20,
+        )
+        r.raise_for_status()
+        rows = r.json()
+    except Exception as exc:
+        return jsonify({"error": "Falha ao consultar usuários", "details": str(exc)}), 500
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = loadData();
-      const payload = Object.fromEntries(Object.entries(fields).map(([k, el]) => [k, el.value.trim()]));
-
-      if (!payload.lojaId) {
-        alert('LojaID é obrigatório.');
-        return;
-      }
-
-      const existsIndex = data.findIndex(item => item.lojaId === payload.lojaId);
-
-      if (editingId && editingId !== payload.lojaId && existsIndex !== -1) {
-        alert('Já existe uma loja com este LojaID.');
-        return;
-      }
-
-      if (editingId) {
-        const idx = data.findIndex(item => item.lojaId === editingId);
-        data[idx] = payload;
-      } else {
-        if (existsIndex !== -1) {
-          alert('LojaID já cadastrado.');
-          return;
-        }
-        data.push(payload);
-      }
-
-      saveData(data);
-      clearForm();
-      render();
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', clearForm);
-    document.getElementById('syncLojaIdsBtn').addEventListener('click', syncLojaIdsFromDatabase);
-    search.addEventListener('input', render);
-    filterStatus.addEventListener('change', render);
-
-    window.editItem = (lojaId) => {
-      const data = loadData();
-      const item = data.find(i => i.lojaId === lojaId);
-      if (!item) return;
-      editingId = item.lojaId;
-      Object.entries(fields).forEach(([k, el]) => { el.value = item[k] || ''; });
-      document.getElementById('saveBtn').textContent = 'Atualizar Loja';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    window.deleteItem = (lojaId) => {
-      if (!confirm(`Excluir loja ${lojaId}?`)) return;
-      const next = loadData().filter(i => i.lojaId !== lojaId);
-      saveData(next);
-      render();
-    };
-
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(loadData(), null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'crm_lojaid.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
-
-    document.getElementById('importFile').addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const imported = JSON.parse(String(reader.result));
-          if (!Array.isArray(imported)) throw new Error('Formato inválido');
-          saveData(imported);
-          render();
-          alert('Importação concluída!');
-        } catch {
-          alert('Arquivo inválido. Envie um JSON exportado do CRM.');
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    });
-
-    render();
-  </script>
-</body>
-</html>
+    return jsonify({"usuarios": rows})
