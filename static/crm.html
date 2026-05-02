@@ -17,7 +17,6 @@
     button.secondary { background: #64748b; }
     button.danger { background: #dc2626; }
     .span-2 { grid-column: span 2; }
-    .span-3 { grid-column: span 3; }
     .span-6 { grid-column: span 6; }
     .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -30,7 +29,7 @@
     .small { font-size: 12px; color: #475569; }
     @media (max-width: 900px) {
       form { grid-template-columns: 1fr; }
-      .span-2,.span-3,.span-6 { grid-column: span 1; }
+      .span-2,.span-6 { grid-column: span 1; }
       .toolbar { flex-direction: column; }
     }
   </style>
@@ -38,8 +37,8 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>CRM /CRM - Gestão de LojaID</h1>
-      <p class="small">Controle lojas por LojaID, contato, status e observações. Dados salvos no navegador (localStorage).</p>
+      <h1>CRM - Gestão de LojaID</h1>
+      <p class="small">Busque LojaIDs já existentes no banco e gerencie os detalhes localmente.</p>
     </div>
 
     <div class="card">
@@ -70,6 +69,7 @@
           <option value="ativo">Ativo</option>
           <option value="inativo">Inativo</option>
         </select>
+        <button class="secondary" id="syncLojaIdsBtn">Trazer LojaIDs do Banco</button>
         <button class="secondary" id="exportBtn">Exportar JSON</button>
         <input type="file" id="importFile" accept="application/json" />
       </div>
@@ -136,10 +136,7 @@
       const data = loadData();
 
       const filtered = data.filter(item => {
-        const matchesSearch = [item.lojaId, item.nomeLoja, item.responsavel]
-          .join(' ')
-          .toLowerCase()
-          .includes(q);
+        const matchesSearch = [item.lojaId, item.nomeLoja, item.responsavel].join(' ').toLowerCase().includes(q);
         const matchesStatus = !statusFilter || item.status === statusFilter;
         return matchesSearch && matchesStatus;
       });
@@ -169,12 +166,58 @@
       document.getElementById('saveBtn').textContent = 'Salvar Loja';
     }
 
+    async function syncLojaIdsFromDatabase() {
+      const btn = document.getElementById('syncLojaIdsBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Sincronizando...';
+
+      try {
+        const response = await fetch('/api/orcamentos');
+        const payload = await response.json();
+
+        if (!response.ok || !payload?.success || !Array.isArray(payload.orcamentos)) {
+          throw new Error(payload?.error || 'Falha ao carregar LojaIDs do banco.');
+        }
+
+        const lojaIds = [...new Set(
+          payload.orcamentos
+            .map(item => String(item.lojaid || '').trim())
+            .filter(Boolean)
+        )];
+
+        const data = loadData();
+        const existingIds = new Set(data.map(item => item.lojaId));
+        const newEntries = lojaIds
+          .filter(id => !existingIds.has(id))
+          .map(id => ({
+            lojaId: id,
+            nomeLoja: `Loja ${id}`,
+            responsavel: '',
+            email: '',
+            telefone: '',
+            status: 'lead',
+            observacoes: 'Importado automaticamente do banco (api/orcamentos).'
+          }));
+
+        if (newEntries.length > 0) {
+          saveData([...data, ...newEntries]);
+          render();
+        }
+
+        alert(`Sincronização concluída. ${newEntries.length} LojaID(s) adicionados.`);
+      } catch (error) {
+        alert(`Erro ao sincronizar LojaIDs: ${error.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const data = loadData();
-      const payload = Object.fromEntries(
-        Object.entries(fields).map(([k, el]) => [k, el.value.trim()])
-      );
+      const payload = Object.fromEntries(Object.entries(fields).map(([k, el]) => [k, el.value.trim()]));
 
       if (!payload.lojaId) {
         alert('LojaID é obrigatório.');
@@ -205,6 +248,7 @@
     });
 
     document.getElementById('resetBtn').addEventListener('click', clearForm);
+    document.getElementById('syncLojaIdsBtn').addEventListener('click', syncLojaIdsFromDatabase);
     search.addEventListener('input', render);
     filterStatus.addEventListener('change', render);
 
