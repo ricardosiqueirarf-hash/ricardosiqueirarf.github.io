@@ -173,16 +173,16 @@
       btn.textContent = 'Sincronizando...';
 
       try {
-        const response = await fetch('/api/orcamentos');
+        const response = await fetch('/api/clientes/storeids');
         const payload = await response.json();
 
-        if (!response.ok || !payload?.success || !Array.isArray(payload.orcamentos)) {
-          throw new Error(payload?.error || 'Falha ao carregar LojaIDs do banco.');
+        if (!response.ok || !Array.isArray(payload.storeIds)) {
+          throw new Error(payload?.error || 'Falha ao carregar StoreIDs da tabela usuarios (Supabase).');
         }
 
         const lojaIds = [...new Set(
-          payload.orcamentos
-            .map(item => String(item.lojaid || '').trim())
+          payload.storeIds
+            .map(id => String(id || '').trim())
             .filter(Boolean)
         )];
 
@@ -197,7 +197,7 @@
             email: '',
             telefone: '',
             status: 'lead',
-            observacoes: 'Importado automaticamente do banco (api/orcamentos).'
+            observacoes: 'Importado automaticamente da tabela usuarios do Supabase (coluna storeid).'
           }));
 
         if (newEntries.length > 0) {
