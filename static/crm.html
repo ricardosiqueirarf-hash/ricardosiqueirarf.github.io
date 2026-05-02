@@ -1,65 +1,105 @@
-from flask import Blueprint, jsonify, request
-import requests
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM - Usuários</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f6fb; color: #1f2937; }
+    .wrap { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 16px; margin-bottom: 16px; }
+    h1 { margin: 0 0 12px; }
+    .small { font-size: 13px; color: #475569; }
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+    button { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #f8fafc; }
+    code { background: #e2e8f0; padding: 2px 5px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>/CRM - Usuários do Supabase</h1>
+      <p class="small">Lista completa da tabela <code>usuarios</code>, incluindo o campo <code>storeid</code>.</p>
+    </div>
 
-from auth_utils import buscar_usuario_por_token, extrair_token
+    <div class="card">
+      <div class="toolbar">
+        <button id="reloadBtn" type="button">Recarregar</button>
+        <span id="status" class="small">Carregando...</span>
+      </div>
 
+      <table>
+        <thead>
+          <tr>
+            <th>UserID</th>
+            <th>StoreID</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Level</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
 
-clientes_api_bp = Blueprint("clientes_api_bp", __name__)
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
 
-
-def _tem_permissao():
-    token = extrair_token(request)
-    usuario = buscar_usuario_por_token(token) if token else None
-    nivel = int((usuario or {}).get("level") or 0)
-    return nivel in (2, 3)
-
-
-@clientes_api_bp.route("/api/clientes/storeids", methods=["GET"])
-@clientes_api_bp.route("/api/usuarios/storeids", methods=["GET"])
-def listar_storeids():
-    if not _tem_permissao():
-        return jsonify({"error": "Acesso negado"}), 403
-
-    from app import SUPABASE_URL, HEADERS
-
-    try:
-        r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/usuarios?select=storeid&storeid=not.is.null",
-            headers=HEADERS,
-            timeout=20,
-        )
-        r.raise_for_status()
-        rows = r.json()
-    except Exception as exc:
-        return jsonify({"error": "Falha ao consultar usuários", "details": str(exc)}), 500
-
-    store_ids = sorted(
-        {
-            str(row.get("storeid")).strip()
-            for row in rows
-            if row.get("storeid") is not None and str(row.get("storeid")).strip()
+    function pick(row, keys) {
+      for (const key of keys) {
+        if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
+          return row[key];
         }
-    )
+      }
+      return '-';
+    }
 
-    return jsonify({"storeIds": store_ids})
+    function renderUsuarios(usuarios) {
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = usuarios.map((row) => `
+        <tr>
+          <td>${escapeHtml(pick(row, ['userid', 'user_id', 'id']))}</td>
+          <td><strong>${escapeHtml(pick(row, ['storeid', 'store_id', 'StoreID']))}</strong></td>
+          <td>${escapeHtml(pick(row, ['nome', 'name']))}</td>
+          <td>${escapeHtml(pick(row, ['email']))}</td>
+          <td>${escapeHtml(pick(row, ['level']))}</td>
+        </tr>
+      `).join('');
+    }
 
+    async function loadUsuarios() {
+      const status = document.getElementById('status');
+      status.textContent = 'Carregando...';
 
-@clientes_api_bp.route("/api/usuarios", methods=["GET"])
-def listar_usuarios():
-    if not _tem_permissao():
-        return jsonify({"error": "Acesso negado"}), 403
+      try {
+        const response = await fetch('/api/usuarios');
+        const payload = await response.json();
 
-    from app import SUPABASE_URL, HEADERS
+        if (!response.ok || !Array.isArray(payload.usuarios)) {
+          throw new Error(payload?.error || `Erro HTTP ${response.status}`);
+        }
 
-    try:
-        r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/usuarios?select=*&order=userid.asc.nullslast",
-            headers=HEADERS,
-            timeout=20,
-        )
-        r.raise_for_status()
-        rows = r.json()
-    except Exception as exc:
-        return jsonify({"error": "Falha ao consultar usuários", "details": str(exc)}), 500
+        renderUsuarios(payload.usuarios);
+        status.textContent = `Total de usuários: ${payload.usuarios.length}`;
+      } catch (error) {
+        document.getElementById('tbody').innerHTML = '';
+        status.textContent = `Erro ao carregar usuários: ${error.message}`;
+      }
+    }
 
-    return jsonify({"usuarios": rows})
+    document.getElementById('reloadBtn').addEventListener('click', loadUsuarios);
+    loadUsuarios();
+  </script>
+</body>
+</html>
