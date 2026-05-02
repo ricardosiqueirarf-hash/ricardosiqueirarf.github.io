@@ -130,6 +130,7 @@ def validar_token():
         return jsonify({
             "success": True,
             "level": level,
+            "storeid": usuario.get("storeid"),
             "permissions": permissions,
             "redirect": pagina_por_nivel(level)
         })
