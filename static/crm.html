@@ -173,11 +173,30 @@
       btn.textContent = 'Sincronizando...';
 
       try {
-        const response = await fetch('/api/clientes/storeids');
-        const payload = await response.json();
+        const endpoints = ['/api/clientes/storeids', '/api/storeids', '/clientes/storeids'];
+        let payload = null;
+        let lastError = null;
 
-        if (!response.ok || !Array.isArray(payload.storeIds)) {
-          throw new Error(payload?.error || 'Falha ao carregar StoreIDs da tabela usuarios (Supabase).');
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+              lastError = `HTTP ${response.status} em ${endpoint}`;
+              continue;
+            }
+            const body = await response.json();
+            if (Array.isArray(body.storeIds)) {
+              payload = body;
+              break;
+            }
+            lastError = `Resposta inválida em ${endpoint}`;
+          } catch (err) {
+            lastError = `${endpoint}: ${err.message}`;
+          }
+        }
+
+        if (!payload) {
+          throw new Error(lastError || 'Falha ao carregar StoreIDs da tabela usuarios (Supabase).');
         }
 
         const lojaIds = [...new Set(
