@@ -263,189 +263,146 @@ body{
 }
 
 .status-text{
-  font-size: 0.9rem;
+  font-size: .9rem;
   color: var(--cg-muted);
-  background: rgba(231,243,251,0.65);
-  border: 1px solid rgba(16,121,186,0.14);
-  padding: 8px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
 }
 
 .orcamentos-limit{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.limit-label{
-  font-size: 0.9rem;
-  color: var(--cg-muted);
-  white-space: nowrap;
-}
-
-.limit-buttons{
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  display:flex;
+  gap:8px;
+  align-items:center;
 }
 
 .limit-btn{
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(16,121,186,0.2);
-  background: #fff;
-  color: var(--cg-blue-dark);
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  border:1px solid rgba(16,121,186,0.22);
+  background:#fff;
+  color:#1f2933;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s ease;
 }
 
 .limit-btn:hover{
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(16,121,186,0.18);
+  border-color: var(--cg-blue);
 }
 
 .limit-btn.active{
   background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
-  color: #fff;
-  border-color: rgba(16,121,186,0.45);
-  box-shadow: 0 10px 18px rgba(16,121,186,0.24);
+  color:#fff;
+  border-color: transparent;
 }
 
-/* AÇÕES com ícones — mais “premium” */
-.actions{
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.icon-btn{
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid rgba(16,121,186,0.18);
-  background: rgba(255,255,255,0.85);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  line-height: 1;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color .18s ease;
-  box-shadow: 0 10px 18px rgba(15,44,62,0.10);
-  user-select: none;
-  padding: 0;
-}
-
-.icon-btn:hover{
-  transform: translateY(-2px);
-  background: #ffffff;
-  border-color: rgba(16,121,186,0.28);
-  box-shadow: 0 14px 24px rgba(15,44,62,0.14);
-}
-
-.icon-btn:active{ transform: translateY(0); }
-
-.icon-btn.edit{ color: var(--cg-blue-dark); }
-.icon-btn.pay{ color: #0c7c3c; }
-
-/* TABELAS — card + hover suave */
-#orcamentosExistentes { overflow-x: auto; }
-
+/* TABELA */
 table{
+  width:100%;
   border-collapse: collapse;
-  width: 100%;
-  margin-top: 14px;
-  background: rgba(255,255,255,0.92);
-  border-radius: 18px;
-  overflow: hidden;
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden;
   box-shadow: var(--cg-shadow-soft);
-  border: 1px solid rgba(16,121,186,0.10);
+  border:1px solid var(--cg-border);
+}
+
+thead{
+  background: linear-gradient(135deg, rgba(16,121,186,0.10), rgba(16,121,186,0.06));
 }
 
 th, td{
-  border: 1px solid rgba(220,221,225,0.85);
-  padding: 12px 12px;
+  padding: 12px 10px;
   text-align: left;
+  border-bottom: 1px solid #eef2f6;
+  font-size: .93rem;
 }
 
-th{
-  background: linear-gradient(135deg, rgba(231,243,251,0.95), rgba(231,243,251,0.65));
-  color: #1f2933;
-  font-weight: 800;
+tbody tr:hover{
+  background: #f8fbff;
 }
 
-tr{
-  transition: background .18s ease, transform .18s ease;
+.actions{
+  display:flex;
+  gap:8px;
 }
 
-tr:hover{
-  background: rgba(243,249,255,0.95);
+.icon-btn{
+  border:none;
+  background:#f3f7fb;
+  border:1px solid #dce6f1;
+  cursor:pointer;
+  border-radius:10px;
+  padding:8px 9px;
+  transition:all .2s ease;
+  font-size: 15px;
 }
 
-/* SCROLLBARS CUSTOM */
-.content::-webkit-scrollbar { width: 10px; }
-.content::-webkit-scrollbar-thumb { background: var(--cg-blue); border-radius: 999px; }
-.content::-webkit-scrollbar-track { background: rgba(255,255,255,0.0); }
+.icon-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(15,44,62,0.12);
+}
 
-/* ANIMAÇÕES */
-@keyframes fadeIn{
-  from { opacity: 0; transform: translateY(10px); }
+.icon-btn.edit:hover{ border-color:#58a6d6; background:#e9f5fc; }
+.icon-btn.pay:hover{ border-color:#d5b25a; background:#fff7e0; }
+
+#orcamentosExistentes { overflow-x: auto; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes floatIn{
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(10px) scale(.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* RESPONSIVO */
-@media (max-width: 900px), (orientation: portrait){
-  body{ display: block; }
+@media (max-width: 980px){
   .app{
     flex-direction: column;
-    min-height: 100vh;
-    padding: 14px;
+    padding: 12px;
   }
   .sidebar{
     width: 100%;
     height: auto;
     position: relative;
     top: 0;
-    border-radius: 18px;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .sidebar button{
-    text-align: center;
-    flex: 1;
+    border-radius: 14px;
   }
   .content{
-    padding: 18px 14px 22px;
-    border-radius: 18px;
+    border-radius: 14px;
+    padding: 14px;
   }
+  table{
+    font-size: .88rem;
+  }
+}
+
+@media (max-width: 640px){
   .orcamentos-toolbar{
     flex-direction: column;
     align-items: stretch;
   }
-  .btn{ width: 100%; }
 }
 </style>
 </head>
-
 <body>
 <div class="app">
     <div class="sidebar">
-        <h3>COLOR GLASS</h3>
-        <button onclick="go('index_loja.html')">Orçamentos</button>
+        <h3>ColorGlass</h3>
+        <button onclick="go('index.html')">🏠 Dashboard</button>
+        <button onclick="go('index_loja.html')">🧾 Orçamentos</button>
+        <button onclick="go('financeiro.html')">💵 Financeiro</button>
+        <button onclick="go('controle.html')">🛠️ Controle</button>
+        <button onclick="go('estoque2.html')">📦 Estoque</button>
+        <button onclick="go('listacorteperfil.html')">📏 Lista de Corte</button>
+        <button onclick="go('tecnico.html')">🧮 Técnico</button>
+        <button onclick="go('logout.html')">🚪 Sair</button>
     </div>
 
     <div class="content">
-        <h1>Orçamento de Portas</h1>
+        <h1>📋 Orçamentos</h1>
+        <h2>Nova Ficha</h2>
 
         <div id="formCliente">
             <label>Nome do Cliente<input type="text" id="clienteNome"></label>
@@ -456,14 +413,14 @@ tr:hover{
         <div class="orcamentos-toolbar">
             <input type="text" id="orcamentoFiltro" placeholder="Buscar por cliente ou número do pedido">
             <div class="orcamentos-limit">
-              <span class="limit-label">Mostrar:</span>
-              <div class="limit-buttons">
-                <button class="limit-btn" type="button" data-limit="10">10</button>
-                <button class="limit-btn" type="button" data-limit="50">50</button>
-                <button class="limit-btn" type="button" data-limit="100">100</button>
-                <button class="limit-btn" type="button" data-limit="todos">Todos</button>
-              </div>
+                <button class="limit-btn active" data-limit="10">10</button>
+                <button class="limit-btn" data-limit="50">50</button>
+                <button class="limit-btn" data-limit="100">100</button>
+                <button class="limit-btn" data-limit="todos">Todos</button>
             </div>
+        </div>
+
+        <div style="margin-bottom:8px;">
             <span id="orcamentosStatus" class="status-text">Carregando...</span>
         </div>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
@@ -497,6 +454,7 @@ function go(url){
 // URL do backend
 // =====================
 const BACKEND_URL = "https://colorglass.onrender.com";
+let userSession = { level: null, storeid: null };
 
 function getUserToken() {
   return localStorage.getItem("USER_TOKEN");
@@ -542,6 +500,11 @@ async function validarSessao() {
       window.location.href = data.redirect;
       return false;
     }
+
+    userSession = {
+      level: data.level ?? null,
+      storeid: data.storeid ?? null
+    };
 
     return true;
   } catch (err) {
@@ -624,6 +587,8 @@ function renderizarOrcamentos(orcamentos, totalDisponivel = null) {
         <div class="actions">
           <button class="icon-btn edit" title="Editar"
             onclick="editarOrcamento('${o.id}')">✏️</button>
+          <button class="icon-btn edit" title="Alterar nome do cliente"
+            onclick="alterarNomeCliente('${o.id}', '${encodeURIComponent(o.cliente_nome ?? "")}')">📝</button>
 
           <button class="icon-btn pay" title="Aprovar / Boleto"
             onclick="aprovarPedido('${o.id}')">🪙</button>
@@ -815,6 +780,42 @@ function visualizarOrcamento(uuid){
   window.location.href = buildUrlComToken(baseUrl);
 }
 
+async function alterarNomeCliente(uuid, nomeAtualEncoded) {
+  const USER_TOKEN = getUserToken();
+  const nomeAtual = decodeURIComponent(nomeAtualEncoded || "");
+  const novoNome = prompt("Digite o novo nome do cliente:", nomeAtual || "");
+  if (novoNome === null) return;
+
+  const nomeLimpo = novoNome.trim();
+  if (!nomeLimpo) {
+    alert("Nome do cliente não pode ficar vazio.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orcamento/${encodeURIComponent(uuid)}/cliente`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      },
+      body: JSON.stringify({ cliente_nome: nomeLimpo })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      alert(data.error || "Não foi possível alterar o nome do cliente.");
+      return;
+    }
+
+    alert("Nome do cliente atualizado com sucesso.");
+    await carregarOrcamentos();
+  } catch (err) {
+    console.error("Erro ao atualizar cliente:", err);
+    alert("Erro ao atualizar cliente.");
+  }
+}
+
 // =====================
 // FICHA CLIENTE
 // =====================
@@ -838,7 +839,10 @@ async function criarFichaCliente(){
         "Content-Type": "application/json",
         "Authorization": `Bearer ${USER_TOKEN}`
       },
-      body: JSON.stringify({ cliente_nome: cliente.nome })
+      body: JSON.stringify({
+        cliente_nome: cliente.nome,
+        storeID: userSession.storeid || undefined
+      })
     });
 
     if (!res.ok) {
