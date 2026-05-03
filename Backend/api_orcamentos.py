@@ -396,6 +396,7 @@ def atualizar_status(uuid):
             "status": novo_status,
             "status_label": status_label(novo_status)
         })
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -403,7 +404,9 @@ def atualizar_status(uuid):
 @orcamentos_bp.route("/api/pagamentos", methods=["GET"])
 def listar_pagamentos():
     from app import SUPABASE_URL, HEADERS
+
     token, usuario = _usuario_por_request()
+
     try:
         level = int((usuario or {}).get("level") or 0)
     except (TypeError, ValueError):
@@ -414,30 +417,29 @@ def listar_pagamentos():
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
-    filtros = []
+    filtro_loja = ""
     if level == 1:
-        filtros.append(f"lojaid=eq.{storeid}")
-
-    query_filtros = ""
-    if filtros:
-        query_filtros = "&" + "&".join(filtros)
+        filtro_loja = f"&lojaid=eq.{storeid}"
 
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?select=*&order=data_pagamento.desc{query_filtros}",
+            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?select=id,orcamento_uuid,numero_pedido,cliente_nome,lojaid,valor_total,formas_pagamento,data_criacao,data_pagamento,status&order=data_criacao.desc{filtro_loja}",
             headers=HEADERS
         )
         r.raise_for_status()
-        pagamentos = r.json()
+        pagamentos = r.json() or []
+
         return jsonify({"success": True, "pagamentos": pagamentos})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 @orcamentos_bp.route("/api/orcamento/<uuid>/pagamentos", methods=["GET"])
-def listar_pagamentos_orcamento(uuid):
+def obter_pagamentos_orcamento(uuid):
     from app import SUPABASE_URL, HEADERS
+
     token, usuario = _usuario_por_request()
+
     try:
         level = int((usuario or {}).get("level") or 0)
     except (TypeError, ValueError):
@@ -448,18 +450,20 @@ def listar_pagamentos_orcamento(uuid):
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
-    try:
-        filtro_loja = ""
-        if level == 1:
-            filtro_loja = f"&lojaid=eq.{storeid}"
+    filtro_loja = ""
+    if level == 1:
+        filtro_loja = f"&lojaid=eq.{storeid}"
 
+    try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?select=*&orcamento_uuid=eq.{uuid}{filtro_loja}&order=data_pagamento.asc",
+            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?select=id,orcamento_uuid,numero_pedido,cliente_nome,lojaid,valor_total,formas_pagamento,data_criacao,data_pagamento,status&orcamento_uuid=eq.{uuid}{filtro_loja}&limit=1",
             headers=HEADERS
         )
         r.raise_for_status()
-        pagamentos = r.json()
-        return jsonify({"success": True, "pagamentos": pagamentos})
+        itens = r.json() or []
+        pagamento = itens[0] if itens else None
+
+        return jsonify({"success": True, "pagamento": pagamento})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -467,74 +471,56 @@ def listar_pagamentos_orcamento(uuid):
 @orcamentos_bp.route("/api/orcamento/<uuid>/pagamentos", methods=["POST"])
 def salvar_pagamentos_orcamento(uuid):
     from app import SUPABASE_URL, HEADERS
+
     token, usuario = _usuario_por_request()
+
     try:
         level = int((usuario or {}).get("level") or 0)
     except (TypeError, ValueError):
         level = 0
 
     storeid = (usuario or {}).get("storeid")
+
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
     data = request.json or {}
-    pagamentos_raw = data.get("pagamentos")
-    pagamentos = _normalizar_pagamentos(pagamentos_raw)
+    numero_pedido = data.get("numero_pedido")
+    cliente_nome = data.get("cliente_nome")
+    lojaid = data.get("lojaid") or storeid
+    formas_pagamento = _normalizar_pagamentos(data.get("formas_pagamento"))
+    status = data.get("status", "pendente")
 
-    if not pagamentos:
-        return jsonify({"success": False, "error": "Lista de pagamentos vazia"}), 400
+    if not isinstance(formas_pagamento, list) or len(formas_pagamento) == 0:
+        return jsonify({"success": False, "error": "Formas de pagamento inválidas."}), 400
+
+    valor_total = sum(_valor_float(item.get("valor")) for item in formas_pagamento)
+
+    payload = {
+        "orcamento_uuid": uuid,
+        "numero_pedido": numero_pedido,
+        "cliente_nome": cliente_nome,
+        "lojaid": lojaid,
+        "valor_total": valor_total,
+        "formas_pagamento": formas_pagamento,
+        "status": status
+    }
 
     try:
-        # Verifica orçamento e autorização por loja
-        filtro_loja = ""
-        if level == 1:
-            filtro_loja = f"&lojaid=eq.{storeid}"
-
-        r_orc = requests.get(
-            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,lojaid&id=eq.{uuid}{filtro_loja}&limit=1",
-            headers=HEADERS
-        )
-        r_orc.raise_for_status()
-        orcs = r_orc.json()
-        if not orcs:
-            return jsonify({"success": False, "error": "Orçamento não encontrado"}), 404
-
-        lojaid_orc = orcs[0].get("lojaid")
-
-        # Remove pagamentos anteriores
-        r_del = requests.delete(
-            f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}?orcamento_uuid=eq.{uuid}",
-            headers=HEADERS
-        )
-        r_del.raise_for_status()
-
-        linhas = []
-        for p in pagamentos:
-            forma = (p.get("forma_pagamento") or "").strip()
-            valor = _valor_float(p.get("valor"))
-            data_pagamento = p.get("data_pagamento")
-            if not forma:
-                continue
-            linhas.append({
-                "orcamento_uuid": uuid,
-                "forma_pagamento": forma,
-                "valor": valor,
-                "data_pagamento": data_pagamento,
-                "lojaid": lojaid_orc
-            })
-
-        if not linhas:
-            return jsonify({"success": False, "error": "Nenhum pagamento válido"}), 400
-
-        r_post = requests.post(
+        # upsert por orcamento_uuid
+        r = requests.post(
             f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}",
-            headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
-            json=linhas
+            headers={
+                **HEADERS,
+                "Content-Type": "application/json",
+                "Prefer": "resolution=merge-duplicates,return=representation"
+            },
+            json=payload
         )
-        r_post.raise_for_status()
+        r.raise_for_status()
+        itens = r.json() or []
+        pagamento = itens[0] if itens else payload
 
-        total = sum(_valor_float(i.get("valor")) for i in linhas)
-
-        return jsonify({"success": True, "pagamentos": r_post.json(), "valor_total_pagamentos": total})
+        return jsonify({"success": True, "pagamento": pagamento})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
