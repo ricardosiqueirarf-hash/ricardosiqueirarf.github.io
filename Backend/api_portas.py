@@ -72,7 +72,32 @@ def criar_portas(orcamento_uuid):
         )
         r_post.raise_for_status()
         portas_salvas = r_post.json()
-        return jsonify({"success": True, "portas_salvas": portas_salvas})
+
+        quantidade_total = 0
+        valor_total = 0.0
+        for p in portas:
+            qtd = int(p.get("quantidade", 1) or 1)
+            preco = float(p.get("preco", 0) or 0)
+            quantidade_total += qtd
+            valor_total += (preco * qtd)
+
+        payload_orcamento = {
+            "quantidade_total": quantidade_total,
+            "valor_total": round(valor_total, 2)
+        }
+        r_patch_orc = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/orcamentos?id=eq.{orcamento_uuid}",
+            headers={**HEADERS, "Content-Type": "application/json"},
+            json=payload_orcamento
+        )
+        r_patch_orc.raise_for_status()
+
+        return jsonify({
+            "success": True,
+            "portas_salvas": portas_salvas,
+            "quantidade_total": quantidade_total,
+            "valor_total": round(valor_total, 2)
+        })
     except requests.HTTPError as http_err:
         return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
