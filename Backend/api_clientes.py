@@ -14,16 +14,8 @@ def _tem_permissao():
     return nivel in (2, 3)
 
 
-def _preflight_ok():
-    return request.method == "OPTIONS"
-
-
-@clientes_api_bp.route("/api/clientes/storeids", methods=["GET", "OPTIONS"])
-@clientes_api_bp.route("/api/usuarios/storeids", methods=["GET", "OPTIONS"])
+@clientes_api_bp.route("/api/clientes/storeids", methods=["GET"])
 def listar_storeids():
-    if _preflight_ok():
-        return ("", 204)
-
     if not _tem_permissao():
         return jsonify({"error": "Acesso negado"}), 403
 
@@ -31,45 +23,37 @@ def listar_storeids():
 
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/usuarios?select=storeid&storeid=not.is.null",
+            f"{SUPABASE_URL}/rest/v1/usuarios?select=storeid,storeID,lojaid,lojaID",
             headers=HEADERS,
-            timeout=20,
+            timeout=20
         )
         r.raise_for_status()
         rows = r.json()
     except Exception as exc:
-        return jsonify({"error": "Falha ao consultar usuários", "details": str(exc)}), 500
+        return jsonify({
+            "error": "Falha ao consultar usuários",
+            "details": str(exc)
+        }), 500
 
-    store_ids = sorted(
-        {
-            str(row.get("storeid")).strip()
-            for row in rows
-            if row.get("storeid") is not None and str(row.get("storeid")).strip()
-        }
-    )
+    store_ids = sorted({
+        str(
+            row.get("storeid")
+            or row.get("storeID")
+            or row.get("lojaid")
+            or row.get("lojaID")
+        ).strip()
+        for row in rows
+        if (
+            row.get("storeid") is not None
+            or row.get("storeID") is not None
+            or row.get("lojaid") is not None
+            or row.get("lojaID") is not None
+        ) and str(
+            row.get("storeid")
+            or row.get("storeID")
+            or row.get("lojaid")
+            or row.get("lojaID")
+        ).strip()
+    })
 
     return jsonify({"storeIds": store_ids})
-
-
-@clientes_api_bp.route("/api/usuarios", methods=["GET", "OPTIONS"])
-def listar_usuarios():
-    if _preflight_ok():
-        return ("", 204)
-
-    if not _tem_permissao():
-        return jsonify({"error": "Acesso negado"}), 403
-
-    from app import SUPABASE_URL, HEADERS
-
-    try:
-        r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/usuarios?select=*&order=userid.asc.nullslast",
-            headers=HEADERS,
-            timeout=20,
-        )
-        r.raise_for_status()
-        rows = r.json()
-    except Exception as exc:
-        return jsonify({"error": "Falha ao consultar usuários", "details": str(exc)}), 500
-
-    return jsonify({"usuarios": rows})
