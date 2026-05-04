@@ -2,6 +2,8 @@ import os
 import requests
 from flask import Blueprint, jsonify, request, make_response
 
+from auth_utils import buscar_usuario_por_token, extrair_token
+
 api_financeiro_bp = Blueprint("api_financeiro_bp", __name__) 
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -52,10 +54,38 @@ def api_financeiro():
         "data_criacao",
         "status",
         "valor_total",
-        "valor_pago"
+        "valor_pago",
+        "lojaid"
     ])
 
     status_in = ",".join(status_list)
+
+    token = extrair_token(request)
+    usuario = None
+    if token:
+        try:
+            usuario = buscar_usuario_por_token(token)
+        except Exception as e:
+            return make_response(jsonify({"error": str(e)}), 500)
+
+    try:
+        level = int((usuario or {}).get("level") or 0)
+    except (TypeError, ValueError):
+        level = 0
+
+    storeid = (
+        (usuario or {}).get("storeid")
+        or (usuario or {}).get("storeID")
+        or (usuario or {}).get("lojaid")
+        or (usuario or {}).get("lojaID")
+    )
+
+    if level == 1 and not storeid:
+        return make_response(jsonify({"error": "Loja não vinculada ao usuário."}), 403)
+
+    filtro_loja = ""
+    if level == 1:
+        filtro_loja = f"&lojaid=eq.{storeid}"
 
     supa_url = (
         f"{SUPABASE_URL}/rest/v1/orcamentos"
@@ -63,6 +93,7 @@ def api_financeiro():
         f"&status=in.({status_in})"
         f"&order={order}"
         f"&limit={limit}"
+        f"{filtro_loja}"
     )
 
     try:
