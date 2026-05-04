@@ -23,7 +23,7 @@ def _buscar_usuario_por_login(login):
         f"{SUPABASE_URL}/rest/v1/usuarios",
         headers=HEADERS,
         params={
-            "select": "userid,user,pass,token,level,storeid,storeID,lojaid,lojaID",
+            "select": "*",
             "user": f"eq.{login}"
         }
     )
@@ -131,7 +131,7 @@ def listar_usuarios():
             f"{SUPABASE_URL}/rest/v1/usuarios",
             headers=HEADERS,
             params={
-                "select": "userid,user,nome,email,storeid,storeID,lojaid,lojaID,level"
+                "select": "*"
             }
         )
         response.raise_for_status()
