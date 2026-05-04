@@ -24,6 +24,16 @@ STATUS_LABELS = {
 TABELA_PAGAMENTOS = os.getenv("SUPABASE_TABLE_PAGAMENTOS", "pagamentos")
 
 
+def obter_storeid(usuario):
+    usuario = usuario or {}
+    return (
+        usuario.get("storeid")
+        or usuario.get("storeID")
+        or usuario.get("lojaid")
+        or usuario.get("lojaID")
+    )
+
+
 def status_label(valor):
     """Converte status numérico em texto amigável."""
     try:
@@ -78,7 +88,7 @@ def criar_orcamento():
     except (TypeError, ValueError):
         level = 0
 
-    storeid_usuario = (usuario or {}).get("storeid")
+    storeid_usuario = obter_storeid(usuario)
 
     data = request.json or {}
     cliente_nome = data.get("cliente_nome")
@@ -170,7 +180,7 @@ def listar_orcamentos():
     except (TypeError, ValueError):
         level = 0
 
-    storeid = (usuario or {}).get("storeid")
+    storeid = obter_storeid(usuario)
 
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
@@ -213,12 +223,21 @@ def atualizar_cliente_orcamento(uuid):
     except (TypeError, ValueError):
         level = 0
 
-    storeid = (usuario or {}).get("storeid")
+    storeid = obter_storeid(usuario)
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
     data = request.json or {}
     cliente_nome = (data.get("cliente_nome") or "").strip()
+    lojaid_novo = (
+        data.get("storeID")
+        or data.get("lojaID")
+        or data.get("lojaid")
+        or data.get("storeid")
+    )
+    if lojaid_novo is not None:
+        lojaid_novo = str(lojaid_novo).strip() or None
+
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
 
@@ -252,10 +271,16 @@ def atualizar_cliente_orcamento(uuid):
                 "status_label": status_label(status_atual)
             }), 409
 
+        payload_patch = {"cliente_nome": cliente_nome}
+        if level in (2, 3) and lojaid_novo:
+            payload_patch["lojaid"] = lojaid_novo
+        elif level == 1 and storeid:
+            payload_patch["lojaid"] = storeid
+
         r_patch = requests.patch(
             f"{SUPABASE_URL}/rest/v1/orcamentos?id=eq.{uuid}",
             headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
-            json={"cliente_nome": cliente_nome}
+            json=payload_patch
         )
         r_patch.raise_for_status()
         atualizados = r_patch.json() or []
@@ -265,6 +290,7 @@ def atualizar_cliente_orcamento(uuid):
             "success": True,
             "id": item.get("id"),
             "cliente_nome": item.get("cliente_nome"),
+            "lojaid": item.get("lojaid"),
             "status": item.get("status"),
             "status_label": status_label(item.get("status"))
         })
@@ -412,7 +438,7 @@ def listar_pagamentos():
     except (TypeError, ValueError):
         level = 0
 
-    storeid = (usuario or {}).get("storeid")
+    storeid = obter_storeid(usuario)
 
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
@@ -445,7 +471,7 @@ def obter_pagamentos_orcamento(uuid):
     except (TypeError, ValueError):
         level = 0
 
-    storeid = (usuario or {}).get("storeid")
+    storeid = obter_storeid(usuario)
 
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
@@ -479,7 +505,7 @@ def salvar_pagamentos_orcamento(uuid):
     except (TypeError, ValueError):
         level = 0
 
-    storeid = (usuario or {}).get("storeid")
+    storeid = obter_storeid(usuario)
 
     if level == 1 and not storeid:
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
