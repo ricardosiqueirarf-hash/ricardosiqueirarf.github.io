@@ -143,6 +143,14 @@ def controle_page():
 def controle_html_page():
     return send_from_directory(os.path.join(ROOT_DIR, "static"), "gerenciar_aprovados.html")
 
+@app.route("/controle_loja")
+def controle_loja_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "controle_loja.html")
+
+@app.route("/controle_loja.html")
+def controle_loja_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "controle_loja.html")
+
 @app.route("/tags")
 def tags_page():
     return send_from_directory(BASE_DIR, "tags.html")
