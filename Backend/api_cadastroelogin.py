@@ -7,13 +7,23 @@ from auth_utils import buscar_usuario_por_token, construir_permissoes, extrair_t
 cadastro_login_bp = Blueprint("cadastro_login_bp", __name__)
 
 
+def _storeid_usuario(usuario):
+    usuario = usuario or {}
+    return (
+        usuario.get("storeid")
+        or usuario.get("storeID")
+        or usuario.get("lojaid")
+        or usuario.get("lojaID")
+    )
+
+
 def _buscar_usuario_por_login(login):
     from app import SUPABASE_URL, HEADERS
     response = requests.get(
         f"{SUPABASE_URL}/rest/v1/usuarios",
         headers=HEADERS,
         params={
-            "select": "userid,user,pass,token,level,storeid",
+            "select": "userid,user,pass,token,level,storeid,storeID,lojaid,lojaID",
             "user": f"eq.{login}"
         }
     )
@@ -110,6 +120,27 @@ def login_usuario():
         return jsonify({"success": False, "error": str(exc)}), 500
 
 
+@cadastro_login_bp.route("/api/usuarios", methods=["GET", "OPTIONS"])
+def listar_usuarios():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    from app import SUPABASE_URL, HEADERS
+    try:
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/usuarios",
+            headers=HEADERS,
+            params={
+                "select": "userid,user,nome,email,storeid,storeID,lojaid,lojaID,level"
+            }
+        )
+        response.raise_for_status()
+        usuarios = response.json() or []
+        return jsonify({"success": True, "usuarios": usuarios})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @cadastro_login_bp.route("/api/auth/validar", methods=["POST"])
 def validar_token():
     token = extrair_token(request)
@@ -130,7 +161,7 @@ def validar_token():
         return jsonify({
             "success": True,
             "level": level,
-            "storeid": usuario.get("storeid"),
+            "storeid": _storeid_usuario(usuario),
             "permissions": permissions,
             "redirect": pagina_por_nivel(level)
         })
