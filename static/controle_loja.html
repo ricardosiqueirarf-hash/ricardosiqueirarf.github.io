@@ -230,6 +230,14 @@
   <script>
     const API_BASE = "https://colorglass.onrender.com";
     const STATUS_PRODUCAO = [2, 3, 4, 5];
+    const STATUS_LABELS = {
+      0: "Cancelado",
+      1: "Orçamento",
+      2: "Aprovado",
+      3: "Em Produção",
+      4: "Separado",
+      5: "Entregue"
+    };
 
     function getToken() {
       return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
@@ -268,6 +276,20 @@
       }
       const parsed = Number(normalizado);
       return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function getStatusLabel(status) {
+      const statusNumero = Number(status);
+      if (Number.isFinite(statusNumero) && STATUS_LABELS[statusNumero]) {
+        return STATUS_LABELS[statusNumero];
+      }
+      return "Desconhecido";
+    }
+
+    function formatarStatus(pedido) {
+      const statusNumero = Number(pedido?.status);
+      const statusTexto = pedido?.status_label || getStatusLabel(statusNumero);
+      return `${Number.isFinite(statusNumero) ? statusNumero : "-"} - ${statusTexto}`;
     }
 
     function getUsuarioStoreID(usuario) {
@@ -346,7 +368,7 @@
             <td>${formatarLoja(p, lojasPorStoreID)}</td>
             <td>${moneyBR(valor)}</td>
             <td>${moneyBR(valorPago)}</td>
-            <td><span class="tag">${escapeHtml(Number(p.status))} - ${escapeHtml(p.status_label || "Status")}</span></td>
+            <td><span class="tag">${escapeHtml(formatarStatus(p))}</span></td>
           </tr>
         `;
       }).join("");
