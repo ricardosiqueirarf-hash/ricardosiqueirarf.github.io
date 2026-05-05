@@ -211,7 +211,7 @@
             <tr>
               <th>Pedido</th>
               <th>Cliente</th>
-              <th>UUID</th>
+              <th>LojaID</th>
               <th>Total</th>
               <th>Pago</th>
               <th>Status atual</th>
@@ -241,6 +241,15 @@
       el.className = "status " + tipo;
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
     function moneyBR(valor) {
       const n = Number(valor || 0);
       return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -261,7 +270,66 @@
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
-    function renderTabela(pedidos) {
+    function getUsuarioStoreID(usuario) {
+      return String(
+        usuario?.storeID
+        ?? usuario?.storeid
+        ?? usuario?.StoreID
+        ?? usuario?.store_id
+        ?? usuario?.lojaid
+        ?? usuario?.lojaID
+        ?? ""
+      ).trim();
+    }
+
+    function getUsuarioNome(usuario) {
+      return String(
+        usuario?.NOME
+        ?? usuario?.nome
+        ?? usuario?.name
+        ?? usuario?.dados?.nome
+        ?? ""
+      ).trim();
+    }
+
+    function getPedidoLojaID(pedido) {
+      return String(
+        pedido?.lojaid
+        ?? pedido?.lojaID
+        ?? pedido?.storeID
+        ?? pedido?.storeid
+        ?? ""
+      ).trim();
+    }
+
+    function criarMapaLojas(usuarios) {
+      const mapa = new Map();
+      usuarios.forEach((usuario) => {
+        const storeID = getUsuarioStoreID(usuario);
+        const nome = getUsuarioNome(usuario);
+        if (storeID && nome && !mapa.has(storeID)) {
+          mapa.set(storeID, nome);
+        }
+      });
+      return mapa;
+    }
+
+    function formatarLoja(pedido, lojasPorStoreID) {
+      const lojaID = getPedidoLojaID(pedido);
+      if (!lojaID) return "-";
+
+      const nomeLoja = lojasPorStoreID.get(lojaID);
+      if (!nomeLoja) {
+        return `<span class="muted">${escapeHtml(lojaID)}</span>`;
+      }
+
+      return `
+        <strong>${escapeHtml(nomeLoja)}</strong>
+        <div class="muted" style="font-size:0.78rem; margin-top:2px;">LojaID: ${escapeHtml(lojaID)}</div>
+      `;
+    }
+
+    function renderTabela(pedidos, lojasPorStoreID = new Map()) {
       const tbody = document.getElementById("tbodyPedidos");
       if (!pedidos.length) {
         tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum pedido encontrado.</td></tr>';
@@ -273,15 +341,28 @@
         const valorPago = parseValorTotal(p.valor_pago);
         return `
           <tr>
-            <td><b>#${p.numero_pedido ?? "-"}</b></td>
-            <td>${p.cliente_nome || "-"}</td>
-            <td class="muted" style="font-size:0.85rem; word-break:break-all;">${p.id || "-"}</td>
+            <td><b>#${escapeHtml(p.numero_pedido ?? "-")}</b></td>
+            <td>${escapeHtml(p.cliente_nome || "-")}</td>
+            <td>${formatarLoja(p, lojasPorStoreID)}</td>
             <td>${moneyBR(valor)}</td>
             <td>${moneyBR(valorPago)}</td>
-            <td><span class="tag">${Number(p.status)} - ${p.status_label || "Status"}</span></td>
+            <td><span class="tag">${escapeHtml(Number(p.status))} - ${escapeHtml(p.status_label || "Status")}</span></td>
           </tr>
         `;
       }).join("");
+    }
+
+    async function carregarMapaLojas(token) {
+      const res = await fetch(`${API_BASE}/api/usuarios`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
+      });
+
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data?.usuarios)) {
+        throw new Error(data?.error || "Falha ao carregar lojas.");
+      }
+
+      return criarMapaLojas(data.usuarios);
     }
 
     async function carregarPedidosProducao() {
@@ -299,9 +380,12 @@
       setStatusGlobal("Buscando status da produção...");
 
       try {
-        const res = await fetch(`${API_BASE}/api/financeiro?status=2,3,4,5&limit=2000`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        const [res, lojasPorStoreID] = await Promise.all([
+          fetch(`${API_BASE}/api/financeiro?status=2,3,4,5&limit=2000`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          }),
+          carregarMapaLojas(token)
+        ]);
 
         const data = await res.json();
         if (!res.ok || !Array.isArray(data)) {
@@ -309,7 +393,7 @@
         }
 
         const emProducao = data.filter(o => STATUS_PRODUCAO.includes(Number(o.status)));
-        renderTabela(emProducao);
+        renderTabela(emProducao, lojasPorStoreID);
         setStatusGlobal(`Foram encontrados ${emProducao.length} pedido(s).`, "ok");
       } catch (err) {
         console.error(err);
