@@ -510,6 +510,10 @@ function getUserToken() {
   return localStorage.getItem("USER_TOKEN");
 }
 
+function usuarioPodeSelecionarLoja() {
+  return [2, 3].includes(Number(userSession.level));
+}
+
 // =====================
 // Sessão
 // =====================
@@ -641,6 +645,10 @@ function renderizarOrcamentos(orcamentos, totalDisponivel = null) {
             onclick="editarOrcamento('${o.id}')">✏️</button>
           <button class="icon-btn edit" title="Alterar nome do cliente"
             onclick="alterarNomeCliente('${o.id}', '${encodeURIComponent(o.cliente_nome ?? "")}', '${encodeURIComponent(o.lojaid ?? "")}')">📝</button>
+          ${usuarioPodeSelecionarLoja() ? `
+            <button class="icon-btn edit" title="Alterar loja por nome"
+              onclick="alterarLojaPedido('${o.id}', '${encodeURIComponent(o.cliente_nome ?? "")}', '${encodeURIComponent(o.lojaid ?? "")}')">🏬</button>
+          ` : ""}
 
           <button class="icon-btn pay" title="Aprovar / Boleto"
             onclick="aprovarPedido('${o.id}')">🪙</button>
@@ -832,32 +840,7 @@ async function alterarNomeCliente(uuid, nomeAtualEncoded, lojaAtualEncoded) {
     return;
   }
 
-  let novaLojaId = lojaAtual || "";
-  if (userSession.level === 2 || userSession.level === 3) {
-    const lojaAtualObj = encontrarLojaPorStoreId(lojaAtual || userSession.storeid);
-    const nomeAtualLoja = lojaAtualObj ? formatarOpcaoLoja(lojaAtualObj) : "";
-    const nomesDisponiveis = lojasDisponiveis
-      .map(formatarOpcaoLoja)
-      .filter(Boolean)
-      .join(", ");
-    const mensagem = nomesDisponiveis
-      ? `Digite o NOME da loja para atrelar ao pedido. Opções: ${nomesDisponiveis}`
-      : "Digite o NOME da loja para atrelar ao pedido:";
-    const lojaDigitada = prompt(mensagem, nomeAtualLoja);
-    if (lojaDigitada === null) return;
-
-    const lojaEncontrada = encontrarLojaPorNome(lojaDigitada);
-    if (!lojaEncontrada) {
-      alert("Selecione um nome de loja válido.");
-      return;
-    }
-
-    novaLojaId = obterStoreIdLoja(lojaEncontrada);
-    if (!novaLojaId) {
-      alert("A loja selecionada não possui StoreID vinculado.");
-      return;
-    }
-  }
+  const novaLojaId = lojaAtual || "";
 
   try {
     const res = await fetch(`${BACKEND_URL}/api/orcamento/${encodeURIComponent(uuid)}/cliente`, {
@@ -886,6 +869,81 @@ async function alterarNomeCliente(uuid, nomeAtualEncoded, lojaAtualEncoded) {
   }
 }
 
+async function alterarLojaPedido(uuid, nomeAtualEncoded, lojaAtualEncoded) {
+  if (!usuarioPodeSelecionarLoja()) {
+    alert("Seu usuário não tem permissão para alterar a loja do pedido.");
+    return;
+  }
+
+  const USER_TOKEN = getUserToken();
+  const nomeAtual = decodeURIComponent(nomeAtualEncoded || "").trim();
+  const lojaAtual = decodeURIComponent(lojaAtualEncoded || "").trim();
+
+  if (!lojasDisponiveis.length) {
+    await carregarStoreIds();
+  }
+
+  if (!lojasDisponiveis.length) {
+    alert("Não foi possível carregar a lista de lojas por nome.");
+    return;
+  }
+
+  const lojaAtualObj = encontrarLojaPorStoreId(lojaAtual || userSession.storeid);
+  const nomeAtualLoja = lojaAtualObj ? formatarOpcaoLoja(lojaAtualObj) : "";
+  const nomesDisponiveis = lojasDisponiveis
+    .map(formatarOpcaoLoja)
+    .filter(Boolean)
+    .join(", ");
+  const lojaDigitada = prompt(
+    `Digite o NOME da loja para atrelar ao pedido. Opções: ${nomesDisponiveis}`,
+    nomeAtualLoja
+  );
+  if (lojaDigitada === null) return;
+
+  const lojaEncontrada = encontrarLojaPorNome(lojaDigitada);
+  if (!lojaEncontrada) {
+    alert("Selecione um nome de loja válido.");
+    return;
+  }
+
+  const novaLojaId = obterStoreIdLoja(lojaEncontrada);
+  if (!novaLojaId) {
+    alert("A loja selecionada não possui StoreID vinculado.");
+    return;
+  }
+
+  if (!nomeAtual) {
+    alert("Não foi possível identificar o nome atual do cliente para atualizar o pedido.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orcamento/${encodeURIComponent(uuid)}/cliente`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      },
+      body: JSON.stringify({
+        cliente_nome: nomeAtual,
+        storeID: novaLojaId
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      alert(data.error || "Não foi possível alterar a loja do pedido.");
+      return;
+    }
+
+    alert("Loja do pedido atualizada com sucesso.");
+    await carregarOrcamentos();
+  } catch (err) {
+    console.error("Erro ao atualizar loja do pedido:", err);
+    alert("Erro ao atualizar loja do pedido.");
+  }
+}
+
 // =====================
 // FICHA CLIENTE
 // =====================
@@ -911,7 +969,7 @@ async function criarFichaCliente(){
       },
       body: JSON.stringify({
         cliente_nome: cliente.nome,
-        storeID: (userSession.level === 2 || userSession.level === 3)
+        storeID: usuarioPodeSelecionarLoja()
           ? (storeSelecionada || userSession.storeid || undefined)
           : (userSession.storeid || undefined)
       })
@@ -942,7 +1000,7 @@ async function criarFichaCliente(){
 }
 
 async function carregarStoreIds() {
-  if (!(userSession.level === 2 || userSession.level === 3)) return;
+  if (!usuarioPodeSelecionarLoja()) return;
 
   const USER_TOKEN = getUserToken();
   const wrap = document.getElementById("storeSelectorWrap");
