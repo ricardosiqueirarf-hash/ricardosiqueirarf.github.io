@@ -235,7 +235,7 @@
             <tr>
               <th>Pedido</th>
               <th>Cliente</th>
-              <th>UUID</th>
+              <th>LojaID</th>
               <th>Total</th>
               <th>Status atual</th>
               <th>Pago</th>
@@ -258,6 +258,15 @@
 
     const STATUS_EM_CONTROLE = [2, 3, 4];
 
+    const STATUS_LABELS = {
+      0: "Cancelado",
+      1: "Orçamento",
+      2: "Aprovado",
+      3: "Em Produção",
+      4: "Separado",
+      5: "Entregue"
+    };
+
     const STATUS_PERMITIDOS_NO_SELECT = [
       { value: 2, label: "2 - Aprovado" },
       { value: 3, label: "3 - Em Produção" },
@@ -273,6 +282,15 @@
       const el = document.getElementById("statusGlobal");
       el.textContent = msg;
       el.className = "status " + tipo;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
     function moneyBR(valor) {
@@ -295,7 +313,80 @@
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
-    function renderTabela(pedidos) {
+    function getStatusLabel(status) {
+      const statusNumero = Number(status);
+      if (Number.isFinite(statusNumero) && STATUS_LABELS[statusNumero]) {
+        return STATUS_LABELS[statusNumero];
+      }
+      return "Desconhecido";
+    }
+
+    function formatarStatus(pedido) {
+      const statusNumero = Number(pedido?.status);
+      const statusTexto = pedido?.status_label || getStatusLabel(statusNumero);
+      return `${Number.isFinite(statusNumero) ? statusNumero : "-"} - ${statusTexto}`;
+    }
+
+    function getUsuarioStoreID(usuario) {
+      return String(
+        usuario?.storeID
+        ?? usuario?.storeid
+        ?? usuario?.StoreID
+        ?? usuario?.store_id
+        ?? usuario?.lojaid
+        ?? usuario?.lojaID
+        ?? ""
+      ).trim();
+    }
+
+    function getUsuarioNome(usuario) {
+      return String(
+        usuario?.NOME
+        ?? usuario?.nome
+        ?? usuario?.name
+        ?? usuario?.dados?.nome
+        ?? ""
+      ).trim();
+    }
+
+    function getPedidoLojaID(pedido) {
+      return String(
+        pedido?.lojaid
+        ?? pedido?.lojaID
+        ?? pedido?.storeID
+        ?? pedido?.storeid
+        ?? ""
+      ).trim();
+    }
+
+    function criarMapaLojas(usuarios) {
+      const mapa = new Map();
+      usuarios.forEach((usuario) => {
+        const storeID = getUsuarioStoreID(usuario);
+        const nome = getUsuarioNome(usuario);
+        if (storeID && nome && !mapa.has(storeID)) {
+          mapa.set(storeID, nome);
+        }
+      });
+      return mapa;
+    }
+
+    function formatarLoja(pedido, lojasPorStoreID) {
+      const lojaID = getPedidoLojaID(pedido);
+      if (!lojaID) return "-";
+
+      const nomeLoja = lojasPorStoreID.get(lojaID);
+      if (!nomeLoja) {
+        return `<span class="muted">${escapeHtml(lojaID)}</span>`;
+      }
+
+      return `
+        <strong>${escapeHtml(nomeLoja)}</strong>
+        <div class="muted" style="font-size:0.78rem; margin-top:2px;">LojaID: ${escapeHtml(lojaID)}</div>
+      `;
+    }
+
+    function renderTabela(pedidos, lojasPorStoreID = new Map()) {
       const tbody = document.getElementById("tbodyPedidos");
       if (!pedidos.length) {
         tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum pedido nos status 2, 3 ou 4 encontrado.</td></tr>';
@@ -312,17 +403,17 @@
 
         return `
           <tr>
-            <td><b>#${p.numero_pedido ?? "-"}</b></td>
-            <td>${p.cliente_nome || "-"}</td>
-            <td class="muted" style="font-size:0.85rem; word-break:break-all;">${p.id || "-"}</td>
+            <td><b>#${escapeHtml(p.numero_pedido ?? "-")}</b></td>
+            <td>${escapeHtml(p.cliente_nome || "-")}</td>
+            <td>${formatarLoja(p, lojasPorStoreID)}</td>
             <td>${moneyBR(valor)}</td>
-            <td><span class="tag">${Number(p.status)} - ${p.status_label || "Status"}</span></td>
+            <td><span class="tag">${escapeHtml(formatarStatus(p))}</span></td>
             <td>
               <input id="${pagoId}" type="number" min="0" step="0.01" value="${Number.isFinite(valorPago) ? valorPago.toFixed(2) : "0.00"}" style="width:120px;padding:8px 9px;border:1px solid #d4d9df;border-radius:9px;" />
               <button class="btn-row" id="${btnPagoId}" style="margin-top:6px;display:block;" onclick="atualizarPago('${p.id}', '${pagoId}', '${btnPagoId}')">Salvar pago</button>
             </td>
             <td>
-              <select id="${selectId}" aria-label="Novo status do pedido ${p.numero_pedido ?? ""}">
+              <select id="${selectId}" aria-label="Novo status do pedido ${escapeHtml(p.numero_pedido ?? "")}">
                 ${STATUS_PERMITIDOS_NO_SELECT.map(s => `<option value="${s.value}" ${Number(p.status) === s.value ? "selected" : ""}>${s.label}</option>`).join("")}
               </select>
             </td>
@@ -332,6 +423,19 @@
           </tr>
         `;
       }).join("");
+    }
+
+    async function carregarMapaLojas(token) {
+      const res = await fetch(`${API_BASE}/api/usuarios`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
+      });
+
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data?.usuarios)) {
+        throw new Error(data?.error || "Falha ao carregar lojas.");
+      }
+
+      return criarMapaLojas(data.usuarios);
     }
 
     async function carregarPedidosAprovados() {
@@ -349,9 +453,12 @@
       setStatusGlobal("Buscando pedidos em controle...");
 
       try {
-        const res = await fetch(`${API_BASE}/api/financeiro?status=2,3,4&limit=2000`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        const [res, lojasPorStoreID] = await Promise.all([
+          fetch(`${API_BASE}/api/financeiro?status=2,3,4&limit=2000`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          }),
+          carregarMapaLojas(token)
+        ]);
 
         const data = await res.json();
         if (!res.ok || !Array.isArray(data)) {
@@ -359,7 +466,7 @@
         }
 
         const emControle = data.filter(o => STATUS_EM_CONTROLE.includes(Number(o.status)));
-        renderTabela(emControle);
+        renderTabela(emControle, lojasPorStoreID);
         setStatusGlobal(`Foram encontrados ${emControle.length} pedido(s) nos status 2, 3 e 4.`, "ok");
       } catch (err) {
         console.error(err);
