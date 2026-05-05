@@ -23,7 +23,7 @@ def listar_storeids():
 
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/usuarios?select=storeid,storeID,lojaid,lojaID",
+            f"{SUPABASE_URL}/rest/v1/usuarios?select=nome,user,storeid,storeID,lojaid,lojaID",
             headers=HEADERS,
             timeout=20
         )
@@ -35,25 +35,28 @@ def listar_storeids():
             "details": str(exc)
         }), 500
 
-    store_ids = sorted({
-        str(
+    lojas_por_storeid = {}
+    for row in rows:
+        storeid = str(
             row.get("storeid")
             or row.get("storeID")
             or row.get("lojaid")
             or row.get("lojaID")
+            or ""
         ).strip()
-        for row in rows
-        if (
-            row.get("storeid") is not None
-            or row.get("storeID") is not None
-            or row.get("lojaid") is not None
-            or row.get("lojaID") is not None
-        ) and str(
-            row.get("storeid")
-            or row.get("storeID")
-            or row.get("lojaid")
-            or row.get("lojaID")
-        ).strip()
-    })
+        if not storeid:
+            continue
 
-    return jsonify({"storeIds": store_ids})
+        nome = str(row.get("nome") or row.get("user") or storeid).strip()
+        lojas_por_storeid[storeid] = {
+            "storeID": storeid,
+            "nome": nome or storeid
+        }
+
+    lojas = sorted(
+        lojas_por_storeid.values(),
+        key=lambda loja: loja["nome"].casefold()
+    )
+    store_ids = [loja["storeID"] for loja in lojas]
+
+    return jsonify({"storeIds": store_ids, "stores": lojas})
