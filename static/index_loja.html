@@ -198,7 +198,8 @@ body{
   color: #374151;
 }
 
-#formCliente input{
+#formCliente input,
+#formCliente select{
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid #d4d9df;
@@ -207,7 +208,8 @@ body{
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
-#formCliente input:focus{
+#formCliente input:focus,
+#formCliente select:focus{
   border-color: var(--cg-blue);
   box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
   outline: none;
@@ -451,7 +453,7 @@ tr:hover{
         <div id="formCliente">
             <label>Nome do Cliente<input type="text" id="clienteNome"></label>
             <label id="storeSelectorWrap" style="display:none;">
-              Loja (StoreID)
+              Loja (Nome)
               <select id="storeSelector"></select>
             </label>
             <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
@@ -569,6 +571,7 @@ let orcamentosCache = [];
 let limiteOrcamentos = 10;
 const LIMITE_TODOS = "todos";
 let storeSelecionada = null;
+let lojasDisponiveis = [];
 
 function atualizarStatusOrcamentos(mensagem) {
   const status = document.getElementById("orcamentosStatus");
@@ -729,6 +732,43 @@ function atualizarBotoesLimite() {
   });
 }
 
+function normalizarTextoLoja(valor) {
+  return String(valor || "").trim();
+}
+
+function obterNomeLoja(loja) {
+  return normalizarTextoLoja(loja?.nome || loja?.name || loja?.user || loja?.usuario || loja?.storeName);
+}
+
+function obterStoreIdLoja(loja) {
+  return normalizarTextoLoja(
+    loja?.storeID
+    || loja?.storeid
+    || loja?.lojaID
+    || loja?.lojaid
+    || loja?.storeId
+    || loja
+  );
+}
+
+function formatarOpcaoLoja(loja) {
+  const nome = obterNomeLoja(loja);
+  const storeID = obterStoreIdLoja(loja);
+  return nome || storeID;
+}
+
+function encontrarLojaPorStoreId(storeID) {
+  const alvo = normalizarTextoLoja(storeID);
+  if (!alvo) return null;
+  return lojasDisponiveis.find((loja) => obterStoreIdLoja(loja) === alvo) || null;
+}
+
+function encontrarLojaPorNome(nome) {
+  const alvo = normalizarTextoLoja(nome).toLowerCase();
+  if (!alvo) return null;
+  return lojasDisponiveis.find((loja) => formatarOpcaoLoja(loja).toLowerCase() === alvo) || null;
+}
+
 async function carregarOrcamentos() {
   const USER_TOKEN = getUserToken();
 
@@ -794,11 +834,27 @@ async function alterarNomeCliente(uuid, nomeAtualEncoded, lojaAtualEncoded) {
 
   let novaLojaId = lojaAtual || "";
   if (userSession.level === 2 || userSession.level === 3) {
-    const lojaDigitada = prompt("Digite o StoreID para atrelar ao pedido:", lojaAtual || (userSession.storeid || ""));
+    const lojaAtualObj = encontrarLojaPorStoreId(lojaAtual || userSession.storeid);
+    const nomeAtualLoja = lojaAtualObj ? formatarOpcaoLoja(lojaAtualObj) : "";
+    const nomesDisponiveis = lojasDisponiveis
+      .map(formatarOpcaoLoja)
+      .filter(Boolean)
+      .join(", ");
+    const mensagem = nomesDisponiveis
+      ? `Digite o NOME da loja para atrelar ao pedido. Opções: ${nomesDisponiveis}`
+      : "Digite o NOME da loja para atrelar ao pedido:";
+    const lojaDigitada = prompt(mensagem, nomeAtualLoja);
     if (lojaDigitada === null) return;
-    novaLojaId = lojaDigitada.trim();
+
+    const lojaEncontrada = encontrarLojaPorNome(lojaDigitada);
+    if (!lojaEncontrada) {
+      alert("Selecione um nome de loja válido.");
+      return;
+    }
+
+    novaLojaId = obterStoreIdLoja(lojaEncontrada);
     if (!novaLojaId) {
-      alert("StoreID não pode ficar vazio.");
+      alert("A loja selecionada não possui StoreID vinculado.");
       return;
     }
   }
@@ -899,21 +955,31 @@ async function carregarStoreIds() {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const lista = Array.isArray(data.storeIds) ? data.storeIds : [];
+    const lista = Array.isArray(data.stores) && data.stores.length
+      ? data.stores
+      : (Array.isArray(data.storeIds) ? data.storeIds : []);
 
-    if (!lista.length) return;
+    lojasDisponiveis = lista
+      .map((loja) => ({
+        storeID: obterStoreIdLoja(loja),
+        nome: obterNomeLoja(loja) || obterStoreIdLoja(loja)
+      }))
+      .filter((loja) => loja.storeID && loja.nome)
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
+
+    if (!lojasDisponiveis.length) return;
 
     select.innerHTML = "";
-    lista.forEach((id) => {
+    lojasDisponiveis.forEach((loja) => {
       const opt = document.createElement("option");
-      opt.value = id;
-      opt.textContent = id;
+      opt.value = loja.storeID;
+      opt.textContent = loja.nome;
       select.appendChild(opt);
     });
 
-    const preferida = userSession.storeid && lista.includes(String(userSession.storeid))
+    const preferida = userSession.storeid && encontrarLojaPorStoreId(userSession.storeid)
       ? String(userSession.storeid)
-      : String(lista[0]);
+      : lojasDisponiveis[0].storeID;
 
     select.value = preferida;
     storeSelecionada = preferida;
@@ -922,7 +988,7 @@ async function carregarStoreIds() {
     });
     wrap.style.display = "flex";
   } catch (err) {
-    console.error("Erro ao carregar storeIds:", err);
+    console.error("Erro ao carregar lojas:", err);
   }
 }
 
