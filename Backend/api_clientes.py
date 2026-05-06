@@ -23,18 +23,7 @@ def _valor_texto(*valores):
 
 
 def _nome_loja(row, storeid):
-    dados = row.get("dados") if isinstance(row.get("dados"), dict) else {}
-    return _valor_texto(
-        row.get("nome"),
-        row.get("name"),
-        row.get("storeName"),
-        row.get("store_name"),
-        dados.get("nome"),
-        dados.get("name"),
-        dados.get("storeName"),
-        dados.get("store_name"),
-        storeid
-    )
+    return _valor_texto(row.get("nome"), storeid)
 
 
 @clientes_api_bp.route("/api/clientes/storeids", methods=["GET"])
