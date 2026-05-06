@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Carteira | ColorGlass</title>
+  <meta name="description" content="Resumo de faturamento, pedidos, portas, ticket médio e carteira por loja." />
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    :root {
+      --cg-blue: #1079ba;
+      --cg-blue-dark: #0d5d8c;
+      --cg-blue-soft: #e7f3fb;
+      --cg-border: rgba(16, 121, 186, 0.14);
+      --cg-text: #1f2933;
+      --cg-muted: #6b7280;
+      --cg-white: #ffffff;
+      --ok: #0c7c3c;
+      --warn: #b7791f;
+      --danger: #c23616;
+      --purple: #6750a4;
+      --shadow: 0 12px 28px rgba(15, 44, 62, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, rgba(16,121,186,0.14), transparent 52%),
+        linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+      color: var(--cg-text);
+      padding: 28px 16px;
+    }
+
+    .page {
+      width: min(1380px, 100%);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--cg-white);
+      border: 1px solid var(--cg-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand h1 {
+      color: var(--cg-blue-dark);
+      font-size: 1.55rem;
+      margin-bottom: 5px;
+    }
+
+    .brand p {
+      color: #4b5563;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      max-width: 860px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--cg-blue-soft);
+      color: var(--cg-blue-dark);
+      font-size: 0.84rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f0c24c;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(16, 121, 186, 0.22);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--cg-blue-dark);
+      border: 1px solid rgba(16,121,186,0.25);
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .status {
+      margin-top: 12px;
+      font-size: 0.93rem;
+      min-height: 20px;
+      color: #4b5563;
+    }
+    .status.ok { color: var(--ok); }
+    .status.erro { color: var(--danger); }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--cg-blue-dark);
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid #d4d9df;
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: #fff;
+      color: var(--cg-text);
+      font-size: 0.95rem;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 500;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      border: 1px solid rgba(16,121,186,0.12);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff, #f7fbff);
+      padding: 15px;
+      min-height: 96px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--cg-muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 9px;
+    }
+
+    .metric strong {
+      color: var(--cg-blue-dark);
+      font-size: 1.3rem;
+      line-height: 1.1;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      color: var(--cg-muted);
+      font-size: 0.86rem;
+    }
+
+    .legend b { color: var(--cg-text); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 16px;
+      border: 1px solid rgba(16,121,186,0.14);
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1220px;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 11px 10px;
+      border-bottom: 1px solid rgba(16,121,186,0.08);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      color: var(--cg-blue-dark);
+      background: rgba(231, 243, 251, 0.94);
+      font-size: 0.79rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    td.numeric, th.numeric {
+      text-align: right;
+    }
+
+    tbody tr:hover {
+      background: rgba(231, 243, 251, 0.28);
+    }
+
+    .muted { color: var(--cg-muted); }
+
+    .store-name {
+      font-weight: 800;
+      color: var(--cg-text);
+    }
+
+    .store-id {
+      color: var(--cg-muted);
+      font-size: 0.78rem;
+      margin-top: 2px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tag-estrategico { background: rgba(12, 124, 60, 0.12); color: var(--ok); }
+    .tag-ativo { background: rgba(16, 121, 186, 0.12); color: var(--cg-blue-dark); }
+    .tag-pequeno { background: rgba(103, 80, 164, 0.12); color: var(--purple); }
+    .tag-atencao { background: rgba(183, 121, 31, 0.14); color: var(--warn); }
+    .tag-risco { background: rgba(194, 54, 22, 0.12); color: var(--danger); }
+    .tag-sem-movimento { background: rgba(107, 114, 128, 0.13); color: #4b5563; }
+
+    .empty {
+      padding: 22px;
+      text-align: center;
+      color: var(--cg-muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 1080px) {
+      .metrics { grid-template-columns: repeat(2, minmax(170px, 1fr)); }
+      .filters { grid-template-columns: repeat(2, minmax(170px, 1fr)); }
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 18px 10px; }
+      .brand h1 { font-size: 1.22rem; }
+      .brand p { font-size: 0.9rem; }
+      .metrics, .filters { grid-template-columns: 1fr; }
+      .toolbar, .toolbar button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="pill">Gestão de carteira</div>
+      <div class="brand">
+        <div>
+          <h1>Carteira por loja</h1>
+          <p>
+            Esta tela agrupa os pedidos por <b>LojaID / StoreID</b>, mostra o nome da loja, soma o faturamento do mês,
+            quantidade de pedidos, quantidade de portas, ticket médio por pedido, valor em aberto, último pedido e
+            tempo sem comprar.
+          </p>
+        </div>
+        <div class="toolbar">
+          <button class="btn-outline" onclick="voltar()">Voltar</button>
+          <button class="btn-primary" id="btnRecarregar" onclick="carregarCarteira()">Recarregar</button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <label>
+          Mês de faturamento
+          <input id="filtroMes" type="month" onchange="renderizarCarteira()" />
+        </label>
+        <label>
+          Buscar loja
+          <input id="filtroBusca" type="search" placeholder="Nome, LojaID ou StoreID" oninput="renderizarCarteira()" />
+        </label>
+        <label>
+          Status da carteira
+          <select id="filtroStatus" onchange="renderizarCarteira()">
+            <option value="">Todos</option>
+            <option value="Estratégico">Estratégico</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Pequeno">Pequeno</option>
+            <option value="Atenção">Atenção</option>
+            <option value="Risco">Risco</option>
+            <option value="Sem movimento">Sem movimento</option>
+          </select>
+        </label>
+        <label>
+          Ordenar por
+          <select id="ordenacao" onchange="renderizarCarteira()">
+            <option value="faturamento_desc">Maior faturamento</option>
+            <option value="aberto_desc">Maior valor em aberto</option>
+            <option value="ultimo_asc">Mais tempo sem pedir</option>
+            <option value="pedidos_desc">Mais pedidos</option>
+            <option value="loja_asc">Nome da loja</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="statusGlobal" class="status"></div>
+      <div class="legend">
+        <span><b>Valor em aberto:</b> soma de valor do pedido menos valor pago.</span>
+        <span><b>Ticket médio:</b> faturamento do mês dividido por pedidos do mês.</span>
+        <span><b>Status:</b> calculado automaticamente por faturamento, frequência, inadimplência e recência.</span>
+      </div>
+    </section>
+
+    <section class="metrics">
+      <div class="metric"><span>Lojas listadas</span><strong id="mLojas">--</strong></div>
+      <div class="metric"><span>Faturamento do mês</span><strong id="mFaturamento">--</strong></div>
+      <div class="metric"><span>Pedidos do mês</span><strong id="mPedidos">--</strong></div>
+      <div class="metric"><span>Portas do mês</span><strong id="mPortas">--</strong></div>
+      <div class="metric"><span>Valor em aberto</span><strong id="mAberto">--</strong></div>
+    </section>
+
+    <section class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Loja</th>
+              <th>LojaID / StoreID</th>
+              <th class="numeric">Faturamento do mês</th>
+              <th class="numeric">Pedidos do mês</th>
+              <th class="numeric">Portas compradas</th>
+              <th class="numeric">Ticket médio por pedido</th>
+              <th class="numeric">Valor em aberto</th>
+              <th>Último pedido</th>
+              <th>Tempo sem pedido</th>
+              <th>Status da carteira</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyCarteira">
+            <tr>
+              <td colspan="10" class="empty">Carregando carteira...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = "https://colorglass.onrender.com";
+    const STATUS_PEDIDOS = [2, 3, 4, 5];
+    const carteiraCache = {
+      pedidos: [],
+      lojasPorStoreID: new Map()
+    };
+
+    function getToken() {
+      return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+    }
+
+    function setStatusGlobal(msg, tipo = "") {
+      const el = document.getElementById("statusGlobal");
+      el.textContent = msg;
+      el.className = "status " + tipo;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function moneyBR(valor) {
+      const n = Number(valor || 0);
+      return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    function numberBR(valor) {
+      const n = Number(valor || 0);
+      return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+    }
+
+    function parseValorTotal(valor) {
+      if (valor === null || valor === undefined) return 0;
+      if (typeof valor === "number") return valor;
+      const bruto = String(valor).trim();
+      if (!bruto) return 0;
+      let normalizado = bruto.replace(/[^0-9,.-]/g, "");
+      if (normalizado.includes(",")) {
+        normalizado = normalizado.replace(/\./g, "").replace(",", ".");
+      } else {
+        normalizado = normalizado.replace(/,/g, "");
+      }
+      const parsed = Number(normalizado);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function getUsuarioStoreID(usuario) {
+      return String(
+        usuario?.storeID
+        ?? usuario?.storeid
+        ?? usuario?.StoreID
+        ?? usuario?.store_id
+        ?? usuario?.lojaid
+        ?? usuario?.lojaID
+        ?? ""
+      ).trim();
+    }
+
+    function getUsuarioNome(usuario) {
+      return String(
+        usuario?.NOME
+        ?? usuario?.nome
+        ?? usuario?.name
+        ?? usuario?.dados?.nome
+        ?? usuario?.dados?.loja
+        ?? usuario?.dados?.loja_nome
+        ?? usuario?.dados?.razao_social
+        ?? usuario?.user
+        ?? ""
+      ).trim();
+    }
+
+    function getPedidoLojaID(pedido) {
+      return String(
+        pedido?.lojaid
+        ?? pedido?.lojaID
+        ?? pedido?.storeID
+        ?? pedido?.storeid
+        ?? ""
+      ).trim();
+    }
+
+    function getQuantidadePortas(pedido) {
+      return Math.max(0, parseValorTotal(
+        pedido?.quantidade_total
+        ?? pedido?.qtd_total
+        ?? pedido?.quantidade
+        ?? pedido?.portas
+        ?? 0
+      ));
+    }
+
+    function criarMapaLojas(usuarios) {
+      const mapa = new Map();
+      usuarios.forEach((usuario) => {
+        const storeID = getUsuarioStoreID(usuario);
+        const nome = getUsuarioNome(usuario);
+        if (storeID && nome && !mapa.has(storeID)) {
+          mapa.set(storeID, nome);
+        }
+      });
+      return mapa;
+    }
+
+    function formatarDataLocal(dataISO) {
+      if (!dataISO) return "-";
+      const d = new Date(dataISO);
+      if (Number.isNaN(d.getTime())) return "-";
+      return d.toLocaleDateString("pt-BR");
+    }
+
+    function dataNoMes(dataISO, mesYYYYMM) {
+      if (!dataISO || !mesYYYYMM) return false;
+      const d = new Date(dataISO);
+      if (Number.isNaN(d.getTime())) return false;
+      const ano = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, "0");
+      return `${ano}-${mes}` === mesYYYYMM;
+    }
+
+    function diasDesde(dataISO) {
+      if (!dataISO) return null;
+      const d = new Date(dataISO);
+      if (Number.isNaN(d.getTime())) return null;
+      const hoje = new Date();
+      const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+      const inicioData = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      return Math.max(0, Math.floor((inicioHoje - inicioData) / 86400000));
+    }
+
+    function formatarTempoSemPedido(dias) {
+      if (dias === null || dias === undefined) return "Sem pedido";
+      if (dias === 0) return "Hoje";
+      if (dias === 1) return "1 dia";
+      if (dias < 30) return `${dias} dias`;
+      const meses = Math.floor(dias / 30);
+      if (meses < 12) return meses === 1 ? "1 mês" : `${meses} meses`;
+      const anos = Math.floor(meses / 12);
+      return anos === 1 ? "1 ano ou mais" : `${anos} anos ou mais`;
+    }
+
+    function classificarCarteira(loja) {
+      const dias = loja.diasSemPedido;
+      const percentualAberto = loja.faturamentoMes > 0 ? loja.valorAberto / loja.faturamentoMes : loja.valorAberto > 0 ? 1 : 0;
+
+      if (loja.totalPedidos === 0) return "Sem movimento";
+      if (loja.valorAberto > 0 && (percentualAberto >= 0.5 || loja.valorAberto >= 5000)) return "Risco";
+      if (dias !== null && dias > 60) return "Risco";
+      if (dias !== null && dias > 30) return "Atenção";
+      if (loja.faturamentoMes >= 20000 || loja.pedidosMes >= 8) return "Estratégico";
+      if (loja.faturamentoMes >= 5000 || loja.pedidosMes >= 3) return "Ativo";
+      if (loja.pedidosMes > 0) return "Pequeno";
+      return "Atenção";
+    }
+
+    function statusClass(status) {
+      return "tag-" + String(status || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+    }
+
+    function agregarCarteira() {
+      const mes = document.getElementById("filtroMes").value;
+      const lojas = new Map();
+
+      carteiraCache.lojasPorStoreID.forEach((nome, storeID) => {
+        lojas.set(storeID, criarLinhaLoja(storeID, nome));
+      });
+
+      carteiraCache.pedidos.forEach((pedido) => {
+        const lojaID = getPedidoLojaID(pedido) || "Sem LojaID";
+        const nomeLoja = carteiraCache.lojasPorStoreID.get(lojaID) || pedido?.loja_nome || pedido?.cliente_nome || `Loja ${lojaID}`;
+        if (!lojas.has(lojaID)) {
+          lojas.set(lojaID, criarLinhaLoja(lojaID, nomeLoja));
+        }
+
+        const loja = lojas.get(lojaID);
+        const dataPedido = pedido.data_criacao;
+        const valorPedido = parseValorTotal(pedido.valor_total ?? pedido.total ?? pedido.preco_total);
+        const valorPago = parseValorTotal(pedido.valor_pago);
+        const valorAbertoPedido = Math.max(0, valorPedido - valorPago);
+        const qtdPortas = getQuantidadePortas(pedido);
+
+        loja.totalPedidos += 1;
+        loja.valorAberto += valorAbertoPedido;
+
+        const dataAtual = dataPedido ? new Date(dataPedido) : null;
+        if (dataAtual && !Number.isNaN(dataAtual.getTime())) {
+          if (!loja.ultimoPedidoData || dataAtual > loja.ultimoPedidoData) {
+            loja.ultimoPedidoData = dataAtual;
+            loja.ultimoPedidoISO = dataPedido;
+            loja.ultimoPedidoNumero = pedido.numero_pedido ?? "";
+          }
+        }
+
+        if (dataNoMes(dataPedido, mes)) {
+          loja.faturamentoMes += valorPedido;
+          loja.pedidosMes += 1;
+          loja.portasMes += qtdPortas;
+        }
+      });
+
+      return Array.from(lojas.values()).map((loja) => {
+        loja.ticketMedio = loja.pedidosMes > 0 ? loja.faturamentoMes / loja.pedidosMes : 0;
+        loja.diasSemPedido = diasDesde(loja.ultimoPedidoISO);
+        loja.statusCarteira = classificarCarteira(loja);
+        return loja;
+      });
+    }
+
+    function criarLinhaLoja(storeID, nome) {
+      return {
+        storeID,
+        nome: nome || `Loja ${storeID}`,
+        faturamentoMes: 0,
+        pedidosMes: 0,
+        portasMes: 0,
+        ticketMedio: 0,
+        valorAberto: 0,
+        ultimoPedidoISO: "",
+        ultimoPedidoData: null,
+        ultimoPedidoNumero: "",
+        diasSemPedido: null,
+        totalPedidos: 0,
+        statusCarteira: "Sem movimento"
+      };
+    }
+
+    function ordenarCarteira(linhas) {
+      const ordenacao = document.getElementById("ordenacao").value;
+      return linhas.sort((a, b) => {
+        if (ordenacao === "aberto_desc") return b.valorAberto - a.valorAberto;
+        if (ordenacao === "ultimo_asc") {
+          const da = a.diasSemPedido ?? 999999;
+          const db = b.diasSemPedido ?? 999999;
+          return db - da;
+        }
+        if (ordenacao === "pedidos_desc") return b.pedidosMes - a.pedidosMes;
+        if (ordenacao === "loja_asc") return a.nome.localeCompare(b.nome, "pt-BR");
+        return b.faturamentoMes - a.faturamentoMes;
+      });
+    }
+
+    function aplicarFiltros(linhas) {
+      const busca = document.getElementById("filtroBusca").value.trim().toLowerCase();
+      const status = document.getElementById("filtroStatus").value;
+
+      return linhas.filter((loja) => {
+        const textoLoja = `${loja.nome} ${loja.storeID}`.toLowerCase();
+        const passaBusca = !busca || textoLoja.includes(busca);
+        const passaStatus = !status || loja.statusCarteira === status;
+        return passaBusca && passaStatus;
+      });
+    }
+
+    function atualizarMetricas(linhas) {
+      const totais = linhas.reduce((acc, loja) => {
+        acc.faturamento += loja.faturamentoMes;
+        acc.pedidos += loja.pedidosMes;
+        acc.portas += loja.portasMes;
+        acc.aberto += loja.valorAberto;
+        return acc;
+      }, { faturamento: 0, pedidos: 0, portas: 0, aberto: 0 });
+
+      document.getElementById("mLojas").textContent = numberBR(linhas.length);
+      document.getElementById("mFaturamento").textContent = moneyBR(totais.faturamento);
+      document.getElementById("mPedidos").textContent = numberBR(totais.pedidos);
+      document.getElementById("mPortas").textContent = numberBR(totais.portas);
+      document.getElementById("mAberto").textContent = moneyBR(totais.aberto);
+    }
+
+    function renderizarCarteira() {
+      const tbody = document.getElementById("tbodyCarteira");
+      let linhas = agregarCarteira();
+      linhas = aplicarFiltros(linhas);
+      linhas = ordenarCarteira(linhas);
+
+      atualizarMetricas(linhas);
+
+      if (!linhas.length) {
+        tbody.innerHTML = '<tr><td colspan="10" class="empty">Nenhuma loja encontrada para os filtros selecionados.</td></tr>';
+        setStatusGlobal("Nenhuma loja encontrada para os filtros selecionados.");
+        return;
+      }
+
+      tbody.innerHTML = linhas.map((loja) => `
+        <tr>
+          <td>
+            <div class="store-name">${escapeHtml(loja.nome)}</div>
+            <div class="store-id">Último pedido: ${loja.ultimoPedidoNumero ? `#${escapeHtml(loja.ultimoPedidoNumero)}` : "--"}</div>
+          </td>
+          <td>${escapeHtml(loja.storeID)}</td>
+          <td class="numeric"><b>${moneyBR(loja.faturamentoMes)}</b></td>
+          <td class="numeric">${numberBR(loja.pedidosMes)}</td>
+          <td class="numeric">${numberBR(loja.portasMes)}</td>
+          <td class="numeric">${moneyBR(loja.ticketMedio)}</td>
+          <td class="numeric">${moneyBR(loja.valorAberto)}</td>
+          <td>${formatarDataLocal(loja.ultimoPedidoISO)}</td>
+          <td>${formatarTempoSemPedido(loja.diasSemPedido)}</td>
+          <td><span class="tag ${statusClass(loja.statusCarteira)}">${escapeHtml(loja.statusCarteira)}</span></td>
+        </tr>
+      `).join("");
+
+      setStatusGlobal(`Foram listada(s) ${linhas.length} loja(s) na carteira.`, "ok");
+    }
+
+    async function carregarMapaLojas(token) {
+      const res = await fetch(`${API_BASE}/api/usuarios`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
+      });
+
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data?.usuarios)) {
+        throw new Error(data?.error || "Falha ao carregar lojas.");
+      }
+
+      return criarMapaLojas(data.usuarios);
+    }
+
+    async function carregarPedidos(token) {
+      const res = await fetch(`${API_BASE}/api/financeiro?status=${STATUS_PEDIDOS.join(",")}&limit=2000&order=data_criacao.desc`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data)) {
+        throw new Error(data?.error || "Falha ao carregar pedidos.");
+      }
+
+      return data.filter((pedido) => STATUS_PEDIDOS.includes(Number(pedido.status)));
+    }
+
+    async function carregarCarteira() {
+      const token = getToken();
+      const btn = document.getElementById("btnRecarregar");
+      const tbody = document.getElementById("tbodyCarteira");
+
+      if (!token) {
+        setStatusGlobal("Sessão não encontrada. Faça login novamente.", "erro");
+        tbody.innerHTML = '<tr><td colspan="10" class="empty">Token ausente para consulta.</td></tr>';
+        return;
+      }
+
+      btn.disabled = true;
+      setStatusGlobal("Buscando lojas e pedidos da carteira...");
+
+      try {
+        const [pedidos, lojasPorStoreID] = await Promise.all([
+          carregarPedidos(token),
+          carregarMapaLojas(token)
+        ]);
+
+        carteiraCache.pedidos = pedidos;
+        carteiraCache.lojasPorStoreID = lojasPorStoreID;
+        renderizarCarteira();
+      } catch (err) {
+        console.error(err);
+        setStatusGlobal(err.message || "Erro ao buscar dados da carteira.", "erro");
+        tbody.innerHTML = '<tr><td colspan="10" class="empty">Não foi possível carregar a carteira.</td></tr>';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function preencherMesAtual() {
+      const hoje = new Date();
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+      document.getElementById("filtroMes").value = `${ano}-${mes}`;
+    }
+
+    function voltar() {
+      history.back();
+    }
+
+    preencherMesAtual();
+    carregarCarteira();
+  </script>
+</body>
+</html>
