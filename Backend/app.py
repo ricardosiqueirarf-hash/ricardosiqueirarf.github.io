@@ -280,6 +280,14 @@ def crm_index_html_page():
 def promob_export_html_page():
     return send_from_directory(BASE_DIR, "promob_export.html")
 
+@app.route("/gestao-carteira")
+def gestao_carteira_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gestao-carteira.html")
+
+@app.route("/gestao-carteira.html")
+def gestao_carteira_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gestao-carteira.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
