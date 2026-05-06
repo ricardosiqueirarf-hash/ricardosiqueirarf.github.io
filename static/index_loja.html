@@ -997,6 +997,66 @@ async function criarFichaCliente(){
   }
 }
 
+async function buscarLojasPorApi(USER_TOKEN) {
+  const res = await fetch(`${BACKEND_URL}/api/clientes/storeids`, {
+    headers: { "Authorization": `Bearer ${USER_TOKEN}` }
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  return Array.isArray(data.stores) && data.stores.length
+    ? data.stores
+    : (Array.isArray(data.storeIds) ? data.storeIds : []);
+}
+
+async function buscarLojasPorUsuarios(USER_TOKEN) {
+  const res = await fetch(`${BACKEND_URL}/api/usuarios`, {
+    headers: { "Authorization": `Bearer ${USER_TOKEN}` }
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  return Array.isArray(data.usuarios) ? data.usuarios : [];
+}
+
+function popularSeletorLojas(lista, select, wrap) {
+  lojasDisponiveis = lista
+    .map((loja) => ({
+      storeID: obterStoreIdLoja(loja),
+      nome: obterNomeLoja(loja) || obterStoreIdLoja(loja)
+    }))
+    .filter((loja) => loja.storeID && loja.nome)
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
+
+  if (!lojasDisponiveis.length) return false;
+
+  select.innerHTML = "";
+  lojasDisponiveis.forEach((loja) => {
+    const opt = document.createElement("option");
+    opt.value = loja.storeID;
+    opt.textContent = loja.nome;
+    select.appendChild(opt);
+  });
+
+  const preferida = userSession.storeid && encontrarLojaPorStoreId(userSession.storeid)
+    ? String(userSession.storeid)
+    : lojasDisponiveis[0].storeID;
+
+  select.value = preferida;
+  storeSelecionada = preferida;
+  select.onchange = () => {
+    storeSelecionada = select.value || null;
+  };
+  wrap.style.display = "flex";
+  return true;
+}
+
 async function carregarStoreIds() {
   if (!usuarioPodeSelecionarLoja()) return;
 
@@ -1006,43 +1066,18 @@ async function carregarStoreIds() {
   if (!wrap || !select) return;
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/clientes/storeids`, {
-      headers: { "Authorization": `Bearer ${USER_TOKEN}` }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const lista = Array.isArray(data.stores) && data.stores.length
-      ? data.stores
-      : (Array.isArray(data.storeIds) ? data.storeIds : []);
+    let lista = [];
 
-    lojasDisponiveis = lista
-      .map((loja) => ({
-        storeID: obterStoreIdLoja(loja),
-        nome: obterNomeLoja(loja) || obterStoreIdLoja(loja)
-      }))
-      .filter((loja) => loja.storeID && loja.nome)
-      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
+    try {
+      lista = await buscarLojasPorApi(USER_TOKEN);
+    } catch (apiErr) {
+      console.warn("Falha em /api/clientes/storeids, tentando /api/usuarios:", apiErr);
+      lista = await buscarLojasPorUsuarios(USER_TOKEN);
+    }
 
-    if (!lojasDisponiveis.length) return;
-
-    select.innerHTML = "";
-    lojasDisponiveis.forEach((loja) => {
-      const opt = document.createElement("option");
-      opt.value = loja.storeID;
-      opt.textContent = loja.nome;
-      select.appendChild(opt);
-    });
-
-    const preferida = userSession.storeid && encontrarLojaPorStoreId(userSession.storeid)
-      ? String(userSession.storeid)
-      : lojasDisponiveis[0].storeID;
-
-    select.value = preferida;
-    storeSelecionada = preferida;
-    select.addEventListener("change", () => {
-      storeSelecionada = select.value || null;
-    });
-    wrap.style.display = "flex";
+    if (!popularSeletorLojas(lista, select, wrap)) {
+      console.warn("Nenhuma loja com nome e StoreID encontrada.");
+    }
   } catch (err) {
     console.error("Erro ao carregar lojas:", err);
   }
