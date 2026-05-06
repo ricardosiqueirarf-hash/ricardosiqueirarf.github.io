@@ -14,6 +14,30 @@ def _tem_permissao():
     return nivel in (2, 3)
 
 
+def _valor_texto(*valores):
+    for valor in valores:
+        texto = str(valor or "").strip()
+        if texto:
+            return texto
+    return ""
+
+
+def _nome_loja(row, storeid):
+    dados = row.get("dados") if isinstance(row.get("dados"), dict) else {}
+    return _valor_texto(
+        row.get("nome"),
+        row.get("name"),
+        row.get("storeName"),
+        row.get("store_name"),
+        dados.get("nome"),
+        dados.get("name"),
+        dados.get("storeName"),
+        dados.get("store_name"),
+        row.get("user"),
+        storeid
+    )
+
+
 @clientes_api_bp.route("/api/clientes/storeids", methods=["GET"])
 def listar_storeids():
     if not _tem_permissao():
@@ -23,12 +47,13 @@ def listar_storeids():
 
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/usuarios?select=nome,user,storeid,storeID,lojaid,lojaID",
+            f"{SUPABASE_URL}/rest/v1/usuarios",
             headers=HEADERS,
+            params={"select": "*"},
             timeout=20
         )
         r.raise_for_status()
-        rows = r.json()
+        rows = r.json() or []
     except Exception as exc:
         return jsonify({
             "error": "Falha ao consultar usuários",
@@ -37,20 +62,18 @@ def listar_storeids():
 
     lojas_por_storeid = {}
     for row in rows:
-        storeid = str(
-            row.get("storeid")
-            or row.get("storeID")
-            or row.get("lojaid")
-            or row.get("lojaID")
-            or ""
-        ).strip()
+        storeid = _valor_texto(
+            row.get("storeid"),
+            row.get("storeID"),
+            row.get("lojaid"),
+            row.get("lojaID")
+        )
         if not storeid:
             continue
 
-        nome = str(row.get("nome") or row.get("user") or storeid).strip()
         lojas_por_storeid[storeid] = {
             "storeID": storeid,
-            "nome": nome or storeid
+            "nome": _nome_loja(row, storeid)
         }
 
     lojas = sorted(
