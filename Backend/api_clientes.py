@@ -33,7 +33,6 @@ def _nome_loja(row, storeid):
         dados.get("name"),
         dados.get("storeName"),
         dados.get("store_name"),
-        row.get("user"),
         storeid
     )
 
