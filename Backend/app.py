@@ -327,6 +327,7 @@ from api_clientes import clientes_api_bp
 from api_export_promob import export_promob_bp
 from api_sistemas import sistemas_bp
 from api_trilhos import trilhos_bp
+from api_fornecedores import fornecedores_bp
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
@@ -347,6 +348,7 @@ app.register_blueprint(clientes_api_bp)
 app.register_blueprint(export_promob_bp)
 app.register_blueprint(sistemas_bp)
 app.register_blueprint(trilhos_bp)
+app.register_blueprint(fornecedores_bp)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
