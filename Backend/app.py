@@ -288,6 +288,14 @@ def gestao_carteira_page():
 def gestao_carteira_html_page():
     return send_from_directory(os.path.join(ROOT_DIR, "static"), "gestao-carteira.html")
 
+@app.route("/pagamentos")
+def pagamentos_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "pagamentos.html")
+
+@app.route("/pagamentos.html")
+def pagamentos_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "pagamentos.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
