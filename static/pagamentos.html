@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adicionar Pagamento</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --ok-bg: #dcfce7;
+      --ok-text: #166534;
+      --err-bg: #fee2e2;
+      --err-text: #991b1b;
+      --border: #d1d5db;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef4ff 0%, var(--bg) 55%, #ffffff 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: min(100%, 720px);
+      background: var(--card);
+      border: 1px solid rgba(209, 213, 219, 0.7);
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 28px 32px;
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+    }
+
+    header p {
+      margin: 0;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    main { padding: 32px; }
+
+    form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .field { display: grid; gap: 8px; }
+
+    label {
+      font-weight: 700;
+      color: #374151;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 14px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    button:hover { background: var(--primary-dark); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    .status {
+      display: none;
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+
+    .status.ok {
+      display: block;
+      background: var(--ok-bg);
+      color: var(--ok-text);
+    }
+
+    .status.erro {
+      display: block;
+      background: var(--err-bg);
+      color: var(--err-text);
+    }
+
+    .details {
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      background: #f9fafb;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 12px; align-items: flex-start; }
+      header, main { padding: 24px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Adicionar Pagamento</h1>
+      <p>Informe o número do pedido, o valor pago e a data do pagamento. Ao salvar, o sistema adiciona o pagamento e atualiza o campo <strong>valor_pago</strong> na tabela <strong>orcamentos</strong>.</p>
+    </header>
+
+    <main>
+      <form id="pagamentoForm">
+        <div class="field">
+          <label for="numeroPedido">Número do pedido</label>
+          <input id="numeroPedido" name="numero_pedido" type="number" min="1" step="1" placeholder="Ex.: 1024" required />
+          <span class="hint">Digite exatamente o número do pedido cadastrado no orçamento.</span>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="valorPago">Valor pago</label>
+            <input id="valorPago" name="valor_pago" type="text" inputmode="decimal" placeholder="Ex.: 1500,00" required />
+          </div>
+
+          <div class="field">
+            <label for="dataPagamento">Data do pagamento</label>
+            <input id="dataPagamento" name="data_pagamento" type="date" required />
+          </div>
+        </div>
+
+        <button id="salvarBtn" type="submit">Adicionar pagamento</button>
+      </form>
+
+      <div id="status" class="status"></div>
+
+      <div class="details">
+        <strong>Observação:</strong> é necessário estar logado para enviar o token de autorização salvo no navegador.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    function getToken() {
+      return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+    }
+
+    function parseValor(value) {
+      const normalized = String(value || "")
+        .replace(/\s/g, "")
+        .replace(/R\$/gi, "")
+        .replace(/\./g, "")
+        .replace(",", ".");
+
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    function setStatus(message, type) {
+      const el = document.getElementById("status");
+      el.textContent = message;
+      el.className = `status ${type || ""}`;
+    }
+
+    function setTodayAsDefault() {
+      const input = document.getElementById("dataPagamento");
+      if (!input.value) {
+        input.value = new Date().toISOString().slice(0, 10);
+      }
+    }
+
+    document.getElementById("pagamentoForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const token = getToken();
+      const numeroPedido = document.getElementById("numeroPedido").value.trim();
+      const valorPago = parseValor(document.getElementById("valorPago").value);
+      const dataPagamento = document.getElementById("dataPagamento").value;
+      const btn = document.getElementById("salvarBtn");
+
+      if (!token) {
+        setStatus("Sessão não encontrada. Faça login novamente antes de adicionar o pagamento.", "erro");
+        return;
+      }
+
+      if (!numeroPedido || Number(numeroPedido) <= 0) {
+        setStatus("Informe um número de pedido válido.", "erro");
+        return;
+      }
+
+      if (!Number.isFinite(valorPago) || valorPago < 0) {
+        setStatus("Informe um valor pago válido.", "erro");
+        return;
+      }
+
+      if (!dataPagamento) {
+        setStatus("Informe a data do pagamento.", "erro");
+        return;
+      }
+
+      btn.disabled = true;
+      setStatus("", "");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/pagamentos`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            numero_pedido: Number(numeroPedido),
+            valor_pago: valorPago,
+            data_pagamento: dataPagamento
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data?.error || "Não foi possível adicionar o pagamento.");
+        }
+
+        setStatus(
+          `Pagamento adicionado com sucesso!\nPedido: ${numeroPedido}\nValor copiado para orcamentos.valor_pago: ${formatMoney(data.valor_pago)}\nData do pagamento: ${dataPagamento}`,
+          "ok"
+        );
+
+        document.getElementById("valorPago").value = "";
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message || "Erro ao adicionar pagamento.", "erro");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    setTodayAsDefault();
+  </script>
+</body>
+</html>
