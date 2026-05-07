@@ -576,10 +576,20 @@ let limiteOrcamentos = 10;
 const LIMITE_TODOS = "todos";
 let storeSelecionada = null;
 let lojasDisponiveis = [];
+let lojasPorStoreID = new Map();
 
 function atualizarStatusOrcamentos(mensagem) {
   const status = document.getElementById("orcamentosStatus");
   if (status) status.textContent = mensagem;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function formatarDinheiroBR(valor) {
@@ -594,6 +604,65 @@ function formatarDataLocal(dataISO) {
   const d = new Date(dataISO);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleString();
+}
+
+function getUsuarioStoreID(usuario) {
+  return String(
+    usuario?.storeID
+    ?? usuario?.storeid
+    ?? usuario?.StoreID
+    ?? usuario?.store_id
+    ?? usuario?.lojaid
+    ?? usuario?.lojaID
+    ?? ""
+  ).trim();
+}
+
+function getUsuarioNome(usuario) {
+  return String(
+    usuario?.NOME
+    ?? usuario?.nome
+    ?? usuario?.name
+    ?? usuario?.dados?.nome
+    ?? ""
+  ).trim();
+}
+
+function getPedidoLojaID(pedido) {
+  return String(
+    pedido?.lojaid
+    ?? pedido?.lojaID
+    ?? pedido?.storeID
+    ?? pedido?.storeid
+    ?? ""
+  ).trim();
+}
+
+function criarMapaLojas(usuarios) {
+  const mapa = new Map();
+  usuarios.forEach((usuario) => {
+    const storeID = getUsuarioStoreID(usuario);
+    const nome = getUsuarioNome(usuario);
+    if (storeID && nome && !mapa.has(storeID)) {
+      mapa.set(storeID, nome);
+    }
+  });
+  return mapa;
+}
+
+function formatarLojaPedido(pedido) {
+  const lojaID = getPedidoLojaID(pedido);
+  if (!lojaID) return "-";
+
+  const nomeLoja = lojasPorStoreID.get(lojaID);
+  if (!nomeLoja) {
+    return `<span style="color:#6b7280;">${escapeHtml(lojaID)}</span>`;
+  }
+
+  return `
+    <strong>${escapeHtml(nomeLoja)}</strong>
+    <div style="color:#6b7280; font-size:0.78rem; margin-top:2px;">LojaID: ${escapeHtml(lojaID)}</div>
+  `;
 }
 
 function renderizarOrcamentos(orcamentos, totalDisponivel = null) {
@@ -615,6 +684,7 @@ function renderizarOrcamentos(orcamentos, totalDisponivel = null) {
         <th>Data Criação</th>
         <th>Qtd Total</th>
         <th>Status do pedido</th>
+        <th>LojaID</th>
         <th>Valor Total (R$)</th>
         <th>Ações</th>
       </tr>
@@ -674,6 +744,7 @@ function renderizarOrcamentos(orcamentos, totalDisponivel = null) {
 
       <!-- ✅ Aqui: mostra o texto amigável -->
       <td data-field="status_label">${statusLabel}</td>
+      <td>${formatarLojaPedido(o)}</td>
 
       <td data-field="valor_total">${valorTotal === "--" ? "--" : formatarDinheiroBR(valorTotal)}</td>
       <td>${actionsHtml}</td>
@@ -777,17 +848,35 @@ function encontrarLojaPorNome(nome) {
   return lojasDisponiveis.find((loja) => formatarOpcaoLoja(loja).toLowerCase() === alvo) || null;
 }
 
+async function carregarMapaLojas(USER_TOKEN) {
+  const res = await fetch(`${BACKEND_URL}/api/usuarios`, {
+    headers: USER_TOKEN ? { "Authorization": `Bearer ${USER_TOKEN}` } : {}
+  });
+
+  const data = await res.json();
+  if (!res.ok || !Array.isArray(data?.usuarios)) {
+    throw new Error(data?.error || "Falha ao carregar lojas.");
+  }
+
+  return criarMapaLojas(data.usuarios);
+}
+
 async function carregarOrcamentos() {
   const USER_TOKEN = getUserToken();
 
   try {
     atualizarStatusOrcamentos("Carregando...");
 
-    const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
-      headers: {
-        "Authorization": `Bearer ${USER_TOKEN}`
-      }
-    });
+    const [res, mapaLojas] = await Promise.all([
+      fetch(`${BACKEND_URL}/api/orcamentos`, {
+        headers: {
+          "Authorization": `Bearer ${USER_TOKEN}`
+        }
+      }),
+      carregarMapaLojas(USER_TOKEN)
+    ]);
+
+    lojasPorStoreID = mapaLojas;
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
