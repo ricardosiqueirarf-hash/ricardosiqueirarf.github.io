@@ -296,6 +296,14 @@ def pagamentos_page():
 def pagamentos_html_page():
     return send_from_directory(os.path.join(ROOT_DIR, "static"), "pagamentos.html")
 
+@app.route("/fornecedores")
+def fornecedores_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "fornecedores.html")
+
+@app.route("/fornecedores.html")
+def fornecedores_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "fornecedores.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
