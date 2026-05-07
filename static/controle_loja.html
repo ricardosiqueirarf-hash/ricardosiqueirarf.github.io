@@ -324,6 +324,26 @@
       ).trim();
     }
 
+function getPedidoUUID(pedido) {
+      return String(
+        pedido?.id
+        ?? pedido?.uuid
+        ?? pedido?.orcamento_uuid
+        ?? ""
+      ).trim();
+    }
+
+    function aplicarValorPago(pedido, valorPago) {
+      if (valorPago === null || valorPago === undefined || valorPago === "") {
+        return pedido;
+      }
+
+      return {
+        ...pedido,
+        valor_pago: valorPago
+      };
+    }
+    
     function criarMapaLojas(usuarios) {
       const mapa = new Map();
       usuarios.forEach((usuario) => {
@@ -387,6 +407,36 @@
       return criarMapaLojas(data.usuarios);
     }
 
+    async function carregarValorPagoPedido(uuid, token) {
+      if (!uuid) return null;
+
+      const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(uuid)}/valor-pago`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
+      });
+
+      const data = await res.json();
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.error || `Falha ao carregar valor pago do pedido ${uuid}.`);
+      }
+
+      return data?.valor_pago ?? null;
+    }
+
+    async function carregarValoresPagosPedidos(pedidos, token) {
+      return Promise.all(pedidos.map(async (pedido) => {
+        const uuid = getPedidoUUID(pedido);
+        if (!uuid) return pedido;
+
+        try {
+          const valorPago = await carregarValorPagoPedido(uuid, token);
+          return aplicarValorPago(pedido, valorPago);
+        } catch (err) {
+          console.warn(err);
+          return pedido;
+        }
+      }));
+    }
+
     async function carregarPedidosProducao() {
       const token = getToken();
       const btn = document.getElementById("btnRecarregar");
@@ -415,8 +465,9 @@
         }
 
         const emProducao = data.filter(o => STATUS_PRODUCAO.includes(Number(o.status)));
-        renderTabela(emProducao, lojasPorStoreID);
-        setStatusGlobal(`Foram encontrados ${emProducao.length} pedido(s).`, "ok");
+        const pedidosComValorPago = await carregarValoresPagosPedidos(emProducao, token);
+        renderTabela(pedidosComValorPago, lojasPorStoreID);
+        setStatusGlobal(`Foram encontrados ${pedidosComValorPago.length} pedido(s).`, "ok");
       } catch (err) {
         console.error(err);
         setStatusGlobal(err.message || "Erro ao buscar pedidos.", "erro");
