@@ -464,6 +464,7 @@ tr:hover{
         <button onclick="go('index_loja.html')">Orçamentos</button>
         <button onclick="go('controle_loja.html')">Acompanhamento</button>
         <button id="btnCarteira" style="display:none;" onclick="go('gestao-carteira.html')">Carteira</button>
+        <button id="btnPagamentos" style="display:none;" onclick="go('pagamentos.html')">Pagamentos</button>
     </div>
 
     <div class="content">
@@ -533,10 +534,17 @@ function usuarioPodeSelecionarLoja() {
   return [2, 3].includes(Number(userSession.level));
 }
 
-function atualizarBotaoCarteira() {
+function atualizarBotoesRestritos() {
+  const exibirBotaoRestrito = usuarioPodeSelecionarLoja() ? "block" : "none";
   const botaoCarteira = document.getElementById("btnCarteira");
+  const botaoPagamentos = document.getElementById("btnPagamentos");
+
   if (botaoCarteira) {
-    botaoCarteira.style.display = usuarioPodeSelecionarLoja() ? "block" : "none";
+    botaoCarteira.style.display = exibirBotaoRestrito;
+  }
+
+  if (botaoPagamentos) {
+    botaoPagamentos.style.display = exibirBotaoRestrito;
   }
 }
 
@@ -585,7 +593,7 @@ async function validarSessao() {
       level: data.level ?? null,
       storeid: data.storeid ?? null
     };
-    atualizarBotaoCarteira();
+        atualizarBotoesRestritos();
 
     return true;
   } catch (err) {
