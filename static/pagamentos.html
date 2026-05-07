@@ -79,7 +79,8 @@
       color: #374151;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -87,9 +88,11 @@
       font-size: 1rem;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+      background: #ffffff;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
     }
@@ -178,6 +181,16 @@
             <label for="dataPagamento">Data do pagamento</label>
             <input id="dataPagamento" name="data_pagamento" type="date" required />
           </div>
+
+          <div class="field">
+            <label for="formaPagamento">Forma de pagamento</label>
+            <select id="formaPagamento" name="forma_pagamento" required>
+              <option value="">Selecione...</option>
+              <option value="pix">Pix</option>
+              <option value="cartao_credito">Cartão de crédito</option>
+              <option value="dinheiro">Dinheiro</option>
+            </select>
+          </div>
         </div>
 
         <button id="salvarBtn" type="submit">Adicionar pagamento</button>
@@ -236,6 +249,7 @@
       const numeroPedido = document.getElementById("numeroPedido").value.trim();
       const valorPago = parseValor(document.getElementById("valorPago").value);
       const dataPagamento = document.getElementById("dataPagamento").value;
+      const formaPagamento = document.getElementById("formaPagamento").value;
       const btn = document.getElementById("salvarBtn");
 
       if (!token) {
@@ -258,6 +272,11 @@
         return;
       }
 
+      if (!formaPagamento) {
+        setStatus("Informe a forma de pagamento.", "erro");
+        return;
+      }
+
       btn.disabled = true;
       setStatus("", "");
 
@@ -271,7 +290,8 @@
           body: JSON.stringify({
             numero_pedido: Number(numeroPedido),
             valor_pago: valorPago,
-            data_pagamento: dataPagamento
+            data_pagamento: dataPagamento,
+            forma_pagamento: formaPagamento
           })
         });
 
@@ -281,11 +301,12 @@
         }
 
         setStatus(
-          `Pagamento adicionado com sucesso!\nPedido: ${numeroPedido}\nValor copiado para orcamentos.valor_pago: ${formatMoney(data.valor_pago)}\nData do pagamento: ${dataPagamento}`,
+          `Pagamento adicionado com sucesso!\nPedido: ${numeroPedido}\nValor copiado para orcamentos.valor_pago: ${formatMoney(data.valor_pago)}\nData do pagamento: ${dataPagamento}\nForma de pagamento: ${document.getElementById("formaPagamento").selectedOptions[0].textContent}`,
           "ok"
         );
 
         document.getElementById("valorPago").value = "";
+        document.getElementById("formaPagamento").value = "";
       } catch (error) {
         console.error(error);
         setStatus(error.message || "Erro ao adicionar pagamento.", "erro");
