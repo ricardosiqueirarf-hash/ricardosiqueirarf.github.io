@@ -79,7 +79,9 @@ def criar_portas(orcamento_uuid):
             qtd = int(p.get("quantidade", 1) or 1)
             preco = float(p.get("preco", 0) or 0)
             quantidade_total += qtd
-            valor_total += (preco * qtd)
+            # O preço da porta já vem calculado com a quantidade no frontend.
+            # Não multiplica novamente para evitar inflar o valor_total exibido na loja.
+            valor_total += preco
 
         payload_orcamento = {
             "quantidade_total": quantidade_total,
