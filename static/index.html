@@ -216,6 +216,135 @@
       line-height: 1.7;
     }
 
+    .hero-showcase {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 56px 24px 0;
+    }
+
+    .hero-showcase-card {
+      position: relative;
+      min-height: clamp(360px, 58vw, 620px);
+      border-radius: 34px;
+      overflow: hidden;
+      background: #071825;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      box-shadow: 0 34px 80px rgba(7, 24, 37, 0.32);
+      isolation: isolate;
+    }
+
+    .hero-showcase-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background:
+        radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.16), transparent 35%),
+        linear-gradient(90deg, rgba(7, 24, 37, 0.58) 0%, rgba(7, 24, 37, 0.06) 40%, rgba(7, 24, 37, 0.42) 100%),
+        linear-gradient(180deg, rgba(7, 24, 37, 0.02) 35%, rgba(7, 24, 37, 0.86) 100%);
+      pointer-events: none;
+    }
+
+    .hero-showcase-card::after {
+      content: "";
+      position: absolute;
+      inset: -45% auto auto -28%;
+      z-index: 3;
+      width: 58%;
+      height: 190%;
+      background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.28) 48%, transparent 68%);
+      transform: rotate(8deg);
+      animation: cinematicSweep 6s ease-in-out infinite;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .hero-showcase-track {
+      height: 100%;
+      min-height: inherit;
+      display: flex;
+      transition: transform 1.15s cubic-bezier(0.19, 1, 0.22, 1);
+      will-change: transform;
+    }
+
+    .hero-showcase-slide {
+      min-width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-showcase-slide img {
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      transform: scale(1.05);
+      filter: saturate(1.12) contrast(1.05);
+      transition: transform 5s ease, filter 1s ease;
+    }
+
+    .hero-showcase-slide.is-active img {
+      transform: scale(1.12) translateX(-1.5%);
+      filter: saturate(1.22) contrast(1.08);
+    }
+
+    .hero-showcase-caption {
+      position: absolute;
+      left: clamp(22px, 5vw, 58px);
+      right: clamp(22px, 5vw, 58px);
+      bottom: clamp(24px, 5vw, 58px);
+      z-index: 4;
+      max-width: 690px;
+      color: #ffffff;
+      text-shadow: 0 4px 18px rgba(0, 0, 0, 0.52);
+    }
+
+    .hero-showcase-caption span {
+      display: inline-flex;
+      margin-bottom: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(240, 194, 76, 0.92);
+      color: #3d2a00;
+      font-weight: 800;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-shadow: none;
+    }
+
+    .hero-showcase-caption strong {
+      display: block;
+      font-size: clamp(1.7rem, 4.4vw, 3.75rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-showcase-dots {
+      position: absolute;
+      right: clamp(22px, 4vw, 46px);
+      bottom: clamp(24px, 4vw, 46px);
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+    }
+
+    .hero-showcase-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.45);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+      transition: width 0.35s ease, background-color 0.35s ease;
+    }
+
+    .hero-showcase-dot.is-active {
+      width: 34px;
+      background: #ffffff;
+    }
+
     .hero-actions {
       margin-top: 18px;
       display: flex;
@@ -248,126 +377,6 @@
     .hero-card > * {
       position: relative;
       z-index: 1;
-    }
-
-    .hero-gallery {
-      position: relative;
-      min-height: 330px;
-      margin: -10px -10px 24px;
-      border-radius: 26px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.55);
-      background: #071825;
-      box-shadow: 0 24px 55px rgba(7, 24, 37, 0.35);
-      isolation: isolate;
-    }
-
-    .hero-gallery::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      background:
-        linear-gradient(90deg, rgba(7, 24, 37, 0.55) 0%, rgba(7, 24, 37, 0.08) 35%, rgba(7, 24, 37, 0.2) 100%),
-        linear-gradient(180deg, rgba(7, 24, 37, 0.02) 35%, rgba(7, 24, 37, 0.82) 100%);
-      pointer-events: none;
-    }
-
-    .hero-gallery::after {
-      content: "";
-      position: absolute;
-      inset: -45% auto auto -30%;
-      z-index: 3;
-      width: 70%;
-      height: 190%;
-      background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.28) 48%, transparent 68%);
-      transform: rotate(8deg);
-      animation: cinematicSweep 6s ease-in-out infinite;
-      pointer-events: none;
-      mix-blend-mode: screen;
-    }
-
-    .hero-gallery-track {
-      height: 100%;
-      min-height: inherit;
-      display: flex;
-      transition: transform 1.15s cubic-bezier(0.19, 1, 0.22, 1);
-      will-change: transform;
-    }
-
-    .hero-gallery-slide {
-      min-width: 100%;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-gallery-slide img {
-      width: 100%;
-      height: 100%;
-      min-height: inherit;
-      display: block;
-      object-fit: cover;
-      transform: scale(1.08);
-      filter: saturate(1.12) contrast(1.05);
-      transition: transform 5s ease, filter 1s ease;
-    }
-
-    .hero-gallery-slide.is-active img {
-      transform: scale(1.16) translateX(-1.8%);
-      filter: saturate(1.22) contrast(1.08);
-    }
-
-    .hero-gallery-caption {
-      position: absolute;
-      left: 22px;
-      right: 22px;
-      bottom: 22px;
-      z-index: 4;
-      color: #ffffff;
-      text-shadow: 0 3px 16px rgba(0, 0, 0, 0.45);
-    }
-
-    .hero-gallery-caption span {
-      display: inline-flex;
-      margin-bottom: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(240, 194, 76, 0.9);
-      color: #3d2a00;
-      font-weight: 800;
-      font-size: 0.78rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      text-shadow: none;
-    }
-
-    .hero-gallery-caption strong {
-      display: block;
-      font-size: clamp(1.25rem, 3vw, 1.75rem);
-      line-height: 1.05;
-    }
-
-    .hero-gallery-dots {
-      position: absolute;
-      right: 20px;
-      bottom: 20px;
-      z-index: 5;
-      display: flex;
-      gap: 7px;
-    }
-
-    .hero-gallery-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.45);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
-      transition: width 0.35s ease, background-color 0.35s ease;
-    }
-
-    .hero-gallery-dot.is-active {
-      width: 28px;
-      background: #ffffff;
     }
 
     .hero-stats {
@@ -746,20 +755,24 @@
         grid-template-columns: 1fr;
       }
 
-      .hero-gallery {
-        min-height: 270px;
-        margin: -4px -4px 22px;
+      .hero-showcase {
+        padding-top: 32px;
       }
 
-      .hero-gallery-caption {
-        left: 16px;
-        right: 16px;
-        bottom: 16px;
+      .hero-showcase-card {
+        min-height: 340px;
+        border-radius: 24px;
       }
 
-      .hero-gallery-dots {
-        right: 16px;
-        bottom: 16px;
+      .hero-showcase-caption {
+        left: 18px;
+        right: 18px;
+        bottom: 20px;
+      }
+
+      .hero-showcase-dots {
+        right: 18px;
+        bottom: 18px;
       }
     }
   </style>
@@ -788,6 +801,59 @@ Color Glass Fortaleza
   </header>
 
   <main>
+    <section class="hero-showcase" aria-label="Projetos Color Glass em destaque">
+      <div class="hero-showcase-card">
+        <div class="hero-showcase-track">
+          <div class="hero-showcase-slide is-active">
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
+              alt="Portas de giro em vidro e alumínio com acabamento premium"
+            />
+            <div class="hero-showcase-caption">
+              <span>Impacto premium</span>
+              <strong>Portas de giro em vidro e alumínio para planejados.</strong>
+            </div>
+          </div>
+          <div class="hero-showcase-slide">
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
+              alt="Portas de correr em alumínio e vidro para otimização de espaço"
+            />
+            <div class="hero-showcase-caption">
+              <span>Movimento limpo</span>
+              <strong>Portas de correr com estética sofisticada e funcionalidade.</strong>
+            </div>
+          </div>
+          <div class="hero-showcase-slide">
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
+              alt="Estruturas thin em alumínio com visual contemporâneo"
+            />
+            <div class="hero-showcase-caption">
+              <span>Design contemporâneo</span>
+              <strong>Estruturas thin leves, modernas e de grande presença.</strong>
+            </div>
+          </div>
+          <div class="hero-showcase-slide">
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
+              alt="Cristaleira em alumínio e vidro sob medida"
+            />
+            <div class="hero-showcase-caption">
+              <span>Sob medida</span>
+              <strong>Cristaleiras e composições que elevam o projeto final.</strong>
+            </div>
+          </div>
+        </div>
+        <div class="hero-showcase-dots" aria-hidden="true">
+          <span class="hero-showcase-dot is-active"></span>
+          <span class="hero-showcase-dot"></span>
+          <span class="hero-showcase-dot"></span>
+          <span class="hero-showcase-dot"></span>
+        </div>
+      </div>
+    </section>
+
     <section class="hero">
       <div>
         <div class="badge">🤝 B2B em Fortaleza — parceiro de marcenarias e lojas de planejados</div>
@@ -822,56 +888,6 @@ Color Glass Fortaleza
       </div>
 
       <div class="hero-card">
-        <div class="hero-gallery" aria-label="Projetos Color Glass em destaque">
-          <div class="hero-gallery-track">
-            <div class="hero-gallery-slide is-active">
-              <img
-                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
-                alt="Portas de giro em vidro e alumínio com acabamento premium"
-              />
-              <div class="hero-gallery-caption">
-                <span>Impacto premium</span>
-                <strong>Portas de giro em vidro e alumínio para planejados.</strong>
-              </div>
-            </div>
-            <div class="hero-gallery-slide">
-              <img
-                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
-                alt="Portas de correr em alumínio e vidro para otimização de espaço"
-              />
-              <div class="hero-gallery-caption">
-                <span>Movimento limpo</span>
-                <strong>Portas de correr com estética sofisticada e funcionalidade.</strong>
-              </div>
-            </div>
-            <div class="hero-gallery-slide">
-              <img
-                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
-                alt="Estruturas thin em alumínio com visual contemporâneo"
-              />
-              <div class="hero-gallery-caption">
-                <span>Design contemporâneo</span>
-                <strong>Estruturas thin leves, modernas e de grande presença.</strong>
-              </div>
-            </div>
-            <div class="hero-gallery-slide">
-              <img
-                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
-                alt="Cristaleira em alumínio e vidro sob medida"
-              />
-              <div class="hero-gallery-caption">
-                <span>Sob medida</span>
-                <strong>Cristaleiras e composições que elevam o projeto final.</strong>
-              </div>
-            </div>
-          </div>
-          <div class="hero-gallery-dots" aria-hidden="true">
-            <span class="hero-gallery-dot is-active"></span>
-            <span class="hero-gallery-dot"></span>
-            <span class="hero-gallery-dot"></span>
-            <span class="hero-gallery-dot"></span>
-          </div>
-        </div>
 
         <h3>O que muda quando você fecha com a Color Glass?</h3>
         <p>
@@ -930,89 +946,8 @@ Color Glass Fortaleza
         Linhas voltadas para o dia a dia do planejado: soluções que vendem bem, têm boa estética e encaixam em obra sem dor de cabeça.
       </p>
 
-      <div class="portfolio">  
-        <button
-          class="portfolio-item"
-          type="button"
-          data-title="Portas de giro (vidro + alumínio)"
-          data-description="Para ambientes internos e mobiliário planejado — visual limpo e fechamento sólido."
-          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
-          aria-label="Abrir imagem Portas de giro (vidro + alumínio)"
-        >
-          <img
-            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
-            alt="Portas de giro (vidro + alumínio)"
-          />
-          <div class="portfolio-overlay">
-            <h3>Portas de giro (vidro e alumínio)</h3>
-            <p>Para ambientes internos e mobiliário planejado — visual limpo e fechamento sólido.</p>
-          </div>
-        </button>
-
-        <button
-          class="portfolio-item"
-          type="button"
-          data-title="Portas de correr (alumínio + vidro)"
-          data-description="Alta demanda no planejado: funcionalidade + estética, ideal para otimizar espaço."
-          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
-          aria-label="Abrir imagem Portas de correr (alumínio + vidro)"
-        >
-          <img
-            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
-            alt="Portas de correr (alumínio + vidro)"
-          />
-          <div class="portfolio-overlay">
-            <h3>Portas de correr (alumínio e vidro)</h3>
-            <p>Alta demanda no planejado: funcionalidade + estética, ideal para otimizar espaço.</p>
-          </div>
-        </button>
-
-        <button
-          class="portfolio-item"
-          type="button"
-          data-title="Estruturas thin (alumínio)"
-          data-description="Estruturas leves, modernas e com visual sofisticado para composições contemporâneas."
-          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
-          aria-label="Abrir imagem Estruturas thin (alumínio)"
-        >
-          <img
-            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
-            alt="Estruturas thin (alumínio)"
-          />
-          <div class="portfolio-overlay">
-            <h3>Estruturas thin (alumínio)</h3>
-            <p>Estruturas leves, modernas e com visual sofisticado para composições contemporâneas.</p>
-          </div>
-        </button>
-
-        <button
-          class="portfolio-item"
-          type="button"
-          data-title="Closet + prateleiras (alumínio)"
-          data-description="Soluções sob medida para projetos completos — estética e resistência no mesmo pacote."
-          data-image="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
-          aria-label="Abrir imagem Closet + prateleiras (alumínio)"
-        >
-          <img
-            src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
-            alt="Closet + prateleiras (alumínio)"
-          />
-          <div class="portfolio-overlay">
-            <h3>Cristaleira (alumínio e vidro)</h3>
-            <p>Soluções sob medida para projetos completos — estética e resistência no mesmo pacote.</p>
-          </div>
-        </button>
-      </div>
+      <!-- As imagens do portfólio agora aparecem no banner principal acima. -->
     </section>
-
-    <div class="portfolio-modal" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="portfolio-modal-content">
-        <button class="portfolio-modal-close" type="button" aria-label="Fechar">×</button>
-        <img src="" alt="" />
-        <h3></h3>
-        <p></p>
-      </div>
-    </div>
 
     <section id="diferenciais" class="reveal">
       <h2>Diferenciais</h2>
@@ -1154,34 +1089,28 @@ Color Glass Fortaleza
     const counters = document.querySelectorAll("[data-count]");
     const revealElements = document.querySelectorAll(".reveal");
     const faqItems = document.querySelectorAll(".faq-item");
-    const heroGalleryTrack = document.querySelector(".hero-gallery-track");
-    const heroGallerySlides = document.querySelectorAll(".hero-gallery-slide");
-    const heroGalleryDots = document.querySelectorAll(".hero-gallery-dot");
-    const portfolioItems = document.querySelectorAll(".portfolio-item");
-    const portfolioModal = document.querySelector(".portfolio-modal");
-    const portfolioModalImage = portfolioModal.querySelector("img");
-    const portfolioModalTitle = portfolioModal.querySelector("h3");
-    const portfolioModalDescription = portfolioModal.querySelector("p");
-    const portfolioModalClose = portfolioModal.querySelector(".portfolio-modal-close");
+    const heroShowcaseTrack = document.querySelector(".hero-showcase-track");
+    const heroShowcaseSlides = document.querySelectorAll(".hero-showcase-slide");
+    const heroShowcaseDots = document.querySelectorAll(".hero-showcase-dot");
 
-    // Hero gallery cinematic slider
+    // Hero showcase cinematic slider
     let currentHeroSlide = 0;
-    const updateHeroGallery = () => {
-      if (!heroGalleryTrack || !heroGallerySlides.length) return;
+    const updateHeroShowcase = () => {
+      if (!heroShowcaseTrack || !heroShowcaseSlides.length) return;
 
-      heroGalleryTrack.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
-      heroGallerySlides.forEach((slide, index) => {
+      heroShowcaseTrack.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
+      heroShowcaseSlides.forEach((slide, index) => {
         slide.classList.toggle("is-active", index === currentHeroSlide);
       });
-      heroGalleryDots.forEach((dot, index) => {
+      heroShowcaseDots.forEach((dot, index) => {
         dot.classList.toggle("is-active", index === currentHeroSlide);
       });
     };
 
-    if (heroGalleryTrack && heroGallerySlides.length) {
+    if (heroShowcaseTrack && heroShowcaseSlides.length) {
       setInterval(() => {
-        currentHeroSlide = (currentHeroSlide + 1) % heroGallerySlides.length;
-        updateHeroGallery();
+        currentHeroSlide = (currentHeroSlide + 1) % heroShowcaseSlides.length;
+        updateHeroShowcase();
       }, 5000);
     }
 
@@ -1226,44 +1155,6 @@ Color Glass Fortaleza
     document.getElementById("ctaHero").addEventListener("click", () => openWA(msgParceria));
     document.getElementById("ctaBottom").addEventListener("click", () => openWA(msgParceria));
     document.getElementById("ctaCatalogo").addEventListener("click", () => openWA(msgCatalogo));
-
-    // Portfolio modal
-    const openPortfolioModal = (item) => {
-      const image = item.dataset.image;
-      const title = item.dataset.title;
-      const description = item.dataset.description;
-
-      portfolioModalImage.src = image;
-      portfolioModalImage.alt = title;
-      portfolioModalTitle.textContent = title;
-      portfolioModalDescription.textContent = description;
-      portfolioModal.classList.add("active");
-      portfolioModal.setAttribute("aria-hidden", "false");
-    };
-
-    const closePortfolioModal = () => {
-      portfolioModal.classList.remove("active");
-      portfolioModal.setAttribute("aria-hidden", "true");
-      portfolioModalImage.src = "";
-    };
-
-    portfolioItems.forEach((item) => {
-      item.addEventListener("click", () => openPortfolioModal(item));
-    });
-
-    portfolioModalClose.addEventListener("click", closePortfolioModal);
-
-    portfolioModal.addEventListener("click", (event) => {
-      if (event.target === portfolioModal) {
-        closePortfolioModal();
-      }
-    });
-
-    window.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && portfolioModal.classList.contains("active")) {
-        closePortfolioModal();
-      }
-    });
 
     window.addEventListener("load", () => {
       animateCounters();
