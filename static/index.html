@@ -242,6 +242,132 @@
       height: 200px;
       background: radial-gradient(circle, rgba(16, 121, 186, 0.2), transparent 70%);
       opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .hero-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-gallery {
+      position: relative;
+      min-height: 330px;
+      margin: -10px -10px 24px;
+      border-radius: 26px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      background: #071825;
+      box-shadow: 0 24px 55px rgba(7, 24, 37, 0.35);
+      isolation: isolate;
+    }
+
+    .hero-gallery::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background:
+        linear-gradient(90deg, rgba(7, 24, 37, 0.55) 0%, rgba(7, 24, 37, 0.08) 35%, rgba(7, 24, 37, 0.2) 100%),
+        linear-gradient(180deg, rgba(7, 24, 37, 0.02) 35%, rgba(7, 24, 37, 0.82) 100%);
+      pointer-events: none;
+    }
+
+    .hero-gallery::after {
+      content: "";
+      position: absolute;
+      inset: -45% auto auto -30%;
+      z-index: 3;
+      width: 70%;
+      height: 190%;
+      background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.28) 48%, transparent 68%);
+      transform: rotate(8deg);
+      animation: cinematicSweep 6s ease-in-out infinite;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .hero-gallery-track {
+      height: 100%;
+      min-height: inherit;
+      display: flex;
+      transition: transform 1.15s cubic-bezier(0.19, 1, 0.22, 1);
+      will-change: transform;
+    }
+
+    .hero-gallery-slide {
+      min-width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-gallery-slide img {
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      display: block;
+      object-fit: cover;
+      transform: scale(1.08);
+      filter: saturate(1.12) contrast(1.05);
+      transition: transform 5s ease, filter 1s ease;
+    }
+
+    .hero-gallery-slide.is-active img {
+      transform: scale(1.16) translateX(-1.8%);
+      filter: saturate(1.22) contrast(1.08);
+    }
+
+    .hero-gallery-caption {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      z-index: 4;
+      color: #ffffff;
+      text-shadow: 0 3px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .hero-gallery-caption span {
+      display: inline-flex;
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(240, 194, 76, 0.9);
+      color: #3d2a00;
+      font-weight: 800;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-shadow: none;
+    }
+
+    .hero-gallery-caption strong {
+      display: block;
+      font-size: clamp(1.25rem, 3vw, 1.75rem);
+      line-height: 1.05;
+    }
+
+    .hero-gallery-dots {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      z-index: 5;
+      display: flex;
+      gap: 7px;
+    }
+
+    .hero-gallery-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.45);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+      transition: width 0.35s ease, background-color 0.35s ease;
+    }
+
+    .hero-gallery-dot.is-active {
+      width: 28px;
+      background: #ffffff;
     }
 
     .hero-stats {
@@ -594,6 +720,12 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes cinematicSweep {
+      0%, 20% { transform: translateX(-120%) rotate(8deg); opacity: 0; }
+      42% { opacity: 0.8; }
+      68%, 100% { transform: translateX(245%) rotate(8deg); opacity: 0; }
+    }
+
     @media (max-width: 800px) {
       .nav {
         flex-direction: column;
@@ -612,6 +744,22 @@
 
       .hero-stats {
         grid-template-columns: 1fr;
+      }
+
+      .hero-gallery {
+        min-height: 270px;
+        margin: -4px -4px 22px;
+      }
+
+      .hero-gallery-caption {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+      }
+
+      .hero-gallery-dots {
+        right: 16px;
+        bottom: 16px;
       }
     }
   </style>
@@ -674,6 +822,57 @@ Color Glass Fortaleza
       </div>
 
       <div class="hero-card">
+        <div class="hero-gallery" aria-label="Projetos Color Glass em destaque">
+          <div class="hero-gallery-track">
+            <div class="hero-gallery-slide is-active">
+              <img
+                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
+                alt="Portas de giro em vidro e alumínio com acabamento premium"
+              />
+              <div class="hero-gallery-caption">
+                <span>Impacto premium</span>
+                <strong>Portas de giro em vidro e alumínio para planejados.</strong>
+              </div>
+            </div>
+            <div class="hero-gallery-slide">
+              <img
+                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
+                alt="Portas de correr em alumínio e vidro para otimização de espaço"
+              />
+              <div class="hero-gallery-caption">
+                <span>Movimento limpo</span>
+                <strong>Portas de correr com estética sofisticada e funcionalidade.</strong>
+              </div>
+            </div>
+            <div class="hero-gallery-slide">
+              <img
+                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
+                alt="Estruturas thin em alumínio com visual contemporâneo"
+              />
+              <div class="hero-gallery-caption">
+                <span>Design contemporâneo</span>
+                <strong>Estruturas thin leves, modernas e de grande presença.</strong>
+              </div>
+            </div>
+            <div class="hero-gallery-slide">
+              <img
+                src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
+                alt="Cristaleira em alumínio e vidro sob medida"
+              />
+              <div class="hero-gallery-caption">
+                <span>Sob medida</span>
+                <strong>Cristaleiras e composições que elevam o projeto final.</strong>
+              </div>
+            </div>
+          </div>
+          <div class="hero-gallery-dots" aria-hidden="true">
+            <span class="hero-gallery-dot is-active"></span>
+            <span class="hero-gallery-dot"></span>
+            <span class="hero-gallery-dot"></span>
+            <span class="hero-gallery-dot"></span>
+          </div>
+        </div>
+
         <h3>O que muda quando você fecha com a Color Glass?</h3>
         <p>
           Você para de “apagar incêndio” com fornecedor. Aqui o jogo é:
@@ -955,12 +1154,36 @@ Color Glass Fortaleza
     const counters = document.querySelectorAll("[data-count]");
     const revealElements = document.querySelectorAll(".reveal");
     const faqItems = document.querySelectorAll(".faq-item");
+    const heroGalleryTrack = document.querySelector(".hero-gallery-track");
+    const heroGallerySlides = document.querySelectorAll(".hero-gallery-slide");
+    const heroGalleryDots = document.querySelectorAll(".hero-gallery-dot");
     const portfolioItems = document.querySelectorAll(".portfolio-item");
     const portfolioModal = document.querySelector(".portfolio-modal");
     const portfolioModalImage = portfolioModal.querySelector("img");
     const portfolioModalTitle = portfolioModal.querySelector("h3");
     const portfolioModalDescription = portfolioModal.querySelector("p");
     const portfolioModalClose = portfolioModal.querySelector(".portfolio-modal-close");
+
+    // Hero gallery cinematic slider
+    let currentHeroSlide = 0;
+    const updateHeroGallery = () => {
+      if (!heroGalleryTrack || !heroGallerySlides.length) return;
+
+      heroGalleryTrack.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
+      heroGallerySlides.forEach((slide, index) => {
+        slide.classList.toggle("is-active", index === currentHeroSlide);
+      });
+      heroGalleryDots.forEach((dot, index) => {
+        dot.classList.toggle("is-active", index === currentHeroSlide);
+      });
+    };
+
+    if (heroGalleryTrack && heroGallerySlides.length) {
+      setInterval(() => {
+        currentHeroSlide = (currentHeroSlide + 1) % heroGallerySlides.length;
+        updateHeroGallery();
+      }, 5000);
+    }
 
     // Counters
     const animateCounters = () => {
