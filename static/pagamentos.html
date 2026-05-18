@@ -34,7 +34,7 @@
     }
 
     .container {
-      width: min(100%, 720px);
+      width: min(100%, 820px);
       background: var(--card);
       border: 1px solid rgba(209, 213, 219, 0.7);
       border-radius: 18px;
@@ -80,7 +80,7 @@
     }
 
     input,
-    select {
+    textarea {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -91,15 +91,29 @@
       background: #ffffff;
     }
 
+    textarea {
+      min-height: 230px;
+      resize: vertical;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      line-height: 1.45;
+    }
+
     input:focus,
-    select:focus {
+    textarea:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    input[readonly] {
+      background: #f3f4f6;
+      color: var(--muted);
+      cursor: not-allowed;
     }
 
     .hint {
       color: var(--muted);
       font-size: 0.9rem;
+      line-height: 1.4;
     }
 
     button {
@@ -147,6 +161,14 @@
       color: var(--muted);
       background: #f9fafb;
       font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 6px;
+      background: #e5e7eb;
+      color: #111827;
     }
 
     @media (max-width: 640px) {
@@ -160,37 +182,42 @@
   <div class="container">
     <header>
       <h1>Adicionar Pagamento</h1>
-      <p>Informe o número do pedido, o valor pago e a data do pagamento. Ao salvar, o sistema adiciona o pagamento e atualiza o campo <strong>valor_pago</strong> na tabela <strong>orcamentos</strong>.</p>
+      <p>Preencha os campos conforme a tabela <strong>pagamentos</strong>: <strong>id</strong> int8, <strong>created_at</strong> timestamptz, <strong>orcamentoid</strong> uuid e <strong>pagamentos</strong> jsonb.</p>
     </header>
 
     <main>
       <form id="pagamentoForm">
-        <div class="field">
-          <label for="numeroPedido">Número do pedido</label>
-          <input id="numeroPedido" name="numero_pedido" type="number" min="1" step="1" placeholder="Ex.: 1024" required />
-          <span class="hint">Digite exatamente o número do pedido cadastrado no orçamento.</span>
-        </div>
-
         <div class="grid">
           <div class="field">
-            <label for="valorPago">Valor pago</label>
-            <input id="valorPago" name="valor_pago" type="text" inputmode="decimal" placeholder="Ex.: 1500,00" required />
+            <label for="idPagamento">ID (int8)</label>
+            <input id="idPagamento" name="id" type="number" placeholder="Gerado automaticamente" readonly />
+            <span class="hint">O banco gera este valor automaticamente ao inserir.</span>
           </div>
 
           <div class="field">
-            <label for="dataPagamento">Data do pagamento</label>
-            <input id="dataPagamento" name="data_pagamento" type="date" required />
+            <label for="createdAt">Criado em (timestamptz)</label>
+            <input id="createdAt" name="created_at" type="datetime-local" />
+            <span class="hint">Opcional. Se ficar vazio, o banco usa o horário padrão da tabela.</span>
           </div>
+        </div>
 
-          <div class="field">
-            <label for="formaPagamento">Forma de pagamento</label>
-            <select id="formaPagamento" name="forma_pagamento" required>
-              <option value="">Selecione...</option>
-              <option value="pix">Pix</option>
-              <option value="cartao_credito">Cartão de crédito</option>
-              <option value="dinheiro">Dinheiro</option>
-            </select>
-          </div>
+        <div class="field">
+          <label for="orcamentoId">ID do orçamento (orcamentoid uuid)</label>
+          <input id="orcamentoId" name="orcamentoid" type="text" placeholder="Ex.: 550e8400-e29b-41d4-a716-446655440000" required />
+          <span class="hint">Cole aqui o UUID do orçamento que será gravado na coluna <code>orcamentoid</code>.</span>
+        </div>
+
+        <div class="field">
+          <label for="pagamentosJson">Pagamentos (jsonb)</label>
+          <textarea id="pagamentosJson" name="pagamentos" spellcheck="false" required>{
+  "numero_pedido": 1024,
+  "cliente_nome": "Nome do cliente",
+  "valor_pago": 1500,
+  "data_pagamento": "2026-05-18",
+  "forma_pagamento": "pix",
+  "status": "pago"
+}</textarea>
+          <span class="hint">Informe um JSON válido. Este conteúdo será salvo diretamente na coluna <code>pagamentos</code> do tipo jsonb.</span>
         </div>
 
         <button id="salvarBtn" type="submit">Adicionar pagamento</button>
@@ -199,34 +226,17 @@
       <div id="status" class="status"></div>
 
       <div class="details">
-        <strong>Observação:</strong> é necessário estar logado para enviar o token de autorização salvo no navegador.
+        <strong>Observação:</strong> é necessário estar logado para enviar o token de autorização salvo no navegador. O envio usa o formato do banco: <code>{ orcamentoid, pagamentos }</code>; <code>id</code> e <code>created_at</code> só são enviados quando preenchidos e editáveis no futuro.
       </div>
     </main>
   </div>
 
   <script>
     const API_BASE = window.location.origin;
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
     function getToken() {
       return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
-    }
-
-    function parseValor(value) {
-      const normalized = String(value || "")
-        .replace(/\s/g, "")
-        .replace(/R\$/gi, "")
-        .replace(/\./g, "")
-        .replace(",", ".");
-
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : NaN;
-    }
-
-    function formatMoney(value) {
-      return Number(value || 0).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      });
     }
 
     function setStatus(message, type) {
@@ -235,21 +245,30 @@
       el.className = `status ${type || ""}`;
     }
 
-    function setTodayAsDefault() {
-      const input = document.getElementById("dataPagamento");
-      if (!input.value) {
-        input.value = new Date().toISOString().slice(0, 10);
+    function parseJsonb(value) {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        throw new Error(`JSON inválido em pagamentos: ${error.message}`);
       }
+    }
+
+    function datetimeLocalToTimestamptz(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        throw new Error("Informe um created_at válido.");
+      }
+      return date.toISOString();
     }
 
     document.getElementById("pagamentoForm").addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const token = getToken();
-      const numeroPedido = document.getElementById("numeroPedido").value.trim();
-      const valorPago = parseValor(document.getElementById("valorPago").value);
-      const dataPagamento = document.getElementById("dataPagamento").value;
-      const formaPagamento = document.getElementById("formaPagamento").value;
+      const orcamentoid = document.getElementById("orcamentoId").value.trim();
+      const createdAt = document.getElementById("createdAt").value;
+      const pagamentosInput = document.getElementById("pagamentosJson").value.trim();
       const btn = document.getElementById("salvarBtn");
 
       if (!token) {
@@ -257,24 +276,28 @@
         return;
       }
 
-      if (!numeroPedido || Number(numeroPedido) <= 0) {
-        setStatus("Informe um número de pedido válido.", "erro");
+      if (!UUID_RE.test(orcamentoid)) {
+        setStatus("Informe um orcamentoid UUID válido.", "erro");
         return;
       }
 
-      if (!Number.isFinite(valorPago) || valorPago < 0) {
-        setStatus("Informe um valor pago válido.", "erro");
+      let pagamentos;
+      let created_at;
+      try {
+        pagamentos = parseJsonb(pagamentosInput);
+        created_at = datetimeLocalToTimestamptz(createdAt);
+      } catch (error) {
+        setStatus(error.message, "erro");
         return;
       }
 
-      if (!dataPagamento) {
-        setStatus("Informe a data do pagamento.", "erro");
-        return;
-      }
+      const payload = {
+        orcamentoid,
+        pagamentos
+      };
 
-      if (!formaPagamento) {
-        setStatus("Informe a forma de pagamento.", "erro");
-        return;
+      if (created_at) {
+        payload.created_at = created_at;
       }
 
       btn.disabled = true;
@@ -287,12 +310,7 @@
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({
-            numero_pedido: Number(numeroPedido),
-            valor_pago: valorPago,
-            data_pagamento: dataPagamento,
-            forma_pagamento: formaPagamento
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -300,13 +318,11 @@
           throw new Error(data?.error || "Não foi possível adicionar o pagamento.");
         }
 
+        const pagamento = data.pagamento || {};
         setStatus(
-          `Pagamento adicionado com sucesso!\nPedido: ${numeroPedido}\nValor copiado para orcamentos.valor_pago: ${formatMoney(data.valor_pago)}\nData do pagamento: ${dataPagamento}\nForma de pagamento: ${document.getElementById("formaPagamento").selectedOptions[0].textContent}`,
+          `Pagamento adicionado com sucesso!\nID: ${pagamento.id ?? "gerado pelo banco"}\nOrçamento: ${pagamento.orcamentoid || orcamentoid}\nCriado em: ${pagamento.created_at || created_at || "padrão do banco"}`,
           "ok"
         );
-
-        document.getElementById("valorPago").value = "";
-        document.getElementById("formaPagamento").value = "";
       } catch (error) {
         console.error(error);
         setStatus(error.message || "Erro ao adicionar pagamento.", "erro");
@@ -314,8 +330,6 @@
         btn.disabled = false;
       }
     });
-
-    setTodayAsDefault();
   </script>
 </body>
 </html>
