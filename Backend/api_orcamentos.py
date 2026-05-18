@@ -644,6 +644,62 @@ def adicionar_pagamento():
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
     data = request.json or {}
+
+    if "orcamentoid" in data and "pagamentos" in data:
+        orcamentoid = (data.get("orcamentoid") or "").strip()
+        pagamentos = data.get("pagamentos")
+        created_at = (data.get("created_at") or "").strip()
+
+        if not orcamentoid:
+            return jsonify({"success": False, "error": "orcamentoid não informado."}), 400
+
+        if not isinstance(pagamentos, (dict, list)):
+            return jsonify({"success": False, "error": "pagamentos deve ser um JSON válido (objeto ou lista)."}), 400
+
+        try:
+            orcamento = _buscar_orcamento_por_id(orcamentoid, storeid if level == 1 else None)
+            if not orcamento:
+                return jsonify({"success": False, "error": "Pedido não encontrado."}), 404
+
+            payload = {
+                "orcamentoid": orcamentoid,
+                "pagamentos": pagamentos
+            }
+            if created_at:
+                payload["created_at"] = created_at
+
+            r = requests.post(
+                f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}",
+                headers={
+                    **HEADERS,
+                    "Content-Type": "application/json",
+                    "Prefer": "return=representation"
+                },
+                json=payload
+            )
+            r.raise_for_status()
+            itens = r.json() or []
+            pagamento = _normalizar_registro_pagamento(itens[0]) if itens else _normalizar_registro_pagamento(payload)
+
+            valor_pago_json = pagamentos.get("valor_pago") if isinstance(pagamentos, dict) else None
+            orcamento_atualizado = None
+            if valor_pago_json is not None:
+                try:
+                    valor_pago_float = float(valor_pago_json)
+                    if valor_pago_float >= 0:
+                        orcamento_atualizado = _atualizar_valor_pago_orcamento(orcamentoid, valor_pago_float)
+                except (TypeError, ValueError):
+                    orcamento_atualizado = None
+
+            return jsonify({
+                "success": True,
+                "message": "Pagamento adicionado conforme colunas orcamentoid e pagamentos jsonb.",
+                "pagamento": pagamento,
+                "orcamento": orcamento_atualizado
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+
     numero_pedido = data.get("numero_pedido")
     valor_pago = data.get("valor_pago")
     data_pagamento = (data.get("data_pagamento") or "").strip()
