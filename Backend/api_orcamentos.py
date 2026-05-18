@@ -644,7 +644,79 @@ def adicionar_pagamento():
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
     data = request.json or {}
+        if "pagamentos" in data and ("numero_pedido" in data or "orcamentoid" in data):
+        pagamentos = data.get("pagamentos")
+        created_at = (data.get("created_at") or "").strip()
+        orcamentoid = (data.get("orcamentoid") or "").strip()
+        numero_pedido = data.get("numero_pedido")
 
+        if not isinstance(pagamentos, (dict, list)):
+            return jsonify({"success": False, "error": "pagamentos deve ser um JSON válido (objeto ou lista)."}), 400
+
+        try:
+            if orcamentoid:
+                orcamento = _buscar_orcamento_por_id(orcamentoid, storeid if level == 1 else None)
+            else:
+                try:
+                    numero_pedido = int(numero_pedido)
+                except (TypeError, ValueError):
+                    return jsonify({"success": False, "error": "Número do pedido inválido."}), 400
+                orcamento = _buscar_orcamento_por_numero(numero_pedido, storeid if level == 1 else None)
+
+            if not orcamento:
+                return jsonify({"success": False, "error": "Pedido não encontrado."}), 404
+
+            orcamentoid_final = orcamento.get("id") or orcamentoid
+            if isinstance(pagamentos, dict):
+                pagamentos_payload = {
+                    **pagamentos,
+                    "numero_pedido": pagamentos.get("numero_pedido") or orcamento.get("numero_pedido"),
+                    "cliente_nome": pagamentos.get("cliente_nome") or orcamento.get("cliente_nome"),
+                    "lojaid": pagamentos.get("lojaid") or orcamento.get("lojaid") or storeid
+                }
+            else:
+                pagamentos_payload = pagamentos
+
+            payload = {
+                "orcamentoid": orcamentoid_final,
+                "pagamentos": pagamentos_payload
+            }
+            if created_at:
+                payload["created_at"] = created_at
+
+            r = requests.post(
+                f"{SUPABASE_URL}/rest/v1/{TABELA_PAGAMENTOS}",
+                headers={
+                    **HEADERS,
+                    "Content-Type": "application/json",
+                    "Prefer": "return=representation"
+                },
+                json=payload
+            )
+            r.raise_for_status()
+            itens = r.json() or []
+            pagamento = _normalizar_registro_pagamento(itens[0]) if itens else _normalizar_registro_pagamento(payload)
+
+            valor_pago_json = pagamentos_payload.get("valor_pago") if isinstance(pagamentos_payload, dict) else None
+            orcamento_atualizado = None
+            if valor_pago_json is not None:
+                try:
+                    valor_pago_float = float(valor_pago_json)
+                    if valor_pago_float >= 0:
+                        orcamento_atualizado = _atualizar_valor_pago_orcamento(orcamentoid_final, valor_pago_float)
+                except (TypeError, ValueError):
+                    orcamento_atualizado = None
+
+            return jsonify({
+                "success": True,
+                "message": "Pagamento adicionado. O UUID foi buscado na tabela orcamentos pelo número do pedido.",
+                "pagamento": pagamento,
+                "orcamento": orcamento_atualizado,
+                "orcamentoid": orcamentoid_final
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+            
     if "orcamentoid" in data and "pagamentos" in data:
         orcamentoid = (data.get("orcamentoid") or "").strip()
         pagamentos = data.get("pagamentos")
