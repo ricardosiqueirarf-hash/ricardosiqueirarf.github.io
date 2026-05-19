@@ -605,6 +605,61 @@
       font-size: 0.92rem;
     }
 
+    .preview-3d-section {
+      padding-top: 4px;
+    }
+
+    .preview-3d-controls {
+      display: inline-flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      background: #fff;
+      border: 1px solid var(--cg-border);
+      border-radius: 999px;
+      padding: 6px;
+    }
+
+    .preview-3d-btn {
+      border: none;
+      background: transparent;
+      color: #334155;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .preview-3d-btn:hover {
+      background: rgba(16,121,186,.10);
+      color: var(--cg-blue-dark);
+    }
+
+    .preview-3d-btn.is-active {
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(15,44,62,.18);
+    }
+
+    #preview-3d {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      min-height: 300px;
+      border-radius: 20px;
+      border: 1px solid var(--cg-border);
+      background: linear-gradient(135deg, #f7fbff 0%, #ecf5fb 100%);
+      box-shadow: var(--cg-shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #preview-3d canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
     .faq-list {
       display: grid;
       gap: 12px;
@@ -743,11 +798,10 @@
 
       .hero {
         padding-top: 42px;
-        grid-template-columns: 1fr;
       }
 
       .hero-showcase {
-        padding: 2.5vh 4vw 0;
+        padding-top: 22px;
       }
 
       .hero-showcase-card {
@@ -769,58 +823,6 @@
       .hero-showcase-dots {
         right: 18px;
         bottom: 18px;
-      }
-
-      .hero-stats {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 560px) {
-      .hero-showcase-caption span {
-        font-size: 0.7rem;
-        padding: 6px 10px;
-      }
-
-      .hero-showcase-caption strong {
-        line-height: 1.08;
-      }
-
-      .hero-showcase-slide img {
-        object-fit: cover;
-      }
-
-      .hero-card {
-        min-height: 300px;
-      }
-
-      .cta-banner {
-        padding: 20px;
-      }
-
-      .cta-banner h3 {
-        font-size: 1.2rem;
-      }
-
-      .cta-banner p {
-        font-size: 0.92rem;
-      }
-
-      .stat strong {
-        font-size: 1.2rem;
-      }
-
-      .brand-name {
-        font-size: 0.95rem;
-      }
-
-      .brand-tagline {
-        font-size: 0.66rem;
-      }
-
-      .brand-logo {
-        width: 42px;
-        height: 42px;
       }
     }
   </style>
@@ -854,35 +856,50 @@
       <div class="hero-showcase-card">
         <div class="hero-showcase-track">
           <div class="hero-showcase-slide is-active">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="Portas de giro em vidro e alumínio com acabamento premium" />
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
+              alt="Portas de giro em vidro e alumínio com acabamento premium"
+            />
             <div class="hero-showcase-caption">
               <span>Impacto premium</span>
               <strong>Portas de giro em vidro e alumínio para planejados.</strong>
             </div>
           </div>
           <div class="hero-showcase-slide">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Portas de correr em alumínio e vidro para otimização de espaço" />
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
+              alt="Portas de correr em alumínio e vidro para otimização de espaço"
+            />
             <div class="hero-showcase-caption">
               <span>Movimento limpo</span>
               <strong>Portas de correr com estética sofisticada e funcionalidade.</strong>
             </div>
           </div>
           <div class="hero-showcase-slide">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png" alt="Estruturas thin em alumínio com visual contemporâneo" />
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
+              alt="Estruturas thin em alumínio com visual contemporâneo"
+            />
             <div class="hero-showcase-caption">
               <span>Design contemporâneo</span>
               <strong>Estruturas thin leves, modernas e de grande presença.</strong>
             </div>
           </div>
           <div class="hero-showcase-slide">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png" alt="Cristaleira em alumínio e vidro sob medida" />
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
+              alt="Cristaleira em alumínio e vidro sob medida"
+            />
             <div class="hero-showcase-caption">
               <span>Sob medida</span>
               <strong>Cristaleiras e composições que elevam o projeto final.</strong>
             </div>
           </div>
           <div class="hero-showcase-slide">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor4.png" alt="Projeto Color Glass com vidro e alumínio em ambiente sofisticado" />
+            <img
+              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor4.png"
+              alt="Projeto Color Glass com vidro e alumínio em ambiente sofisticado"
+            />
             <div class="hero-showcase-caption">
               <span>Exclusivo</span>
               <strong>Mais um projeto premium com visual marcante e funcional.</strong>
@@ -950,9 +967,24 @@
       <div class="section-title">
         <h2>Quem somos</h2>
         <p>
-          Somos fabricantes e parceiros B2B em Fortaleza, focados em soluções de vidro e alumínio para móveis planejados.
-          Combinamos técnica, acabamento e compromisso com prazo para facilitar sua operação e aumentar seu valor percebido.
+          Na <strong>Color Glass Fortaleza</strong>, acreditamos que qualidade é rotina, não exceção. Somos especializados em
+          <strong>portas de vidro e alumínio</strong> e <strong>estruturas sob medida</strong> para lojas de móveis planejados e marcenarias.
+          Com foco em prazo, acabamento e parceria comercial, ajudamos você a entregar projetos que impressionam.
         </p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <h3>Missão</h3>
+          <p>Entregar soluções sob medida em vidro &amp; alumínio com estética premium e máxima confiabilidade de prazo.</p>
+        </article>
+        <article class="card">
+          <h3>Visão</h3>
+          <p>Ser o fornecedor mais confiável de portas e estruturas em vidro &amp; alumínio em Fortaleza — com entrega dentro do combinado.</p>
+        </article>
+        <article class="card">
+          <h3>Valores</h3>
+          <p>Compromisso, transparência, parceria de longo prazo, qualidade técnica e atendimento próximo.</p>
+        </article>
       </div>
     </section>
 
@@ -1012,6 +1044,19 @@
       </div>
     </section>
 
+    <section class="reveal preview-3d-section">
+      <div class="section-title">
+        <h2>Visualize as linhas em 3D</h2>
+        <p>Alterne entre os perfis e veja a proposta estética para aplicar em seus projetos.</p>
+      </div>
+      <div class="preview-3d-controls" role="group" aria-label="Perfis 3D">
+        <button class="preview-3d-btn is-active" type="button" data-model="1036.glb">Clássico</button>
+        <button class="preview-3d-btn" type="button" data-model="3545.glb">Slim</button>
+        <button class="preview-3d-btn" type="button" data-model="3446.glb">Invisível</button>
+      </div>
+      <div id="preview-3d"></div>
+    </section>
+
     <section id="faq" class="reveal">
       <div class="section-title">
         <h2>Perguntas frequentes</h2>
@@ -1061,8 +1106,8 @@
   </main>
 
   <footer>
-    © <span id="year"></span> Color Glass Fortaleza — B2B em vidro &amp; alumínio para móveis planejados.
-    <br />
+    <strong>Color Glass Fortaleza</strong> © 2026 — Parceiro B2B em portas e estruturas de vidro &amp; alumínio.<br />
+    Fortaleza, CE · Atendimento comercial via WhatsApp ·
     <a href="https://instagram.com/colorglassfortaleza" target="_blank" rel="noopener" style="color:inherit; text-decoration: underline;">@colorglassfortaleza</a>
   </footer>
 
@@ -1086,6 +1131,7 @@
     const heroShowcaseSlides = document.querySelectorAll(".hero-showcase-slide");
     const heroShowcaseDots = document.querySelectorAll(".hero-showcase-dot");
 
+    // Hero showcase slider (duas imagens visíveis por vez)
     let currentHeroSlide = 0;
     const heroVisibleSlides = 2;
     const heroStepPercent = 100 / heroVisibleSlides;
@@ -1171,5 +1217,6 @@
 
     window.addEventListener("scroll", onScroll);
   </script>
+<script type="module" src="preview3d.js"></script>
 </body>
 </html>
