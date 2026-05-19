@@ -3,67 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Teste de Vídeo</title>
+
+  <title>Vídeo de Fundo</title>
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
     }
 
-    body {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      position: relative;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      color: #ffffff;
-      background: #000;
+    body{
+      min-height:100vh;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Arial, sans-serif;
+      background:#000;
+      color:#fff;
+      position:relative;
     }
 
-    .bg-video {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: contain;
-      object-position: center;
-      z-index: -1;
+    /* VIDEO */
+    .bg-video{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center;
+      z-index:-2;
     }
 
-    .texto {
-      text-align: center;
-      font-size: clamp(1.5rem, 4vw, 3rem);
-      font-weight: 700;
-      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
-      padding: 0 16px;
+    /* OVERLAY ESCURO */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.45);
+      z-index:-1;
+    }
+
+    /* CONTEUDO */
+    .content{
+      text-align:center;
+      padding:20px;
+      z-index:1;
+    }
+
+    .content h1{
+      font-size:clamp(2.5rem, 6vw, 5rem);
+      margin-bottom:16px;
+      letter-spacing:2px;
+      text-shadow:0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    .content p{
+      font-size:clamp(1rem, 2vw, 1.4rem);
+      opacity:0.9;
+      text-shadow:0 2px 10px rgba(0,0,0,0.6);
+    }
+
+    /* MOBILE */
+    @media (max-width:768px){
+
+      .bg-video{
+        object-fit:cover;
+      }
+
+      .content h1{
+        font-size:2.2rem;
+      }
+
+      .content p{
+        font-size:1rem;
+      }
     }
   </style>
 </head>
+
 <body>
+
+  <!-- VIDEO -->
   <video
     id="bgVideo"
     class="bg-video"
     autoplay
-    loop
     muted
+    loop
     playsinline
     preload="auto"
     disablepictureinpicture
     controlslist="nodownload noplaybackrate noremoteplayback"
   >
-    <source src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/back.mov" type="video/mov" />
+    <source 
+      src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/back.mp4"
+      type="video/mp4"
+    />
   </video>
 
-  <div class="texto">Teste de vídeo de fundo</div>
+  <!-- ESCURECER -->
+  <div class="overlay"></div>
+
+  <!-- TEXTO -->
+  <div class="content">
+    <h1>COLOR GLASS</h1>
+    <p>Parceiro B2B em portas de vidro e alumínio</p>
+  </div>
 
   <script>
     const bgVideo = document.getElementById("bgVideo");
+
     bgVideo.muted = true;
     bgVideo.defaultMuted = true;
     bgVideo.volume = 0;
-    bgVideo.play().catch(() => {});
+
+    const playPromise = bgVideo.play();
+
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        console.log("Autoplay bloqueado pelo navegador.");
+      });
+    }
   </script>
+
 </body>
 </html>
