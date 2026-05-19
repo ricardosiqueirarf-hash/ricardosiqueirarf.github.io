@@ -261,52 +261,42 @@
 
     .hero {
       position: relative;
+      max-width: 1200px;
       width: 100%;
       min-height: 100vh;
-      margin: 0;
+      margin: 0 auto;
       padding: 90px 24px 60px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 32px;
       align-items: center;
       overflow: hidden;
-      isolation: isolate;
     }
 
-    .hero video.hero-bg-video {
+    .hero-bg-video {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       z-index: 0;
+      pointer-events: none;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(6, 20, 30, 0.62), rgba(16, 121, 186, 0.48));
-      z-index: 1;
-    }
-
-    .hero > * {
+    .hero > div {
       position: relative;
-      z-index: 2;
-      max-width: 1200px;
-      width: 100%;
-      margin: 0 auto;
+      z-index: 1;
     }
 
     .hero h1 {
       font-size: clamp(2.2rem, 4vw, 3.2rem);
-      color: #ffffff;
+      color: var(--cg-blue-dark);
       line-height: 1.1;
       margin-bottom: 16px;
     }
 
     .hero p {
-      color: rgba(255, 255, 255, 0.92);
+      color: var(--cg-muted);
       font-size: 1.05rem;
       line-height: 1.7;
     }
@@ -801,22 +791,6 @@
         padding: 24px;
       }
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      .hero-showcase-track,
-      .hero-showcase-slide img,
-      .hero-showcase-card::after,
-      .hero-showcase-caption,
-      .nav a,
-      .cta {
-        transition: none !important;
-        animation: none !important;
-      }
-
-      .hero-showcase-slide img {
-        transform: none !important;
-      }
-    }
   </style>
 </head>
 <body id="top">
@@ -900,7 +874,7 @@
 
     <section class="hero">
       <video class="hero-bg-video" autoplay muted loop playsinline>
-        <source src="/static/back.mp4" type="video/mp4" />
+        <source src="back.mp4" type="video/mp4" />
       </video>
       <div>
         <div class="badge">🤝 B2B em Fortaleza — parceiro de marcenarias e lojas de planejados</div>
@@ -942,16 +916,16 @@
         </p>
         <div class="cards">
           <div class="card">
-            <h3>Portas de giro</h3>
+            <h3>Porta de giro</h3>
             <p>Elegância e presença para ambientes que pedem destaque.</p>
           </div>
           <div class="card">
-            <h3>Portas de correr</h3>
+            <h3>Porta de correr</h3>
             <p>Otimização de espaço com acabamento técnico e sofisticado.</p>
           </div>
           <div class="card">
-            <h3>Estruturas thin</h3>
-            <p>Visual contemporâneo com leveza e alto valor percebido.</p>
+            <h3>Perfil thin</h3>
+            <p>Minimalismo elegante para projetos contemporâneos e premium.</p>
           </div>
         </div>
       </div>
