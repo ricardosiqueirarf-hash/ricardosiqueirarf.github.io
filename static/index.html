@@ -147,7 +147,6 @@
       white-space: nowrap;
     }
 
-    /* ✅ Logo no lugar do "CG" mantendo o mesmo tamanho e formato */
     .brand-logo {
       width: 48px;
       height: 48px;
@@ -259,61 +258,21 @@
       transform: translateY(-2px);
     }
 
-    .hero {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 90px 24px 60px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 32px;
-      align-items: center;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.2rem, 4vw, 3.2rem);
-      color: var(--cg-blue-dark);
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
-
-    .hero p {
-      color: var(--cg-muted);
-      line-height: 1.7;
-      font-size: 1rem;
-      max-width: 620px;
-    }
-
-    .hero p strong {
-      color: var(--cg-blue-dark);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: var(--cg-blue-soft);
-      color: var(--cg-blue-dark);
-      font-weight: 700;
-      font-size: 0.86rem;
-      margin-bottom: 18px;
-      border: 1px solid rgba(16, 121, 186, 0.18);
-    }
-
     .hero-showcase {
-      max-width: 1200px;
+      width: min(100%, 1200px);
       margin: 0 auto;
-      padding: 26px 24px 0;
+      padding: 3.5vh 2vw 0;
     }
 
     .hero-showcase-card {
       position: relative;
-      min-height: clamp(320px, 48vw, 560px);
-      border-radius: clamp(22px, 3vw, 36px);
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      max-height: 80svh;
+      border-radius: clamp(18px, 2.5vw, 30px);
       overflow: hidden;
-      background: radial-gradient(circle at 18% 18%, rgba(16, 121, 186, 0.28), rgba(10, 34, 52, 0.9));
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: linear-gradient(135deg, #ffffff 0%, #eef7fc 100%);
+      border: 1px solid rgba(16, 121, 186, 0.14);
       box-shadow: none;
       isolation: isolate;
     }
@@ -428,6 +387,48 @@
     .hero-showcase-dot.is-active {
       width: 34px;
       background: #ffffff;
+    }
+
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 90px 24px 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 4vw, 3.2rem);
+      color: var(--cg-blue-dark);
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      color: var(--cg-muted);
+      line-height: 1.7;
+      font-size: 1rem;
+      max-width: 620px;
+    }
+
+    .hero p strong {
+      color: var(--cg-blue-dark);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--cg-blue-soft);
+      color: var(--cg-blue-dark);
+      font-weight: 700;
+      font-size: 0.86rem;
+      margin-bottom: 18px;
+      border: 1px solid rgba(16, 121, 186, 0.18);
     }
 
     .hero-actions {
@@ -742,20 +743,23 @@
 
       .hero {
         padding-top: 42px;
+        grid-template-columns: 1fr;
       }
 
       .hero-showcase {
-        padding-top: 22px;
+        padding: 2.5vh 4vw 0;
       }
 
       .hero-showcase-card {
-        min-height: clamp(240px, 70vw, 400px);
+        aspect-ratio: 2 / 1;
+        max-height: 50svh;
+        border-radius: clamp(16px, 5vw, 22px);
       }
 
       .hero-showcase-caption {
         left: 18px;
         right: 18px;
-        bottom: 18px;
+        bottom: 20px;
       }
 
       .hero-showcase-caption strong {
@@ -765,6 +769,58 @@
       .hero-showcase-dots {
         right: 18px;
         bottom: 18px;
+      }
+
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero-showcase-caption span {
+        font-size: 0.7rem;
+        padding: 6px 10px;
+      }
+
+      .hero-showcase-caption strong {
+        line-height: 1.08;
+      }
+
+      .hero-showcase-slide img {
+        object-fit: cover;
+      }
+
+      .hero-card {
+        min-height: 300px;
+      }
+
+      .cta-banner {
+        padding: 20px;
+      }
+
+      .cta-banner h3 {
+        font-size: 1.2rem;
+      }
+
+      .cta-banner p {
+        font-size: 0.92rem;
+      }
+
+      .stat strong {
+        font-size: 1.2rem;
+      }
+
+      .brand-name {
+        font-size: 0.95rem;
+      }
+
+      .brand-tagline {
+        font-size: 0.66rem;
+      }
+
+      .brand-logo {
+        width: 42px;
+        height: 42px;
       }
     }
   </style>
@@ -788,7 +844,6 @@
         <a href="#portfolio">Portfólio</a>
         <a href="#diferenciais">Diferenciais</a>
         <a href="#faq">FAQ</a>
-        
       </nav>
       <a href="/login" class="cta" id="ctaTop">Portal de acesso</a>
     </div>
@@ -799,50 +854,35 @@
       <div class="hero-showcase-card">
         <div class="hero-showcase-track">
           <div class="hero-showcase-slide is-active">
-            <img
-              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png"
-              alt="Portas de giro em vidro e alumínio com acabamento premium"
-            />
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="Portas de giro em vidro e alumínio com acabamento premium" />
             <div class="hero-showcase-caption">
               <span>Impacto premium</span>
               <strong>Portas de giro em vidro e alumínio para planejados.</strong>
             </div>
           </div>
           <div class="hero-showcase-slide">
-            <img
-              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png"
-              alt="Portas de correr em alumínio e vidro para otimização de espaço"
-            />
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Portas de correr em alumínio e vidro para otimização de espaço" />
             <div class="hero-showcase-caption">
               <span>Movimento limpo</span>
               <strong>Portas de correr com estética sofisticada e funcionalidade.</strong>
             </div>
           </div>
           <div class="hero-showcase-slide">
-            <img
-              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png"
-              alt="Estruturas thin em alumínio com visual contemporâneo"
-            />
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png" alt="Estruturas thin em alumínio com visual contemporâneo" />
             <div class="hero-showcase-caption">
               <span>Design contemporâneo</span>
               <strong>Estruturas thin leves, modernas e de grande presença.</strong>
             </div>
           </div>
           <div class="hero-showcase-slide">
-            <img
-              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png"
-              alt="Cristaleira em alumínio e vidro sob medida"
-            />
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor3.png" alt="Cristaleira em alumínio e vidro sob medida" />
             <div class="hero-showcase-caption">
               <span>Sob medida</span>
               <strong>Cristaleiras e composições que elevam o projeto final.</strong>
             </div>
           </div>
-               <div class="hero-showcase-slide">
-            <img
-              src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor4.png"
-              alt="Projeto Color Glass com vidro e alumínio em ambiente sofisticado"
-            />
+          <div class="hero-showcase-slide">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor4.png" alt="Projeto Color Glass com vidro e alumínio em ambiente sofisticado" />
             <div class="hero-showcase-caption">
               <span>Exclusivo</span>
               <strong>Mais um projeto premium com visual marcante e funcional.</strong>
@@ -1027,15 +1067,10 @@
   </footer>
 
   <script>
-    // =====================
-    // WhatsApp CTA (B2B)
-    // =====================
     const waBase = "https://wa.me/5585988241620";
     const encode = (s) => encodeURIComponent(s);
 
-    const msgParceria =
-      "Olá! Gostaria de fazer um pedido. ";
-
+    const msgParceria = "Olá! Gostaria de fazer um pedido. ";
     const msgCatalogo =
       "Olá! Quero receber as linhas e aplicações (clássico/slim/invisível) e exemplos do portfólio B2B (giro, correr, thin, Cristaleira). " +
       "Também queria alinhar prazo médio (7–14 dias úteis) e forma de pedido.";
@@ -1051,7 +1086,6 @@
     const heroShowcaseSlides = document.querySelectorAll(".hero-showcase-slide");
     const heroShowcaseDots = document.querySelectorAll(".hero-showcase-dot");
 
-    // Hero showcase slider (duas imagens visíveis por vez)
     let currentHeroSlide = 0;
     const heroVisibleSlides = 2;
     const heroStepPercent = 100 / heroVisibleSlides;
@@ -1083,7 +1117,6 @@
       }, 5000);
     }
 
-    // Counters
     const animateCounters = () => {
       counters.forEach((counter) => {
         const target = Number(counter.dataset.count);
@@ -1095,9 +1128,7 @@
         const step = (now) => {
           const progress = Math.min((now - startTime) / duration, 1);
           const value = Math.floor(progress * (target - start) + start);
-
           counter.textContent = value + suffix;
-
           if (progress < 1) requestAnimationFrame(step);
         };
 
@@ -1105,7 +1136,6 @@
       });
     };
 
-    // Reveal on scroll
     const onScroll = () => {
       revealElements.forEach((element) => {
         const rect = element.getBoundingClientRect();
@@ -1113,7 +1143,6 @@
       });
     };
 
-    // FAQ accordion
     faqItems.forEach((item) => {
       const button = item.querySelector(".faq-question");
       button.addEventListener("click", () => {
@@ -1131,16 +1160,10 @@
       });
     });
 
-    // CTA bindings
-    document.getElementById("ctaTop")?.addEventListener("click", (e) => {
-      // mantém o link /login do topo sem interferência
-    });
-
     document.getElementById("ctaHero")?.addEventListener("click", () => openWA(msgParceria));
     document.getElementById("ctaCatalogo")?.addEventListener("click", () => openWA(msgCatalogo));
     document.getElementById("ctaBottom")?.addEventListener("click", () => openWA(msgParceria));
 
-    // Init
     document.getElementById("year").textContent = new Date().getFullYear();
     updateHeroShowcase();
     onScroll();
