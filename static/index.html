@@ -278,25 +278,42 @@
 
     .hero p {
       color: var(--cg-muted);
-      font-size: 1.05rem;
       line-height: 1.7;
+      font-size: 1rem;
+      max-width: 620px;
+    }
+
+    .hero p strong {
+      color: var(--cg-blue-dark);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--cg-blue-soft);
+      color: var(--cg-blue-dark);
+      font-weight: 700;
+      font-size: 0.86rem;
+      margin-bottom: 18px;
+      border: 1px solid rgba(16, 121, 186, 0.18);
     }
 
     .hero-showcase {
-      width: min(100%, 1200px);
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 3.5vh 2vw 0;
+      padding: 26px 24px 0;
     }
 
     .hero-showcase-card {
       position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 8;
-      max-height: 80svh;
-      border-radius: clamp(18px, 2.5vw, 30px);
+      min-height: clamp(320px, 48vw, 560px);
+      border-radius: clamp(22px, 3vw, 36px);
       overflow: hidden;
-      background: linear-gradient(135deg, #ffffff 0%, #eef7fc 100%);
-      border: 1px solid rgba(16, 121, 186, 0.14);
+      background: radial-gradient(circle at 18% 18%, rgba(16, 121, 186, 0.28), rgba(10, 34, 52, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.18);
       box-shadow: none;
       isolation: isolate;
     }
@@ -333,7 +350,7 @@
     }
 
     .hero-showcase-slide {
-      min-width: 100%;
+      min-width: 50%;
       height: 100%;
       position: relative;
       overflow: hidden;
@@ -458,321 +475,223 @@
       background: var(--cg-blue-soft);
       padding: 16px;
       border-radius: 16px;
-      text-align: center;
     }
 
     .stat strong {
-      font-size: 1.4rem;
+      display: block;
       color: var(--cg-blue-dark);
+      font-size: 1.4rem;
+      margin-bottom: 6px;
+    }
+
+    .stat p {
+      font-size: 0.85rem;
+      color: #3d5566;
+      font-weight: 600;
+      line-height: 1.4;
     }
 
     section {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 50px 24px;
+      padding: 18px 24px 60px;
     }
 
-    section h2 {
-      font-size: 2rem;
+    .section-title {
+      margin-bottom: 24px;
+    }
+
+    .section-title h2 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
       color: var(--cg-blue-dark);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
-    section p.subtitle {
+    .section-title p {
+      max-width: 640px;
       color: var(--cg-muted);
-      margin-bottom: 30px;
-      max-width: 780px;
-      line-height: 1.6;
-    }
-    .preview-3d-section {
-      margin-top: 40px;
+      line-height: 1.7;
     }
 
-    .preview-3d-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-
-    .preview-3d-btn {
-      padding: 10px 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(16, 121, 186, 0.2);
-      background: #ffffff;
-      color: var(--cg-blue-dark);
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease, color 0.25s ease;
-      box-shadow: 0 8px 18px rgba(15, 44, 62, 0.08);
-    }
-
-    .preview-3d-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 22px rgba(15, 44, 62, 0.12);
-    }
-
-    .preview-3d-btn.is-active {
-      background: var(--cg-blue-dark);
-      color: #ffffff;
-      box-shadow: 0 12px 26px rgba(13, 93, 140, 0.25);
-      transform: translateY(-1px);
-    }
-
-    #preview-3d {
-      width: min(560px, 100%);
-      margin: 0 auto;
-      background: linear-gradient(160deg, #f4f9ff 0%, #e2f1fb 100%);
-      border: 1px solid rgba(16, 121, 186, 0.18);
-      border-radius: 24px;
-      box-shadow: 0 12px 28px rgba(15, 44, 62, 0.12);
-      aspect-ratio: 1 / 1;
-      overflow: hidden;
-    }
-
-    #preview-3d canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    .grid {
+    .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: var(--cg-white);
-      padding: 22px;
-      border-radius: 20px;
-      border: 1px solid var(--cg-border);
-      box-shadow: var(--cg-shadow-soft);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 16px 32px rgba(15, 44, 62, 0.18);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(240, 194, 76, 0.18);
-      color: #9a6b00;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(16, 121, 186, 0.10);
-      border: 1px solid var(--cg-border);
-      color: var(--cg-blue-dark);
-      font-weight: 700;
-      font-size: 0.95rem;
-      margin-top: 12px;
-    }
-
-    .portfolio {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 18px;
     }
 
-    .portfolio-item {
-      position: relative;
-      overflow: hidden;
+    .card {
+      background: rgba(255, 255, 255, 0.92);
       border-radius: 20px;
-      background: linear-gradient(135deg, rgba(16, 121, 186, 0.2), rgba(16, 121, 186, 0.05));
-      min-height: 300px;
-      padding: 0;
+      padding: 22px;
       border: 1px solid var(--cg-border);
       box-shadow: var(--cg-shadow-soft);
-      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
     }
 
-    .portfolio-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.3s ease;
-    }
-
-    .portfolio-overlay {
+    .card::after {
+      content: "";
       position: absolute;
-      inset: 0;
+      inset: auto -22% -55% auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 121, 186, 0.18), transparent 70%);
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 34px rgba(15, 44, 62, 0.16);
+    }
+
+    .card h3 {
+      color: var(--cg-blue-dark);
+      margin-bottom: 10px;
+      font-size: 1.08rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card p {
+      color: var(--cg-muted);
+      line-height: 1.65;
+      font-size: 0.93rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .step {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--cg-border);
+      border-radius: 18px;
       padding: 18px;
       display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      gap: 8px;
-      background: linear-gradient(180deg, rgba(16, 121, 186, 0) 25%, rgba(13, 93, 140, 0.78) 100%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      gap: 14px;
+      box-shadow: var(--cg-shadow-soft);
+      align-items: flex-start;
     }
 
-    .portfolio-overlay h3 {
-      color: var(--cg-white);
-      margin-bottom: 2px;
-      font-size: 1.1rem;
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--cg-blue);
+      color: #fff;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 10px 16px rgba(16, 121, 186, 0.28);
     }
 
-    .portfolio-overlay p {
-      font-size: 0.95rem;
-      color: rgba(255, 255, 255, 0.9);
-      line-height: 1.4;
-      margin: 0;
-      max-width: 90%;
-    }
-
-    .portfolio-item:hover img {
-      transform: scale(1.05);
-    }
-
-    .portfolio-item:hover .portfolio-overlay {
-      opacity: 1;
-    }
-
-    .portfolio-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 44, 62, 0.72);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      padding: 24px;
-      z-index: 40;
-    }
-
-    .portfolio-modal.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .portfolio-modal-content {
-      background: var(--cg-white);
-      border-radius: 20px;
-      padding: 16px;
-      max-width: min(900px, 92vw);
-      box-shadow: var(--cg-shadow);
-      position: relative;
-    }
-
-    .portfolio-modal img {
-      display: block;
-      max-width: 85vw;
-      max-height: 80vh;
-      border-radius: 14px;
-      object-fit: contain;
-    }
-
-    .portfolio-modal h3 {
-      margin: 12px 8px 4px;
+    .step h4 {
+      margin-bottom: 6px;
       color: var(--cg-blue-dark);
+      font-size: 1.02rem;
     }
 
-    .portfolio-modal p {
-      margin: 0 8px 8px;
+    .step p {
       color: var(--cg-muted);
-      line-height: 1.5;
+      line-height: 1.6;
+      font-size: 0.92rem;
     }
 
-    .portfolio-modal-close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      border: none;
-      background: rgba(16, 121, 186, 0.12);
-      color: var(--cg-blue-dark);
-      font-size: 1.1rem;
-      font-weight: 700;
-      border-radius: 999px;
-      width: 34px;
-      height: 34px;
-      cursor: pointer;
+    .faq-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
     }
 
     .faq-item {
-      background: var(--cg-white);
-      border-radius: 18px;
+      border-radius: 16px;
       border: 1px solid var(--cg-border);
-      padding: 18px 20px;
+      background: rgba(255, 255, 255, 0.94);
+      overflow: hidden;
       box-shadow: var(--cg-shadow-soft);
     }
 
-    .faq-item button {
+    .faq-question {
       width: 100%;
       border: none;
       background: transparent;
+      padding: 16px 18px;
       text-align: left;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--cg-blue-dark);
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #233444;
+      cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      cursor: pointer;
     }
 
-    .faq-item p {
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
       color: var(--cg-muted);
-      margin-top: 12px;
-      line-height: 1.6;
-      display: none;
+      line-height: 1.65;
+      font-size: 0.92rem;
+      padding: 0 18px;
     }
 
-    .faq-item.active p {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .faq-item .icon {
-      transition: transform 0.2s ease;
-    }
-
-    .faq-item.active .icon {
-      transform: rotate(180deg);
+    .faq-item.active .faq-answer {
+      max-height: 240px;
+      padding: 0 18px 16px;
     }
 
     .cta-banner {
-      background: linear-gradient(135deg, rgba(16, 121, 186, 0.16), rgba(240, 194, 76, 0.16));
-      padding: 32px;
+      margin-top: 28px;
       border-radius: 24px;
-      border: 1px solid var(--cg-border);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
+      padding: 28px;
+      background: linear-gradient(135deg, rgba(16, 121, 186, 0.97), rgba(13, 93, 140, 0.97));
+      color: #fff;
+      display: grid;
+      gap: 14px;
       box-shadow: var(--cg-shadow);
     }
 
+    .cta-banner h3 {
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      line-height: 1.2;
+    }
+
+    .cta-banner p {
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 760px;
+    }
+
+    .cta-banner .cta {
+      justify-self: start;
+      background: #fff;
+      color: var(--cg-blue-dark);
+      box-shadow: none;
+    }
+
     footer {
-      padding: 30px 24px 50px;
+      border-top: 1px solid rgba(16, 121, 186, 0.14);
+      margin-top: 30px;
+      padding: 24px;
       text-align: center;
       color: var(--cg-muted);
-      font-size: 0.95rem;
-      line-height: 1.6;
+      font-size: 0.86rem;
+      background: rgba(255, 255, 255, 0.8);
     }
 
     .reveal {
       opacity: 0;
-      transform: translateY(24px);
-      transition: all 0.5s ease;
+      transform: translateY(22px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
 
     .reveal.show {
@@ -780,53 +699,40 @@
       transform: translateY(0);
     }
 
-    .mini {
-      font-size: 0.92rem;
-      color: var(--cg-muted);
-      line-height: 1.6;
-      margin-top: 10px;
-    }
-
     @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
     }
 
     @keyframes cinematicSweep {
-      0%, 20% { transform: translateX(-120%) rotate(8deg); opacity: 0; }
-      42% { opacity: 0.8; }
-      68%, 100% { transform: translateX(245%) rotate(8deg); opacity: 0; }
+      0%,
+      100% {
+        transform: translateX(-4%) rotate(8deg);
+        opacity: 0.35;
+      }
+      45% {
+        transform: translateX(95%) rotate(8deg);
+        opacity: 0.55;
+      }
+      70% {
+        opacity: 0.18;
+      }
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 900px) {
       .nav {
         grid-template-columns: 1fr;
-        align-items: stretch;
         gap: 12px;
-        padding: 12px 18px;
-      }
-
-      .brand {
-        justify-content: flex-start;
-      }
-
-      .brand-logo {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
       }
 
       .nav-links {
-        display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 6px;
-        border-radius: 22px;
       }
 
       .nav a.cta {
@@ -835,27 +741,25 @@
       }
 
       .hero {
-        padding-top: 60px;
-      }
-
-      .hero-stats {
-        grid-template-columns: 1fr;
+        padding-top: 42px;
       }
 
       .hero-showcase {
-        padding: 2.5vh 4vw 0;
+        padding-top: 22px;
       }
 
       .hero-showcase-card {
-        aspect-ratio: 4 / 3;
-        max-height: 50svh;
-        border-radius: clamp(16px, 5vw, 22px);
+        min-height: clamp(240px, 70vw, 400px);
       }
 
       .hero-showcase-caption {
         left: 18px;
         right: 18px;
-        bottom: 20px;
+        bottom: 18px;
+      }
+
+      .hero-showcase-caption strong {
+        font-size: clamp(1.05rem, 6vw, 1.65rem);
       }
 
       .hero-showcase-dots {
@@ -950,7 +854,6 @@
           <span class="hero-showcase-dot"></span>
           <span class="hero-showcase-dot"></span>
           <span class="hero-showcase-dot"></span>
-          <span class="hero-showcase-dot"></span>
         </div>
       </div>
     </section>
@@ -980,183 +883,146 @@
             <p>projetos entregues</p>
           </div>
           <div class="stat">
-            <strong data-count="92" data-suffix="%">0</strong>
-            <p>satisfação</p>
+            <strong data-count="98" data-suffix="%">0</strong>
+            <p>prazo cumprido no combinado</p>
           </div>
         </div>
-
-        <div class="pill">Condições: 50% entrada • 50% entrega • prazo médio 7–14 dias úteis</div>
       </div>
 
-      <div class="hero-card">
-
-        <h3>O que muda quando você fecha com a Color Glass?</h3>
-        <p>
-          Você para de “apagar incêndio” com fornecedor. Aqui o jogo é:
-          <strong>combinar e cumprir</strong>. E quando houver variável (medida, vidro, perfil),
-          a comunicação é direta — sem surpresa.
+      <aside class="hero-card">
+        <h3 style="color: var(--cg-blue-dark); margin-bottom: 10px;">Por que marcenarias e lojas escolhem a Color Glass?</h3>
+        <p style="color: var(--cg-muted); line-height: 1.7; margin-bottom: 16px;">
+          Produção sob medida, padrão estético premium e suporte comercial para você vender com segurança.
         </p>
+        <ul style="list-style: none; display: grid; gap: 10px; color: #2b3e50; font-weight: 600; font-size: 0.92rem;">
+          <li>✅ Linhas clássico, slim e invisível</li>
+          <li>✅ Portas de giro, correr e soluções thin</li>
+          <li>✅ Prazo médio de 7–14 dias úteis*</li>
+          <li>✅ Atendimento consultivo para B2B</li>
+        </ul>
+        <small style="display:block; margin-top: 12px; color: var(--cg-muted); font-size: 0.78rem;">
+          *Varia conforme volume e complexidade.
+        </small>
+      </aside>
+    </section>
 
-        <div class="grid" style="margin-top: 18px;">
-          <div class="card">
-            <strong>Transparência B2B</strong>
-            <p class="mini">Prazos claros, alinhamento do pedido e acompanhamento até a entrega.</p>
-          </div>
-          <div class="card">
-            <strong>Acabamento premium</strong>
-            <p class="mini">Perfis de linha <strong>clássico, slim e invisível</strong> com montagem precisa.</p>
-          </div>
-        </div>
-
-        <p class="mini">
-          Vidros conforme disponibilidade e especificação: <strong>Guardian / AGC / Ecodesigne</strong>.
-          Alumínio (quando aplicável): <strong>Alternativa</strong>.
+    <section id="quem-somos" class="reveal">
+      <div class="section-title">
+        <h2>Quem somos</h2>
+        <p>
+          Somos fabricantes e parceiros B2B em Fortaleza, focados em soluções de vidro e alumínio para móveis planejados.
+          Combinamos técnica, acabamento e compromisso com prazo para facilitar sua operação e aumentar seu valor percebido.
         </p>
       </div>
     </section>
 
-    <section id="quem-somos" class="reveal">
-      <h2>Quem somos</h2>
-      <p class="subtitle">
-        Somos um fornecedor B2B em Fortaleza, especializado em <strong>portas de vidro e alumínio</strong> e
-        <strong>estruturas sob medida</strong> para lojas de móveis planejados e marcenarias.
-        Nossa prioridade é simples: <strong>prazo cumprido</strong> e <strong>produto premium</strong>.
-      </p>
-
-      <div class="grid">
-        <div class="card">
-          <h3>Missão</h3>
-          <p>Ser o fornecedor mais confiável de portas e estruturas em vidro &amp; alumínio em Fortaleza — com entrega dentro do combinado.</p>
-        </div>
-
-        <div class="card">
-          <h3>Como trabalhamos</h3>
-          <p>Produção sob medida com foco em repetibilidade, acabamento e comunicação clara para o seu time vender com segurança.</p>
-        </div>
-
-        <div class="card">
-          <h3>Parceria B2B</h3>
-          <p>Você ganha previsibilidade: especificação de perfis, orientação de aplicação e suporte no fechamento de pedido.</p>
-        </div>
+    <section id="portfolio" class="reveal">
+      <div class="section-title">
+        <h2>Portfólio de soluções</h2>
+        <p>Escolha a linha ideal para cada projeto e conte com personalização em medidas, cores e aplicações.</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <h3>Portas de giro</h3>
+          <p>Elegância e presença para frentes de armário com opção de diversos acabamentos.</p>
+        </article>
+        <article class="card">
+          <h3>Portas de correr</h3>
+          <p>Excelente aproveitamento de espaço com deslizamento suave e visual limpo.</p>
+        </article>
+        <article class="card">
+          <h3>Estruturas thin</h3>
+          <p>Perfis finos com estética contemporânea para projetos sofisticados e leves.</p>
+        </article>
+        <article class="card">
+          <h3>Cristaleiras e composições</h3>
+          <p>Soluções sob medida para valorizar ambientes e destacar o design do mobiliário.</p>
+        </article>
       </div>
     </section>
 
     <section id="diferenciais" class="reveal">
-      <h2>Diferenciais</h2>
-      <p class="subtitle">
-        B2B não precisa de “marketing bonito”, precisa de <strong>confiança operacional</strong>.
-        Aqui estão os pilares que sustentam a parceria:
-      </p>
+      <div class="section-title">
+        <h2>Diferenciais que impactam seu resultado</h2>
+        <p>Nosso processo foi desenhado para reduzir retrabalho e aumentar sua previsibilidade de entrega.</p>
+      </div>
 
-      <div class="grid">
-        <div class="card">
-          <h3>Cumprimento de prazos</h3>
-          <p>Processo desenhado para previsibilidade: combinado é combinado. Se houver variável, você fica sabendo cedo.</p>
-        </div>
-
-        <div class="card">
-          <h3>Produção rápida</h3>
-          <p>Prazo médio de <strong>7 a 14 dias úteis</strong> (variando por tamanho e especificação do pedido).</p>
-        </div>
-
-        <div class="card">
-          <h3>Personalização real</h3>
-          <p>Medidas, configuração e linha de perfil (clássico, slim, invisível) para encaixar no seu projeto.</p>
-        </div>
-
-        <div class="card">
-          <h3>Padrão premium</h3>
-          <p>Acabamento, alinhamento e montagem pensados para reduzir retrabalho e elevar sua entrega final.</p>
-        </div>
+      <div class="timeline">
+        <article class="step">
+          <span class="step-number">1</span>
+          <div>
+            <h4>Briefing técnico e comercial</h4>
+            <p>Entendemos necessidade, aplicação e especificações para indicar a melhor solução.</p>
+          </div>
+        </article>
+        <article class="step">
+          <span class="step-number">2</span>
+          <div>
+            <h4>Produção sob medida</h4>
+            <p>Fabricamos com padrão de qualidade e conferência em cada etapa do processo.</p>
+          </div>
+        </article>
+        <article class="step">
+          <span class="step-number">3</span>
+          <div>
+            <h4>Entrega e suporte</h4>
+            <p>Alinhamos prazo e oferecemos acompanhamento para garantir satisfação no projeto final.</p>
+          </div>
+        </article>
       </div>
     </section>
 
     <section id="faq" class="reveal">
-      <h2>Perguntas frequentes</h2>
-      <p class="subtitle">
-        Respostas objetivas, do jeito que fornecedor B2B tem que ser. Sem enrolação.
-      </p>
-
-      <div class="grid">
-        <div class="faq-item">
-          <button type="button">
-            Qual o prazo de entrega?
-            <span class="icon">▼</span>
-          </button>
-          <p>
-            Em média, <strong>7 a 14 dias úteis</strong>, variando conforme tamanho e especificação do pedido. O prazo é alinhado antes de iniciar.
-          </p>
-        </div>
-
-        <div class="faq-item">
-          <button type="button">
-            Quais linhas de perfis vocês trabalham?
-            <span class="icon">▼</span>
-          </button>
-          <p>
-            Trabalhamos com linhas de perfil <strong>clássico, slim e invisível</strong>, adequando estética e aplicação ao seu projeto.
-          </p>
-        </div>
-
-        <div class="faq-item">
-          <button type="button">
-            Quais marcas de vidro e alumínio vocês utilizam?
-            <span class="icon">▼</span>
-          </button>
-          <p>
-            Vidros conforme especificação e disponibilidade: <strong>Guardian, AGC e Ecodesigne</strong>.
-            Alumínio (quando aplicável): <strong>Alternativa</strong>.
-          </p>
-        </div>
-
-        <div class="faq-item">
-          <button type="button">
-            Como funciona a condição de pagamento?
-            <span class="icon">▼</span>
-          </button>
-          <p>
-            Padrão B2B: <strong>50% de entrada</strong> para iniciar produção e <strong>50% na entrega</strong>.
-          </p>
-        </div>
-
-        <div class="faq-item">
-          <button type="button">
-            Como funciona a garantia?
-            <span class="icon">▼</span>
-          </button>
-          <p>
-            O vidro segue a garantia da distribuidora, em média <strong>6 meses</strong>.
-            Perfis e componentes: a garantia é da loja em casos de <strong>defeito de fabricação</strong> ou <strong>mau funcionamento entregue</strong>.
-          </p>
-        </div>
+      <div class="section-title">
+        <h2>Perguntas frequentes</h2>
+        <p>Respostas rápidas para decisões mais seguras no seu pedido B2B.</p>
       </div>
-    </section>
-    <section class="reveal preview-3d-section">
-      <div class="preview-3d-controls" role="group" aria-label="Perfis 3D">
-        <button class="preview-3d-btn is-active" type="button" data-model="1036.glb">Clássico</button>
-        <button class="preview-3d-btn" type="button" data-model="3545.glb">Slim</button>
-        <button class="preview-3d-btn" type="button" data-model="3446.glb">Invisível</button>
-      </div>
-      <div id="preview-3d"></div>
-    </section>
 
-    <section class="reveal">
+      <div class="faq-list">
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Qual o prazo médio de produção?
+            <span>+</span>
+          </button>
+          <div class="faq-answer">
+            O prazo médio varia entre 7 e 14 dias úteis, conforme volume e complexidade do projeto.
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            Vocês atendem apenas B2B?
+            <span>+</span>
+          </button>
+          <div class="faq-answer">
+            Nosso foco principal é B2B (marcenarias, lojas de planejados e parceiros do setor), com atendimento consultivo.
+          </div>
+        </article>
+
+        <article class="faq-item">
+          <button class="faq-question" type="button">
+            É possível personalizar medidas e acabamentos?
+            <span>+</span>
+          </button>
+          <div class="faq-answer">
+            Sim. Trabalhamos sob medida e com opções de linhas/acabamentos para adequar ao padrão do seu projeto.
+          </div>
+        </article>
+      </div>
+
       <div class="cta-banner">
-        <div>
-          <h2>Quer um fornecedor B2B que cumpre o combinado?</h2>
-          <p class="subtitle" style="margin-bottom: 0;">
-            Chama no WhatsApp e me diga: tipo de produto, medidas e linha de perfil. Eu te respondo com direcionamento e próximo passo.
-          </p>
-        </div>
-        <button class="cta" id="ctaBottom">Falar no WhatsApp</button>
+        <h3>Pronto para elevar o padrão dos seus projetos?</h3>
+        <p>
+          Fale com a Color Glass Fortaleza e receba orientação de linha, aplicação e prazo para sua próxima demanda.
+        </p>
+        <button class="cta" id="ctaBottom">Quero fazer um pedido no WhatsApp</button>
       </div>
     </section>
   </main>
 
   <footer>
-    <strong>Color Glass Fortaleza</strong> © 2026 — Parceiro B2B em portas e estruturas de vidro &amp; alumínio.<br />
-    Atendimento: seg–sex, 8:30 às 17:30 • Fortaleza/CE •
-    <a href="mailto:colorglassfortaleza@gmail.com" style="color:inherit; text-decoration: underline;">colorglassfortaleza@gmail.com</a> •
+    © <span id="year"></span> Color Glass Fortaleza — B2B em vidro &amp; alumínio para móveis planejados.
+    <br />
     <a href="https://instagram.com/colorglassfortaleza" target="_blank" rel="noopener" style="color:inherit; text-decoration: underline;">@colorglassfortaleza</a>
   </footer>
 
@@ -1185,23 +1051,34 @@
     const heroShowcaseSlides = document.querySelectorAll(".hero-showcase-slide");
     const heroShowcaseDots = document.querySelectorAll(".hero-showcase-dot");
 
-    // Hero showcase cinematic slider
+    // Hero showcase slider (duas imagens visíveis por vez)
     let currentHeroSlide = 0;
+    const heroVisibleSlides = 2;
+    const heroStepPercent = 100 / heroVisibleSlides;
+
     const updateHeroShowcase = () => {
       if (!heroShowcaseTrack || !heroShowcaseSlides.length) return;
 
-      heroShowcaseTrack.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
+      const maxHeroIndex = Math.max(heroShowcaseSlides.length - heroVisibleSlides, 0);
+      currentHeroSlide = Math.min(currentHeroSlide, maxHeroIndex);
+
+      heroShowcaseTrack.style.transform = `translateX(-${currentHeroSlide * heroStepPercent}%)`;
+
       heroShowcaseSlides.forEach((slide, index) => {
-        slide.classList.toggle("is-active", index === currentHeroSlide);
+        const isVisible = index >= currentHeroSlide && index < currentHeroSlide + heroVisibleSlides;
+        slide.classList.toggle("is-active", isVisible);
       });
+
       heroShowcaseDots.forEach((dot, index) => {
         dot.classList.toggle("is-active", index === currentHeroSlide);
       });
     };
 
     if (heroShowcaseTrack && heroShowcaseSlides.length) {
+      const maxHeroIndex = Math.max(heroShowcaseSlides.length - heroVisibleSlides, 0);
+
       setInterval(() => {
-        currentHeroSlide = (currentHeroSlide + 1) % heroShowcaseSlides.length;
+        currentHeroSlide = currentHeroSlide >= maxHeroIndex ? 0 : currentHeroSlide + 1;
         updateHeroShowcase();
       }, 5000);
     }
@@ -1238,23 +1115,38 @@
 
     // FAQ accordion
     faqItems.forEach((item) => {
-      item.querySelector("button").addEventListener("click", () => {
-        item.classList.toggle("active");
+      const button = item.querySelector(".faq-question");
+      button.addEventListener("click", () => {
+        const active = item.classList.contains("active");
+        faqItems.forEach((f) => {
+          f.classList.remove("active");
+          const sign = f.querySelector(".faq-question span");
+          if (sign) sign.textContent = "+";
+        });
+        if (!active) {
+          item.classList.add("active");
+          const sign = item.querySelector(".faq-question span");
+          if (sign) sign.textContent = "−";
+        }
       });
     });
 
-    // CTA events
-    document.getElementById("ctaHero").addEventListener("click", () => openWA(msgParceria));
-    document.getElementById("ctaBottom").addEventListener("click", () => openWA(msgParceria));
-    document.getElementById("ctaCatalogo").addEventListener("click", () => openWA(msgCatalogo));
-
-    window.addEventListener("load", () => {
-      animateCounters();
-      onScroll();
+    // CTA bindings
+    document.getElementById("ctaTop")?.addEventListener("click", (e) => {
+      // mantém o link /login do topo sem interferência
     });
+
+    document.getElementById("ctaHero")?.addEventListener("click", () => openWA(msgParceria));
+    document.getElementById("ctaCatalogo")?.addEventListener("click", () => openWA(msgCatalogo));
+    document.getElementById("ctaBottom")?.addEventListener("click", () => openWA(msgParceria));
+
+    // Init
+    document.getElementById("year").textContent = new Date().getFullYear();
+    updateHeroShowcase();
+    onScroll();
+    animateCounters();
 
     window.addEventListener("scroll", onScroll);
   </script>
-<script type="module" src="preview3d.js"></script>
 </body>
 </html>
