@@ -260,32 +260,13 @@
     }
 
     .hero {
-      position: relative;
       max-width: 1200px;
-      width: 100%;
-      min-height: 100vh;
       margin: 0 auto;
       padding: 90px 24px 60px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 32px;
       align-items: center;
-      overflow: hidden;
-    }
-
-    .hero-bg-video {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .hero > div {
-      position: relative;
-      z-index: 1;
     }
 
     .hero h1 {
@@ -357,72 +338,64 @@
       position: relative;
       overflow: hidden;
       display: flex;
-      align-items: stretch;
+      align-items: center;
       justify-content: center;
-      background: #0b1f2c;
     }
 
     .hero-showcase-slide img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      display: block;
+      object-fit: contain;
       object-position: center;
-      transform: scale(1.05);
-      filter: saturate(1.04) contrast(1.03);
-      transition: transform 7s ease, filter 1s ease;
-      user-select: none;
-      pointer-events: none;
+      transform: scale(1);
+      filter: saturate(1.08) contrast(1.02);
+      transition: transform 5s ease, filter 1s ease;
     }
 
     .hero-showcase-slide.is-active img {
-      transform: scale(1.12);
-      filter: saturate(1.1) contrast(1.06);
+      transform: scale(1.02) translateX(-0.5%);
+      filter: saturate(1.12) contrast(1.03);
     }
 
     .hero-showcase-caption {
       position: absolute;
-      left: clamp(18px, 3vw, 34px);
-      right: clamp(18px, 3vw, 34px);
-      bottom: clamp(16px, 2.7vw, 34px);
+      left: clamp(22px, 5vw, 58px);
+      right: clamp(22px, 5vw, 58px);
+      bottom: clamp(24px, 5vw, 58px);
       z-index: 4;
-      display: inline-flex;
-      flex-direction: column;
-      gap: 6px;
-      text-shadow: 0 6px 18px rgba(4, 10, 18, 0.48);
-      animation: captionRise 0.9s ease both;
+      max-width: 690px;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
     }
 
     .hero-showcase-caption span {
       display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      width: fit-content;
-      padding: 6px 12px;
+      margin-bottom: 12px;
+      padding: 7px 12px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      font-size: 0.74rem;
-      letter-spacing: 0.11em;
+      background: rgba(240, 194, 76, 0.92);
+      color: #3d2a00;
+      font-weight: 800;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #eaf6ff;
-      font-weight: 700;
-      backdrop-filter: blur(4px);
+      text-shadow: none;
     }
 
     .hero-showcase-caption strong {
-      color: #ffffff;
-      font-size: clamp(1rem, 1.8vw, 1.38rem);
-      line-height: 1.35;
-      max-width: 42ch;
+      display: block;
+      font-size: clamp(1.35rem, 3.2vw, 2.6rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
     }
 
     .hero-showcase-dots {
       position: absolute;
-      right: clamp(16px, 2.2vw, 24px);
-      bottom: clamp(14px, 2vw, 24px);
+      right: clamp(22px, 4vw, 46px);
+      bottom: clamp(24px, 4vw, 46px);
       z-index: 5;
-      display: inline-flex;
-      align-items: center;
+      display: flex;
       gap: 8px;
     }
 
@@ -431,39 +404,41 @@
       height: 9px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.45);
-      transition: transform 0.3s ease, background-color 0.3s ease;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+      transition: width 0.35s ease, background-color 0.35s ease;
     }
 
     .hero-showcase-dot.is-active {
+      width: 34px;
       background: #ffffff;
-      transform: scale(1.3);
     }
 
     .hero-actions {
+      margin-top: 18px;
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-block: 28px 22px;
+      gap: 10px;
     }
 
     .hero-card {
-      background: rgba(255, 255, 255, 0.82);
-      border: 1px solid rgba(16, 121, 186, 0.12);
-      border-radius: 24px;
-      box-shadow: var(--cg-shadow-soft);
-      padding: 28px;
+      background: var(--cg-white);
+      padding: 26px;
+      border-radius: 22px;
+      box-shadow: var(--cg-shadow);
+      border: 1px solid var(--cg-border);
       position: relative;
       overflow: hidden;
-      backdrop-filter: blur(2px);
+      animation: float 6s ease-in-out infinite;
     }
 
     .hero-card::after {
       content: "";
       position: absolute;
-      inset: auto -30px -80px auto;
-      width: 180px;
-      height: 180px;
-      background: radial-gradient(circle, rgba(16, 121, 186, 0.18), transparent 70%);
+      inset: -60px 60px auto -60px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(16, 121, 186, 0.2), transparent 70%);
+      opacity: 0.8;
       pointer-events: none;
     }
 
@@ -474,321 +449,418 @@
 
     .hero-stats {
       display: grid;
-      grid-template-columns: repeat(3, minmax(90px, 1fr));
-      gap: 12px;
-      margin-top: 22px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 26px;
     }
 
     .stat {
-      background: rgba(255, 255, 255, 0.84);
-      border: 1px solid rgba(16, 121, 186, 0.10);
-      border-radius: 14px;
-      padding: 14px 12px;
+      background: var(--cg-blue-soft);
+      padding: 16px;
+      border-radius: 16px;
       text-align: center;
     }
 
     .stat strong {
+      font-size: 1.4rem;
       color: var(--cg-blue-dark);
-      font-size: 1.35rem;
-      display: block;
-      margin-bottom: 4px;
     }
 
     section {
-      width: min(100%, 1200px);
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 64px 24px;
+      padding: 50px 24px;
     }
 
     section h2 {
-      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-size: 2rem;
       color: var(--cg-blue-dark);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     section p.subtitle {
       color: var(--cg-muted);
       margin-bottom: 30px;
-      max-width: 680px;
+      max-width: 780px;
+      line-height: 1.6;
     }
-
     .preview-3d-section {
-      width: 100%;
-      max-width: none;
-      margin: 0;
-      padding: 24px 0 54px;
+      margin-top: 40px;
     }
 
-    .preview-3d-wrap {
-      width: min(100%, 1200px);
+    .preview-3d-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .preview-3d-btn {
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 121, 186, 0.2);
+      background: #ffffff;
+      color: var(--cg-blue-dark);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease, color 0.25s ease;
+      box-shadow: 0 8px 18px rgba(15, 44, 62, 0.08);
+    }
+
+    .preview-3d-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15, 44, 62, 0.12);
+    }
+
+    .preview-3d-btn.is-active {
+      background: var(--cg-blue-dark);
+      color: #ffffff;
+      box-shadow: 0 12px 26px rgba(13, 93, 140, 0.25);
+      transform: translateY(-1px);
+    }
+
+    #preview-3d {
+      width: min(560px, 100%);
       margin: 0 auto;
-      padding: 0 24px;
+      background: linear-gradient(160deg, #f4f9ff 0%, #e2f1fb 100%);
+      border: 1px solid rgba(16, 121, 186, 0.18);
+      border-radius: 24px;
+      box-shadow: 0 12px 28px rgba(15, 44, 62, 0.12);
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
     }
 
-    .cards {
+    #preview-3d canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
     }
 
     .card {
-      background: #fff;
-      border: 1px solid rgba(16, 121, 186, 0.10);
-      border-radius: 18px;
+      background: var(--cg-white);
       padding: 22px;
-      box-shadow: 0 12px 26px rgba(15, 44, 62, 0.08);
+      border-radius: 20px;
+      border: 1px solid var(--cg-border);
+      box-shadow: var(--cg-shadow-soft);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 30px rgba(15, 44, 62, 0.12);
-    }
-
-    .card h3 {
-      color: var(--cg-blue-dark);
-      margin-bottom: 10px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(16, 121, 186, 0.08);
-      color: var(--cg-blue-dark);
-      font-size: 0.85rem;
-      font-weight: 600;
-      border: 1px solid rgba(16, 121, 186, 0.15);
-      margin-top: 18px;
+      transform: translateY(-6px);
+      box-shadow: 0 16px 32px rgba(15, 44, 62, 0.18);
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255, 255, 255, 0.72);
-      color: var(--cg-blue-dark);
-      border: 1px solid rgba(16, 121, 186, 0.18);
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      margin-bottom: 18px;
+      background: rgba(240, 194, 76, 0.18);
+      color: #9a6b00;
+      font-weight: 600;
+      margin-bottom: 12px;
     }
 
-    .timeline {
-      border-left: 2px solid rgba(16, 121, 186, 0.25);
-      margin-left: 10px;
-      padding-left: 20px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .timeline .step {
-      background: #fff;
-      border: 1px solid rgba(16, 121, 186, 0.12);
-      border-radius: 14px;
-      padding: 16px 18px;
-      position: relative;
-    }
-
-    .timeline .step::before {
-      content: "";
-      position: absolute;
-      left: -30px;
-      top: 18px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--cg-blue);
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 3px rgba(16, 121, 186, 0.2);
-    }
-
-    .faq {
-      display: grid;
-      gap: 12px;
-    }
-
-    .faq details {
-      background: #fff;
-      border: 1px solid rgba(16, 121, 186, 0.14);
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 8px 18px rgba(15, 44, 62, 0.06);
-    }
-
-    .faq summary {
-      cursor: pointer;
-      font-weight: 700;
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(16, 121, 186, 0.10);
+      border: 1px solid var(--cg-border);
       color: var(--cg-blue-dark);
-      list-style: none;
-      position: relative;
-      padding-right: 24px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-top: 12px;
     }
 
-    .faq summary::-webkit-details-marker {
+    .portfolio {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .portfolio-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(16, 121, 186, 0.2), rgba(16, 121, 186, 0.05));
+      min-height: 210px;
+      padding: 0;
+      border: 1px solid var(--cg-border);
+      box-shadow: var(--cg-shadow-soft);
+      cursor: pointer;
+    }
+
+    .portfolio-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .portfolio-overlay {
+      position: absolute;
+      inset: 0;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+      background: linear-gradient(180deg, rgba(16, 121, 186, 0) 25%, rgba(13, 93, 140, 0.78) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .portfolio-overlay h3 {
+      color: var(--cg-white);
+      margin-bottom: 2px;
+      font-size: 1.1rem;
+    }
+
+    .portfolio-overlay p {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.4;
+      margin: 0;
+      max-width: 90%;
+    }
+
+    .portfolio-item:hover img {
+      transform: scale(1.05);
+    }
+
+    .portfolio-item:hover .portfolio-overlay {
+      opacity: 1;
+    }
+
+    .portfolio-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 44, 62, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      padding: 24px;
+      z-index: 40;
+    }
+
+    .portfolio-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .portfolio-modal-content {
+      background: var(--cg-white);
+      border-radius: 20px;
+      padding: 16px;
+      max-width: min(900px, 92vw);
+      box-shadow: var(--cg-shadow);
+      position: relative;
+    }
+
+    .portfolio-modal img {
+      display: block;
+      max-width: 85vw;
+      max-height: 80vh;
+      border-radius: 14px;
+      object-fit: contain;
+    }
+
+    .portfolio-modal h3 {
+      margin: 12px 8px 4px;
+      color: var(--cg-blue-dark);
+    }
+
+    .portfolio-modal p {
+      margin: 0 8px 8px;
+      color: var(--cg-muted);
+      line-height: 1.5;
+    }
+
+    .portfolio-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: none;
+      background: rgba(16, 121, 186, 0.12);
+      color: var(--cg-blue-dark);
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+    }
+
+    .faq-item {
+      background: var(--cg-white);
+      border-radius: 18px;
+      border: 1px solid var(--cg-border);
+      padding: 18px 20px;
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .faq-item button {
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--cg-blue-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .faq-item p {
+      color: var(--cg-muted);
+      margin-top: 12px;
+      line-height: 1.6;
       display: none;
     }
 
-    .faq summary::after {
-      content: "+";
-      position: absolute;
-      right: 0;
-      top: 0;
-      color: var(--cg-blue);
-      font-weight: 800;
+    .faq-item.active p {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .faq-item .icon {
       transition: transform 0.2s ease;
     }
 
-    .faq details[open] summary::after {
-      content: "−";
-      transform: translateY(-1px);
+    .faq-item.active .icon {
+      transform: rotate(180deg);
     }
 
-    .faq p {
-      margin-top: 10px;
-      color: #4b5563;
-      line-height: 1.6;
-    }
-
-    .contact {
-      background: linear-gradient(135deg, #0f5b85, #1079ba);
-      color: #fff;
-      border-radius: 22px;
-      padding: 34px;
+    .cta-banner {
+      background: linear-gradient(135deg, rgba(16, 121, 186, 0.16), rgba(240, 194, 76, 0.16));
+      padding: 32px;
+      border-radius: 24px;
+      border: 1px solid var(--cg-border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
       box-shadow: var(--cg-shadow);
-      display: grid;
-      gap: 14px;
-      margin-top: 20px;
-    }
-
-    .contact a {
-      color: #fff;
-      font-weight: 700;
-      text-decoration: underline;
     }
 
     footer {
-      margin-top: 60px;
-      padding: 28px 24px 40px;
-      color: #6b7280;
+      padding: 30px 24px 50px;
       text-align: center;
-      font-size: 0.9rem;
+      color: var(--cg-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: all 0.5s ease;
+    }
+
+    .reveal.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mini {
+      font-size: 0.92rem;
+      color: var(--cg-muted);
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes cinematicSweep {
-      0% {
-        transform: translateX(-20%) rotate(8deg);
-        opacity: 0;
-      }
-      18% {
-        opacity: 0.42;
-      }
-      52% {
-        transform: translateX(86%) rotate(8deg);
-        opacity: 0;
-      }
-      100% {
-        transform: translateX(86%) rotate(8deg);
-        opacity: 0;
-      }
+      0%, 20% { transform: translateX(-120%) rotate(8deg); opacity: 0; }
+      42% { opacity: 0.8; }
+      68%, 100% { transform: translateX(245%) rotate(8deg); opacity: 0; }
     }
 
-    @keyframes captionRise {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @media (max-width: 1024px) {
+    @media (max-width: 800px) {
       .nav {
         grid-template-columns: 1fr;
-        justify-items: start;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px 18px;
+      }
+
+      .brand {
+        justify-content: flex-start;
+      }
+
+      .brand-logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
       }
 
       .nav-links {
-        width: 100%;
+        display: flex;
         flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 22px;
       }
 
       .nav a.cta {
-        justify-self: start;
+        justify-self: stretch;
+        text-align: center;
       }
 
       .hero {
-        padding-top: 56px;
+        padding-top: 60px;
       }
 
       .hero-stats {
-        grid-template-columns: repeat(3, minmax(80px, 1fr));
+        grid-template-columns: 1fr;
       }
 
       .hero-showcase {
-        padding: 2.8vh 24px 0;
+        padding: 2.5vh 4vw 0;
       }
 
       .hero-showcase-card {
-        aspect-ratio: 16 / 8;
-        max-height: none;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .hero {
-        padding-top: 46px;
-        gap: 22px;
-      }
-
-      .hero h1 {
-        font-size: clamp(1.8rem, 9vw, 2.5rem);
-      }
-
-      .hero-showcase {
-        padding-top: 12px;
-      }
-
-      .hero-showcase-card {
-        aspect-ratio: 16 / 10;
-        border-radius: 20px;
+        aspect-ratio: 4 / 3;
+        max-height: 38svh;
+        border-radius: clamp(16px, 5vw, 22px);
       }
 
       .hero-showcase-caption {
-        left: 14px;
-        right: 14px;
-        bottom: 14px;
-        gap: 5px;
-      }
-
-      .hero-showcase-caption span {
-        font-size: 0.66rem;
-        letter-spacing: 0.08em;
-        padding: 5px 10px;
-      }
-
-      .hero-showcase-caption strong {
-        font-size: clamp(0.88rem, 4vw, 1rem);
-        max-width: 28ch;
+        left: 18px;
+        right: 18px;
+        bottom: 20px;
       }
 
       .hero-showcase-dots {
-        right: 12px;
-        bottom: 12px;
-      }
-
-      section {
-        padding: 54px 20px;
-      }
-
-      .contact {
-        padding: 24px;
+        right: 18px;
+        bottom: 18px;
       }
     }
   </style>
@@ -873,9 +945,6 @@
     </section>
 
     <section class="hero">
-      <video class="hero-bg-video" autoplay muted loop playsinline>
-        <source src="back.mp4" type="video/mp4" />
-      </video>
       <div>
         <div class="badge">🤝 B2B em Fortaleza — parceiro de marcenarias e lojas de planejados</div>
         <h1>Portas e estruturas em vidro &amp; alumínio com prazo cumprido e padrão premium.</h1>
@@ -909,233 +978,272 @@
       </div>
 
       <div class="hero-card">
-        <h3 style="margin-bottom: 10px; color: var(--cg-blue-dark);">Linhas que você pode oferecer ao seu cliente</h3>
-        <p style="margin-bottom: 14px;">
-          Portas de <strong>giro</strong> e <strong>correr</strong>, estruturas <strong>thin</strong>,
-          <strong>closet</strong>, <strong>prateleiras</strong> e soluções sob medida para elevar o ticket do seu projeto.
+
+        <h3>O que muda quando você fecha com a Color Glass?</h3>
+        <p>
+          Você para de “apagar incêndio” com fornecedor. Aqui o jogo é:
+          <strong>combinar e cumprir</strong>. E quando houver variável (medida, vidro, perfil),
+          a comunicação é direta — sem surpresa.
         </p>
-        <div class="cards">
+
+        <div class="grid" style="margin-top: 18px;">
           <div class="card">
-            <h3>Porta de giro</h3>
-            <p>Elegância e presença para ambientes que pedem destaque.</p>
+            <strong>Transparência B2B</strong>
+            <p class="mini">Prazos claros, alinhamento do pedido e acompanhamento até a entrega.</p>
           </div>
           <div class="card">
-            <h3>Porta de correr</h3>
-            <p>Otimização de espaço com acabamento técnico e sofisticado.</p>
-          </div>
-          <div class="card">
-            <h3>Perfil thin</h3>
-            <p>Minimalismo elegante para projetos contemporâneos e premium.</p>
+            <strong>Acabamento premium</strong>
+            <p class="mini">Perfis de linha <strong>clássico, slim e invisível</strong> com montagem precisa.</p>
           </div>
         </div>
+
+        <p class="mini">
+          Vidros conforme disponibilidade e especificação: <strong>Guardian / AGC / Ecodesigne</strong>.
+          Alumínio (quando aplicável): <strong>Alternativa</strong>.
+        </p>
       </div>
     </section>
 
-    <section id="quem-somos">
+    <section id="quem-somos" class="reveal">
       <h2>Quem somos</h2>
       <p class="subtitle">
-        Somos fornecedores B2B especializados em vidro e alumínio para o mercado de móveis planejados em Fortaleza.
-        Trabalhamos com foco em <strong>padronização</strong>, <strong>prazo</strong> e <strong>acabamento premium</strong>.
+        Somos um fornecedor B2B em Fortaleza, especializado em <strong>portas de vidro e alumínio</strong> e
+        <strong>estruturas sob medida</strong> para lojas de móveis planejados e marcenarias.
+        Nossa prioridade é simples: <strong>prazo cumprido</strong> e <strong>produto premium</strong>.
       </p>
-      <div class="cards">
+
+      <div class="grid">
         <div class="card">
           <h3>Missão</h3>
-          <p>Entregar soluções sob medida com qualidade e previsibilidade para fortalecer seus projetos.</p>
+          <p>Ser o fornecedor mais confiável de portas e estruturas em vidro &amp; alumínio em Fortaleza — com entrega dentro do combinado.</p>
         </div>
+
         <div class="card">
-          <h3>Visão</h3>
-          <p>Ser a principal referência B2B em portas e estruturas de vidro e alumínio na região.</p>
+          <h3>Como trabalhamos</h3>
+          <p>Produção sob medida com foco em repetibilidade, acabamento e comunicação clara para o seu time vender com segurança.</p>
         </div>
+
         <div class="card">
-          <h3>Valores</h3>
-          <p>Compromisso com prazo, transparência na comunicação e excelência no acabamento.</p>
+          <h3>Parceria B2B</h3>
+          <p>Você ganha previsibilidade: especificação de perfis, orientação de aplicação e suporte no fechamento de pedido.</p>
         </div>
       </div>
     </section>
 
-    <section id="portfolio">
-      <h2>Portfólio de soluções</h2>
-      <p class="subtitle">Produtos pensados para elevar padrão estético e valor percebido no mobiliário planejado.</p>
-      <div class="cards">
-        <div class="card"><h3>Porta de giro</h3><p>Estrutura robusta e acabamento refinado para cozinhas, salas e dormitórios.</p></div>
-        <div class="card"><h3>Porta de correr</h3><p>Deslizamento suave, ótimo aproveitamento de espaço e visual limpo.</p></div>
-        <div class="card"><h3>Perfil thin</h3><p>Minimalismo elegante para projetos contemporâneos e premium.</p></div>
-        <div class="card"><h3>Closet e prateleiras</h3><p>Composição inteligente com estética de alto padrão e praticidade.</p></div>
-      </div>
-    </section>
+    <section id="diferenciais" class="reveal">
+      <h2>Diferenciais</h2>
+      <p class="subtitle">
+        B2B não precisa de “marketing bonito”, precisa de <strong>confiança operacional</strong>.
+        Aqui estão os pilares que sustentam a parceria:
+      </p>
 
-    <section id="diferenciais">
-      <h2>Diferenciais para sua marcenaria ou loja</h2>
-      <p class="subtitle">Você ganha eficiência operacional e segurança comercial para vender mais.</p>
-      <div class="timeline">
-        <div class="step">
-          <h3>1) Atendimento consultivo</h3>
-          <p>Entendemos o projeto e ajudamos na especificação ideal para cada cliente final.</p>
+      <div class="grid">
+        <div class="card">
+          <h3>Cumprimento de prazos</h3>
+          <p>Processo desenhado para previsibilidade: combinado é combinado. Se houver variável, você fica sabendo cedo.</p>
         </div>
-        <div class="step">
-          <h3>2) Produção sob medida</h3>
-          <p>Padronização técnica, personalização e foco em acabamento premium.</p>
+
+        <div class="card">
+          <h3>Produção rápida</h3>
+          <p>Prazo médio de <strong>7 a 14 dias úteis</strong> (variando por tamanho e especificação do pedido).</p>
         </div>
-        <div class="step">
-          <h3>3) Prazo cumprido</h3>
-          <p>Processo organizado para previsibilidade e confiança nas suas entregas.</p>
+
+        <div class="card">
+          <h3>Personalização real</h3>
+          <p>Medidas, configuração e linha de perfil (clássico, slim, invisível) para encaixar no seu projeto.</p>
         </div>
-        <div class="step">
-          <h3>4) Parceria de longo prazo</h3>
-          <p>Suporte contínuo para sua operação crescer com consistência.</p>
+
+        <div class="card">
+          <h3>Padrão premium</h3>
+          <p>Acabamento, alinhamento e montagem pensados para reduzir retrabalho e elevar sua entrega final.</p>
         </div>
       </div>
     </section>
 
-    <section class="preview-3d-section" aria-label="Visualização 3D Color Glass">
-      <div class="preview-3d-wrap">
-        <h2 style="margin-bottom: 14px;">Visualize em 3D antes de produzir</h2>
-        <p class="subtitle" style="margin-bottom: 20px;">
-          Explore um modelo 3D interativo para apresentar melhor ao seu cliente e acelerar a decisão.
-        </p>
-        <iframe
-          title="Visualização 3D Color Glass"
-          src="/3dteste.html"
-          style="width: 100%; height: 540px; border: 0; border-radius: 18px; box-shadow: 0 12px 26px rgba(15,44,62,0.12); background: #fff;"
-          loading="lazy"
-          allowfullscreen>
-        </iframe>
-      </div>
-    </section>
-
-    <section id="faq">
+    <section id="faq" class="reveal">
       <h2>Perguntas frequentes</h2>
-      <p class="subtitle">Respostas rápidas para facilitar sua decisão de parceria.</p>
-      <div class="faq">
-        <details>
-          <summary>Vocês atendem apenas empresas?</summary>
-          <p>Sim. Nosso foco é B2B: marcenarias, lojas de móveis planejados e parceiros do setor.</p>
-        </details>
-        <details>
-          <summary>Qual o prazo médio?</summary>
-          <p>Normalmente de 7 a 14 dias úteis, variando conforme volume e complexidade do pedido.</p>
-        </details>
-        <details>
-          <summary>Como funciona o pagamento?</summary>
-          <p>Condição padrão: 50% de entrada e 50% na entrega (podendo variar conforme negociação).</p>
-        </details>
-        <details>
-          <summary>Vocês ajudam na especificação técnica?</summary>
-          <p>Sim. Orientamos em medidas, tipologia e acabamento para maior assertividade no projeto.</p>
-        </details>
-      </div>
+      <p class="subtitle">
+        Respostas objetivas, do jeito que fornecedor B2B tem que ser. Sem enrolação.
+      </p>
 
-      <div class="contact" id="contato">
-        <h3>Vamos fechar parceria?</h3>
-        <p>Fale agora no WhatsApp e receba atendimento comercial para sua operação B2B.</p>
-        <a id="whatsLink" href="#" target="_blank" rel="noopener noreferrer">Chamar no WhatsApp</a>
-        <small>Color Glass Fortaleza • Vidro &amp; Alumínio para planejados.</small>
+      <div class="grid">
+        <div class="faq-item">
+          <button type="button">
+            Qual o prazo de entrega?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Em média, <strong>7 a 14 dias úteis</strong>, variando conforme tamanho e especificação do pedido. O prazo é alinhado antes de iniciar.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Quais linhas de perfis vocês trabalham?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Trabalhamos com linhas de perfil <strong>clássico, slim e invisível</strong>, adequando estética e aplicação ao seu projeto.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Quais marcas de vidro e alumínio vocês utilizam?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Vidros conforme especificação e disponibilidade: <strong>Guardian, AGC e Ecodesigne</strong>.
+            Alumínio (quando aplicável): <strong>Alternativa</strong>.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Como funciona a condição de pagamento?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            Padrão B2B: <strong>50% de entrada</strong> para iniciar produção e <strong>50% na entrega</strong>.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <button type="button">
+            Como funciona a garantia?
+            <span class="icon">▼</span>
+          </button>
+          <p>
+            O vidro segue a garantia da distribuidora, em média <strong>6 meses</strong>.
+            Perfis e componentes: a garantia é da loja em casos de <strong>defeito de fabricação</strong> ou <strong>mau funcionamento entregue</strong>.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section class="reveal preview-3d-section">
+      <div class="preview-3d-controls" role="group" aria-label="Perfis 3D">
+        <button class="preview-3d-btn is-active" type="button" data-model="1036.glb">Clássico</button>
+        <button class="preview-3d-btn" type="button" data-model="3545.glb">Slim</button>
+        <button class="preview-3d-btn" type="button" data-model="3446.glb">Invisível</button>
+      </div>
+      <div id="preview-3d"></div>
+    </section>
+
+    <section class="reveal">
+      <div class="cta-banner">
+        <div>
+          <h2>Quer um fornecedor B2B que cumpre o combinado?</h2>
+          <p class="subtitle" style="margin-bottom: 0;">
+            Chama no WhatsApp e me diga: tipo de produto, medidas e linha de perfil. Eu te respondo com direcionamento e próximo passo.
+          </p>
+        </div>
+        <button class="cta" id="ctaBottom">Falar no WhatsApp</button>
       </div>
     </section>
   </main>
 
   <footer>
-    © <span id="year"></span> Color Glass Fortaleza • Todos os direitos reservados.
+    <strong>Color Glass Fortaleza</strong> © 2026 — Parceiro B2B em portas e estruturas de vidro &amp; alumínio.<br />
+    Atendimento: seg–sex, 8:30 às 17:30 • Fortaleza/CE •
+    <a href="mailto:colorglassfortaleza@gmail.com" style="color:inherit; text-decoration: underline;">colorglassfortaleza@gmail.com</a> •
+    <a href="https://instagram.com/colorglassfortaleza" target="_blank" rel="noopener" style="color:inherit; text-decoration: underline;">@colorglassfortaleza</a>
   </footer>
 
   <script>
-    const WHATS_NUMBER = "5585999999999";
-    const WHATS_TEXT = encodeURIComponent(
-      "Olá! Vim pelo site e quero conhecer as linhas da Color Glass Fortaleza para parceria B2B."
-    );
+    // =====================
+    // WhatsApp CTA (B2B)
+    // =====================
+    const waBase = "https://wa.me/5585988241620";
+    const encode = (s) => encodeURIComponent(s);
 
-    const whatsLink = document.getElementById("whatsLink");
-    const ctaHero = document.getElementById("ctaHero");
-    const ctaTop = document.getElementById("ctaTop");
-    const ctaCatalogo = document.getElementById("ctaCatalogo");
+    const msgParceria =
+      "Olá! Gostaria de fazer um pedido. ";
 
-    const link = `https://wa.me/${WHATS_NUMBER}?text=${WHATS_TEXT}`;
-    whatsLink.href = link;
+    const msgCatalogo =
+      "Olá! Quero receber as linhas e aplicações (clássico/slim/invisível) e exemplos do portfólio B2B (giro, correr, thin, Cristaleira). " +
+      "Também queria alinhar prazo médio (7–14 dias úteis) e forma de pedido.";
 
-    function openWhats() {
-      window.open(link, "_blank");
+    const openWA = (message) => {
+      window.open(`${waBase}?text=${encode(message)}`, "_blank", "noopener");
+    };
+
+    const counters = document.querySelectorAll("[data-count]");
+    const revealElements = document.querySelectorAll(".reveal");
+    const faqItems = document.querySelectorAll(".faq-item");
+    const heroShowcaseTrack = document.querySelector(".hero-showcase-track");
+    const heroShowcaseSlides = document.querySelectorAll(".hero-showcase-slide");
+    const heroShowcaseDots = document.querySelectorAll(".hero-showcase-dot");
+
+    // Hero showcase cinematic slider
+    let currentHeroSlide = 0;
+    const updateHeroShowcase = () => {
+      if (!heroShowcaseTrack || !heroShowcaseSlides.length) return;
+
+      heroShowcaseTrack.style.transform = `translateX(-${currentHeroSlide * 100}%)`;
+      heroShowcaseSlides.forEach((slide, index) => {
+        slide.classList.toggle("is-active", index === currentHeroSlide);
+      });
+      heroShowcaseDots.forEach((dot, index) => {
+        dot.classList.toggle("is-active", index === currentHeroSlide);
+      });
+    };
+
+    if (heroShowcaseTrack && heroShowcaseSlides.length) {
+      setInterval(() => {
+        currentHeroSlide = (currentHeroSlide + 1) % heroShowcaseSlides.length;
+        updateHeroShowcase();
+      }, 5000);
     }
 
-    ctaHero?.addEventListener("click", openWhats);
-    ctaCatalogo?.addEventListener("click", openWhats);
-    ctaTop?.addEventListener("click", (e) => {
-      e.preventDefault();
-      window.location.href = "/login";
+    // Counters
+    const animateCounters = () => {
+      counters.forEach((counter) => {
+        const target = Number(counter.dataset.count);
+        const suffix = counter.dataset.suffix || "";
+        const duration = 1400;
+        const start = 0;
+        const startTime = performance.now();
+
+        const step = (now) => {
+          const progress = Math.min((now - startTime) / duration, 1);
+          const value = Math.floor(progress * (target - start) + start);
+
+          counter.textContent = value + suffix;
+
+          if (progress < 1) requestAnimationFrame(step);
+        };
+
+        requestAnimationFrame(step);
+      });
+    };
+
+    // Reveal on scroll
+    const onScroll = () => {
+      revealElements.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 120) element.classList.add("show");
+      });
+    };
+
+    // FAQ accordion
+    faqItems.forEach((item) => {
+      item.querySelector("button").addEventListener("click", () => {
+        item.classList.toggle("active");
+      });
     });
 
-    document.getElementById("year").textContent = new Date().getFullYear();
+    // CTA events
+    document.getElementById("ctaHero").addEventListener("click", () => openWA(msgParceria));
+    document.getElementById("ctaBottom").addEventListener("click", () => openWA(msgParceria));
+    document.getElementById("ctaCatalogo").addEventListener("click", () => openWA(msgCatalogo));
 
-    // contador animado simples
-    const counters = document.querySelectorAll("[data-count]");
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const el = entry.target;
-        const target = Number(el.dataset.count || 0);
-        const suffix = el.dataset.suffix || "";
-        const duration = 1200;
-        const start = performance.now();
+    window.addEventListener("load", () => {
+      animateCounters();
+      onScroll();
+    });
 
-        function tick(now) {
-          const p = Math.min((now - start) / duration, 1);
-          const value = Math.floor(target * (1 - Math.pow(1 - p, 3)));
-          el.textContent = value.toLocaleString("pt-BR") + suffix;
-          if (p < 1) requestAnimationFrame(tick);
-        }
-
-        requestAnimationFrame(tick);
-        io.unobserve(el);
-      });
-    }, { threshold: 0.35 });
-
-    counters.forEach((c) => io.observe(c));
-
-    // slider hero-showcase
-    const showcase = document.querySelector(".hero-showcase");
-    if (showcase) {
-      const track = showcase.querySelector(".hero-showcase-track");
-      const slides = Array.from(showcase.querySelectorAll(".hero-showcase-slide"));
-      const dots = Array.from(showcase.querySelectorAll(".hero-showcase-dot"));
-      let index = 0;
-      let timerId = null;
-      const interval = 4200;
-      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      const setActive = (nextIndex) => {
-        index = (nextIndex + slides.length) % slides.length;
-        track.style.transform = `translateX(-${index * 100}%)`;
-        slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
-        dots.forEach((dot, i) => dot.classList.toggle("is-active", i === index));
-      };
-
-      const start = () => {
-        if (prefersReducedMotion || slides.length <= 1) return;
-        stop();
-        timerId = window.setInterval(() => setActive(index + 1), interval);
-      };
-
-      const stop = () => {
-        if (timerId) {
-          window.clearInterval(timerId);
-          timerId = null;
-        }
-      };
-
-      dots.forEach((dot, dotIndex) => {
-        dot.addEventListener("click", () => {
-          setActive(dotIndex);
-          start();
-        });
-      });
-
-      showcase.addEventListener("mouseenter", stop);
-      showcase.addEventListener("mouseleave", start);
-      showcase.addEventListener("focusin", stop);
-      showcase.addEventListener("focusout", start);
-
-      setActive(0);
-      start();
-    }
+    window.addEventListener("scroll", onScroll);
   </script>
+<script type="module" src="preview3d.js"></script>
 </body>
 </html>
