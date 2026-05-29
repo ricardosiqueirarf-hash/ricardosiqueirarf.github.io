@@ -141,7 +141,7 @@
 
     table {
       width: 100%;
-      min-width: 760px;
+      min-width: 880px;
       border-collapse: collapse;
       font-size: 0.93rem;
       background: #fff;
@@ -210,6 +210,7 @@
           <thead>
             <tr>
               <th>Pedido</th>
+              <th>Data aprovação</th>
               <th>Cliente</th>
               <th>LojaID</th>
               <th>Total</th>
@@ -219,7 +220,7 @@
           </thead>
           <tbody id="tbodyPedidos">
             <tr>
-              <td colspan="6" class="empty">Carregando pedidos...</td>
+              <td colspan="7" class="empty">Carregando pedidos...</td>
             </tr>
           </tbody>
         </table>
@@ -292,6 +293,26 @@
       return `${Number.isFinite(statusNumero) ? statusNumero : "-"} - ${statusTexto}`;
     }
 
+    function getDataAprovacao(pedido) {
+      return pedido?.data_aprovacao ?? pedido?.dataAprovacao ?? pedido?.aprovado_em ?? "";
+    }
+
+    function formatarDataAprovacao(pedido) {
+      const valor = getDataAprovacao(pedido);
+      if (!valor) return "-";
+
+      const data = new Date(valor);
+      if (Number.isNaN(data.getTime())) return String(valor);
+
+      return data.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
     function getUsuarioStoreID(usuario) {
       return String(
         usuario?.storeID
@@ -324,7 +345,7 @@
       ).trim();
     }
 
-function getPedidoUUID(pedido) {
+    function getPedidoUUID(pedido) {
       return String(
         pedido?.id
         ?? pedido?.uuid
@@ -374,7 +395,7 @@ function getPedidoUUID(pedido) {
     function renderTabela(pedidos, lojasPorStoreID = new Map()) {
       const tbody = document.getElementById("tbodyPedidos");
       if (!pedidos.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum pedido encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum pedido encontrado.</td></tr>';
         return;
       }
 
@@ -384,6 +405,7 @@ function getPedidoUUID(pedido) {
         return `
           <tr>
             <td><b>#${escapeHtml(p.numero_pedido ?? "-")}</b></td>
+            <td>${escapeHtml(formatarDataAprovacao(p))}</td>
             <td>${escapeHtml(p.cliente_nome || "-")}</td>
             <td>${formatarLoja(p, lojasPorStoreID)}</td>
             <td>${moneyBR(valor)}</td>
@@ -444,7 +466,7 @@ function getPedidoUUID(pedido) {
 
       if (!token) {
         setStatusGlobal("Sessão não encontrada. Faça login novamente.", "erro");
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">Token ausente para consulta.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Token ausente para consulta.</td></tr>';
         return;
       }
 
@@ -471,7 +493,7 @@ function getPedidoUUID(pedido) {
       } catch (err) {
         console.error(err);
         setStatusGlobal(err.message || "Erro ao buscar pedidos.", "erro");
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">Não foi possível carregar os pedidos.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Não foi possível carregar os pedidos.</td></tr>';
       } finally {
         btn.disabled = false;
       }
