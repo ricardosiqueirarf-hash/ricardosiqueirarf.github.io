@@ -52,6 +52,7 @@ def api_financeiro():
         "numero_pedido",
         "cliente_nome",
         "data_criacao",
+        "data_aprovacao",
         "status",
         "valor_total",
         "valor_pago",
