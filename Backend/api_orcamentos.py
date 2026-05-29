@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from datetime import datetime, timezone
 import requests
 import os
 
@@ -69,6 +70,10 @@ def _valor_float(valor):
         return float(valor)
     except (TypeError, ValueError):
         return 0.0
+
+
+def _agora_iso_utc():
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _buscar_orcamento_por_numero(numero_pedido, storeid=None):
@@ -202,6 +207,9 @@ def criar_orcamento():
             "valor_total": 0
         }
 
+        if status_inicial == 2:
+            payload["data_aprovacao"] = _agora_iso_utc()
+
         if orcamento_uuid:
             payload["id"] = orcamento_uuid
 
@@ -260,7 +268,7 @@ def listar_orcamentos():
 
     try:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,data_criacao,quantidade_total,status,valor_total,lojaid&order=numero_pedido.asc{filtro_loja}",
+            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,data_criacao,data_aprovacao,quantidade_total,status,valor_total,lojaid&order=numero_pedido.asc{filtro_loja}",
             headers=HEADERS
         )
         r.raise_for_status()
@@ -478,6 +486,9 @@ def atualizar_status(uuid):
             }), 400
 
         payload = {"status": novo_status}
+        if novo_status == 2 and status_atual != 2:
+            payload["data_aprovacao"] = _agora_iso_utc()
+
         r_patch = requests.patch(
             f"{SUPABASE_URL}/rest/v1/orcamentos?id=eq.{uuid}",
             headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
@@ -644,7 +655,7 @@ def adicionar_pagamento():
         return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
 
     data = request.json or {}
-        if "pagamentos" in data and ("numero_pedido" in data or "orcamentoid" in data):
+    if "pagamentos" in data and ("numero_pedido" in data or "orcamentoid" in data):
         pagamentos = data.get("pagamentos")
         created_at = (data.get("created_at") or "").strip()
         orcamentoid = (data.get("orcamentoid") or "").strip()
