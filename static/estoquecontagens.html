@@ -375,7 +375,7 @@
       renderizarLinhaMensagem("Carregando contagens...");
 
       const { data, error } = await supabase
-        .from("estoque_contagens")
+        .from("estoque")
         .select("id, produto, quantidade, unidade, data_contagem, custo, categoria")
         .order("data_contagem", { ascending: false })
         .order("id", { ascending: false })
