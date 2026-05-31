@@ -410,7 +410,7 @@
       }
 
       const { error } = await supabase
-        .from("estoque_contagens")
+        .from("estoque")
         .insert([novaContagem]);
 
       salvarBtn.disabled = false;
