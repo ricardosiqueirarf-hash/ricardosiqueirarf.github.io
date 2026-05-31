@@ -304,13 +304,13 @@ def fornecedores_page():
 def fornecedores_html_page():
     return send_from_directory(os.path.join(ROOT_DIR, "static"), "fornecedores.html")
 
-@app.route("/estoque-contagens")
-def estoque-contagens_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoque-contagens.html")
+@app.route("/estoquecontagens")
+def estoquecontagens_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquecontagens.html")
 
-@app.route("/estoque-contagens.html")
-def estoque_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoque-contagens.html")
+@app.route("/estoquecontagens.html")
+def estoquecontagens_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquecontagens.html")
 
 # =====================
 # BLUEPRINTS
