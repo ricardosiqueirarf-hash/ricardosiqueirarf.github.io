@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard de Estoque</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --green: #16a34a;
+      --red: #dc2626;
+      --amber: #d97706;
+      --shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 34px 20px;
+      background: linear-gradient(135deg, #0f766e, #14b8a6);
+      color: #ffffff;
+    }
+
+    .header-inner,
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.9rem, 4vw, 2.7rem);
+    }
+
+    .subtitle {
+      margin: 0;
+      opacity: 0.9;
+      line-height: 1.45;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #ffffff;
+      background: rgba(15, 23, 42, 0.28);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+      transition: transform 0.2s, background 0.2s, opacity 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background: rgba(15, 23, 42, 0.42);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.68;
+    }
+
+    main {
+      padding: 28px 0 38px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card,
+    .table-card {
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(226, 232, 240, 0.72);
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    .card span {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .card strong {
+      display: block;
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      line-height: 1.1;
+      color: var(--primary-dark);
+    }
+
+    .table-card {
+      overflow: hidden;
+    }
+
+    .table-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .table-top h2 {
+      margin: 0;
+      color: var(--primary-dark);
+      font-size: 1.25rem;
+    }
+
+    .updated-at {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .message {
+      padding: 0 22px 18px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .message.error {
+      color: var(--red);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1040px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.12);
+    }
+
+    .dot.buy {
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.14);
+    }
+
+    .dot.available {
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.14);
+    }
+
+    .dot.insufficient {
+      background: var(--amber);
+      box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.14);
+    }
+
+    .status.buy {
+      color: var(--red);
+    }
+
+    .status.available {
+      color: var(--green);
+    }
+
+    .status.insufficient {
+      color: var(--amber);
+    }
+
+    .product {
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .empty {
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    @media (max-width: 860px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .header-inner,
+      main {
+        width: min(100% - 22px, 1180px);
+      }
+
+      header {
+        padding: 28px 0;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <h1>Dashboard de Estoque</h1>
+        <p class="subtitle">Visão atual baseada nas contagens já cadastradas na tabela estoque.</p>
+      </div>
+      <button id="atualizarBtn" type="button">Atualizar dados</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="cards" aria-label="Resumo do estoque">
+      <article class="card">
+        <span>Valor total em estoque</span>
+        <strong id="valorTotal">R$ 0,00</strong>
+      </article>
+
+      <article class="card">
+        <span>Produtos diferentes</span>
+        <strong id="produtosDiferentes">0</strong>
+      </article>
+
+      <article class="card">
+        <span>Itens para comprar</span>
+        <strong id="itensComprar">0</strong>
+      </article>
+    </section>
+
+    <section class="table-card" aria-labelledby="tabela-title">
+      <div class="table-top">
+        <h2 id="tabela-title">Estoque atual por produto</h2>
+        <span id="atualizadoEm" class="updated-at">Aguardando atualização...</span>
+      </div>
+
+      <div id="mensagem" class="message" role="status" aria-live="polite">Carregando dados...</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th>Estoque atual</th>
+              <th>Unidade</th>
+              <th>Custo</th>
+              <th>Valor em estoque</th>
+              <th>Vazão média mensal</th>
+              <th>Mínimo sugerido</th>
+              <th>Última contagem</th>
+            </tr>
+          </thead>
+          <tbody id="dashboardBody">
+            <tr>
+              <td colspan="10" class="empty">Carregando dados...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
+    const DIAS_MEDIOS_MES = 30.4375;
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const atualizarBtn = document.getElementById("atualizarBtn");
+    const valorTotalEl = document.getElementById("valorTotal");
+    const produtosDiferentesEl = document.getElementById("produtosDiferentes");
+    const itensComprarEl = document.getElementById("itensComprar");
+    const atualizadoEmEl = document.getElementById("atualizadoEm");
+    const mensagemEl = document.getElementById("mensagem");
+    const dashboardBody = document.getElementById("dashboardBody");
+
+    function numero(valor) {
+      const convertido = Number(valor);
+      return Number.isFinite(convertido) ? convertido : 0;
+    }
+
+    function dataTimestamp(valor) {
+      const timestamp = new Date(valor || 0).getTime();
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function formatarNumero(valor, casas = 2) {
+      if (valor === null || valor === undefined || Number.isNaN(Number(valor))) return "—";
+      return Number(valor).toLocaleString("pt-BR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: casas
+      });
+    }
+
+    function formatarInteiroParaCima(valor) {
+      if (valor === null || valor === undefined || Number.isNaN(Number(valor))) return "histórico insuficiente";
+      return Math.ceil(Number(valor)).toLocaleString("pt-BR");
+    }
+
+    function formatarMoeda(valor) {
+      return numero(valor).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    function formatarData(valor) {
+      if (!valor) return "—";
+      return new Date(valor).toLocaleString("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short"
+      });
+    }
+
+    function definirMensagem(texto, tipo = "") {
+      mensagemEl.textContent = texto;
+      mensagemEl.className = `message ${tipo}`.trim();
+    }
+
+    function criarCelula(texto, classe = "") {
+      const td = document.createElement("td");
+      td.textContent = texto;
+      if (classe) td.className = classe;
+      return td;
+    }
+
+    function renderizarLinhaMensagem(texto) {
+      dashboardBody.innerHTML = "";
+      const tr = document.createElement("tr");
+      const td = criarCelula(texto, "empty");
+      td.colSpan = 10;
+      tr.appendChild(td);
+      dashboardBody.appendChild(tr);
+    }
+
+    function chaveProduto(item) {
+      return String(item.produto || "").trim() || `Produto sem nome #${item.id}`;
+    }
+
+    function compararPorDataEId(a, b) {
+      const diferencaData = dataTimestamp(a.data_contagem) - dataTimestamp(b.data_contagem);
+      if (diferencaData !== 0) return diferencaData;
+      return numero(a.id) - numero(b.id);
+    }
+
+    function mesesEntreDatas(inicio, fim) {
+      const inicioMs = dataTimestamp(inicio);
+      const fimMs = dataTimestamp(fim);
+      if (!inicioMs || !fimMs || fimMs <= inicioMs) return 0;
+      return (fimMs - inicioMs) / (1000 * 60 * 60 * 24 * DIAS_MEDIOS_MES);
+    }
+
+    function calcularProduto(produto, historicoOriginal) {
+      const historico = [...historicoOriginal].sort(compararPorDataEId);
+      const ultima = historico[historico.length - 1];
+      const quantidadeAtual = numero(ultima.quantidade);
+      const custo = numero(ultima.custo);
+      const valorEstoque = quantidadeAtual * custo;
+      let somaConsumosPositivos = 0;
+
+      for (let index = 1; index < historico.length; index += 1) {
+        const quantidadeAnterior = numero(historico[index - 1].quantidade);
+        const quantidadeContagemAtual = numero(historico[index].quantidade);
+        const consumo = quantidadeAnterior - quantidadeContagemAtual;
+
+        if (consumo > 0) {
+          somaConsumosPositivos += consumo;
+        }
+      }
+
+      const meses = mesesEntreDatas(historico[0]?.data_contagem, ultima.data_contagem);
+      const temHistoricoSuficiente = historico.length >= 2 && meses > 0;
+      const vazaoMediaMensal = temHistoricoSuficiente ? somaConsumosPositivos / meses : null;
+      const minimoSugerido = vazaoMediaMensal === null ? null : Math.ceil(vazaoMediaMensal * 0.5);
+      const precisaComprar = minimoSugerido !== null && quantidadeAtual < minimoSugerido;
+
+      return {
+        produto,
+        categoria: ultima.categoria || "—",
+        quantidadeAtual,
+        unidade: ultima.unidade || "—",
+        custo,
+        valorEstoque,
+        vazaoMediaMensal,
+        minimoSugerido,
+        precisaComprar,
+        historicoInsuficiente: !temHistoricoSuficiente,
+        ultimaContagem: ultima.data_contagem
+      };
+    }
+
+    function agruparPorProduto(dados) {
+      return dados.reduce((grupos, item) => {
+        const chave = chaveProduto(item);
+        if (!grupos.has(chave)) grupos.set(chave, []);
+        grupos.get(chave).push(item);
+        return grupos;
+      }, new Map());
+    }
+
+    function statusHtml(item) {
+      if (item.historicoInsuficiente) {
+        return '<span class="status insufficient"><span class="dot insufficient"></span>Histórico insuficiente</span>';
+      }
+
+      if (item.precisaComprar) {
+        return '<span class="status buy"><span class="dot buy"></span>Comprar</span>';
+      }
+
+      return '<span class="status available"><span class="dot available"></span>Disponível</span>';
+    }
+
+    function renderizarDashboard(itens) {
+      dashboardBody.innerHTML = "";
+
+      if (!itens.length) {
+        renderizarLinhaMensagem("Nenhuma contagem cadastrada na tabela estoque.");
+        return;
+      }
+
+      itens.forEach((item) => {
+        const tr = document.createElement("tr");
+        const statusTd = document.createElement("td");
+        statusTd.innerHTML = statusHtml(item);
+
+        tr.appendChild(statusTd);
+        tr.appendChild(criarCelula(item.produto, "product"));
+        tr.appendChild(criarCelula(item.categoria));
+        tr.appendChild(criarCelula(formatarNumero(item.quantidadeAtual)));
+        tr.appendChild(criarCelula(item.unidade));
+        tr.appendChild(criarCelula(formatarMoeda(item.custo)));
+        tr.appendChild(criarCelula(formatarMoeda(item.valorEstoque)));
+        tr.appendChild(criarCelula(
+          item.vazaoMediaMensal === null
+            ? "histórico insuficiente"
+            : `${formatarNumero(item.vazaoMediaMensal)} / mês`,
+          item.vazaoMediaMensal === null ? "muted" : ""
+        ));
+        tr.appendChild(criarCelula(formatarInteiroParaCima(item.minimoSugerido), item.minimoSugerido === null ? "muted" : ""));
+        tr.appendChild(criarCelula(formatarData(item.ultimaContagem)));
+        dashboardBody.appendChild(tr);
+      });
+    }
+
+    function atualizarCards(itens) {
+      const valorTotal = itens.reduce((total, item) => total + item.valorEstoque, 0);
+      const itensParaComprar = itens.filter((item) => item.precisaComprar).length;
+
+      valorTotalEl.textContent = formatarMoeda(valorTotal);
+      produtosDiferentesEl.textContent = itens.length.toLocaleString("pt-BR");
+      itensComprarEl.textContent = itensParaComprar.toLocaleString("pt-BR");
+    }
+
+    async function atualizarDashboard() {
+      atualizarBtn.disabled = true;
+      definirMensagem("Carregando dados...");
+      renderizarLinhaMensagem("Carregando dados...");
+
+      const { data, error } = await supabase
+        .from("estoque")
+        .select("id, produto, quantidade, unidade, data_contagem, custo, categoria");
+
+      atualizarBtn.disabled = false;
+
+      if (error) {
+        definirMensagem(`Erro ao carregar dados: ${error.message}`, "error");
+        renderizarLinhaMensagem("Não foi possível carregar os dados da tabela estoque.");
+        return;
+      }
+
+      const grupos = agruparPorProduto(data || []);
+      const itens = Array.from(grupos.entries())
+        .map(([produto, historico]) => calcularProduto(produto, historico))
+        .sort((a, b) => b.valorEstoque - a.valorEstoque);
+
+      atualizarCards(itens);
+      renderizarDashboard(itens);
+      definirMensagem(`${itens.length.toLocaleString("pt-BR")} produto(s) carregado(s).`);
+      atualizadoEmEl.textContent = `Atualizado em ${new Date().toLocaleString("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short"
+      })}`;
+    }
+
+    atualizarBtn.addEventListener("click", atualizarDashboard);
+    atualizarDashboard();
+  </script>
+</body>
+</html>
