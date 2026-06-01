@@ -69,7 +69,8 @@
       font-size: 0.95rem;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       border: 1px solid #cbd5e1;
       border-radius: 10px;
@@ -80,7 +81,14 @@
       transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    input:focus {
+    select:disabled,
+    input:read-only {
+      background: #f8fafc;
+      color: #64748b;
+    }
+
+    input:focus,
+    select:focus {
       outline: none;
       border-color: #14b8a6;
       box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.16);
@@ -222,7 +230,9 @@
       <form id="contagemForm">
         <label>
           Produto
-          <input id="produto" name="produto" type="text" placeholder="Ex: Perfil alumínio" required />
+          <select id="produto" name="produto" required disabled>
+            <option value="">Carregando produtos cadastrados...</option>
+          </select>
         </label>
 
         <label>
@@ -242,7 +252,7 @@
 
         <label>
           Categoria
-          <input id="categoria" name="categoria" type="text" placeholder="Ex: Alumínio" required />
+          <input id="categoria" name="categoria" type="text" placeholder="Selecione um produto" readonly required />
         </label>
 
         <label>
@@ -295,9 +305,20 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const form = document.getElementById("contagemForm");
     const mensagem = document.getElementById("mensagem");
+    const produtoSelect = document.getElementById("produto");
+    const categoriaInput = document.getElementById("categoria");
+    const custoInput = document.getElementById("custo");
     const salvarBtn = document.getElementById("salvarBtn");
     const recarregarBtn = document.getElementById("recarregarBtn");
     const contagensBody = document.getElementById("contagensBody");
+    const tabelasProdutos = [
+      { tabela: "perfis", categoria: "perfis", campoNome: "nome", select: "id, nome, custo" },
+      { tabela: "vidros", categoria: "vidros", campoNome: "tipo", select: "id, tipo, espessura, custo" },
+      { tabela: "puxadores", categoria: "puxadores", campoNome: "nome", select: "id, nome, custo" },
+      { tabela: "sistemas", categoria: "sistemas", campoNome: "nome", select: "id, nome, custo" },
+      { tabela: "trilhos", categoria: "trilhos", campoNome: "nome", select: "id, nome, custo" }
+    ];
+    const produtosPorChave = new Map();
 
     function mostrarMensagem(texto, tipo) {
       mensagem.textContent = texto;
@@ -307,6 +328,110 @@
     function valorDecimal(campo) {
       const valor = form.elements[campo].value;
       return valor === "" ? null : Number(valor);
+    }
+
+    function textoProduto(item, config) {
+      if (config.tabela === "vidros") {
+        const tipo = String(item.tipo || "").trim();
+        const espessura = item.espessura ? `${item.espessura} mm` : "";
+        return [tipo, espessura].filter(Boolean).join(" - ");
+      }
+
+      return String(item[config.campoNome] || "").trim();
+    }
+
+    function limparSelectProdutos(texto) {
+      produtoSelect.innerHTML = "";
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = texto;
+      produtoSelect.appendChild(option);
+    }
+
+    function criarOpcaoProduto(item, config) {
+      const nome = textoProduto(item, config);
+      if (!nome) return null;
+
+      const chave = `${config.categoria}:${item.id ?? nome}`;
+      const option = document.createElement("option");
+      option.value = chave;
+      option.textContent = nome;
+      option.dataset.categoria = config.categoria;
+
+      produtosPorChave.set(chave, {
+        nome,
+        categoria: config.categoria,
+        custo: item.custo
+      });
+
+      return option;
+    }
+
+    async function carregarProdutosCadastrados() {
+      produtoSelect.disabled = true;
+      salvarBtn.disabled = true;
+      categoriaInput.value = "";
+      produtosPorChave.clear();
+      limparSelectProdutos("Carregando produtos cadastrados...");
+
+      const resultados = await Promise.allSettled(
+        tabelasProdutos.map(async (config) => {
+          const { data, error } = await supabase
+            .from(config.tabela)
+            .select(config.select)
+            .order(config.campoNome, { ascending: true });
+
+          if (error) throw new Error(`${config.categoria}: ${error.message}`);
+          return { config, data: data || [] };
+        })
+      );
+
+      produtoSelect.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Selecione um produto cadastrado";
+      produtoSelect.appendChild(placeholder);
+
+      const erros = [];
+
+      resultados.forEach((resultado) => {
+        if (resultado.status === "rejected") {
+          erros.push(resultado.reason.message);
+          return;
+        }
+
+        const { config, data } = resultado.value;
+        const opcoes = data
+          .map((item) => criarOpcaoProduto(item, config))
+          .filter(Boolean);
+
+        if (!opcoes.length) return;
+
+        const grupo = document.createElement("optgroup");
+        grupo.label = config.categoria;
+        opcoes.forEach((option) => grupo.appendChild(option));
+        produtoSelect.appendChild(grupo);
+      });
+
+      produtoSelect.disabled = produtosPorChave.size === 0;
+      salvarBtn.disabled = produtosPorChave.size === 0;
+
+      if (produtosPorChave.size === 0) {
+        limparSelectProdutos("Nenhum produto cadastrado encontrado");
+      }
+
+      if (erros.length) {
+        mostrarMensagem(`Algumas categorias não carregaram: ${erros.join(" | ")}`, "error");
+      }
+    }
+
+    function atualizarProdutoSelecionado() {
+      const produto = produtosPorChave.get(produtoSelect.value);
+      categoriaInput.value = produto?.categoria || "";
+
+      if (produto?.custo !== null && produto?.custo !== undefined && produto.custo !== "") {
+        custoInput.value = produto.custo;
+      }
     }
 
     function formatarNumero(valor) {
@@ -375,7 +500,7 @@
       renderizarLinhaMensagem("Carregando contagens...");
 
       const { data, error } = await supabase
-        .from("estoque")
+        .from("estoque_contagens")
         .select("id, produto, quantidade, unidade, data_contagem, custo, categoria")
         .order("data_contagem", { ascending: false })
         .order("id", { ascending: false })
@@ -398,19 +523,25 @@
 
       const dataContagem = form.elements.data_contagem.value;
       const novaContagem = {
-        produto: form.elements.produto.value.trim(),
+        produto: produtosPorChave.get(produtoSelect.value)?.nome || "",
         quantidade: valorDecimal("quantidade"),
         unidade: form.elements.unidade.value.trim(),
         custo: valorDecimal("custo"),
-        categoria: form.elements.categoria.value.trim()
+        categoria: categoriaInput.value
       };
+
+      if (!novaContagem.produto || !novaContagem.categoria) {
+        salvarBtn.disabled = false;
+        mostrarMensagem("Selecione um produto cadastrado antes de salvar.", "error");
+        return;
+      }
 
       if (dataContagem) {
         novaContagem.data_contagem = new Date(dataContagem).toISOString();
       }
 
       const { error } = await supabase
-        .from("estoque")
+        .from("estoque_contagens")
         .insert([novaContagem]);
 
       salvarBtn.disabled = false;
@@ -421,11 +552,14 @@
       }
 
       form.reset();
+      categoriaInput.value = "";
       mostrarMensagem("Contagem salva com sucesso!", "success");
       carregarContagens();
     });
 
+    produtoSelect.addEventListener("change", atualizarProdutoSelecionado);
     recarregarBtn.addEventListener("click", carregarContagens);
+    carregarProdutosCadastrados();
     carregarContagens();
   </script>
 </body>
