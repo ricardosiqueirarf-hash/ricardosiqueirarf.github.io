@@ -312,6 +312,14 @@ def estoquecontagens_page():
 def estoquecontagens_html_page():
     return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquecontagens.html")
 
+@app.route("/estoquedashboard")
+def estoquedashboard_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquedashboard.html")
+
+@app.route("/estoquedashboard.html")
+def estoquedashboard_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquedashboard.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
