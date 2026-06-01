@@ -313,7 +313,7 @@
     const contagensBody = document.getElementById("contagensBody");
     const tabelasProdutos = [
       { tabela: "perfis", categoria: "perfis", campoNome: "nome", select: "id, nome, custo" },
-      { tabela: "vidros", categoria: "vidros", campoNome: "tipo", select: "id, tipo, espessura, custo", apiEndpoint: "/api/vidros" },
+      { tabela: "vidros", categoria: "vidros", campoNome: "tipo", select: "id, tipo, espessura, custo" },
       { tabela: "puxadores", categoria: "puxadores", campoNome: "nome", select: "id, nome, custo" },
       { tabela: "sistemas", categoria: "sistemas", campoNome: "nome", select: "id, nome, custo" },
       { tabela: "trilhos", categoria: "trilhos", campoNome: "nome", select: "id, nome, custo" }
@@ -367,48 +367,6 @@
       return option;
     }
 
-    async function carregarTabelaSupabase(config) {
-      const { data, error } = await supabase
-        .from(config.tabela)
-        .select(config.select)
-        .order(config.campoNome, { ascending: true });
-
-      if (error) throw new Error(error.message);
-      return data || [];
-    }
-
-    async function carregarTabelaApi(config) {
-      const response = await fetch(config.apiEndpoint);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        throw new Error(data?.error || "Resposta inválida");
-      }
-
-      return data;
-    }
-
-    async function carregarDadosProdutos(config) {
-      if (!config.apiEndpoint) {
-        return carregarTabelaSupabase(config);
-      }
-
-      try {
-        return await carregarTabelaApi(config);
-      } catch (apiError) {
-        try {
-          return await carregarTabelaSupabase(config);
-        } catch (supabaseError) {
-          throw new Error(`${config.categoria}: API (${apiError.message}) | Supabase (${supabaseError.message})`);
-        }
-      }
-    }
-
     async function carregarProdutosCadastrados() {
       produtoSelect.disabled = true;
       salvarBtn.disabled = true;
@@ -417,10 +375,15 @@
       limparSelectProdutos("Carregando produtos cadastrados...");
 
       const resultados = await Promise.allSettled(
-        tabelasProdutos.map(async (config) => ({
-          config,
-          data: await carregarDadosProdutos(config)
-        }))
+        tabelasProdutos.map(async (config) => {
+          const { data, error } = await supabase
+            .from(config.tabela)
+            .select(config.select)
+            .order(config.campoNome, { ascending: true });
+
+          if (error) throw new Error(`${config.categoria}: ${error.message}`);
+          return { config, data: data || [] };
+        })
       );
 
       produtoSelect.innerHTML = "";
