@@ -115,6 +115,161 @@ def _atualizar_valor_pago_orcamento(orcamento_id, valor_pago):
     return itens[0] if itens else {"id": orcamento_id, "valor_pago": valor_pago}
 
 
+
+
+def load_telegram_env():
+    """Carrega TELEGRAM_TOKEN e TELEGRAM_CHAT_ID de static/bottelegram.env sem expor no frontend."""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env_path = os.path.join(base_dir, "static", "bottelegram.env")
+    config = {}
+
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as env_file:
+            for line in env_file:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                config[key.strip()] = value.strip().strip('"').strip("'")
+
+    return {
+        "TELEGRAM_TOKEN": os.getenv("TELEGRAM_TOKEN") or config.get("TELEGRAM_TOKEN", ""),
+        "TELEGRAM_CHAT_ID": os.getenv("TELEGRAM_CHAT_ID") or config.get("TELEGRAM_CHAT_ID", ""),
+    }
+
+
+def _telegram_api_url(token, method):
+    return f"https://api.telegram.org/bot{token}/{method}"
+
+
+def _enviar_mensagem_telegram(orcamento):
+    config = load_telegram_env()
+    token = config.get("TELEGRAM_TOKEN")
+    chat_id = config.get("TELEGRAM_CHAT_ID")
+
+    if not token or not chat_id:
+        raise RuntimeError("TELEGRAM_TOKEN ou TELEGRAM_CHAT_ID não configurados em static/bottelegram.env")
+
+    uuid = str(orcamento.get("id") or "").strip()
+    mensagem = (
+        "Solicitação de aprovação de pedido\n\n"
+        f"Pedido: {orcamento.get('numero_pedido') or '-'}\n"
+        f"Cliente: {orcamento.get('cliente_nome') or '-'}\n"
+        f"Valor: {money_br(orcamento.get('valor_total'))}\n"
+        f"UUID: {uuid}"
+    )
+
+    payload = {
+        "chat_id": chat_id,
+        "text": mensagem,
+        "reply_markup": {
+            "inline_keyboard": [
+                [{"text": "✅ Aprovar", "callback_data": f"aprovar_orcamento:{uuid}"}],
+                [{"text": "❌ Negar", "callback_data": f"negar_orcamento:{uuid}"}],
+            ]
+        }
+    }
+
+    r = requests.post(_telegram_api_url(token, "sendMessage"), json=payload, timeout=15)
+    r.raise_for_status()
+    data = r.json()
+    if not data.get("ok"):
+        raise RuntimeError(data.get("description") or "Telegram não aceitou a mensagem")
+    return data
+
+
+def _responder_callback_telegram(callback_query_id, texto):
+    config = load_telegram_env()
+    token = config.get("TELEGRAM_TOKEN")
+    if not token or not callback_query_id:
+        return
+
+    requests.post(
+        _telegram_api_url(token, "answerCallbackQuery"),
+        json={"callback_query_id": callback_query_id, "text": texto},
+        timeout=10
+    )
+
+
+def _editar_mensagem_telegram(message, texto):
+    config = load_telegram_env()
+    token = config.get("TELEGRAM_TOKEN")
+    if not token or not message:
+        return
+
+    chat = message.get("chat") or {}
+    chat_id = chat.get("id")
+    message_id = message.get("message_id")
+    if not chat_id or not message_id:
+        return
+
+    requests.post(
+        _telegram_api_url(token, "editMessageText"),
+        json={"chat_id": chat_id, "message_id": message_id, "text": texto},
+        timeout=10
+    )
+
+
+def money_br(valor):
+    try:
+        numero = float(valor or 0)
+    except (TypeError, ValueError):
+        numero = 0.0
+    texto = f"{numero:,.2f}"
+    texto = texto.replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {texto}"
+
+
+def _validar_callback_orcamento(callback_data):
+    if not isinstance(callback_data, str) or ":" not in callback_data:
+        return None, None
+
+    acao, uuid = callback_data.split(":", 1)
+    uuid = uuid.strip()
+
+    if acao not in {"aprovar_orcamento", "negar_orcamento"} or not uuid:
+        return None, None
+
+    return acao, uuid
+
+
+def _aprovar_orcamento_por_telegram(uuid):
+    from app import SUPABASE_URL, HEADERS
+
+    r_atual = requests.get(
+        f"{SUPABASE_URL}/rest/v1/orcamentos?select=status&id=eq.{uuid}&limit=1",
+        headers=HEADERS
+    )
+    r_atual.raise_for_status()
+    atual_data = r_atual.json() or []
+
+    if not atual_data:
+        return {"success": False, "error": "Orçamento não encontrado", "status_code": 404}
+
+    try:
+        status_atual = int(atual_data[0].get("status", 1))
+    except (TypeError, ValueError):
+        status_atual = 1
+
+    if status_atual == 2:
+        return {"success": True, "message": "Pedido já estava aprovado", "status": 2}
+
+    if status_atual != 1:
+        return {
+            "success": False,
+            "error": f"Pedido não pode ser aprovado a partir do status {status_atual}",
+            "status_code": 409
+        }
+
+    r_patch = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/orcamentos?id=eq.{uuid}",
+        headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
+        json={"status": 2, "data_aprovacao": _agora_iso_utc()}
+    )
+    r_patch.raise_for_status()
+
+    return {"success": True, "message": "Pedido aprovado", "status": 2}
+
 def _normalizar_registro_pagamento(registro):
     registro = registro or {}
     dados_pagamento = registro.get("pagamentos") or {}
@@ -404,6 +559,86 @@ def finalizar_orcamento(uuid):
         r_patch.raise_for_status()
         return jsonify({"success": True, "quantidade_total": quantidade_total, "valor_total": valor_total})
     except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# =====================
+# SOLICITAR APROVAÇÃO VIA TELEGRAM
+# =====================
+@orcamentos_bp.route("/api/orcamento/<uuid>/solicitar-aprovacao", methods=["POST"])
+def solicitar_aprovacao_telegram(uuid):
+    token = extrair_token(request)
+
+    usuario = None
+    if token:
+        try:
+            usuario = buscar_usuario_por_token(token)
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    try:
+        level = int((usuario or {}).get("level") or 0)
+    except (TypeError, ValueError):
+        level = 0
+
+    storeid = obter_storeid(usuario)
+
+    if level == 1 and not storeid:
+        return jsonify({"success": False, "error": "Loja não vinculada ao usuário."}), 403
+
+    try:
+        orcamento = _buscar_orcamento_por_id(uuid, storeid if level == 1 else None)
+        if not orcamento:
+            return jsonify({"success": False, "error": "Orçamento não encontrado"}), 404
+
+        _enviar_mensagem_telegram(orcamento)
+        return jsonify({"success": True})
+    except requests.HTTPError as e:
+        detalhe = "Erro ao comunicar com o Telegram ou Supabase."
+        if e.response is not None:
+            try:
+                detalhe = e.response.json().get("description") or e.response.text or detalhe
+            except ValueError:
+                detalhe = e.response.text or detalhe
+        return jsonify({"success": False, "error": detalhe}), 502
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# =====================
+# WEBHOOK TELEGRAM
+# =====================
+@orcamentos_bp.route("/telegram/webhook", methods=["POST"])
+def telegram_webhook():
+    data = request.get_json(silent=True) or {}
+    callback_query = data.get("callback_query") or {}
+    callback_data = callback_query.get("data")
+    callback_query_id = callback_query.get("id")
+    message = callback_query.get("message") or {}
+
+    acao, uuid = _validar_callback_orcamento(callback_data)
+    if not acao or not uuid:
+        _responder_callback_telegram(callback_query_id, "Ação inválida")
+        return jsonify({"success": False, "error": "callback_data inválido"}), 400
+
+    if acao == "negar_orcamento":
+        _responder_callback_telegram(callback_query_id, "Pedido negado")
+        _editar_mensagem_telegram(message, "Pedido negado")
+        return jsonify({"success": True, "action": "negado", "uuid": uuid})
+
+    try:
+        resultado = _aprovar_orcamento_por_telegram(uuid)
+        if not resultado.get("success"):
+            erro = resultado.get("error") or "Não foi possível aprovar o pedido"
+            _responder_callback_telegram(callback_query_id, erro)
+            _editar_mensagem_telegram(message, f"Pedido não aprovado: {erro}")
+            return jsonify({"success": False, "error": erro}), resultado.get("status_code", 400)
+
+        _responder_callback_telegram(callback_query_id, "Pedido aprovado")
+        _editar_mensagem_telegram(message, "Pedido aprovado")
+        return jsonify({"success": True, "action": "aprovado", "uuid": uuid})
+    except Exception as e:
+        _responder_callback_telegram(callback_query_id, "Erro ao aprovar pedido")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
