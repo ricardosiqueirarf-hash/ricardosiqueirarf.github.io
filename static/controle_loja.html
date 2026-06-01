@@ -279,6 +279,36 @@
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
+    function somarValorPago(valorPago) {
+      if (Array.isArray(valorPago)) {
+        return valorPago.reduce((total, item) => {
+          const numero = parseValorTotal(item);
+          return total + numero;
+        }, 0);
+      }
+
+      if (valorPago === null || valorPago === undefined || valorPago === "") {
+        return 0;
+      }
+
+      if (typeof valorPago === "string") {
+        const texto = valorPago.trim();
+
+        if (texto.startsWith("[") && texto.endsWith("]")) {
+          try {
+            const valorPagoJson = JSON.parse(texto);
+            if (Array.isArray(valorPagoJson)) {
+              return somarValorPago(valorPagoJson);
+            }
+          } catch (error) {
+            console.warn("valor_pago não pôde ser interpretado como JSON array.", error);
+          }
+        }
+      }
+
+      return parseValorTotal(valorPago);
+    }
+
     function getStatusLabel(status) {
       const statusNumero = Number(status);
       if (Number.isFinite(statusNumero) && STATUS_LABELS[statusNumero]) {
@@ -401,7 +431,7 @@
 
       tbody.innerHTML = pedidos.map((p) => {
         const valor = parseValorTotal(p.valor_total ?? p.total ?? p.preco_total);
-        const valorPago = parseValorTotal(p.valor_pago);
+        const valorPago = somarValorPago(p.valor_pago);
         return `
           <tr>
             <td><b>#${escapeHtml(p.numero_pedido ?? "-")}</b></td>
