@@ -142,13 +142,42 @@ def _telegram_api_url(token, method):
     return f"https://api.telegram.org/bot{token}/{method}"
 
 
-def _enviar_mensagem_telegram(orcamento):
+def _public_base_url():
+    proto = request.headers.get("X-Forwarded-Proto") or request.scheme or "https"
+    host = request.headers.get("X-Forwarded-Host") or request.headers.get("Host")
+    if host:
+        return f"{proto}://{host}".rstrip("/")
+    return (request.url_root or "").rstrip("/")
+
+
+def _garantir_webhook_telegram(token, base_url=None):
+    base_url = (base_url or "").rstrip("/")
+    if not token or not base_url:
+        return None
+
+    webhook_url = f"{base_url}/telegram/webhook"
+    payload = {
+        "url": webhook_url,
+        "allowed_updates": ["callback_query"]
+    }
+
+    r = requests.post(_telegram_api_url(token, "setWebhook"), json=payload, timeout=15)
+    r.raise_for_status()
+    data = r.json()
+    if not data.get("ok"):
+        raise RuntimeError(data.get("description") or "Telegram não aceitou a configuração do webhook")
+    return data
+
+
+def _enviar_mensagem_telegram(orcamento, webhook_base_url=None):
     config = load_telegram_env()
     token = config.get("TELEGRAM_TOKEN")
     chat_id = config.get("TELEGRAM_CHAT_ID")
 
     if not token or not chat_id:
         raise RuntimeError("TELEGRAM_TOKEN ou TELEGRAM_CHAT_ID não configurados em static/bottelegram.env")
+
+    _garantir_webhook_telegram(token, webhook_base_url)
 
     uuid = str(orcamento.get("id") or "").strip()
     mensagem = (
@@ -591,7 +620,7 @@ def solicitar_aprovacao_telegram(uuid):
         if not orcamento:
             return jsonify({"success": False, "error": "Orçamento não encontrado"}), 404
 
-        _enviar_mensagem_telegram(orcamento)
+        _enviar_mensagem_telegram(orcamento, _public_base_url())
         return jsonify({"success": True})
     except requests.HTTPError as e:
         detalhe = "Erro ao comunicar com o Telegram ou Supabase."
@@ -608,8 +637,12 @@ def solicitar_aprovacao_telegram(uuid):
 # =====================
 # WEBHOOK TELEGRAM
 # =====================
-@orcamentos_bp.route("/telegram/webhook", methods=["POST"])
+@orcamentos_bp.route("/telegram/webhook", methods=["GET", "POST"])
+@orcamentos_bp.route("/api/telegram/webhook", methods=["GET", "POST"])
 def telegram_webhook():
+    if request.method == "GET":
+        return jsonify({"success": True, "message": "Webhook Telegram ativo"})
+
     data = request.get_json(silent=True) or {}
     callback_query = data.get("callback_query") or {}
     callback_data = callback_query.get("data")
