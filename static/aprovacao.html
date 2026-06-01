@@ -328,7 +328,7 @@ hr {
 
     <!-- ESQUERDA: dados + aprovação -->
     <section class="card">
-      <div class="pill"><span></span>Aprovar pedido</div>
+      <div class="pill"><span></span>Solicitar aprovação</div>
       <h2>Detalhes</h2>
       <p class="sub">Os dados abaixo serão preenchidos automaticamente pelo UUID do orçamento.</p>
 
@@ -353,20 +353,16 @@ hr {
       </div>
 
       <div class="badge-secure">
-        <div style="font-size: 1.2rem;">🧾</div>
+        <div style="font-size: 1.2rem;">📲</div>
         <div>
-          <b>Boleto via Asaas</b><br>
-          <span style="color:#4b5563;">Ao aprovar, o boleto será gerado e você poderá abrir/copiar o link.</span>
+          <b>Aprovação via Telegram</b><br>
+          <span style="color:#4b5563;">Ao solicitar, a equipe recebe uma mensagem no Telegram e somente os botões do Telegram aprovam ou negam o pedido.</span>
         </div>
       </div>
 
       <hr>
 
-      <label>Senha de aprovação
-        <input id="aprova_senha" type="password" placeholder="Digite a senha de aprovação" autocomplete="off">
-      </label>
-
-      <button class="btn" id="btnAprovar" onclick="aprovarPedido()">✅ Aprovar pedido</button>
+      <button class="btn" id="btnAprovar" onclick="solicitarAprovacaoTelegram()">📲 Solicitar aprovação</button>
       <button class="btn btn-outline" style="margin-top:10px;" onclick="voltar()">Voltar</button>
 
       <div id="status" class="status"></div>
@@ -413,7 +409,7 @@ hr {
       <hr>
 
       <div class="pill"><span></span>Link do boleto</div>
-      <p class="sub" style="margin-bottom:10px;">Após aprovar, o link aparecerá aqui.</p>
+      <p class="sub" style="margin-bottom:10px;">Após a aprovação pelo Telegram e a geração do boleto, o link aparecerá aqui.</p>
 
       <label>URL do boleto
         <input id="boleto_url" type="text" placeholder="Ainda não gerado" readonly>
@@ -526,7 +522,7 @@ async function carregarDadosDoOrcamento(uuid) {
     document.getElementById("valor_total").value = valorTotal ? valorTotal.toFixed(2) : "";
 
     updateResumoFromInputs();
-    setStatus("Dados carregados. Pode aprovar.", "ok");
+    setStatus("Dados carregados. Solicite a aprovação via Telegram.", "ok");
 
   } catch (err) {
     console.error(err);
@@ -535,70 +531,51 @@ async function carregarDadosDoOrcamento(uuid) {
 }
 
 /**
- * ✅ Aprovação do pedido (atualiza status do orçamento para aprovado)
+ * ✅ Solicita aprovação pelo Telegram.
+ * O frontend apenas dispara a solicitação; a aprovação/negação acontece no Telegram.
  */
-async function aprovarPedido() {
+async function solicitarAprovacaoTelegram() {
   const btn = document.getElementById("btnAprovar");
   const token = getToken();
-
   const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
-  const aprovaSenha = document.getElementById("aprova_senha").value.trim();
-  
+
   if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
   if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
-  if (!aprovaSenha) { setStatus("Informe a senha de aprovação para aprovar o pedido.", "erro"); return; }
 
   try {
     btn.disabled = true;
-    setStatus("Aprovando pedido...");
+    setStatus("Enviando solicitação...");
 
-    const resultado = await atualizarStatusOrcamento(orcamento_uuid, token, aprovaSenha);
-    if (resultado.success) {
-      setStatus("Pedido aprovado! Status atualizado.", "ok");
-      document.getElementById("aprova_senha").value = "";
-    } else {
-      setStatus(resultado.error || "Não foi possível atualizar o status do pedido.", "erro");
-    }
-    btn.disabled = false;
-
-  } catch (err) {
-    console.error(err);
-    setStatus("Erro ao aprovar pedido. Verifique o console.", "erro");
-    btn.disabled = false;
-  }
-}
-
-async function atualizarStatusOrcamento(uuid, token, aprovaSenha) {
-  try {
-    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(uuid)}/status`, {
+    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(orcamento_uuid)}/solicitar-aprovacao`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ status: 2, aprova_senha: aprovaSenha })
+      }
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+
     if (!res.ok || !data.success) {
-      const erro = data?.error || "Falha ao atualizar status do orçamento.";
-      console.warn("Falha ao atualizar status do orçamento:", erro);
-      return { success: false, error: erro };
+      setStatus(data.error || "Não foi possível enviar a solicitação para o Telegram.", "erro");
+      return;
     }
 
-    return { success: true, error: null };
+    setStatus("Solicitação enviada para o Telegram. Aguarde aprovação.", "ok");
   } catch (err) {
-    console.error("Erro ao atualizar status do orçamento:", err);
-    return { success: false, error: "Erro de conexão ao aprovar pedido." };
+    console.error(err);
+    setStatus("Erro ao enviar solicitação para o Telegram. Verifique o console.", "erro");
+  } finally {
+    btn.disabled = false;
   }
 }
 
 async function copiarBoleto() {
-  setStatus("Esta página apenas atualiza o status do orçamento.", "erro");
+  setStatus("O boleto ainda não foi gerado nesta página.", "erro");
 }
 
 function abrirBoleto() {
-  setStatus("Esta página apenas atualiza o status do orçamento.", "erro");
+  setStatus("O boleto ainda não foi gerado nesta página.", "erro");
 }
 
 function voltar() { history.back(); }
