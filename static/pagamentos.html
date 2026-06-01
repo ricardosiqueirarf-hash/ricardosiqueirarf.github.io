@@ -408,6 +408,16 @@
       pagamentosBody.appendChild(tr);
     }
 
+    function normalizarValorPagoArray(valorPagoAtual) {
+      if (Array.isArray(valorPagoAtual)) {
+        return valorPagoAtual
+          .map((item) => Number(item))
+          .filter((item) => Number.isFinite(item));
+      }
+
+      return [];
+    }
+
     async function buscarPedidoPorNumero(numeroPedido) {
       const { data, error } = await supabase
         .from("orcamentos")
@@ -520,15 +530,45 @@
           return;
         }
 
+        // INSERIR PAGAMENTO
         const { error } = await supabase
           .from("pagamentos")
           .insert([{
             orcamentoid: pedido.id,
-            valor,
+            valor: Number(valor),
             forma_pagamento: formaPagamento
           }]);
 
         if (error) throw error;
+
+        try {
+          // BUSCAR ARRAY ATUAL DE VALOR_PAGO
+          const { data: orcamentoAtual, error: valorPagoError } = await supabase
+            .from("orcamentos")
+            .select("valor_pago")
+            .eq("id", pedido.id)
+            .maybeSingle();
+
+          if (valorPagoError) throw valorPagoError;
+
+          const valoresPagos = normalizarValorPagoArray(orcamentoAtual?.valor_pago);
+
+          // ADICIONAR NOVO VALOR AO JSONB
+          const novoArray = [...valoresPagos, Number(valor)];
+
+          // ATUALIZAR ORÇAMENTO
+          const { error: atualizarOrcamentoError } = await supabase
+            .from("orcamentos")
+            .update({ valor_pago: novoArray })
+            .eq("id", pedido.id);
+
+          if (atualizarOrcamentoError) throw atualizarOrcamentoError;
+        } catch (atualizarOrcamentoError) {
+          form.reset();
+          await carregarPagamentos();
+          mostrarMensagem("Pagamento salvo, mas valor_pago do orçamento não foi atualizado.", "error");
+          return;
+        }
 
         form.reset();
         await carregarPagamentos();
