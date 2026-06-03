@@ -8,17 +8,11 @@ from typing import Iterable
 from dotenv import load_dotenv
 
 DEFAULT_ASSISTANT_PROMPT = (
-    "Você é o assistente virtual da ColorGlass Fortaleza. "
-    "Converse de forma natural, informal, direta e objetiva em português do Brasil. "
-    "Pode usar humor leve e ironia sutil quando fizer sentido, mas sem parecer deboche ou perder clareza. "
-    "Sua prioridade é fornecer informações corretas, práticas e úteis. "
-    "Ajude com dúvidas sobre pedidos, orçamentos, produtos, estoque, atendimento, financeiro, produção e informações gerais da empresa. "
-    "Quando precisar consultar dados, utilize apenas consultas em modo leitura. "
-    "Nunca invente dados, pedidos, valores, prazos ou informações ausentes. "
-    "Se faltar contexto ou houver ambiguidade, pergunte antes de responder. "
-    "Nunca diga que salvou, alterou, atualizou ou apagou dados se isso não aconteceu. "
-    "Prefira respostas curtas, conversacionais e focadas em resolver o problema. "
-    "Se identificar inconsistências, erros operacionais ou riscos financeiros, aponte isso claramente."
+    "Você é um assistente virtual da ColorGlass Fortaleza. "
+    "Converse de forma natural, educada e objetiva em português do Brasil. "
+    "Ajude com dúvidas sobre pedidos, orçamentos, produtos, atendimento e informações gerais. "
+    "Quando precisar consultar dados do banco, avise que fará uma consulta em modo somente leitura. "
+    "Nunca diga que salvou, alterou ou atualizou dados no sistema."
 )
 
 DEFAULT_SUPABASE_READ_TABLES: tuple[str, ...] = (
@@ -71,6 +65,9 @@ class Settings:
     orcamentos_table: str = "orcamentos"
     conversation_state_table: str = "conversation_states"
     supabase_read_tables: tuple[str, ...] = DEFAULT_SUPABASE_READ_TABLES
+    database_agent_allowed: bool = True
+    database_agent_default_limit: int = 20
+    database_agent_max_rows: int = 50
 
 
 def _missing_env_vars(required: Iterable[str] = REQUIRED_ENV_VARS) -> list[str]:
@@ -95,6 +92,21 @@ def _get_port() -> int:
     nessa porta. FLASK_PORT fica como fallback para uso local.
     """
     return int(os.getenv("PORT") or os.getenv("FLASK_PORT", "5000"))
+
+
+def _parse_bool(value: str | None, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on", "sim"}
+
+
+def _parse_positive_int(name: str, default: int) -> int:
+    raw = os.getenv(name, str(default))
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return default
+    return max(1, value)
 
 
 def _parse_read_tables() -> tuple[str, ...]:
@@ -130,4 +142,7 @@ def get_settings(validate: bool = True) -> Settings:
         orcamentos_table=os.getenv("SUPABASE_ORCAMENTOS_TABLE", "orcamentos"),
         conversation_state_table=os.getenv("SUPABASE_CONVERSATION_STATE_TABLE", "conversation_states"),
         supabase_read_tables=_parse_read_tables(),
+        database_agent_allowed=_parse_bool(os.getenv("DATABASE_AGENT_ALLOWED"), True),
+        database_agent_default_limit=_parse_positive_int("DATABASE_AGENT_DEFAULT_LIMIT", 20),
+        database_agent_max_rows=min(_parse_positive_int("DATABASE_AGENT_MAX_ROWS", 50), 50),
     )
