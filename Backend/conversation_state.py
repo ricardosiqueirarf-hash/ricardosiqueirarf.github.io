@@ -4,7 +4,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-MINIMUM_BUDGET_FIELDS: tuple[str, ...] = (
+MINIMUM_BUDGET_FIELDS: tuple[str, ...] = ( 
     "cliente",
     "loja",
     "tipo_produto",
