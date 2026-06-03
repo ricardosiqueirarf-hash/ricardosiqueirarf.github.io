@@ -7,7 +7,9 @@ from typing import Iterable
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Carrega variáveis de um .env local quando existir, mas NÃO sobrescreve variáveis
+# configuradas no ambiente do servidor (ex.: Render Environment Variables).
+load_dotenv(override=False)
 
 
 REQUIRED_ENV_VARS: tuple[str, ...] = (
@@ -46,12 +48,16 @@ def validate_required_env() -> None:
         joined = ", ".join(missing)
         raise RuntimeError(
             f"Variáveis de ambiente obrigatórias ausentes: {joined}. "
-            "Crie um arquivo .env baseado em .env.example."
+            "Configure-as no .env local ou nas Environment Variables do Render."
         )
 
 
 def get_settings(validate: bool = True) -> Settings:
-    """Retorna configurações carregadas do ambiente."""
+    """Retorna configurações carregadas do ambiente.
+
+    O python-dotenv carrega o .env somente como apoio local. Em produção no Render,
+    variáveis configuradas em Environment Variables são lidas diretamente por os.getenv.
+    """
     if validate:
         validate_required_env()
 
