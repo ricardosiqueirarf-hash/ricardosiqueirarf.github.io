@@ -14,6 +14,11 @@ else:
 
 logger = logging.getLogger(__name__)
 
+# Modo somente leitura: o bot pode consultar dados, mas não altera o Supabase.
+# Isso garante que a IA e o fluxo do Telegram não tenham autonomia para inserir,
+# atualizar, fazer upsert ou deletar registros no banco enquanto este modo estiver ativo.
+DATABASE_READ_ONLY = True
+
 _memory_conversation_states: dict[str, dict[str, Any]] = {}
 _supabase_client: Client | None = None
 
@@ -136,6 +141,13 @@ def buscar_pedidos_por_cliente(nome: str) -> list[dict[str, Any]]:
 
 
 def salvar_orcamento(dados: dict[str, Any]) -> dict[str, Any]:
+    """Bloqueia escrita de orçamento no Supabase enquanto o bot estiver somente leitura."""
+    if DATABASE_READ_ONLY:
+        logger.info("Salvamento de orçamento bloqueado: bot em modo somente leitura.")
+        raise RuntimeError(
+            "Modo somente leitura ativo: posso consultar pedidos, mas ainda não posso salvar orçamentos no Supabase."
+        )
+
     settings = get_settings()
     try:
         client = get_supabase_client()
@@ -151,56 +163,23 @@ def salvar_orcamento(dados: dict[str, Any]) -> dict[str, Any]:
 
 
 def salvar_estado_conversa(chat_id: str | int, estado: dict[str, Any]) -> None:
-    """Salva estado. Se a tabela não existir/falhar, usa fallback em memória bem isolado."""
+    """Salva estado somente em memória para não alterar o Supabase."""
     key = str(chat_id)
-    settings = get_settings(validate=False)
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        _memory_conversation_states[key] = deepcopy(estado)
-        return
+    _memory_conversation_states[key] = deepcopy(estado)
 
-    try:
-        client = get_supabase_client()
-        client.table(settings.conversation_state_table).upsert(
-            {"chat_id": key, "state": estado}, on_conflict="chat_id"
-        ).execute()
-    except Exception:
-        logger.info("Usando fallback em memória para salvar estado do chat %s", key)
-        _memory_conversation_states[key] = deepcopy(estado)
+    if DATABASE_READ_ONLY:
+        logger.info("Estado do chat %s mantido apenas em memória: bot em modo somente leitura.", key)
+        return
 
 
 def carregar_estado_conversa(chat_id: str | int) -> dict[str, Any] | None:
+    """Carrega estado apenas da memória local para evitar leituras/escritas na tabela de estado."""
     key = str(chat_id)
-    settings = get_settings(validate=False)
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        return deepcopy(_memory_conversation_states.get(key))
-
-    try:
-        client = get_supabase_client()
-        response = (
-            client.table(settings.conversation_state_table)
-            .select("state")
-            .eq("chat_id", key)
-            .limit(1)
-            .execute()
-        )
-        data = response.data or []
-        if data:
-            return data[0].get("state")
-    except Exception:
-        return deepcopy(_memory_conversation_states.get(key))
-
     return deepcopy(_memory_conversation_states.get(key))
 
 
 def limpar_estado_conversa(chat_id: str | int) -> None:
+    """Limpa estado somente da memória local, sem deletar nada no Supabase."""
     key = str(chat_id)
     _memory_conversation_states.pop(key, None)
-    settings = get_settings(validate=False)
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        return
-
-    try:
-        client = get_supabase_client()
-        client.table(settings.conversation_state_table).delete().eq("chat_id", key).execute()
-    except Exception:
-        pass
+    logger.info("Estado do chat %s removido apenas da memória local.", key)
