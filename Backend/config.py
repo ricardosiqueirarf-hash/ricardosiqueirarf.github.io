@@ -32,6 +32,7 @@ class Settings:
     flask_host: str = "0.0.0.0"
     flask_port: int = 5000
     flask_debug: bool = False
+    public_base_url: str = ""
     pedidos_table: str = "pedidos"
     orcamentos_table: str = "orcamentos"
     conversation_state_table: str = "conversation_states"
@@ -52,6 +53,15 @@ def validate_required_env() -> None:
         )
 
 
+def _get_port() -> int:
+    """Retorna a porta correta para local/Render.
+
+    O Render injeta a variável PORT e espera que o processo escute exatamente
+    nessa porta. FLASK_PORT fica como fallback para uso local.
+    """
+    return int(os.getenv("PORT") or os.getenv("FLASK_PORT", "5000"))
+
+
 def get_settings(validate: bool = True) -> Settings:
     """Retorna configurações carregadas do ambiente.
 
@@ -69,8 +79,9 @@ def get_settings(validate: bool = True) -> Settings:
         supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
         gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
         flask_host=os.getenv("FLASK_HOST", "0.0.0.0"),
-        flask_port=int(os.getenv("PORT", os.getenv("FLASK_PORT", "5000"))),
+        flask_port=_get_port(),
         flask_debug=os.getenv("FLASK_DEBUG", "false").lower() in {"1", "true", "yes", "on"},
+        public_base_url=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
         pedidos_table=os.getenv("SUPABASE_PEDIDOS_TABLE", "pedidos"),
         orcamentos_table=os.getenv("SUPABASE_ORCAMENTOS_TABLE", "orcamentos"),
         conversation_state_table=os.getenv("SUPABASE_CONVERSATION_STATE_TABLE", "conversation_states"),
