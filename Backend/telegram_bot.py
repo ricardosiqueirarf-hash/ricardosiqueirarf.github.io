@@ -8,9 +8,9 @@ from flask import Flask, jsonify, request
 
 from config import get_settings
 from conversation_state import get_initial_state, reset_state
-from gemini_service import interpretar_mensagem
+from gemini_service import interpretar_mensagem, responder_conversa_livre
 from supabase_service import carregar_estado_conversa, limpar_estado_conversa, salvar_estado_conversa
-from tools import handle_confirmar_salvar, handle_consultar_pedido, handle_criar_orcamento
+from tools import handle_confirmar_salvar, handle_consultar_pedido, handle_criar_orcamento, handle_pergunta_banco
 
 app = Flask(__name__)
 
@@ -84,6 +84,11 @@ def _process_text(chat_id: str | int, text: str) -> str:
         app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
         return response
 
+    if intent == "pergunta_banco":
+        response = handle_pergunta_banco(text, extracted)
+        app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
+        return response
+
     if intent == "criar_orcamento":
         if question and not extracted:
             state["mode"] = "orcamento"
@@ -96,7 +101,7 @@ def _process_text(chat_id: str | int, text: str) -> str:
         app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
         return response
 
-    response = question or "Olá! Posso consultar um pedido ou criar um orçamento para você."
+    response = responder_conversa_livre(text, state)
     app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
     return response
 
