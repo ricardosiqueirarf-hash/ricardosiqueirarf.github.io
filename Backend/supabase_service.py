@@ -248,14 +248,8 @@ def limpar_estado_conversa(chat_id: str | int) -> None:
     logger.info("Estado do chat %s removido apenas da memória local.", key)
 
 
-def executar_sql_select_via_rpc(sql: str) -> list[dict[str, Any]]:
-    """Executa SQL SELECT via RPC segura criada no Supabase.
-
-    A validação forte da SQL acontece em database_agent.py antes desta chamada.
-    Esta função não usa insert/update/delete e depende da RPC
-    executar_select_somente_leitura(sql text). Se ela não existir, retorna uma
-    mensagem clara para orientar a ativação do recurso no Supabase.
-    """
+def executar_select(sql: str) -> list[dict[str, Any]]:
+    """Executa SELECT via RPC executar_select_somente_leitura no Supabase."""
     try:
         client = get_supabase_client()
     except Exception as exc:
@@ -263,7 +257,8 @@ def executar_sql_select_via_rpc(sql: str) -> list[dict[str, Any]]:
 
     try:
         response = client.rpc("executar_select_somente_leitura", {"sql": sql}).execute()
-        return response.data or []
+        data = response.data or []
+        return list(data) if isinstance(data, list) else [data]
     except Exception as exc:
         text = str(exc).lower()
         if "executar_select_somente_leitura" in text or "function" in text or "rpc" in text or "pgrst202" in text:
@@ -271,4 +266,9 @@ def executar_sql_select_via_rpc(sql: str) -> list[dict[str, Any]]:
                 "Para ativar a IA livre do banco, falta criar a função RPC executar_select_somente_leitura no Supabase."
             ) from exc
         logger.exception("Falha ao executar SELECT via RPC somente leitura: %s", exc)
-        raise RuntimeError("Não consegui executar a consulta somente leitura no Supabase agora.") from exc
+        raise RuntimeError(f"Não consegui executar a consulta somente leitura no Supabase. Detalhe: {exc}") from exc
+
+
+def executar_sql_select_via_rpc(sql: str) -> list[dict[str, Any]]:
+    """Compatibilidade: delega para executar_select."""
+    return executar_select(sql)
