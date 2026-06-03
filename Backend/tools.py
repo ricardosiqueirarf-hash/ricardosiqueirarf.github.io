@@ -24,9 +24,27 @@ def _currency(value: Any) -> str:
         return "R$ 0,00"
 
 
+def _status_label(value: Any) -> str:
+    labels = {
+        0: "Cancelado",
+        1: "Orçamento",
+        2: "Aprovado",
+        3: "Em Produção",
+        4: "Separado",
+        5: "Entregue",
+    }
+    try:
+        numeric = int(value)
+        return labels.get(numeric, str(value))
+    except (TypeError, ValueError):
+        return str(value or "-")
+
+
 def formatar_pedido(pedido: dict[str, Any]) -> str:
-    numero = pedido.get("pedido") or pedido.get("numero") or pedido.get("id") or "-"
-    total = pedido.get("total") or pedido.get("valor_total") or 0
+    numero = pedido.get("numero_pedido") or pedido.get("pedido") or pedido.get("numero") or pedido.get("id") or "-"
+    cliente = pedido.get("cliente_nome") or pedido.get("cliente") or pedido.get("nome_cliente") or "-"
+    loja = pedido.get("loja") or pedido.get("loja_nome") or pedido.get("lojaid") or pedido.get("storeid") or "-"
+    total = pedido.get("total") or pedido.get("valor_total") or pedido.get("valor") or 0
     pago = pedido.get("pago") or pedido.get("valor_pago") or 0
     saldo = pedido.get("saldo")
     if saldo is None:
@@ -38,12 +56,12 @@ def formatar_pedido(pedido: dict[str, Any]) -> str:
     return (
         "📦 Pedido encontrado\n"
         f"Pedido: {numero}\n"
-        f"Cliente: {pedido.get('cliente', '-')}\n"
-        f"Loja: {pedido.get('loja', '-')}\n"
+        f"Cliente: {cliente}\n"
+        f"Loja: {loja}\n"
         f"Total: {_currency(total)}\n"
         f"Pago: {_currency(pago)}\n"
         f"Saldo: {_currency(saldo)}\n"
-        f"Status: {pedido.get('status', '-')}"
+        f"Status: {_status_label(pedido.get('status'))}"
     )
 
 
@@ -66,11 +84,11 @@ def handle_consultar_pedido(extracted: dict[str, Any]) -> str:
                 return formatar_pedido(pedidos[0])
             linhas = ["Encontrei mais de um pedido. Qual deles você quer consultar?"]
             for pedido in pedidos[:10]:
-                numero_pedido = pedido.get("pedido") or pedido.get("numero") or pedido.get("id") or "-"
+                numero_pedido = pedido.get("numero_pedido") or pedido.get("pedido") or pedido.get("numero") or pedido.get("id") or "-"
                 linhas.append(f"- Pedido {numero_pedido} | {pedido.get('cliente', '-')} | {pedido.get('status', '-')}")
             return "\n".join(linhas)
 
-        return "Qual pedido você deseja consultar? Pode enviar o número do pedido ou o nome do cliente."
+        return "Qual número do pedido ou nome do cliente?"
     except RuntimeError as exc:
         return str(exc)
 
