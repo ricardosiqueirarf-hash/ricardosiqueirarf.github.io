@@ -33,7 +33,7 @@ class Settings:
     flask_port: int = 5000
     flask_debug: bool = False
     public_base_url: str = ""
-    pedidos_table: str = "pedidos"
+    pedidos_table: str = "orcamentos"
     orcamentos_table: str = "orcamentos"
     conversation_state_table: str = "conversation_states"
 
@@ -82,7 +82,7 @@ def get_settings(validate: bool = True) -> Settings:
         flask_port=_get_port(),
         flask_debug=os.getenv("FLASK_DEBUG", "false").lower() in {"1", "true", "yes", "on"},
         public_base_url=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
-        pedidos_table=os.getenv("SUPABASE_PEDIDOS_TABLE", "pedidos"),
+        pedidos_table=os.getenv("SUPABASE_PEDIDOS_TABLE", "orcamentos"),
         orcamentos_table=os.getenv("SUPABASE_ORCAMENTOS_TABLE", "orcamentos"),
         conversation_state_table=os.getenv("SUPABASE_CONVERSATION_STATE_TABLE", "conversation_states"),
     )
