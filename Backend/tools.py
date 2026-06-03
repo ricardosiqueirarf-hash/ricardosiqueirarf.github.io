@@ -14,14 +14,11 @@ from conversation_state import (
     reset_state,
     update_state_from_extracted_data,
 )
-from gemini_service import responder_com_dados
+from database_agent import responder_pergunta_banco
 from supabase_service import (
     buscar_pedido_por_numero,
     buscar_pedidos_por_cliente,
-    consultar_tabela_por_termo_somente_leitura,
-    consultar_tabela_somente_leitura,
     limpar_estado_conversa,
-    listar_tabelas_leitura,
     salvar_orcamento,
 )
 
@@ -156,38 +153,8 @@ def handle_consultar_pedido(extracted: dict[str, Any]) -> str:
 
 
 def handle_pergunta_banco(user_message: str, extracted: dict[str, Any] | None = None) -> str:
-    """Responde perguntas livres usando visualização somente leitura do Supabase."""
-    extracted = extracted or {}
-    table = extracted.get("tabela") or _infer_table_from_text(user_message)
-    limit = extracted.get("limite") or 10
-    term = extracted.get("termo")
-
-    if not table:
-        tables = ", ".join(listar_tabelas_leitura())
-        return (
-            "Entendi: você quer que eu visualize dados do banco em modo somente leitura. "
-            "Diga qual área/tabela você quer consultar. Tabelas liberadas: "
-            f"{tables}."
-        )
-
-    try:
-        if term:
-            rows = []
-            for column in ("cliente_nome", "cliente", "nome", "nome_cliente", "descricao", "status"):
-                rows = consultar_tabela_por_termo_somente_leitura(table, column, str(term), limit)
-                if rows:
-                    break
-        else:
-            rows = consultar_tabela_somente_leitura(table, limit)
-    except RuntimeError as exc:
-        return str(exc)
-
-    safe_rows = _safe_rows(rows)
-    context = {"tabela": table, "total_retornado": len(safe_rows), "registros": safe_rows[:10]}
-    ai_answer = responder_com_dados(user_message, context)
-    if "não consegui gerar" in ai_answer.lower():
-        return _format_rows_preview(table, safe_rows)
-    return ai_answer
+    """Responde perguntas livres usando o agente SQL somente leitura."""
+    return responder_pergunta_banco(user_message)
 
 def formatar_resumo_orcamento(state: dict[str, Any]) -> str:
     dados = state.get("budget_data", {})
