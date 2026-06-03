@@ -7,10 +7,26 @@ from typing import Iterable
 
 from dotenv import load_dotenv
 
-# Carrega variáveis de um .env local quando existir, mas NÃO sobrescreve variáveis
-# configuradas no ambiente do servidor (ex.: Render Environment Variables).
-load_dotenv(override=False)
+DEFAULT_SUPABASE_READ_TABLES: tuple[str, ...] = (
+    "orcamentos",
+    "pagamentos",
+    "portas",
+    "usuarios",
+    "clientes",
+    "materiais",
+    "perfis",
+    "vidros",
+    "puxadores",
+    "trilhos",
+    "sistemas",
+    "fornecedores",
+    "tarefas",
+    "tags",
+    "comprovantes",
+    "estruturas",
+)
 
+load_dotenv(override=False)
 
 REQUIRED_ENV_VARS: tuple[str, ...] = (
     "TELEGRAM_TOKEN",
@@ -36,6 +52,7 @@ class Settings:
     pedidos_table: str = "orcamentos"
     orcamentos_table: str = "orcamentos"
     conversation_state_table: str = "conversation_states"
+    supabase_read_tables: tuple[str, ...] = DEFAULT_SUPABASE_READ_TABLES
 
 
 def _missing_env_vars(required: Iterable[str] = REQUIRED_ENV_VARS) -> list[str]:
@@ -43,7 +60,6 @@ def _missing_env_vars(required: Iterable[str] = REQUIRED_ENV_VARS) -> list[str]:
 
 
 def validate_required_env() -> None:
-    """Valida variáveis obrigatórias e falha cedo com mensagem clara."""
     missing = _missing_env_vars()
     if missing:
         joined = ", ".join(missing)
@@ -54,20 +70,18 @@ def validate_required_env() -> None:
 
 
 def _get_port() -> int:
-    """Retorna a porta correta para local/Render.
-
-    O Render injeta a variável PORT e espera que o processo escute exatamente
-    nessa porta. FLASK_PORT fica como fallback para uso local.
-    """
     return int(os.getenv("PORT") or os.getenv("FLASK_PORT", "5000"))
 
 
-def get_settings(validate: bool = True) -> Settings:
-    """Retorna configurações carregadas do ambiente.
+def _parse_read_tables() -> tuple[str, ...]:
+    raw = os.getenv("SUPABASE_READ_TABLES", "")
+    if not raw.strip():
+        return DEFAULT_SUPABASE_READ_TABLES
+    tables = tuple(table.strip() for table in raw.split(",") if table.strip())
+    return tables or DEFAULT_SUPABASE_READ_TABLES
 
-    O python-dotenv carrega o .env somente como apoio local. Em produção no Render,
-    variáveis configuradas em Environment Variables são lidas diretamente por os.getenv.
-    """
+
+def get_settings(validate: bool = True) -> Settings:
     if validate:
         validate_required_env()
 
@@ -85,4 +99,5 @@ def get_settings(validate: bool = True) -> Settings:
         pedidos_table=os.getenv("SUPABASE_PEDIDOS_TABLE", "orcamentos"),
         orcamentos_table=os.getenv("SUPABASE_ORCAMENTOS_TABLE", "orcamentos"),
         conversation_state_table=os.getenv("SUPABASE_CONVERSATION_STATE_TABLE", "conversation_states"),
+        supabase_read_tables=_parse_read_tables(),
     )
