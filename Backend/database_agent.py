@@ -1,9 +1,4 @@
-"""Agente read-only para perguntas livres sobre o banco da ColorGlass.
-
-Este módulo transforma perguntas naturais em consultas SQL SELECT validadas,
-executa a consulta por RPC segura no Supabase e resume o resultado em português.
-Nenhuma função deste arquivo executa comandos de escrita.
-"""
+"""Agente analista read-only para perguntas livres sobre o banco da ColorGlass."""
 from __future__ import annotations
 
 import json
@@ -11,9 +6,8 @@ import logging
 import re
 from typing import Any
 
-from config import get_settings
-from gemini_service import gerar_sql_somente_leitura_com_gemini, responder_com_dados
-from supabase_service import executar_sql_select_via_rpc, listar_tabelas_leitura
+from gemini_service import gerar_resposta_final, gerar_sql
+from supabase_service import executar_select
 
 logger = logging.getLogger(__name__)
 
@@ -35,24 +29,161 @@ PROHIBITED_SQL_WORDS = (
     "do",
 )
 
-SENSITIVE_MARKERS = (
-    "senha",
-    "password",
-    "token",
-    "secret",
-    "service_role",
-    "authorization",
-    "apikey",
-    "api_key",
-    "key",
-    "chave",
-)
-
 COMMENT_MARKERS = ("--", "/*", "*/", "#")
+MAX_SQL_ATTEMPTS = 2
+
+KNOWN_SCHEMA_CONTEXT = """
+Você tem acesso TOTAL apenas para VISUALIZAÇÃO ao banco PostgreSQL/Supabase da ColorGlass.
+Use somente tabelas e colunas existentes abaixo. Pode consultar qualquer tabela e qualquer coluna.
+Nunca gere comandos de escrita; gere apenas SELECT ou WITH.
+
+Tabelas conhecidas:
+- estado_conversa
+- estoque
+- estruturas
+- fornecedores
+- imagetags
+- materiais
+- orcamentos
+- pagamentos
+- perfis
+- portas
+- puxadores
+- sistemas
+- tags
+- tarefas
+- trilhos
+- usuarios
+- vidros
+
+Tabela estoque:
+- id int8
+- produto text
+- quantidade numeric
+- unidade text
+- data_contagem timestamptz
+- custo numeric
+- categoria text
+
+Tabela materiais:
+- id int8
+- nome text
+- custo numeric
+- tipo_medida text
+- margem numeric
+- preco numeric
+- perda numeric
+- tag text
+
+Tabela orcamentos:
+- id uuid
+- data_criacao timestamptz
+- cliente_nome text
+- numero_pedido numeric
+- quantidade_total numeric
+- valor_total numeric
+- userid text
+- lojaid text
+- status numeric
+- data_aprovacao timestamptz
+- valor_pago jsonb
+
+Tabela pagamentos:
+- id int8
+- created_at timestamptz
+- orcamentoid uuid
+- valor numeric
+- forma_pagamento text
+
+Tabela perfis:
+- id uuid
+- nome text
+- custo numeric
+- margem numeric
+- perda numeric
+- preco numeric
+- tipologias text
+- insumos text
+- tags text
+
+Tabela portas:
+- id int8
+- tipo text
+- dados text
+- preco numeric
+- svg text
+- quantidade numeric
+- orcamento_uuid uuid
+- lojaid text
+
+Tabela puxadores:
+- id int8
+- nome text
+- custo numeric
+- tipo_medida text
+- margem numeric
+- preco numeric
+- perda numeric
+- insumos jsonb
+
+Tabela vidros:
+- id uuid
+- tipo text
+- espessura numeric
+- custo numeric
+- margem numeric
+- perda numeric
+- preco numeric
+- tags text
+
+Tabela usuarios:
+- userid uuid
+- pass text
+- user text
+- token text
+- storeid uuid
+- level numeric
+- dados jsonb
+- nome text
+
+Relações úteis:
+- pagamentos.orcamentoid referencia orcamentos.id.
+- portas.orcamento_uuid referencia orcamentos.id.
+- orcamentos.userid pode se relacionar com usuarios.userid.
+- orcamentos.lojaid pode se relacionar com usuarios.storeid ou identificador de loja quando aplicável.
+
+Exemplos de análise:
+- Faturamento do mês: somar orcamentos.valor_total filtrando data_aprovacao desde date_trunc('month', now()).
+- Último pedido: ordenar orcamentos por data_criacao desc limit 1.
+- Saldo aberto: orcamentos.valor_total menos soma de pagamentos.valor por orçamento.
+- Valor de estoque: soma de estoque.quantidade * estoque.custo.
+""".strip()
 
 
 class SQLSafetyError(ValueError):
     """Erro levantado quando uma SQL não passa na validação somente leitura."""
+
+
+def listar_schema_disponivel() -> str:
+    """Retorna o schema conhecido usado pelo Gemini para gerar SQL."""
+    return KNOWN_SCHEMA_CONTEXT
+
+
+def _clean_sql(sql: str) -> str:
+    cleaned = (sql or "").strip()
+    cleaned = re.sub(r"^```(?:sql)?\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+    cleaned = re.sub(r"^sql\s*:\s*", "", cleaned, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if cleaned.endswith(";") and cleaned.count(";") == 1:
+        cleaned = cleaned[:-1].strip()
+    return cleaned
+
+
+def _has_middle_semicolon(sql: str) -> bool:
+    if ";" not in sql:
+        return False
+    return not sql.endswith(";") or sql.count(";") > 1
 
 
 def _contains_prohibited_word(sql_lower: str) -> str | None:
@@ -62,185 +193,107 @@ def _contains_prohibited_word(sql_lower: str) -> str | None:
     return None
 
 
-def _contains_sensitive_marker(text: str) -> str | None:
-    lower = text.lower()
-    for marker in SENSITIVE_MARKERS:
-        if marker in lower:
-            return marker
-    return None
-
-
-def _strip_single_trailing_semicolon(sql: str) -> str:
-    stripped = sql.strip()
-    if stripped.endswith(";"):
-        stripped = stripped[:-1].strip()
-    return stripped
-
-
-def _has_middle_semicolon(sql: str) -> bool:
-    stripped = sql.strip()
-    if ";" not in stripped:
+def _is_simple_select_without_limit(sql_lower: str) -> bool:
+    if not sql_lower.startswith("select") or " limit " in f" {sql_lower} ":
         return False
-    return not stripped.endswith(";") or stripped.count(";") > 1
+    if " from " not in f" {sql_lower} ":
+        return False
+    complex_markers = (
+        " join ",
+        " where ",
+        " group by ",
+        " order by ",
+        " having ",
+        " union ",
+        " intersect ",
+        " except ",
+        "sum(",
+        "count(",
+        "avg(",
+        "min(",
+        "max(",
+        " jsonb",
+    )
+    return not any(marker in sql_lower for marker in complex_markers)
 
 
-def _apply_limit(sql: str) -> str:
-    settings = get_settings()
-    default_limit = min(settings.database_agent_default_limit, settings.database_agent_max_rows, 50)
-    max_rows = min(settings.database_agent_max_rows, 50)
-    limit_pattern = re.compile(r"\blimit\s+(\d+)\b", re.IGNORECASE)
-    match = limit_pattern.search(sql)
-    if not match:
-        return f"{sql} LIMIT {default_limit}"
-
-    current_limit = int(match.group(1))
-    if current_limit <= max_rows:
-        return sql
-
-    return limit_pattern.sub(f"LIMIT {max_rows}", sql, count=1)
-
-
-def _redact_sensitive(value: Any, key: str = "") -> Any:
-    if _contains_sensitive_marker(key):
-        return "[oculto]"
-    if isinstance(value, dict):
-        return {k: _redact_sensitive(v, k) for k, v in value.items() if not _contains_sensitive_marker(k)}
-    if isinstance(value, list):
-        return [_redact_sensitive(item) for item in value]
-    return value
-
-
-def listar_schema_disponivel() -> str:
-    """Monta contexto de schema permitido para o Gemini.
-
-    A lista de tabelas vem de SUPABASE_READ_TABLES. As colunas são descobertas por
-    uma RPC somente leitura quando disponível; se a RPC ainda não existir, retorna
-    ao menos a lista de tabelas autorizadas para que o erro final seja claro.
-    """
-    tables = listar_tabelas_leitura()
-    if not tables:
-        return "Nenhuma tabela liberada em SUPABASE_READ_TABLES."
-
-    table_list = ", ".join(f"'{table}'" for table in tables)
-    schema_sql = f"""
-SELECT table_name, column_name, data_type
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name IN ({table_list})
-ORDER BY table_name, ordinal_position
-LIMIT 50
-""".strip()
-
-    try:
-        rows = executar_sql_select_via_rpc(schema_sql)
-    except RuntimeError as exc:
-        logger.info("Schema detalhado indisponível via RPC: %s", exc)
-        return "Tabelas liberadas para leitura: " + ", ".join(tables)
-
-    grouped: dict[str, list[str]] = {table: [] for table in tables}
-    for row in rows:
-        table_name = str(row.get("table_name") or "")
-        column_name = str(row.get("column_name") or "")
-        data_type = str(row.get("data_type") or "")
-        if table_name in grouped and column_name:
-            grouped[table_name].append(f"{column_name} ({data_type})")
-
-    lines = ["Schema liberado para consultas somente leitura:"]
-    for table in tables:
-        columns = grouped.get(table) or []
-        if columns:
-            lines.append(f"- {table}: {', '.join(columns)}")
-        else:
-            lines.append(f"- {table}: colunas não descobertas")
-    return "\n".join(lines)
-
-
-def gerar_sql_somente_leitura(user_message: str, schema_context: str) -> str:
-    """Pede ao Gemini uma SQL SELECT usando somente o schema permitido."""
-    sql = gerar_sql_somente_leitura_com_gemini(user_message, schema_context)
-    logger.info("SQL gerada pelo Gemini: %s", sql)
-    return sql.strip()
+def limpar_sql_gerada(sql: str) -> str:
+    """Remove markdown e espaços extras da SQL gerada pelo Gemini."""
+    return _clean_sql(sql)
 
 
 def validar_sql_somente_leitura(sql: str) -> str:
-    """Valida, normaliza e limita uma SQL para permitir apenas leitura."""
-    if not sql or not sql.strip():
-        raise SQLSafetyError("Não consegui gerar uma consulta segura para essa pergunta.")
-
-    cleaned = sql.strip()
-    if cleaned.startswith("```"):
-        cleaned = re.sub(r"^```(?:sql)?\s*", "", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+    """Valida localmente que a SQL é apenas leitura e normaliza quando seguro."""
+    cleaned = limpar_sql_gerada(sql)
+    if not cleaned:
+        raise SQLSafetyError("Não consegui gerar uma consulta SQL segura para essa pergunta.")
 
     if _has_middle_semicolon(cleaned):
-        raise SQLSafetyError("Consulta bloqueada por segurança: múltiplas instruções ou ponto e vírgula no meio.")
+        raise SQLSafetyError("Consulta bloqueada: múltiplas instruções ou ponto e vírgula no meio não são permitidos.")
 
-    cleaned = _strip_single_trailing_semicolon(cleaned)
-    lowered = cleaned.lower()
-
+    lowered = cleaned.lower().strip()
     if any(marker in lowered for marker in COMMENT_MARKERS):
-        raise SQLSafetyError("Consulta bloqueada por segurança: comentários SQL não são permitidos.")
+        raise SQLSafetyError("Consulta bloqueada: comentários SQL não são permitidos.")
 
     if not (lowered.startswith("select") or lowered.startswith("with")):
-        raise SQLSafetyError("Consulta bloqueada por segurança: apenas SELECT ou WITH são permitidos.")
+        raise SQLSafetyError("Consulta bloqueada: apenas SELECT ou WITH são permitidos.")
 
     prohibited = _contains_prohibited_word(lowered)
     if prohibited:
-        raise SQLSafetyError(f"Consulta bloqueada por segurança: comando {prohibited} não é permitido.")
+        raise SQLSafetyError(f"Consulta bloqueada: comando {prohibited} não é permitido.")
 
-    sensitive = _contains_sensitive_marker(lowered)
-    if sensitive:
-        raise SQLSafetyError(f"Consulta bloqueada por segurança: campo sensível '{sensitive}' não pode ser consultado.")
+    # Só adiciona LIMIT automaticamente em SELECT simples; agregações ficam como o usuário pediu.
+    if _is_simple_select_without_limit(lowered):
+        cleaned = f"{cleaned} LIMIT 100"
 
-    safe_sql = _apply_limit(cleaned)
-    logger.info("SQL validada somente leitura: %s", safe_sql)
-    return safe_sql
+    logger.info("SQL validada somente leitura: %s", cleaned)
+    return cleaned
 
 
 def executar_select_seguro(sql: str) -> list[dict[str, Any]]:
-    """Executa SQL já validada por RPC read-only e redige qualquer campo sensível."""
-    rows = executar_sql_select_via_rpc(sql)
-    safe_rows = _redact_sensitive(rows)
-    logger.info("Quantidade de linhas retornadas pela consulta segura: %s", len(safe_rows))
-    return safe_rows
+    """Executa a SQL validada via RPC read-only do Supabase."""
+    rows = executar_select(sql)
+    logger.info("Quantidade de linhas retornadas pela consulta segura: %s", len(rows))
+    return rows
 
 
-def responder_pergunta_banco(user_message: str) -> str:
-    """Fluxo completo da IA livre do banco em modo somente leitura."""
-    settings = get_settings()
-    if not settings.database_agent_allowed:
-        return "A IA livre do banco está desativada neste ambiente."
+def _usuario_pediu_sql(pergunta: str) -> bool:
+    lower = pergunta.lower()
+    return any(term in lower for term in ("mostre a sql", "mostrar sql", "qual sql", "detalhes técnicos", "detalhes tecnicos"))
 
-    logger.info("Pergunta recebida pelo database_agent: %s", user_message)
 
-    if "quais tabelas" in user_message.lower() or "tabelas existem" in user_message.lower():
-        return listar_schema_disponivel()
-
+def responder_pergunta_banco(pergunta: str) -> str:
+    """Responde pergunta livre sobre o banco usando no máximo 2 tentativas de SQL."""
     schema_context = listar_schema_disponivel()
-    try:
-        generated_sql = gerar_sql_somente_leitura(user_message, schema_context)
-        safe_sql = validar_sql_somente_leitura(generated_sql)
-        rows = executar_select_seguro(safe_sql)
-    except SQLSafetyError as exc:
-        logger.warning("SQL bloqueada por segurança: %s", exc)
-        return str(exc)
-    except RuntimeError as exc:
-        message = str(exc)
-        logger.warning("Falha ao executar pergunta livre do banco: %s", message)
-        if "executar_select_somente_leitura" in message:
-            return "Para ativar a IA livre do banco, falta criar a função RPC executar_select_somente_leitura no Supabase."
-        return message
+    last_error = ""
+    sql_validada = ""
+    resultado: list[dict[str, Any]] = []
 
-    context = {
-        "pergunta": user_message,
-        "sql_executada": safe_sql,
-        "quantidade_linhas": len(rows),
-        "resultado": rows[: settings.database_agent_max_rows],
-    }
-    answer = responder_com_dados(user_message, context)
-    if "não consegui gerar" in answer.lower():
-        preview = json.dumps(context, ensure_ascii=False, default=str, indent=2)
-        if len(preview) > 3000:
-            preview = preview[:3000] + "..."
-        return f"Consulta executada em modo somente leitura.\nSQL: {safe_sql}\nResultado:\n{preview}"
-    return answer
+    logger.info("Pergunta recebida pelo database_agent: %s", pergunta)
+
+    for attempt in range(1, MAX_SQL_ATTEMPTS + 1):
+        sql_gerada = gerar_sql(pergunta, schema_context, erro_anterior=last_error, sql_anterior=sql_validada)
+        logger.info("SQL gerada pelo Gemini na tentativa %s: %s", attempt, sql_gerada)
+
+        try:
+            sql_validada = validar_sql_somente_leitura(sql_gerada)
+            resultado = executar_select_seguro(sql_validada)
+            break
+        except SQLSafetyError as exc:
+            logger.warning("SQL bloqueada por segurança na tentativa %s: %s", attempt, exc)
+            return str(exc)
+        except RuntimeError as exc:
+            last_error = str(exc)
+            logger.warning("Falha ao executar SQL na tentativa %s: %s", attempt, last_error)
+            if "executar_select_somente_leitura" in last_error:
+                return "Para ativar a IA livre do banco, falta criar a função RPC executar_select_somente_leitura no Supabase."
+            if attempt >= MAX_SQL_ATTEMPTS:
+                return f"Não consegui consultar o banco agora. Erro: {last_error}"
+
+    resposta = gerar_resposta_final(pergunta, sql_validada, resultado, mostrar_sql=_usuario_pediu_sql(pergunta))
+    if not resposta.strip():
+        if not resultado:
+            return "Não encontrei registros para essa pergunta."
+        preview = json.dumps(resultado[:10], ensure_ascii=False, default=str, indent=2)
+        return f"Encontrei {len(resultado)} registro(s), mas não consegui gerar o resumo agora.\n{preview}"
+    return resposta
