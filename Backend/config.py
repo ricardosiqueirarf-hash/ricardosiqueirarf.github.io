@@ -16,6 +16,7 @@ DEFAULT_ASSISTANT_PROMPT = (
 )
 
 DEFAULT_SUPABASE_READ_TABLES: tuple[str, ...] = (
+    "estado_conversa",
     "orcamentos",
     "pagamentos",
     "portas",
@@ -28,6 +29,7 @@ DEFAULT_SUPABASE_READ_TABLES: tuple[str, ...] = (
     "trilhos",
     "sistemas",
     "fornecedores",
+    "imagetags",
     "tarefas",
     "tags",
     "comprovantes",
