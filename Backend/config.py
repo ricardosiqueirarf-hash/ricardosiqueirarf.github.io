@@ -7,6 +7,14 @@ from typing import Iterable
 
 from dotenv import load_dotenv
 
+DEFAULT_ASSISTANT_PROMPT = (
+    "Você é um assistente virtual da ColorGlass Fortaleza. "
+    "Converse de forma natural, educada e objetiva em português do Brasil. "
+    "Ajude com dúvidas sobre pedidos, orçamentos, produtos, atendimento e informações gerais. "
+    "Quando precisar consultar dados do banco, avise que fará uma consulta em modo somente leitura. "
+    "Nunca diga que salvou, alterou ou atualizou dados no sistema."
+)
+
 DEFAULT_SUPABASE_READ_TABLES: tuple[str, ...] = (
     "orcamentos",
     "pagamentos",
@@ -26,7 +34,10 @@ DEFAULT_SUPABASE_READ_TABLES: tuple[str, ...] = (
     "estruturas",
 )
 
+# Carrega variáveis de um .env local quando existir, mas NÃO sobrescreve variáveis
+# configuradas no ambiente do servidor (ex.: Render Environment Variables).
 load_dotenv(override=False)
+
 
 REQUIRED_ENV_VARS: tuple[str, ...] = (
     "TELEGRAM_TOKEN",
@@ -49,6 +60,7 @@ class Settings:
     flask_port: int = 5000
     flask_debug: bool = False
     public_base_url: str = ""
+    assistant_prompt: str = DEFAULT_ASSISTANT_PROMPT
     pedidos_table: str = "orcamentos"
     orcamentos_table: str = "orcamentos"
     conversation_state_table: str = "conversation_states"
@@ -60,6 +72,7 @@ def _missing_env_vars(required: Iterable[str] = REQUIRED_ENV_VARS) -> list[str]:
 
 
 def validate_required_env() -> None:
+    """Valida variáveis obrigatórias e falha cedo com mensagem clara."""
     missing = _missing_env_vars()
     if missing:
         joined = ", ".join(missing)
@@ -70,6 +83,11 @@ def validate_required_env() -> None:
 
 
 def _get_port() -> int:
+    """Retorna a porta correta para local/Render.
+
+    O Render injeta a variável PORT e espera que o processo escute exatamente
+    nessa porta. FLASK_PORT fica como fallback para uso local.
+    """
     return int(os.getenv("PORT") or os.getenv("FLASK_PORT", "5000"))
 
 
@@ -82,6 +100,11 @@ def _parse_read_tables() -> tuple[str, ...]:
 
 
 def get_settings(validate: bool = True) -> Settings:
+    """Retorna configurações carregadas do ambiente.
+
+    O python-dotenv carrega o .env somente como apoio local. Em produção no Render,
+    variáveis configuradas em Environment Variables são lidas diretamente por os.getenv.
+    """
     if validate:
         validate_required_env()
 
@@ -96,6 +119,7 @@ def get_settings(validate: bool = True) -> Settings:
         flask_port=_get_port(),
         flask_debug=os.getenv("FLASK_DEBUG", "false").lower() in {"1", "true", "yes", "on"},
         public_base_url=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
+        assistant_prompt=os.getenv("ASSISTANT_PROMPT", DEFAULT_ASSISTANT_PROMPT),
         pedidos_table=os.getenv("SUPABASE_PEDIDOS_TABLE", "orcamentos"),
         orcamentos_table=os.getenv("SUPABASE_ORCAMENTOS_TABLE", "orcamentos"),
         conversation_state_table=os.getenv("SUPABASE_CONVERSATION_STATE_TABLE", "conversation_states"),
