@@ -6,5 +6,7 @@ PyJWT
 rectpack
 python-dotenv==1.2.1
 rectpack==0.2.2
+supabase
+google-generativeai
 
 
