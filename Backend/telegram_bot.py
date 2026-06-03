@@ -10,7 +10,19 @@ from config import get_settings
 from conversation_state import get_initial_state, reset_state
 from gemini_service import interpretar_mensagem, responder_conversa_livre
 from supabase_service import carregar_estado_conversa, limpar_estado_conversa, salvar_estado_conversa
-from tools import handle_confirmar_salvar, handle_consultar_pedido, handle_criar_orcamento, handle_pergunta_banco
+try:
+    from tools import handle_confirmar_salvar, handle_consultar_pedido, handle_criar_orcamento, handle_pergunta_banco
+except ImportError:
+    # Compatibilidade para deploys em que o Render está executando a partir da pasta
+    # Backend e encontra um tools.py antigo sem handle_pergunta_banco. Nesses casos,
+    # o bot continua subindo e orienta corrigir/atualizar o arquivo tools.py correto.
+    from tools import handle_confirmar_salvar, handle_consultar_pedido, handle_criar_orcamento
+
+    def handle_pergunta_banco(user_message: str, extracted: dict[str, Any] | None = None) -> str:
+        return (
+            "O modo de perguntas ao banco ainda não está disponível neste deploy. "
+            "Atualize o tools.py usado pelo Render ou ajuste o Root Directory para a raiz do repositório."
+        )
 
 app = Flask(__name__)
 
