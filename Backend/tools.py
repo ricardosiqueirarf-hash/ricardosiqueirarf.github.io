@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 from typing import Any
 
 from budget_calculator import calcular_orcamento
@@ -13,8 +14,68 @@ from conversation_state import (
     reset_state,
     update_state_from_extracted_data,
 )
-from supabase_service import buscar_pedido_por_numero, buscar_pedidos_por_cliente, limpar_estado_conversa, salvar_orcamento
+from gemini_service import responder_com_dados
+from supabase_service import (
+    buscar_pedido_por_numero,
+    buscar_pedidos_por_cliente,
+    consultar_tabela_por_termo_somente_leitura,
+    consultar_tabela_somente_leitura,
+    limpar_estado_conversa,
+    listar_tabelas_leitura,
+    salvar_orcamento,
+)
 
+
+
+SENSITIVE_FIELD_MARKERS = ("senha", "password", "token", "secret", "service_role", "authorization", "apikey", "api_key")
+
+
+def _redact_sensitive(value: Any, key: str = "") -> Any:
+    if any(marker in key.lower() for marker in SENSITIVE_FIELD_MARKERS):
+        return "[oculto]"
+    if isinstance(value, dict):
+        return {k: _redact_sensitive(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_redact_sensitive(item) for item in value]
+    return value
+
+
+def _safe_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [_redact_sensitive(row) for row in rows]
+
+
+def _infer_table_from_text(text: str) -> str | None:
+    lower = (text or "").lower()
+    table_keywords = {
+        "orcamentos": ("orcamento", "orçamento", "pedido", "pedidos"),
+        "pagamentos": ("pagamento", "pagamentos", "pago", "saldo", "financeiro"),
+        "portas": ("porta", "portas"),
+        "usuarios": ("usuario", "usuário", "usuarios", "usuários", "cliente", "clientes"),
+        "materiais": ("material", "materiais", "insumo", "insumos", "estoque"),
+        "perfis": ("perfil", "perfis", "aluminio", "alumínio"),
+        "vidros": ("vidro", "vidros", "espelho", "reflecta"),
+        "puxadores": ("puxador", "puxadores"),
+        "trilhos": ("trilho", "trilhos"),
+        "sistemas": ("sistema", "sistemas"),
+        "fornecedores": ("fornecedor", "fornecedores"),
+        "tarefas": ("tarefa", "tarefas"),
+        "tags": ("tag", "tags"),
+        "comprovantes": ("comprovante", "comprovantes"),
+        "estruturas": ("estrutura", "estruturas"),
+    }
+    for table, keywords in table_keywords.items():
+        if any(keyword in lower for keyword in keywords):
+            return table
+    return None
+
+
+def _format_rows_preview(table: str, rows: list[dict[str, Any]]) -> str:
+    if not rows:
+        return f"Não encontrei registros na tabela {table}."
+    preview = json.dumps(rows[:5], ensure_ascii=False, default=str, indent=2)
+    if len(preview) > 2500:
+        preview = preview[:2500] + "..."
+    return f"Dados visualizados em {table} (somente leitura):\n{preview}"
 
 def _currency(value: Any) -> str:
     try:
@@ -92,6 +153,41 @@ def handle_consultar_pedido(extracted: dict[str, Any]) -> str:
     except RuntimeError as exc:
         return str(exc)
 
+
+
+def handle_pergunta_banco(user_message: str, extracted: dict[str, Any] | None = None) -> str:
+    """Responde perguntas livres usando visualização somente leitura do Supabase."""
+    extracted = extracted or {}
+    table = extracted.get("tabela") or _infer_table_from_text(user_message)
+    limit = extracted.get("limite") or 10
+    term = extracted.get("termo")
+
+    if not table:
+        tables = ", ".join(listar_tabelas_leitura())
+        return (
+            "Entendi: você quer que eu visualize dados do banco em modo somente leitura. "
+            "Diga qual área/tabela você quer consultar. Tabelas liberadas: "
+            f"{tables}."
+        )
+
+    try:
+        if term:
+            rows = []
+            for column in ("cliente_nome", "cliente", "nome", "nome_cliente", "descricao", "status"):
+                rows = consultar_tabela_por_termo_somente_leitura(table, column, str(term), limit)
+                if rows:
+                    break
+        else:
+            rows = consultar_tabela_somente_leitura(table, limit)
+    except RuntimeError as exc:
+        return str(exc)
+
+    safe_rows = _safe_rows(rows)
+    context = {"tabela": table, "total_retornado": len(safe_rows), "registros": safe_rows[:10]}
+    ai_answer = responder_com_dados(user_message, context)
+    if "não consegui gerar" in ai_answer.lower():
+        return _format_rows_preview(table, safe_rows)
+    return ai_answer
 
 def formatar_resumo_orcamento(state: dict[str, Any]) -> str:
     dados = state.get("budget_data", {})
