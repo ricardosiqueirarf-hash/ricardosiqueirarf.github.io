@@ -196,75 +196,98 @@ def _extract_database_hints(lower: str) -> dict[str, Any]:
         extracted["tabela"] = table
     if "quais tabelas" in lower or "tabelas existem" in lower:
         extracted["tabelas"] = True
-    limit_match = re.search(r"\b(?:limite|limit|listar|mostre)\s+(\d{1,2})\b", lower)
+
+    limit_match = re.search(r"\b(?:limite|ultimos|últimos|listar|mostre|mostrar)\s+(\d{1,2})\b", lower)
     if limit_match:
         extracted["limite"] = int(limit_match.group(1))
+
     name_match = re.search(r"\b(?:cliente|do|da)\s+([a-záàâãéêíóôõúç][\wáàâãéêíóôõúç ]{2,})", lower)
     if name_match:
         extracted["termo"] = name_match.group(1).strip()
+
     return extracted
 
 
 def _keyword_intent(user_message: str, state: dict[str, Any] | None) -> dict[str, Any] | None:
-    lower = user_message.lower().strip()
+    """Fallback por palavras-chave para evitar resposta genérica em intenções claras."""
+    text = user_message.strip()
+    lower = text.lower()
+    state = state or {}
 
-    if (state or {}).get("mode") == "orcamento":
+    if state.get("mode") == "orcamento" and lower not in {"sim", "salvar", "confirmar", "cancelar", "parar", "desistir"}:
         return {
             "intent": "criar_orcamento",
             "extracted": _extract_budget_hints(lower),
             "question": "",
-            "confidence": 0.9,
+            "confidence": 0.85,
         }
 
-    if re.search(r"\bpedido\s*(\d+)\b", lower):
-        return {
-            "intent": "consultar_pedido",
-            "extracted": {"numero_pedido": re.search(r"\bpedido\s*(\d+)\b", lower).group(1)},
-            "question": "",
-            "confidence": 0.95,
-        }
-
-    if any(keyword in lower for keyword in ("quais tabelas", "tabelas existem", "banco", "dados", "relatório", "relatorio", "financeiro", "devendo", "devedores", "vendas", "compare", "analise", "análise")):
+    analytics_words = (
+        "faturei", "faturamento", "receita", "vendas", "financeiro", "pagamento", "pagamentos",
+        "estoque", "materiais", "clientes", "cliente", "perfis", "puxadores", "vidros", "trilhos",
+        "tags", "usuarios", "usuários", "status", "ranking", "rankings", "inadimplência",
+        "inadimplencia", "ticket médio", "ticket medio", "saldo aberto", "devendo", "devedores",
+        "último pedido", "ultimo pedido", "últimos pedidos", "ultimos pedidos", "detalhes de pedidos",
+        "compare", "comparar", "análise", "analise", "relatório", "relatorio",
+    )
+    if any(word in lower for word in analytics_words):
         return {
             "intent": "pergunta_banco",
             "extracted": _extract_database_hints(lower),
             "question": "",
-            "confidence": 0.88,
-        }
-
-    if any(keyword in lower for keyword in ("consultar pedido", "consultar pedidos", "ver pedido", "como está o pedido", "como esta o pedido")):
-        numero_match = re.search(r"\b(\d+)\b", lower)
-        return {
-            "intent": "consultar_pedido",
-            "extracted": {"numero_pedido": numero_match.group(1)} if numero_match else {},
-            "question": "" if numero_match else "Qual número do pedido ou nome do cliente?",
             "confidence": 0.9,
         }
 
-    if lower.startswith("pedido do ") or lower.startswith("pedido da "):
-        cliente = re.sub(r"^pedido d[oa]\s+", "", lower).strip()
+    database_words = ("banco", "dados", "tabela", "tabelas", "listar", "liste", "mostre", "mostrar", "visualizar", "ver dados", "quantos", "quais")
+    inferred_table = _infer_database_table(lower)
+    if inferred_table and any(word in lower for word in database_words):
+        return {
+            "intent": "pergunta_banco",
+            "extracted": _extract_database_hints(lower),
+            "question": "",
+            "confidence": 0.85,
+        }
+    if "banco" in lower or "tabela" in lower or "tabelas" in lower:
+        return {
+            "intent": "pergunta_banco",
+            "extracted": _extract_database_hints(lower),
+            "question": "",
+            "confidence": 0.8,
+        }
+
+    pedido_match = re.search(r"\bpedido\s*(?:n[ºo.]*)?\s*(\d+)\b", lower)
+    if pedido_match:
         return {
             "intent": "consultar_pedido",
-            "extracted": {"cliente": cliente} if cliente else {},
-            "question": "" if cliente else "Qual número do pedido ou nome do cliente?",
+            "extracted": {"numero_pedido": pedido_match.group(1)},
+            "question": "",
+            "confidence": 0.95,
+        }
+
+    cliente_match = re.search(r"\bpedido\s+(?:do|da|de)\s+(.+)$", lower)
+    if cliente_match:
+        return {
+            "intent": "consultar_pedido",
+            "extracted": {"cliente": cliente_match.group(1).strip()},
+            "question": "",
             "confidence": 0.85,
         }
 
     if "pedido" in lower or "consultar" in lower:
-        numero_match = re.search(r"\b(\d+)\b", lower)
         return {
             "intent": "consultar_pedido",
-            "extracted": {"numero_pedido": numero_match.group(1)} if numero_match else {},
-            "question": "" if numero_match else "Qual número do pedido ou nome do cliente?",
-            "confidence": 0.78,
+            "extracted": {},
+            "question": "Qual número do pedido ou nome do cliente?",
+            "confidence": 0.85,
         }
 
-    if any(keyword in lower for keyword in ("orçamento", "orcamento", "orçar", "orcar", "porta", "portas", "duas", "2")):
+    budget_keywords = ("orçamento", "orcamento", "orçar", "orcar", "porta", "portas", "duas", "dois")
+    if any(keyword in lower for keyword in budget_keywords) or re.search(r"\b2\b", lower):
         return {
             "intent": "criar_orcamento",
             "extracted": _extract_budget_hints(lower),
             "question": "",
-            "confidence": 0.82,
+            "confidence": 0.85,
         }
 
     return None
@@ -306,6 +329,7 @@ def _merge_extracted_with_regex(result: dict[str, Any], user_message: str) -> di
 
 
 def _apply_keyword_fallback(result: dict[str, Any], user_message: str, state: dict[str, Any] | None) -> dict[str, Any]:
+    """Corrige classificações genéricas quando há sinal claro de pedido/orçamento."""
     keyword_result = _keyword_intent(user_message, state)
     if not keyword_result:
         return result
@@ -449,3 +473,101 @@ Pergunta do usuário:
         return (response.text or "").strip()
     except Exception:
         return ""
+
+
+def gerar_sql(pergunta: str, schema_context: str, erro_anterior: str = "", sql_anterior: str = "") -> str:
+    """Gera SQL puro para análise read-only total do banco da ColorGlass."""
+    settings = get_settings()
+    retry_context = ""
+    if erro_anterior:
+        retry_context = f"""
+A tentativa anterior falhou.
+SQL anterior:
+{sql_anterior}
+Erro retornado:
+{erro_anterior}
+Gere uma nova SQL corrigida, ainda somente leitura.
+""".strip()
+
+    prompt = f"""
+Você é uma IA analista da ColorGlass. Você tem acesso total de visualização ao banco.
+Gere apenas SQL PostgreSQL puro, sem markdown, sem ```sql, sem explicações e sem comentários.
+
+Regras obrigatórias:
+- Gere apenas SELECT ou WITH.
+- Nunca gere comandos de escrita ou administração: INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, TRUNCATE, GRANT, REVOKE, MERGE, UPSERT, COPY, EXECUTE, CALL, DO.
+- Pode usar JOIN, GROUP BY, ORDER BY, WHERE, LIMIT, SUM, COUNT, AVG, MIN, MAX, jsonb e funções de data do PostgreSQL.
+- Use apenas tabelas e colunas existentes no schema informado.
+- Pode consultar qualquer tabela e qualquer coluna do schema informado, inclusive usuarios, token e pass, porque o acesso é total para visualização.
+- Quando precisar calcular faturamento, saldo, ranking, inadimplência ou ticket médio, calcule no SQL.
+- Se não houver como responder diretamente, gere uma consulta exploratória SELECT adequada com base no schema.
+- Não adicione filtros artificiais além do que o usuário pediu.
+
+Schema conhecido:
+{schema_context}
+
+{retry_context}
+
+Pergunta do usuário:
+{pergunta}
+""".strip()
+
+    try:
+        import google.generativeai as genai
+
+        genai.configure(api_key=settings.gemini_api_key)
+        model = genai.GenerativeModel(
+            settings.gemini_model,
+            generation_config={"temperature": 0.0, "max_output_tokens": 900},
+        )
+        response = model.generate_content(prompt)
+        return (response.text or "").strip()
+    except Exception:
+        return ""
+
+
+def gerar_resposta_final(pergunta: str, sql: str, resultado: list[dict[str, Any]], mostrar_sql: bool = False) -> str:
+    """Gera resposta final em português simples usando apenas o resultado da consulta."""
+    settings = get_settings()
+    prompt = f"""
+Você é uma IA analista da ColorGlass.
+Responda em português claro, direto, objetivo e com tom empresarial.
+Use SOMENTE o resultado JSON informado. Não invente faturamento, valores, clientes, pedidos, datas ou conclusões fora do resultado.
+Se o resultado estiver vazio, diga que não encontrou registros para a pergunta.
+Não diga que alterou, salvou ou atualizou dados.
+Não mostre a SQL por padrão. Só mostre se o campo mostrar_sql for true.
+
+Pergunta do usuário:
+{pergunta}
+
+SQL executada:
+{sql}
+
+mostrar_sql: {mostrar_sql}
+
+Resultado JSON:
+{json.dumps(resultado, ensure_ascii=False, default=str)}
+""".strip()
+
+    try:
+        import google.generativeai as genai
+
+        genai.configure(api_key=settings.gemini_api_key)
+        model = genai.GenerativeModel(
+            settings.gemini_model,
+            generation_config={"temperature": 0.2, "max_output_tokens": 1400},
+        )
+        response = model.generate_content(prompt)
+        return (response.text or "").strip()
+    except Exception:
+        if not resultado:
+            return "Não encontrei registros para essa pergunta."
+        preview = json.dumps(resultado[:10], ensure_ascii=False, default=str, indent=2)
+        if mostrar_sql:
+            return f"Consulta executada em modo somente leitura.\n\nSQL usada:\n{sql}\n\nResultado:\n{preview}"
+        return f"Consulta executada em modo somente leitura. Encontrei {len(resultado)} registro(s).\n{preview}"
+
+
+# Compatibilidade com a versão anterior do database_agent.
+def gerar_sql_somente_leitura_com_gemini(user_message: str, schema_context: str) -> str:
+    return gerar_sql(user_message, schema_context)
