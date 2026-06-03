@@ -52,31 +52,53 @@ def _extract_message(update: dict[str, Any]) -> tuple[str | int | None, str | No
 
 def _process_text(chat_id: str | int, text: str) -> str:
     state = carregar_estado_conversa(chat_id) or get_initial_state()
+    app.logger.info("Texto recebido do chat %s: %s", chat_id, text)
+    app.logger.info("Estado atual do chat %s: %s", chat_id, state)
+
     gemini_result = interpretar_mensagem(text, state)
     intent = gemini_result.get("intent", "conversa")
     extracted = gemini_result.get("extracted", {})
     question = gemini_result.get("question", "")
 
+    # Se já estamos no meio de um orçamento, a próxima mensagem deve continuar
+    # preenchendo o orçamento, e não voltar para a resposta genérica.
+    if state.get("mode") == "orcamento" and intent not in {"cancelar", "confirmar_salvar"}:
+        intent = "criar_orcamento"
+        question = ""
+
+    app.logger.info("Intent detectada para o chat %s: %s | extracted=%s", chat_id, intent, extracted)
+
     if intent == "cancelar":
         limpar_estado_conversa(chat_id)
-        return "Conversa cancelada. Quando quiser, posso consultar pedido ou criar orçamento."
+        response = "Conversa cancelada. Quando quiser, posso consultar pedido ou criar orçamento."
+        app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
+        return response
 
     if intent == "confirmar_salvar":
-        return handle_confirmar_salvar(chat_id, state)
+        response = handle_confirmar_salvar(chat_id, state)
+        app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
+        return response
 
     if intent == "consultar_pedido":
-        return handle_consultar_pedido(extracted)
+        response = handle_consultar_pedido(extracted)
+        app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
+        return response
 
-    if intent == "criar_orcamento" or state.get("mode") == "orcamento":
+    if intent == "criar_orcamento":
         if question and not extracted:
+            state["mode"] = "orcamento"
             state["last_question"] = question
             salvar_estado_conversa(chat_id, state)
+            app.logger.info("Resposta final para o chat %s: %s", chat_id, question)
             return question
         updated_state, response = handle_criar_orcamento(state, extracted)
         salvar_estado_conversa(chat_id, updated_state)
+        app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
         return response
 
-    return question or "Olá! Posso consultar pedidos ou criar um orçamento para você."
+    response = question or "Olá! Posso consultar um pedido ou criar um orçamento para você."
+    app.logger.info("Resposta final para o chat %s: %s", chat_id, response)
+    return response
 
 
 def _resolve_webhook_url(payload: dict[str, Any]) -> str:
@@ -89,7 +111,13 @@ def _resolve_webhook_url(payload: dict[str, Any]) -> str:
     return ""
 
 
-@app.route("/health", methods=["GET"])
+@app.route("/", methods=["GET", "HEAD"])
+def index():
+    """Endpoint simples para health checks que batem na raiz do serviço."""
+    return jsonify({"status": "ok", "service": "colorglass-telegram-bot"})
+
+
+@app.route("/health", methods=["GET", "HEAD"])
 def health():
     return jsonify({"status": "ok"})
 
