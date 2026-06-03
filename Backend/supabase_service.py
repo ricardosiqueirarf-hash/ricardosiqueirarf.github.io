@@ -246,3 +246,29 @@ def limpar_estado_conversa(chat_id: str | int) -> None:
     key = str(chat_id)
     _memory_conversation_states.pop(key, None)
     logger.info("Estado do chat %s removido apenas da memória local.", key)
+
+
+def executar_sql_select_via_rpc(sql: str) -> list[dict[str, Any]]:
+    """Executa SQL SELECT via RPC segura criada no Supabase.
+
+    A validação forte da SQL acontece em database_agent.py antes desta chamada.
+    Esta função não usa insert/update/delete e depende da RPC
+    executar_select_somente_leitura(sql text). Se ela não existir, retorna uma
+    mensagem clara para orientar a ativação do recurso no Supabase.
+    """
+    try:
+        client = get_supabase_client()
+    except Exception as exc:
+        raise RuntimeError("Não consegui conectar ao Supabase agora. Verifique a configuração e tente novamente.") from exc
+
+    try:
+        response = client.rpc("executar_select_somente_leitura", {"sql": sql}).execute()
+        return response.data or []
+    except Exception as exc:
+        text = str(exc).lower()
+        if "executar_select_somente_leitura" in text or "function" in text or "rpc" in text or "pgrst202" in text:
+            raise RuntimeError(
+                "Para ativar a IA livre do banco, falta criar a função RPC executar_select_somente_leitura no Supabase."
+            ) from exc
+        logger.exception("Falha ao executar SELECT via RPC somente leitura: %s", exc)
+        raise RuntimeError("Não consegui executar a consulta somente leitura no Supabase agora.") from exc
