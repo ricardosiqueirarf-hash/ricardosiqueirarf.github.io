@@ -28,8 +28,8 @@ Formato obrigatório:
 }
 
 Intenções:
-- criar_orcamento: usuário quer iniciar ou continuar orçamento.
-- consultar_pedido: usuário quer buscar pedido por número ou cliente.
+- criar_orcamento: usuário quer iniciar ou continuar orçamento. Exemplos: "criar orçamento", "orçamento", "orçar", "duas portas", "2 portas", "porta de correr".
+- consultar_pedido: usuário quer buscar pedido por número ou cliente. Exemplos: "consultar pedidos", "consultar pedido", "ver pedido", "pedido 123", "pedido do João".
 - confirmar_salvar: usuário confirma salvar com sim, salvar ou confirmar.
 - cancelar: usuário pede cancelar/parar/desistir.
 - conversa: cumprimento ou assunto geral sem ação operacional.
@@ -45,6 +45,8 @@ Regras de ambiguidade:
 - Nesse caso, retorne question = "300 o quê? largura, altura, quantidade ou valor?".
 - Se medidas forem informadas como "800 x 600", extraia largura_mm=800 e altura_mm=600.
 - Se só houver uma medida, pergunte qual dimensão é.
+- Se faltar número do pedido ou nome do cliente em uma consulta, retorne question = "Qual número do pedido ou nome do cliente?".
+- Se o usuário quiser criar orçamento e faltarem cliente/loja, retorne intent criar_orcamento e deixe a aplicação perguntar "Certo. Qual cliente e loja?".
 - Se faltar dado para uma operação, formule uma pergunta objetiva em question.
 
 Regras de resposta:
@@ -111,26 +113,10 @@ def _local_fallback(user_message: str, state: dict[str, Any] | None) -> dict[str
         return {"intent": "confirmar_salvar", "extracted": {}, "question": "", "confidence": 0.95}
     if lower in {"cancelar", "parar", "desistir"}:
         return {"intent": "cancelar", "extracted": {}, "question": "", "confidence": 0.95}
-    if "criar orçamento" in lower or "novo orçamento" in lower or "orcamento" in lower or "orçamento" in lower:
-        return {"intent": "criar_orcamento", "extracted": {}, "question": "", "confidence": 0.85}
 
-    pedido_match = re.search(r"pedido\s*(?:n[ºo.]*)?\s*(\d+)", lower)
-    if pedido_match:
-        return {
-            "intent": "consultar_pedido",
-            "extracted": {"numero_pedido": pedido_match.group(1)},
-            "question": "",
-            "confidence": 0.9,
-        }
-
-    cliente_match = re.search(r"pedido\s+(?:do|da|de)\s+(.+)$", lower)
-    if cliente_match:
-        return {
-            "intent": "consultar_pedido",
-            "extracted": {"cliente": cliente_match.group(1).strip()},
-            "question": "",
-            "confidence": 0.75,
-        }
+    keyword_result = _keyword_intent(user_message, state)
+    if keyword_result:
+        return keyword_result
 
     if lower in {"oi", "olá", "ola", "bom dia", "boa tarde", "boa noite"}:
         return {
@@ -140,7 +126,100 @@ def _local_fallback(user_message: str, state: dict[str, Any] | None) -> dict[str
             "confidence": 0.8,
         }
 
-    return _default_response("Posso consultar pedidos ou criar orçamentos. O que você deseja fazer?")
+    return _default_response("Olá! Posso consultar um pedido ou criar um orçamento para você.")
+
+
+def _extract_budget_hints(lower: str) -> dict[str, Any]:
+    """Extrai pistas simples de orçamento quando o Gemini não classifica bem."""
+    extracted: dict[str, Any] = {}
+    if re.search(r"\b(2|duas|dois)\b", lower):
+        extracted["quantidade"] = 2
+    elif re.search(r"\b(1|uma|um)\b", lower):
+        extracted["quantidade"] = 1
+
+    if "porta" in lower or "portas" in lower:
+        if "correr" in lower:
+            extracted["tipo_produto"] = "porta de correr"
+        else:
+            extracted["tipo_produto"] = "porta"
+
+    medida_match = re.search(r"(\d+(?:[,.]\d+)?)\s*[xX]\s*(\d+(?:[,.]\d+)?)", lower)
+    if medida_match:
+        extracted["largura_mm"] = medida_match.group(1).replace(",", ".")
+        extracted["altura_mm"] = medida_match.group(2).replace(",", ".")
+
+    return extracted
+
+
+def _keyword_intent(user_message: str, state: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Fallback por palavras-chave para evitar resposta genérica em intenções claras."""
+    text = user_message.strip()
+    lower = text.lower()
+    state = state or {}
+
+    if state.get("mode") == "orcamento" and lower not in {"sim", "salvar", "confirmar", "cancelar", "parar", "desistir"}:
+        return {
+            "intent": "criar_orcamento",
+            "extracted": _extract_budget_hints(lower),
+            "question": "",
+            "confidence": 0.85,
+        }
+
+    pedido_match = re.search(r"\bpedido\s*(?:n[ºo.]*)?\s*(\d+)\b", lower)
+    if pedido_match:
+        return {
+            "intent": "consultar_pedido",
+            "extracted": {"numero_pedido": pedido_match.group(1)},
+            "question": "",
+            "confidence": 0.95,
+        }
+
+    cliente_match = re.search(r"\bpedido\s+(?:do|da|de)\s+(.+)$", lower)
+    if cliente_match:
+        return {
+            "intent": "consultar_pedido",
+            "extracted": {"cliente": cliente_match.group(1).strip()},
+            "question": "",
+            "confidence": 0.85,
+        }
+
+    if "pedido" in lower or "consultar" in lower:
+        return {
+            "intent": "consultar_pedido",
+            "extracted": {},
+            "question": "Qual número do pedido ou nome do cliente?",
+            "confidence": 0.85,
+        }
+
+    budget_keywords = ("orçamento", "orcamento", "orçar", "orcar", "porta", "portas", "duas", "dois")
+    if any(keyword in lower for keyword in budget_keywords) or re.search(r"\b2\b", lower):
+        return {
+            "intent": "criar_orcamento",
+            "extracted": _extract_budget_hints(lower),
+            "question": "",
+            "confidence": 0.85,
+        }
+
+    return None
+
+
+def _apply_keyword_fallback(result: dict[str, Any], user_message: str, state: dict[str, Any] | None) -> dict[str, Any]:
+    """Corrige classificações genéricas quando há sinal claro de pedido/orçamento."""
+    keyword_result = _keyword_intent(user_message, state)
+    if not keyword_result:
+        return result
+
+    intent = result.get("intent")
+    confidence = float(result.get("confidence") or 0)
+    generic_question = "Posso consultar pedidos ou criar orçamentos" in (result.get("question") or "")
+
+    if intent == "conversa" or confidence < 0.65 or generic_question:
+        merged_extracted = dict(keyword_result.get("extracted", {}))
+        merged_extracted.update(result.get("extracted") or {})
+        keyword_result["extracted"] = merged_extracted
+        return keyword_result
+
+    return result
 
 
 def interpretar_mensagem(user_message: str, state: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -170,6 +249,7 @@ Mensagem do usuário:
             },
         )
         response = model.generate_content(prompt)
-        return _sanitize_response(_extract_json(response.text or "{}"))
+        result = _sanitize_response(_extract_json(response.text or "{}"))
+        return _apply_keyword_fallback(result, user_message, state)
     except Exception:
         return _local_fallback(user_message, state)
