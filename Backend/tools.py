@@ -148,10 +148,11 @@ def handle_confirmar_salvar(chat_id: str | int, state: dict[str, Any] | None) ->
     dados["created_at"] = datetime.now(timezone.utc).isoformat()
 
     try:
-        salvo = salvar_orcamento(dados)
+        salvar_orcamento(dados)
     except RuntimeError as exc:
         return str(exc)
 
+    # Este trecho só será alcançado quando o modo somente leitura for desativado
+    # explicitamente em supabase_service.py. Por enquanto, nenhuma escrita ocorre.
     limpar_estado_conversa(chat_id)
-    identificador = salvo.get("id") or salvo.get("pedido") or "sem identificador retornado"
-    return f"✅ Orçamento salvo com sucesso ({identificador})."
+    return "✅ Orçamento salvo com sucesso."
