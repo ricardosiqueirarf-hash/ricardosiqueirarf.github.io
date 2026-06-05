@@ -142,35 +142,26 @@ def _extract_budget_hints(lower: str) -> dict[str, Any]:
     elif re.search(r"\b(1|uma|um)\b", lower):
         extracted["quantidade"] = 1
 
-    if "porta" in lower:
-        extracted["tipo_produto"] = "porta de correr" if "correr" in lower else "porta"
+    if "porta" in lower or "portas" in lower:
+        if "correr" in lower:
+            extracted["tipo_produto"] = "porta de correr"
+        else:
+            extracted["tipo_produto"] = "porta"
 
-    medida = re.search(r"(\d{2,5})\s*(?:x|por)\s*(\d{2,5})", lower)
-    if medida:
-        extracted["largura_mm"] = int(medida.group(1))
-        extracted["altura_mm"] = int(medida.group(2))
-
-    if "1036" in lower:
-        extracted["perfil"] = "1036"
-    if "preto" in lower:
-        extracted["cor"] = "preto"
-    if "prata" in lower:
-        extracted["cor"] = "prata"
-    if "espelho" in lower:
-        extracted["vidro"] = "espelho prata 4mm" if "prata" in lower else "espelho prata 4mm"
-    if "reflecta" in lower or "refleta" in lower:
-        extracted["vidro"] = "reflecta bronze 4mm" if "bronze" in lower else "reflecta bronze 4mm"
+    medida_match = re.search(r"(\d+(?:[,.]\d+)?)\s*[xX]\s*(\d+(?:[,.]\d+)?)", lower)
+    if medida_match:
+        extracted["largura_mm"] = medida_match.group(1).replace(",", ".")
+        extracted["altura_mm"] = medida_match.group(2).replace(",", ".")
 
     return extracted
 
 
 def _infer_database_table(lower: str) -> str | None:
     table_keywords = {
-        "orcamentos": ("orcamento", "orçamento", "pedido", "pedidos", "venda", "vendas"),
-        "pagamentos": ("pagamento", "pagamentos", "pago", "saldo", "financeiro", "devendo", "devedor", "devedores"),
+        "orcamentos": ("orcamento", "orçamento", "pedido", "pedidos"),
+        "pagamentos": ("pagamento", "pagamentos", "pago", "saldo", "financeiro"),
         "portas": ("porta", "portas"),
-        "usuarios": ("usuario", "usuário", "usuarios", "usuários"),
-        "clientes": ("cliente", "clientes"),
+        "usuarios": ("usuario", "usuário", "usuarios", "usuários", "cliente", "clientes"),
         "materiais": ("material", "materiais", "insumo", "insumos", "estoque"),
         "perfis": ("perfil", "perfis", "aluminio", "alumínio"),
         "vidros": ("vidro", "vidros", "espelho", "reflecta"),
@@ -194,16 +185,14 @@ def _extract_database_hints(lower: str) -> dict[str, Any]:
     table = _infer_database_table(lower)
     if table:
         extracted["tabela"] = table
-    if "quais tabelas" in lower or "tabelas existem" in lower:
-        extracted["tabelas"] = True
 
-    limit_match = re.search(r"\b(?:limite|ultimos|últimos|listar|mostre|mostrar)\s+(\d{1,2})\b", lower)
+    limit_match = re.search(r"\b(?:limite|ultimos|últimos|listar|mostre|mostrar)\s+(\d{1,3})\b", lower)
     if limit_match:
         extracted["limite"] = int(limit_match.group(1))
 
-    name_match = re.search(r"\b(?:cliente|do|da)\s+([a-záàâãéêíóôõúç][\wáàâãéêíóôõúç ]{2,})", lower)
-    if name_match:
-        extracted["termo"] = name_match.group(1).strip()
+    quoted = re.search(r"['\"]([^'\"]{2,80})['\"]", lower)
+    if quoted:
+        extracted["termo"] = quoted.group(1).strip()
 
     return extracted
 
@@ -293,71 +282,34 @@ def _keyword_intent(user_message: str, state: dict[str, Any] | None) -> dict[str
     return None
 
 
-def _extract_order_number(text: str) -> str | None:
-    match = re.search(r"\b(?:pedido|n[úu]mero|numero)?\s*#?\s*(\d{1,10})\b", text.lower())
-    return match.group(1) if match else None
-
-
-def _extract_customer_name(text: str) -> str | None:
-    lower = text.lower()
-    match = re.search(r"pedido\s+d[oa]\s+(.+)$", lower)
-    if match:
-        return match.group(1).strip()
-    return None
-
-
-def _merge_extracted_with_regex(result: dict[str, Any], user_message: str) -> dict[str, Any]:
-    extracted = dict(result.get("extracted", {}))
-    lower = user_message.lower()
-
-    if result.get("intent") == "consultar_pedido":
-        numero = _extract_order_number(lower)
-        cliente = _extract_customer_name(lower)
-        if numero and not extracted.get("numero_pedido"):
-            extracted["numero_pedido"] = numero
-        if cliente and not extracted.get("cliente"):
-            extracted["cliente"] = cliente
-
-    if result.get("intent") == "criar_orcamento":
-        extracted.update({k: v for k, v in _extract_budget_hints(lower).items() if not extracted.get(k)})
-
-    if result.get("intent") == "pergunta_banco":
-        extracted.update({k: v for k, v in _extract_database_hints(lower).items() if not extracted.get(k)})
-
-    result["extracted"] = extracted
-    return result
-
-
 def _apply_keyword_fallback(result: dict[str, Any], user_message: str, state: dict[str, Any] | None) -> dict[str, Any]:
     """Corrige classificações genéricas quando há sinal claro de pedido/orçamento."""
     keyword_result = _keyword_intent(user_message, state)
     if not keyword_result:
         return result
 
-    generic_conversation = result.get("intent") == "conversa" and result.get("confidence", 0) < 0.85
-    weak_intent = result.get("confidence", 0) < 0.55
-    if generic_conversation or weak_intent:
-        return keyword_result
+    intent = result.get("intent")
+    confidence = float(result.get("confidence") or 0)
+    generic_question = "Posso consultar pedidos ou criar orçamentos" in (result.get("question") or "")
 
-    if (state or {}).get("mode") == "orcamento" and result.get("intent") not in {"cancelar", "confirmar_salvar"}:
-        return keyword_result
-
-    if keyword_result["intent"] in {"consultar_pedido", "criar_orcamento", "pergunta_banco"} and result.get("intent") == "conversa":
+    if intent == "conversa" or confidence < 0.65 or generic_question:
+        merged_extracted = dict(keyword_result.get("extracted", {}))
+        merged_extracted.update(result.get("extracted") or {})
+        keyword_result["extracted"] = merged_extracted
         return keyword_result
 
     return result
 
 
 def interpretar_mensagem(user_message: str, state: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Interpreta mensagem do usuário e retorna JSON estruturado."""
     settings = get_settings()
     state = state or {}
 
     prompt = f"""
 {SYSTEM_PROMPT}
 
-Estado atual da conversa:
-{json.dumps(state, ensure_ascii=False, default=str)}
+Estado atual da conversa em JSON:
+{json.dumps(state, ensure_ascii=False)}
 
 Mensagem do usuário:
 {user_message}
@@ -367,14 +319,20 @@ Mensagem do usuário:
         import google.generativeai as genai
 
         genai.configure(api_key=settings.gemini_api_key)
-        model = genai.GenerativeModel(settings.gemini_model, generation_config={"temperature": 0.1})
+        model = genai.GenerativeModel(
+            settings.gemini_model,
+            generation_config={
+                "temperature": 0.1,
+                "max_output_tokens": 800,
+                "response_mime_type": "application/json",
+            },
+        )
         response = model.generate_content(prompt)
-        result = _sanitize_response(_extract_json(response.text or ""))
+        result = _sanitize_response(_extract_json(response.text or "{}"))
+        return _apply_keyword_fallback(result, user_message, state)
     except Exception:
-        result = _local_fallback(user_message, state)
+        return _local_fallback(user_message, state)
 
-    result = _merge_extracted_with_regex(result, user_message)
-    return _apply_keyword_fallback(result, user_message, state)
 
 
 def responder_com_dados(user_message: str, db_context: dict[str, Any]) -> str:
@@ -439,42 +397,6 @@ Mensagem do usuário:
     return "Olá! Sou o assistente virtual da ColorGlass Fortaleza. Como posso ajudar você hoje?"
 
 
-def gerar_sql_somente_leitura_com_gemini(user_message: str, schema_context: str) -> str:
-    """Gera apenas SQL SELECT para o database_agent usando o schema permitido."""
-    settings = get_settings()
-    prompt = f"""
-Você gera SQL PostgreSQL para análise interna da ColorGlass.
-Responda SOMENTE com a SQL, sem Markdown, sem explicação e sem comentários.
-
-Regras obrigatórias:
-- Use apenas SELECT ou WITH que termine em SELECT.
-- Nunca use INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, TRUNCATE, GRANT, REVOKE, MERGE ou UPSERT.
-- Use apenas tabelas e colunas existentes no schema fornecido.
-- Nunca selecione colunas sensíveis como senha, password, token, secret, service_role, authorization, apikey, api_key ou chave.
-- Sempre inclua LIMIT.
-- Se não souber gerar com segurança, responda exatamente: SELECT 'Não consegui gerar uma consulta segura' AS erro LIMIT 1
-
-Schema disponível:
-{schema_context}
-
-Pergunta do usuário:
-{user_message}
-""".strip()
-
-    try:
-        import google.generativeai as genai
-
-        genai.configure(api_key=settings.gemini_api_key)
-        model = genai.GenerativeModel(
-            settings.gemini_model,
-            generation_config={"temperature": 0.0, "max_output_tokens": 700},
-        )
-        response = model.generate_content(prompt)
-        return (response.text or "").strip()
-    except Exception:
-        return ""
-
-
 def gerar_sql(pergunta: str, schema_context: str, erro_anterior: str = "", sql_anterior: str = "") -> str:
     """Gera SQL puro para análise read-only total do banco da ColorGlass."""
     settings = get_settings()
@@ -501,6 +423,8 @@ Regras obrigatórias:
 - Pode consultar qualquer tabela e qualquer coluna do schema informado, inclusive usuarios, token e pass, porque o acesso é total para visualização.
 - Quando precisar calcular faturamento, saldo, ranking, inadimplência ou ticket médio, calcule no SQL.
 - Se não houver como responder diretamente, gere uma consulta exploratória SELECT adequada com base no schema.
+- Toda consulta que retornar linhas deve ter LIMIT 300, exceto agregações que retornem uma linha naturalmente.
+- Se o usuário pedir mais de 300 registros, use LIMIT 300.
 - Não adicione filtros artificiais além do que o usuário pediu.
 
 Schema conhecido:
@@ -518,7 +442,7 @@ Pergunta do usuário:
         genai.configure(api_key=settings.gemini_api_key)
         model = genai.GenerativeModel(
             settings.gemini_model,
-            generation_config={"temperature": 0.0, "max_output_tokens": 900},
+            generation_config={"temperature": 0.0, "max_output_tokens": 1200},
         )
         response = model.generate_content(prompt)
         return (response.text or "").strip()
@@ -571,3 +495,4 @@ Resultado JSON:
 # Compatibilidade com a versão anterior do database_agent.
 def gerar_sql_somente_leitura_com_gemini(user_message: str, schema_context: str) -> str:
     return gerar_sql(user_message, schema_context)
+
