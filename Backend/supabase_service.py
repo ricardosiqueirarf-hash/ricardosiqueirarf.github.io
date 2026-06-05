@@ -84,8 +84,9 @@ def _select_first_by_column(table: str, column: str, value: str | int) -> dict[s
 
 def _select_many_by_column_ilike(table: str, column: str, value: str, limit: int = 10) -> list[dict[str, Any]] | None:
     client = get_supabase_client()
+    safe_limit = max(1, min(int(limit or 10), 300))
     try:
-        response = client.table(table).select("*").ilike(column, f"%{value}%").limit(limit).execute()
+        response = client.table(table).select("*").ilike(column, f"%{value}%").limit(safe_limit).execute()
         return response.data or []
     except Exception as exc:
         if _is_schema_mismatch_error(exc):
@@ -130,7 +131,7 @@ def buscar_pedidos_por_cliente(nome: str) -> list[dict[str, Any]]:
     candidate_columns = ["cliente_nome", "cliente", "nome_cliente"]
     for table in _pedido_tables():
         for column in candidate_columns:
-            pedidos = _select_many_by_column_ilike(table, column, nome)
+            pedidos = _select_many_by_column_ilike(table, column, nome, limit=300)
             if pedidos is not None:
                 for pedido in pedidos:
                     pedido.setdefault("_supabase_table", table)
@@ -141,30 +142,23 @@ def buscar_pedidos_por_cliente(nome: str) -> list[dict[str, Any]]:
 
 
 def listar_tabelas_leitura() -> list[str]:
-    """Lista as tabelas liberadas para visualização pela IA em modo somente leitura."""
+    """Lista tabelas informativas configuradas; não é whitelist restritiva."""
     settings = get_settings()
     return list(settings.supabase_read_tables)
 
 
 def _ensure_read_table_allowed(table: str) -> str:
+    """Normaliza tabela sem bloquear: service role + RPC/read-only controlam o acesso real."""
     normalized = str(table or "").strip()
-    allowed = set(listar_tabelas_leitura())
-    if normalized not in allowed:
-        raise RuntimeError(
-            f"Tabela '{normalized}' não está liberada para visualização. "
-            f"Tabelas disponíveis: {', '.join(sorted(allowed))}."
-        )
+    if not normalized:
+        raise RuntimeError("Informe uma tabela para visualização.")
     return normalized
 
 
-def consultar_tabela_somente_leitura(table: str, limit: int = 10) -> list[dict[str, Any]]:
-    """Consulta genérica somente leitura em tabela liberada.
-
-    Não executa insert/update/delete/upsert. O limite é travado para evitar despejar
-    dados demais no Telegram e no prompt do modelo.
-    """
+def consultar_tabela_somente_leitura(table: str, limit: int = 300) -> list[dict[str, Any]]:
+    """Consulta genérica somente leitura sem whitelist restritiva."""
     safe_table = _ensure_read_table_allowed(table)
-    safe_limit = max(1, min(int(limit or 10), 20))
+    safe_limit = max(1, min(int(limit or 300), 300))
     try:
         client = get_supabase_client()
     except Exception as exc:
@@ -182,11 +176,11 @@ def consultar_tabela_por_termo_somente_leitura(
     table: str,
     column: str,
     term: str,
-    limit: int = 10,
+    limit: int = 300,
 ) -> list[dict[str, Any]]:
-    """Consulta somente leitura com ilike em coluna específica de tabela liberada."""
+    """Consulta somente leitura com ilike em coluna específica, sem whitelist restritiva."""
     safe_table = _ensure_read_table_allowed(table)
-    safe_limit = max(1, min(int(limit or 10), 20))
+    safe_limit = max(1, min(int(limit or 300), 300))
     try:
         client = get_supabase_client()
     except Exception as exc:
@@ -272,3 +266,20 @@ def executar_select(sql: str) -> list[dict[str, Any]]:
 def executar_sql_select_via_rpc(sql: str) -> list[dict[str, Any]]:
     """Compatibilidade: delega para executar_select."""
     return executar_select(sql)
+
+
+def consultar_schema_publico() -> list[dict[str, Any]]:
+    """Consulta information_schema para descobrir tabelas/colunas públicas dinamicamente."""
+    schema_sql = """
+SELECT
+  table_schema AS schema,
+  table_name,
+  column_name,
+  data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+ORDER BY table_schema, table_name, ordinal_position
+LIMIT 300
+""".strip()
+    return executar_select(schema_sql)
+
