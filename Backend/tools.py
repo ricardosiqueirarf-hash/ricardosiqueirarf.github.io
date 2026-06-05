@@ -219,3 +219,4 @@ def handle_confirmar_salvar(chat_id: str | int, state: dict[str, Any] | None) ->
     # explicitamente em supabase_service.py. Por enquanto, nenhuma escrita ocorre.
     limpar_estado_conversa(chat_id)
     return "✅ Orçamento salvo com sucesso."
+
