@@ -68,8 +68,8 @@ class Settings:
     conversation_state_table: str = "conversation_states"
     supabase_read_tables: tuple[str, ...] = DEFAULT_SUPABASE_READ_TABLES
     database_agent_allowed: bool = True
-    database_agent_default_limit: int = 20
-    database_agent_max_rows: int = 50
+    database_agent_default_limit: int = 300
+    database_agent_max_rows: int = 300
 
 
 def _missing_env_vars(required: Iterable[str] = REQUIRED_ENV_VARS) -> list[str]:
@@ -145,6 +145,6 @@ def get_settings(validate: bool = True) -> Settings:
         conversation_state_table=os.getenv("SUPABASE_CONVERSATION_STATE_TABLE", "conversation_states"),
         supabase_read_tables=_parse_read_tables(),
         database_agent_allowed=_parse_bool(os.getenv("DATABASE_AGENT_ALLOWED"), True),
-        database_agent_default_limit=_parse_positive_int("DATABASE_AGENT_DEFAULT_LIMIT", 20),
-        database_agent_max_rows=min(_parse_positive_int("DATABASE_AGENT_MAX_ROWS", 50), 50),
+        database_agent_default_limit=_parse_positive_int("DATABASE_AGENT_DEFAULT_LIMIT", 300),
+        database_agent_max_rows=min(_parse_positive_int("DATABASE_AGENT_MAX_ROWS", 300), 300),
     )
