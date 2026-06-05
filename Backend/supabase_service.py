@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from copy import deepcopy
 from typing import Any, TYPE_CHECKING
 
@@ -242,6 +243,23 @@ def limpar_estado_conversa(chat_id: str | int) -> None:
     logger.info("Estado do chat %s removido apenas da memória local.", key)
 
 
+
+
+def _normalizar_sql_para_rpc(sql: str) -> str:
+    """Normaliza a SQL antes de enviar para a RPC somente leitura.
+
+    Algumas versões da RPC validam o começo do texto de forma sensível a
+    maiúsculas/minúsculas. Por isso, mantemos a SQL original, mas forçamos
+    apenas a primeira palavra para select/with em minúsculo.
+    """
+    normalized = str(sql or "").strip()
+    if normalized.endswith(";") and normalized.count(";") == 1:
+        normalized = normalized[:-1].strip()
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    normalized = re.sub(r"^select\b", "select", normalized, count=1, flags=re.IGNORECASE)
+    normalized = re.sub(r"^with\b", "with", normalized, count=1, flags=re.IGNORECASE)
+    return normalized
+
 def executar_select(sql: str) -> list[dict[str, Any]]:
     """Executa SELECT via RPC executar_select_somente_leitura no Supabase."""
     try:
@@ -250,7 +268,9 @@ def executar_select(sql: str) -> list[dict[str, Any]]:
         raise RuntimeError("Não consegui conectar ao Supabase agora. Verifique a configuração e tente novamente.") from exc
 
     try:
-        response = client.rpc("executar_select_somente_leitura", {"sql": sql}).execute()
+        sql_rpc = _normalizar_sql_para_rpc(sql)
+        logger.info("Executando SELECT via RPC somente leitura: %s", sql_rpc)
+        response = client.rpc("executar_select_somente_leitura", {"sql": sql_rpc}).execute()
         data = response.data or []
         return list(data) if isinstance(data, list) else [data]
     except Exception as exc:
