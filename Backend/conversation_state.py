@@ -4,7 +4,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-MINIMUM_BUDGET_FIELDS: tuple[str, ...] = ( 
+MINIMUM_BUDGET_FIELDS: tuple[str, ...] = (
     "cliente",
     "loja",
     "tipo_produto",
@@ -87,7 +87,7 @@ def next_question_for_missing_fields(missing_fields: list[str]) -> str:
         return "Tenho todos os dados. Posso calcular o orçamento agora."
 
     if "cliente" in missing_fields or "loja" in missing_fields:
-        return "Informe o cliente e a loja, por favor."
+        return "Certo. Qual cliente e loja?"
     if "tipo_produto" in missing_fields:
         return "Qual é o tipo de produto do orçamento?"
     if {"quantidade", "largura_mm", "altura_mm"}.intersection(missing_fields):
@@ -99,3 +99,4 @@ def next_question_for_missing_fields(missing_fields: list[str]) -> str:
 
     readable = ", ".join(missing_fields)
     return f"Ainda faltam estes dados: {readable}."
+
