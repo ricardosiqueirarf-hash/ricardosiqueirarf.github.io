@@ -42,7 +42,7 @@ Tabelas conhecidas:
 - estoque
 - estruturas
 - fornecedores
-- imagags
+- imagetags
 - materiais
 - orcamentos
 - pagamentos
@@ -229,6 +229,15 @@ def _extrair_termo_codigo(lower: str) -> str | None:
     return match.group(0) if match else None
 
 
+def _deve_usar_sql_fallback_prioritario(pergunta: str) -> bool:
+    """Usa SQL determinística antes do Gemini para perguntas objetivas conhecidas."""
+    lower = _normalizar_texto(pergunta)
+    has_lookup_word = any(term in lower for term in ("preco", "valor", "custo", "procure", "procurar", "busque", "buscar", "pesquise"))
+    has_known_table = any(term in lower for term in ("perfil", "perfis", "material", "materiais", "estoque"))
+    has_code = _extrair_termo_codigo(lower) is not None
+    return has_lookup_word and (has_known_table or has_code)
+
+
 def _gerar_sql_fallback(pergunta: str) -> str:
     """Fallback determinístico quando Gemini não retorna SQL."""
     lower = _normalizar_texto(pergunta)
@@ -357,13 +366,20 @@ def responder_pergunta_banco(pergunta: str) -> str:
 
     logger.info("Pergunta recebida pelo database_agent: %s", pergunta)
 
+    usar_fallback_prioritario = _deve_usar_sql_fallback_prioritario(pergunta)
+
     for attempt in range(1, MAX_SQL_ATTEMPTS + 1):
-        sql_gerada = gerar_sql(pergunta, schema_context, erro_anterior=last_error, sql_anterior=sql_validada)
-        if not sql_gerada.strip():
+        sql_gerada = ""
+        if usar_fallback_prioritario and attempt == 1:
             sql_gerada = _gerar_sql_fallback(pergunta)
-            logger.info("SQL fallback local na tentativa %s: %s", attempt, sql_gerada)
+            logger.info("SQL fallback local prioritário na tentativa %s: %s", attempt, sql_gerada)
         else:
-            logger.info("SQL gerada pelo Gemini na tentativa %s: %s", attempt, sql_gerada)
+            sql_gerada = gerar_sql(pergunta, schema_context, erro_anterior=last_error, sql_anterior=sql_validada)
+            if not sql_gerada.strip():
+                sql_gerada = _gerar_sql_fallback(pergunta)
+                logger.info("SQL fallback local na tentativa %s: %s", attempt, sql_gerada)
+            else:
+                logger.info("SQL gerada pelo Gemini na tentativa %s: %s", attempt, sql_gerada)
 
         try:
             sql_validada = validar_sql_somente_leitura(sql_gerada)
@@ -377,6 +393,8 @@ def responder_pergunta_banco(pergunta: str) -> str:
             logger.warning("Falha ao executar SQL na tentativa %s: %s", attempt, last_error)
             if "executar_select_somente_leitura" in last_error:
                 return "Para ativar a IA livre do banco, falta criar a função RPC executar_select_somente_leitura no Supabase."
+            if not usar_fallback_prioritario and _gerar_sql_fallback(pergunta):
+                usar_fallback_prioritario = True
             if attempt >= MAX_SQL_ATTEMPTS:
                 return f"Não consegui consultar o banco agora. Erro: {last_error}"
 
