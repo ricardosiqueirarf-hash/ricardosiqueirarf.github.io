@@ -42,7 +42,7 @@ Tabelas conhecidas:
 - estoque
 - estruturas
 - fornecedores
-- imagetags
+- imagags
 - materiais
 - orcamentos
 - pagamentos
@@ -196,11 +196,156 @@ def _usuario_pediu_sql(pergunta: str) -> bool:
     return any(term in lower for term in ("mostre a sql", "mostrar sql", "qual sql", "detalhes técnicos", "detalhes tecnicos"))
 
 
+def _normalizar_texto(texto: str) -> str:
+    replacements = str.maketrans({
+        "á": "a", "à": "a", "â": "a", "ã": "a",
+        "é": "e", "ê": "e",
+        "í": "i",
+        "ó": "o", "ô": "o", "õ": "o",
+        "ú": "u",
+        "ç": "c",
+    })
+    return texto.lower().translate(replacements)
+
+
+def _is_pergunta_capacidade(pergunta: str) -> bool:
+    lower = _normalizar_texto(pergunta)
+    return any(term in lower for term in ("tem acesso", "voce acessa", "consegue acessar")) and any(
+        term in lower for term in ("banco", "dados", "supabase", "tabelas")
+    )
+
+
+def _responder_capacidade_banco() -> str:
+    return (
+        "Sim. Tenho acesso somente leitura ao banco da ColorGlass via Supabase. "
+        "Posso consultar tabelas, pedidos, pagamentos, estoque, materiais, perfis, vidros, puxadores, trilhos, "
+        "clientes/usuários, status, faturamento e rankings. Eu gero apenas consultas SELECT/WITH, valido a SQL "
+        "antes de executar e não tenho permissão no código para alterar dados."
+    )
+
+
+def _extrair_termo_codigo(lower: str) -> str | None:
+    match = re.search(r"\b\d{2,}\b", lower)
+    return match.group(0) if match else None
+
+
+def _gerar_sql_fallback(pergunta: str) -> str:
+    """Fallback determinístico quando Gemini não retorna SQL."""
+    lower = _normalizar_texto(pergunta)
+    limit = min(get_settings().database_agent_default_limit, get_settings().database_agent_max_rows, 300)
+
+    if "faturamento" in lower or "faturei" in lower or "receita" in lower:
+        if "mes" in lower:
+            return (
+                "SELECT COALESCE(SUM(valor_total), 0) AS faturamento_mes "
+                "FROM orcamentos "
+                "WHERE data_aprovacao >= date_trunc('month', now())"
+            )
+        return "SELECT COALESCE(SUM(valor_total), 0) AS faturamento_total FROM orcamentos"
+
+    if "ultimo pedido" in lower or "ultimos pedidos" in lower or "ultimos orcamentos" in lower or "ultimos orçamentos" in lower:
+        return f"SELECT * FROM orcamentos ORDER BY data_criacao DESC LIMIT {limit}"
+
+    if "saldo aberto" in lower or "devendo" in lower or "devedores" in lower or "inadimpl" in lower:
+        return f"""
+SELECT
+  o.id,
+  o.numero_pedido,
+  o.cliente_nome,
+  o.valor_total,
+  COALESCE(SUM(p.valor), 0) AS total_pago,
+  o.valor_total - COALESCE(SUM(p.valor), 0) AS saldo_aberto
+FROM orcamentos o
+LEFT JOIN pagamentos p ON p.orcamentoid = o.id
+GROUP BY o.id, o.numero_pedido, o.cliente_nome, o.valor_total
+HAVING o.valor_total > COALESCE(SUM(p.valor), 0)
+ORDER BY saldo_aberto DESC
+LIMIT {limit}
+""".strip()
+
+    if "valor total" in lower and "estoque" in lower:
+        return "SELECT COALESCE(SUM(quantidade * custo), 0) AS valor_total_estoque FROM estoque"
+
+    if "estoque" in lower:
+        return f"""
+SELECT
+  produto,
+  quantidade,
+  unidade,
+  custo,
+  quantidade * custo AS valor_total
+FROM estoque
+ORDER BY valor_total DESC
+LIMIT {limit}
+""".strip()
+
+    if any(term in lower for term in ("preco", "valor", "custo", "procure", "procurar", "busque", "buscar", "pesquise")):
+        codigo = _extrair_termo_codigo(lower)
+        bronze_filter = ""
+        if "bronze" in lower:
+            bronze_filter = " AND (nome ILIKE '%bronze%' OR tags ILIKE '%bronze%' OR tipologias ILIKE '%bronze%' OR insumos ILIKE '%bronze%')"
+        if codigo:
+            return f"""
+SELECT
+  id,
+  nome,
+  custo,
+  margem,
+  perda,
+  preco,
+  tipologias,
+  insumos,
+  tags
+FROM perfis
+WHERE (nome ILIKE '%{codigo}%' OR tags ILIKE '%{codigo}%' OR tipologias ILIKE '%{codigo}%' OR insumos ILIKE '%{codigo}%')
+{bronze_filter}
+ORDER BY nome
+LIMIT {limit}
+""".strip()
+        if "perfil" in lower or "perfis" in lower:
+            return f"SELECT * FROM perfis ORDER BY nome LIMIT {limit}"
+        if "material" in lower or "materiais" in lower:
+            return f"SELECT * FROM materiais ORDER BY nome LIMIT {limit}"
+
+    table_map = {
+        "orcamento": "orcamentos",
+        "orcamentos": "orcamentos",
+        "pedido": "orcamentos",
+        "pedidos": "orcamentos",
+        "pagamento": "pagamentos",
+        "pagamentos": "pagamentos",
+        "perfil": "perfis",
+        "perfis": "perfis",
+        "material": "materiais",
+        "materiais": "materiais",
+        "porta": "portas",
+        "portas": "portas",
+        "vidro": "vidros",
+        "vidros": "vidros",
+        "puxador": "puxadores",
+        "puxadores": "puxadores",
+        "trilho": "trilhos",
+        "trilhos": "trilhos",
+        "usuario": "usuarios",
+        "usuarios": "usuarios",
+        "tag": "tags",
+        "tags": "tags",
+    }
+    for keyword, table in table_map.items():
+        if keyword in lower:
+            return f"SELECT * FROM {table} LIMIT {limit}"
+
+    return ""
+
+
 def responder_pergunta_banco(pergunta: str) -> str:
     """Responde pergunta livre sobre o banco usando schema dinâmico e até 2 tentativas de SQL."""
     settings = get_settings()
     if not settings.database_agent_allowed:
         return "O agente do banco está desativado neste ambiente."
+
+    if _is_pergunta_capacidade(pergunta):
+        return _responder_capacidade_banco()
 
     schema_context = listar_schema_disponivel()
     if "quais tabelas" in pergunta.lower() or "tabelas existem" in pergunta.lower():
@@ -214,7 +359,11 @@ def responder_pergunta_banco(pergunta: str) -> str:
 
     for attempt in range(1, MAX_SQL_ATTEMPTS + 1):
         sql_gerada = gerar_sql(pergunta, schema_context, erro_anterior=last_error, sql_anterior=sql_validada)
-        logger.info("SQL gerada pelo Gemini na tentativa %s: %s", attempt, sql_gerada)
+        if not sql_gerada.strip():
+            sql_gerada = _gerar_sql_fallback(pergunta)
+            logger.info("SQL fallback local na tentativa %s: %s", attempt, sql_gerada)
+        else:
+            logger.info("SQL gerada pelo Gemini na tentativa %s: %s", attempt, sql_gerada)
 
         try:
             sql_validada = validar_sql_somente_leitura(sql_gerada)
