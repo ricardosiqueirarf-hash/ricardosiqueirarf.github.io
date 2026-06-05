@@ -269,17 +269,17 @@ def executar_sql_select_via_rpc(sql: str) -> list[dict[str, Any]]:
 
 
 def consultar_schema_publico() -> list[dict[str, Any]]:
-    """Consulta information_schema para descobrir tabelas/colunas públicas dinamicamente."""
+    """Consulta information_schema.columns para descobrir o schema public dinamicamente."""
     schema_sql = """
 SELECT
-  table_schema AS schema,
+  table_schema,
   table_name,
   column_name,
   data_type
 FROM information_schema.columns
 WHERE table_schema = 'public'
-ORDER BY table_schema, table_name, ordinal_position
-LIMIT 300
+ORDER BY table_name, ordinal_position
+LIMIT 3000
 """.strip()
     return executar_select(schema_sql)
 
