@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -94,7 +95,7 @@
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 18px;
     }
 
@@ -168,7 +169,7 @@
 
     table {
       width: 100%;
-      min-width: 1040px;
+      min-width: 1780px;
       border-collapse: collapse;
     }
 
@@ -222,12 +223,20 @@
       box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.14);
     }
 
-    .dot.insufficient {
+    .dot.insufficient,
+    .dot.slow,
+    .dot.stopped {
       background: var(--amber);
       box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.14);
     }
 
-    .status.buy {
+    .dot.price-below-cost {
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.14);
+    }
+
+    .status.buy,
+    .status.price-below-cost {
       color: var(--red);
     }
 
@@ -235,7 +244,9 @@
       color: var(--green);
     }
 
-    .status.insufficient {
+    .status.insufficient,
+    .status.slow,
+    .status.stopped {
       color: var(--amber);
     }
 
@@ -303,6 +314,31 @@
         <span>Itens para comprar</span>
         <strong id="itensComprar">0</strong>
       </article>
+
+      <article class="card">
+        <span>Capital parado total</span>
+        <strong id="capitalParadoTotal">R$ 0,00</strong>
+      </article>
+
+      <article class="card">
+        <span>Custo mensal total</span>
+        <strong id="custoMensalTotal">R$ 0,00</strong>
+      </article>
+
+      <article class="card">
+        <span>Lucro mensal total</span>
+        <strong id="lucroMensalTotal">R$ 0,00</strong>
+      </article>
+
+      <article class="card">
+        <span>Itens com estoque parado</span>
+        <strong id="itensEstoqueParado">0</strong>
+      </article>
+
+      <article class="card">
+        <span>Itens com preço abaixo do custo</span>
+        <strong id="itensPrecoAbaixoCusto">0</strong>
+      </article>
     </section>
 
     <section class="table-card" aria-labelledby="tabela-title">
@@ -323,15 +359,23 @@
               <th>Estoque atual</th>
               <th>Unidade</th>
               <th>Custo</th>
+              <th>Preço</th>
+              <th>Lucro Unit.</th>
               <th>Valor em estoque</th>
+              <th>Capital Parado</th>
               <th>Vazão média mensal</th>
+              <th>Custo Mensal</th>
+              <th>Lucro Mensal</th>
+              <th>Payback</th>
+              <th>Cobertura</th>
+              <th>Ponto Reposição</th>
               <th>Mínimo sugerido</th>
               <th>Última contagem</th>
             </tr>
           </thead>
           <tbody id="dashboardBody">
             <tr>
-              <td colspan="10" class="empty">Carregando dados...</td>
+              <td colspan="18" class="empty">Carregando dados...</td>
             </tr>
           </tbody>
         </table>
@@ -345,18 +389,60 @@
     const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
     const DIAS_MEDIOS_MES = 30.4375;
+    const DIAS_MES_CALCULO = 30;
+    const LEAD_TIME_PADRAO = 7;
+    const FATOR_SEGURANCA_REPOSICAO = 1.3;
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const atualizarBtn = document.getElementById("atualizarBtn");
     const valorTotalEl = document.getElementById("valorTotal");
     const produtosDiferentesEl = document.getElementById("produtosDiferentes");
     const itensComprarEl = document.getElementById("itensComprar");
+    const capitalParadoTotalEl = document.getElementById("capitalParadoTotal");
+    const custoMensalTotalEl = document.getElementById("custoMensalTotal");
+    const lucroMensalTotalEl = document.getElementById("lucroMensalTotal");
+    const itensEstoqueParadoEl = document.getElementById("itensEstoqueParado");
+    const itensPrecoAbaixoCustoEl = document.getElementById("itensPrecoAbaixoCusto");
     const atualizadoEmEl = document.getElementById("atualizadoEm");
     const mensagemEl = document.getElementById("mensagem");
     const dashboardBody = document.getElementById("dashboardBody");
+    const tabelasProdutos = [
+      { tabela: "perfis", categoria: "perfis", campoNome: "nome", select: "id, nome, custo, preco", selectComLeadTime: "id, nome, custo, preco, lead_time" },
+      { tabela: "vidros", categoria: "vidros", campoNome: "tipo", select: "id, tipo, espessura, custo, preco", selectComLeadTime: "id, tipo, espessura, custo, preco, lead_time" },
+      { tabela: "puxadores", categoria: "puxadores", campoNome: "nome", select: "id, nome, custo, preco", selectComLeadTime: "id, nome, custo, preco, lead_time" },
+      { tabela: "sistemas", categoria: "sistemas", campoNome: "nome", select: "id, nome, custo, preco", selectComLeadTime: "id, nome, custo, preco, lead_time" },
+      { tabela: "trilhos", categoria: "trilhos", campoNome: "nome", select: "id, nome, custo, preco", selectComLeadTime: "id, nome, custo, preco, lead_time" }
+    ];
 
     function numero(valor) {
-      const convertido = Number(valor);
+      if (valor === null || valor === undefined) return 0;
+      if (typeof valor === "number") return Number.isFinite(valor) ? valor : 0;
+
+      let texto = String(valor).trim();
+      if (!texto) return 0;
+
+      texto = texto
+        .replace(/R\$/gi, "")
+        .replace(/\s/g, "")
+        .replace(/[^\d,.-]/g, "");
+
+      if (!texto || texto === "-" || texto === "," || texto === ".") return 0;
+
+      const temVirgula = texto.includes(",");
+      const temPonto = texto.includes(".");
+
+      if (temVirgula && temPonto) {
+        const ultimoSeparadorDecimal = Math.max(texto.lastIndexOf(","), texto.lastIndexOf("."));
+        const inteiro = texto.slice(0, ultimoSeparadorDecimal).replace(/[,.]/g, "");
+        const decimal = texto.slice(ultimoSeparadorDecimal + 1);
+        texto = `${inteiro}.${decimal}`;
+      } else if (temVirgula) {
+        texto = texto.replace(/\./g, "").replace(",", ".");
+      } else if ((texto.match(/\./g) || []).length > 1) {
+        texto = texto.replace(/\./g, "");
+      }
+
+      const convertido = Number(texto);
       return Number.isFinite(convertido) ? convertido : 0;
     }
 
@@ -385,6 +471,16 @@
       });
     }
 
+    function formatarMoedaOuTraco(valor) {
+      if (valor === null || valor === undefined || Number.isNaN(Number(valor))) return "—";
+      return formatarMoeda(valor);
+    }
+
+    function formatarDias(valor) {
+      if (valor === null || valor === undefined || Number.isNaN(Number(valor))) return "—";
+      return `${formatarNumero(valor)} dias`;
+    }
+
     function formatarData(valor) {
       if (!valor) return "—";
       return new Date(valor).toLocaleString("pt-BR", {
@@ -409,13 +505,36 @@
       dashboardBody.innerHTML = "";
       const tr = document.createElement("tr");
       const td = criarCelula(texto, "empty");
-      td.colSpan = 10;
+      td.colSpan = 18;
       tr.appendChild(td);
       dashboardBody.appendChild(tr);
     }
 
     function chaveProduto(item) {
       return String(item.produto || "").trim() || `Produto sem nome #${item.id}`;
+    }
+
+    function normalizarTexto(valor) {
+      return String(valor || "")
+        .trim()
+        .toLocaleLowerCase("pt-BR")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ");
+    }
+
+    function textoProdutoReferencia(item, config) {
+      if (config.tabela === "vidros") {
+        const tipo = String(item.tipo || "").trim();
+        const espessura = item.espessura ? `${item.espessura} mm` : "";
+        return [tipo, espessura].filter(Boolean).join(" - ");
+      }
+
+      return String(item[config.campoNome] || "").trim();
+    }
+
+    function criarChaveReferencia(categoria, produto) {
+      return `${normalizarTexto(categoria)}::${normalizarTexto(produto)}`;
     }
 
     function compararPorDataEId(a, b) {
@@ -431,12 +550,37 @@
       return (fimMs - inicioMs) / (1000 * 60 * 60 * 24 * DIAS_MEDIOS_MES);
     }
 
-    function calcularProduto(produto, historicoOriginal) {
+    function calcularStatus(item) {
+      if (item.lucroUnitario < 0) {
+        return { texto: "Preço abaixo do custo", classe: "price-below-cost" };
+      }
+
+      if (item.quantidadeAtual <= item.pontoReposicao) {
+        return { texto: "Comprar", classe: "buy" };
+      }
+
+      if (item.cobertura !== null && item.cobertura > 90) {
+        return { texto: "Estoque parado", classe: "stopped" };
+      }
+
+      if (item.payback !== null && item.payback > 90) {
+        return { texto: "Retorno lento", classe: "slow" };
+      }
+
+      return { texto: "OK", classe: "available" };
+    }
+
+    function calcularProduto(produto, historicoOriginal, referenciasProdutos) {
       const historico = [...historicoOriginal].sort(compararPorDataEId);
       const ultima = historico[historico.length - 1];
+      const referencia = referenciasProdutos.get(criarChaveReferencia(ultima.categoria, produto));
       const quantidadeAtual = numero(ultima.quantidade);
-      const custo = numero(ultima.custo);
+      const custo = numero(ultima.custo || referencia?.custo);
+      const preco = numero(referencia?.preco || ultima.preco);
       const valorEstoque = quantidadeAtual * custo;
+      const capitalParado = quantidadeAtual * custo;
+      const lucroUnitario = preco - custo;
+      const leadTime = numero(referencia?.leadTime) > 0 ? numero(referencia.leadTime) : LEAD_TIME_PADRAO;
       let somaConsumosPositivos = 0;
 
       for (let index = 1; index < historico.length; index += 1) {
@@ -451,23 +595,41 @@
 
       const meses = mesesEntreDatas(historico[0]?.data_contagem, ultima.data_contagem);
       const temHistoricoSuficiente = historico.length >= 2 && meses > 0;
-      const vazaoMediaMensal = temHistoricoSuficiente ? somaConsumosPositivos / meses : null;
-      const minimoSugerido = vazaoMediaMensal === null ? null : Math.ceil(vazaoMediaMensal * 0.5);
-      const precisaComprar = minimoSugerido !== null && quantidadeAtual < minimoSugerido;
+      const vazaoMediaMensal = temHistoricoSuficiente ? somaConsumosPositivos / meses : 0;
+      const minimoSugerido = temHistoricoSuficiente ? Math.ceil(vazaoMediaMensal * 0.5) : null;
+      const custoMensal = vazaoMediaMensal * custo;
+      const lucroMensal = vazaoMediaMensal * lucroUnitario;
+      const payback = lucroMensal > 0 ? (capitalParado / lucroMensal) * DIAS_MES_CALCULO : null;
+      const cobertura = vazaoMediaMensal > 0 ? (quantidadeAtual / vazaoMediaMensal) * DIAS_MES_CALCULO : null;
+      const pontoReposicao = vazaoMediaMensal > 0
+        ? (vazaoMediaMensal / DIAS_MES_CALCULO) * leadTime * FATOR_SEGURANCA_REPOSICAO
+        : 0;
 
-      return {
+      const itemCalculado = {
         produto,
         categoria: ultima.categoria || "—",
         quantidadeAtual,
         unidade: ultima.unidade || "—",
         custo,
+        preco,
+        lucroUnitario,
         valorEstoque,
+        capitalParado,
         vazaoMediaMensal,
         minimoSugerido,
-        precisaComprar,
+        custoMensal,
+        lucroMensal,
+        payback,
+        cobertura,
+        pontoReposicao,
+        leadTime,
+        precisaComprar: quantidadeAtual <= pontoReposicao,
         historicoInsuficiente: !temHistoricoSuficiente,
         ultimaContagem: ultima.data_contagem
       };
+
+      itemCalculado.status = calcularStatus(itemCalculado);
+      return itemCalculado;
     }
 
     function agruparPorProduto(dados) {
@@ -480,15 +642,52 @@
     }
 
     function statusHtml(item) {
-      if (item.historicoInsuficiente) {
-        return '<span class="status insufficient"><span class="dot insufficient"></span>Histórico insuficiente</span>';
+      const classe = item.status?.classe || "available";
+      const texto = item.status?.texto || "OK";
+      return `<span class="status ${classe}"><span class="dot ${classe}"></span>${texto}</span>`;
+    }
+
+    async function carregarTabelaReferencia(config) {
+      const consultar = async (select) => supabase
+        .from(config.tabela)
+        .select(select)
+        .order(config.campoNome, { ascending: true });
+
+      let { data, error } = await consultar(config.selectComLeadTime);
+
+      if (error) {
+        ({ data, error } = await consultar(config.select));
       }
 
-      if (item.precisaComprar) {
-        return '<span class="status buy"><span class="dot buy"></span>Comprar</span>';
-      }
+      if (error) throw new Error(`${config.categoria}: ${error.message}`);
 
-      return '<span class="status available"><span class="dot available"></span>Disponível</span>';
+      return (data || []).map((item) => ({
+        categoria: config.categoria,
+        produto: textoProdutoReferencia(item, config),
+        custo: numero(item.custo),
+        preco: numero(item.preco),
+        leadTime: numero(item.lead_time) || LEAD_TIME_PADRAO
+      }));
+    }
+
+    async function carregarReferenciasProdutos() {
+      const referencias = new Map();
+      const resultados = await Promise.allSettled(tabelasProdutos.map(carregarTabelaReferencia));
+      const erros = [];
+
+      resultados.forEach((resultado) => {
+        if (resultado.status === "rejected") {
+          erros.push(resultado.reason.message);
+          return;
+        }
+
+        resultado.value.forEach((item) => {
+          if (!item.produto) return;
+          referencias.set(criarChaveReferencia(item.categoria, item.produto), item);
+        });
+      });
+
+      return { referencias, erros };
     }
 
     function renderizarDashboard(itens) {
@@ -510,13 +709,21 @@
         tr.appendChild(criarCelula(formatarNumero(item.quantidadeAtual)));
         tr.appendChild(criarCelula(item.unidade));
         tr.appendChild(criarCelula(formatarMoeda(item.custo)));
+        tr.appendChild(criarCelula(formatarMoeda(item.preco)));
+        tr.appendChild(criarCelula(formatarMoeda(item.lucroUnitario), item.lucroUnitario < 0 ? "status price-below-cost" : ""));
         tr.appendChild(criarCelula(formatarMoeda(item.valorEstoque)));
+        tr.appendChild(criarCelula(formatarMoeda(item.capitalParado)));
         tr.appendChild(criarCelula(
-          item.vazaoMediaMensal === null
+          item.historicoInsuficiente
             ? "histórico insuficiente"
             : `${formatarNumero(item.vazaoMediaMensal)} / mês`,
-          item.vazaoMediaMensal === null ? "muted" : ""
+          item.historicoInsuficiente ? "muted" : ""
         ));
+        tr.appendChild(criarCelula(formatarMoeda(item.custoMensal)));
+        tr.appendChild(criarCelula(formatarMoeda(item.lucroMensal)));
+        tr.appendChild(criarCelula(formatarDias(item.payback), item.payback === null ? "muted" : ""));
+        tr.appendChild(criarCelula(formatarDias(item.cobertura), item.cobertura === null ? "muted" : ""));
+        tr.appendChild(criarCelula(formatarNumero(item.pontoReposicao)));
         tr.appendChild(criarCelula(formatarInteiroParaCima(item.minimoSugerido), item.minimoSugerido === null ? "muted" : ""));
         tr.appendChild(criarCelula(formatarData(item.ultimaContagem)));
         dashboardBody.appendChild(tr);
@@ -525,11 +732,21 @@
 
     function atualizarCards(itens) {
       const valorTotal = itens.reduce((total, item) => total + item.valorEstoque, 0);
-      const itensParaComprar = itens.filter((item) => item.precisaComprar).length;
+      const capitalParadoTotal = itens.reduce((total, item) => total + item.capitalParado, 0);
+      const custoMensalTotal = itens.reduce((total, item) => total + item.custoMensal, 0);
+      const lucroMensalTotal = itens.reduce((total, item) => total + item.lucroMensal, 0);
+      const itensParaComprar = itens.filter((item) => item.status?.texto === "Comprar").length;
+      const itensEstoqueParado = itens.filter((item) => item.status?.texto === "Estoque parado").length;
+      const itensPrecoAbaixoCusto = itens.filter((item) => item.status?.texto === "Preço abaixo do custo").length;
 
       valorTotalEl.textContent = formatarMoeda(valorTotal);
       produtosDiferentesEl.textContent = itens.length.toLocaleString("pt-BR");
       itensComprarEl.textContent = itensParaComprar.toLocaleString("pt-BR");
+      capitalParadoTotalEl.textContent = formatarMoeda(capitalParadoTotal);
+      custoMensalTotalEl.textContent = formatarMoeda(custoMensalTotal);
+      lucroMensalTotalEl.textContent = formatarMoeda(lucroMensalTotal);
+      itensEstoqueParadoEl.textContent = itensEstoqueParado.toLocaleString("pt-BR");
+      itensPrecoAbaixoCustoEl.textContent = itensPrecoAbaixoCusto.toLocaleString("pt-BR");
     }
 
     async function atualizarDashboard() {
@@ -537,30 +754,43 @@
       definirMensagem("Carregando dados...");
       renderizarLinhaMensagem("Carregando dados...");
 
-      const { data, error } = await supabase
-        .from("estoque")
-        .select("id, produto, quantidade, unidade, data_contagem, custo, categoria");
+      try {
+        const [estoqueResultado, referenciasResultado] = await Promise.all([
+          supabase
+            .from("estoque")
+            .select("id, produto, quantidade, unidade, data_contagem, custo, categoria"),
+          carregarReferenciasProdutos()
+        ]);
 
-      atualizarBtn.disabled = false;
+        if (estoqueResultado.error) {
+          definirMensagem(`Erro ao carregar dados: ${estoqueResultado.error.message}`, "error");
+          renderizarLinhaMensagem("Não foi possível carregar os dados da tabela estoque.");
+          return;
+        }
 
-      if (error) {
-        definirMensagem(`Erro ao carregar dados: ${error.message}`, "error");
-        renderizarLinhaMensagem("Não foi possível carregar os dados da tabela estoque.");
-        return;
+        const grupos = agruparPorProduto(estoqueResultado.data || []);
+        const itens = Array.from(grupos.entries())
+          .map(([produto, historico]) => calcularProduto(produto, historico, referenciasResultado.referencias))
+          .sort((a, b) => b.valorEstoque - a.valorEstoque);
+
+        atualizarCards(itens);
+        renderizarDashboard(itens);
+
+        const avisoReferencias = referenciasResultado.erros.length
+          ? ` Algumas referências de preço não carregaram: ${referenciasResultado.erros.join(" | ")}.`
+          : "";
+
+        definirMensagem(`${itens.length.toLocaleString("pt-BR")} produto(s) carregado(s).${avisoReferencias}`, referenciasResultado.erros.length ? "error" : "");
+        atualizadoEmEl.textContent = `Atualizado em ${new Date().toLocaleString("pt-BR", {
+          dateStyle: "short",
+          timeStyle: "short"
+        })}`;
+      } catch (erro) {
+        definirMensagem(`Erro ao carregar dashboard: ${erro.message}`, "error");
+        renderizarLinhaMensagem("Não foi possível carregar o dashboard de estoque.");
+      } finally {
+        atualizarBtn.disabled = false;
       }
-
-      const grupos = agruparPorProduto(data || []);
-      const itens = Array.from(grupos.entries())
-        .map(([produto, historico]) => calcularProduto(produto, historico))
-        .sort((a, b) => b.valorEstoque - a.valorEstoque);
-
-      atualizarCards(itens);
-      renderizarDashboard(itens);
-      definirMensagem(`${itens.length.toLocaleString("pt-BR")} produto(s) carregado(s).`);
-      atualizadoEmEl.textContent = `Atualizado em ${new Date().toLocaleString("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short"
-      })}`;
     }
 
     atualizarBtn.addEventListener("click", atualizarDashboard);
