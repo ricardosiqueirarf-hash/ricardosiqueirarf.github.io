@@ -320,6 +320,14 @@ def estoquedashboard_page():
 def estoquedashboard_html_page():
     return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquedashboard.html")
 
+@app.route("/3dteste")
+def 3dteste_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "3dteste.html")
+
+@app.route("/3dteste.html")
+def 3dteste_html_page():
+    return send_from_directory(os.path.join(ROOT_DIR, "static"), "3dteste.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
