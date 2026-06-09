@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -169,7 +168,7 @@
 
     table {
       width: 100%;
-      min-width: 1780px;
+      min-width: 1860px;
       border-collapse: collapse;
     }
 
@@ -363,7 +362,8 @@
               <th>Lucro Unit.</th>
               <th>Valor em estoque</th>
               <th>Capital Parado</th>
-              <th>Vazão média mensal</th>
+              <th>Vazão diária</th>
+              <th>Vazão mensal</th>
               <th>Custo Mensal</th>
               <th>Lucro Mensal</th>
               <th>Payback</th>
@@ -375,7 +375,7 @@
           </thead>
           <tbody id="dashboardBody">
             <tr>
-              <td colspan="18" class="empty">Carregando dados...</td>
+              <td colspan="19" class="empty">Carregando dados...</td>
             </tr>
           </tbody>
         </table>
@@ -481,6 +481,10 @@
       return `${formatarNumero(valor)} dias`;
     }
 
+    function formatarVazao(valor, unidade, periodo) {
+      return `${formatarNumero(valor)} ${unidade}/${periodo}`;
+    }
+
     function formatarData(valor) {
       if (!valor) return "—";
       return new Date(valor).toLocaleString("pt-BR", {
@@ -505,13 +509,41 @@
       dashboardBody.innerHTML = "";
       const tr = document.createElement("tr");
       const td = criarCelula(texto, "empty");
-      td.colSpan = 18;
+      td.colSpan = 19;
       tr.appendChild(td);
       dashboardBody.appendChild(tr);
     }
 
-    function chaveProduto(item) {
+    function nomeProduto(item) {
       return String(item.produto || "").trim() || `Produto sem nome #${item.id}`;
+    }
+
+    function normalizarUnidade(valor) {
+      const textoOriginal = String(valor || "").trim();
+      const texto = normalizarTexto(textoOriginal);
+
+      if (!texto) return "sem unidade";
+      if (["un", "und", "unid", "unidade", "unidades", "peca", "pecas"].includes(texto)) return "un";
+      if (["ml", "m linear", "metro linear", "metros lineares", "metro-linear"].includes(texto)) return "ML";
+      if (["m2", "m²", "metro quadrado", "metros quadrados", "metro-quadrado"].includes(texto)) return "m²";
+      return textoOriginal;
+    }
+
+    function unidadeParaExibicao(valor) {
+      const unidadeNormalizada = normalizarUnidade(valor);
+      return unidadeNormalizada === "sem unidade" ? "un" : unidadeNormalizada;
+    }
+
+    function chaveProduto(item) {
+      return `${normalizarTexto(nomeProduto(item))}|${normalizarUnidade(item.unidade)}`;
+    }
+
+    function obterQuantidade(item) {
+      return numero(item?.quantidade ?? item?.qtd ?? item?.estoque);
+    }
+
+    function obterDataContagem(item) {
+      return item?.data_contagem ?? item?.data ?? item?.created_at;
     }
 
     function normalizarTexto(valor) {
@@ -538,16 +570,45 @@
     }
 
     function compararPorDataEId(a, b) {
-      const diferencaData = dataTimestamp(a.data_contagem) - dataTimestamp(b.data_contagem);
+      const diferencaData = dataTimestamp(obterDataContagem(a)) - dataTimestamp(obterDataContagem(b));
       if (diferencaData !== 0) return diferencaData;
       return numero(a.id) - numero(b.id);
     }
 
-    function mesesEntreDatas(inicio, fim) {
-      const inicioMs = dataTimestamp(inicio);
-      const fimMs = dataTimestamp(fim);
-      if (!inicioMs || !fimMs || fimMs <= inicioMs) return 0;
-      return (fimMs - inicioMs) / (1000 * 60 * 60 * 24 * DIAS_MEDIOS_MES);
+    function calcularVazaoPorUltimasContagens(contagens) {
+      const ultimas = contagens
+        .filter((contagem) => dataTimestamp(obterDataContagem(contagem)) > 0)
+        .sort(compararPorDataEId)
+        .slice(-5);
+
+      let totalConsumido = 0;
+      let totalDias = 0;
+
+      for (let index = 1; index < ultimas.length; index += 1) {
+        const anterior = ultimas[index - 1];
+        const atual = ultimas[index];
+        const quantidadeAnterior = obterQuantidade(anterior);
+        const quantidadeAtual = obterQuantidade(atual);
+        const dataAnterior = dataTimestamp(obterDataContagem(anterior));
+        const dataAtual = dataTimestamp(obterDataContagem(atual));
+        const diferencaDias = Math.max(0, (dataAtual - dataAnterior) / (1000 * 60 * 60 * 24));
+
+        if (quantidadeAnterior > quantidadeAtual && diferencaDias > 0) {
+          totalConsumido += quantidadeAnterior - quantidadeAtual;
+          totalDias += diferencaDias;
+        }
+      }
+
+      const vazaoDiaria = totalDias > 0 ? totalConsumido / totalDias : 0;
+      const vazaoMensal = vazaoDiaria * DIAS_MES_CALCULO;
+
+      return {
+        vazaoDiaria,
+        vazaoMensal,
+        totalConsumido,
+        totalDias,
+        contagensConsideradas: ultimas.length
+      };
     }
 
     function calcularStatus(item) {
@@ -570,33 +631,24 @@
       return { texto: "OK", classe: "available" };
     }
 
-    function calcularProduto(produto, historicoOriginal, referenciasProdutos) {
+    function calcularProduto(historicoOriginal, referenciasProdutos) {
       const historico = [...historicoOriginal].sort(compararPorDataEId);
       const ultima = historico[historico.length - 1];
+      const produto = nomeProduto(ultima);
       const referencia = referenciasProdutos.get(criarChaveReferencia(ultima.categoria, produto));
-      const quantidadeAtual = numero(ultima.quantidade);
+      const quantidadeAtual = obterQuantidade(ultima);
       const custo = numero(ultima.custo || referencia?.custo);
       const preco = numero(referencia?.preco || ultima.preco);
       const valorEstoque = quantidadeAtual * custo;
       const capitalParado = quantidadeAtual * custo;
       const lucroUnitario = preco - custo;
       const leadTime = numero(referencia?.leadTime) > 0 ? numero(referencia.leadTime) : LEAD_TIME_PADRAO;
-      let somaConsumosPositivos = 0;
-
-      for (let index = 1; index < historico.length; index += 1) {
-        const quantidadeAnterior = numero(historico[index - 1].quantidade);
-        const quantidadeContagemAtual = numero(historico[index].quantidade);
-        const consumo = quantidadeAnterior - quantidadeContagemAtual;
-
-        if (consumo > 0) {
-          somaConsumosPositivos += consumo;
-        }
-      }
-
-      const meses = mesesEntreDatas(historico[0]?.data_contagem, ultima.data_contagem);
-      const temHistoricoSuficiente = historico.length >= 2 && meses > 0;
-      const vazaoMediaMensal = temHistoricoSuficiente ? somaConsumosPositivos / meses : 0;
-      const minimoSugerido = temHistoricoSuficiente ? Math.ceil(vazaoMediaMensal * 0.5) : null;
+      const unidade = unidadeParaExibicao(ultima.unidade);
+      const vazao = calcularVazaoPorUltimasContagens(historico);
+      const vazaoDiaria = vazao.vazaoDiaria;
+      const vazaoMediaMensal = vazao.vazaoMensal;
+      const temVazaoCalculada = vazao.totalDias > 0;
+      const minimoSugerido = temVazaoCalculada ? Math.ceil(vazaoMediaMensal * 0.5) : null;
       const custoMensal = vazaoMediaMensal * custo;
       const lucroMensal = vazaoMediaMensal * lucroUnitario;
       const payback = lucroMensal > 0 ? (capitalParado / lucroMensal) * DIAS_MES_CALCULO : null;
@@ -609,13 +661,16 @@
         produto,
         categoria: ultima.categoria || "—",
         quantidadeAtual,
-        unidade: ultima.unidade || "—",
+        unidade,
         custo,
         preco,
         lucroUnitario,
         valorEstoque,
         capitalParado,
+        vazaoDiaria,
         vazaoMediaMensal,
+        totalConsumidoVazao: vazao.totalConsumido,
+        totalDiasVazao: vazao.totalDias,
         minimoSugerido,
         custoMensal,
         lucroMensal,
@@ -624,8 +679,8 @@
         pontoReposicao,
         leadTime,
         precisaComprar: quantidadeAtual <= pontoReposicao,
-        historicoInsuficiente: !temHistoricoSuficiente,
-        ultimaContagem: ultima.data_contagem
+        historicoInsuficiente: !temVazaoCalculada,
+        ultimaContagem: obterDataContagem(ultima)
       };
 
       itemCalculado.status = calcularStatus(itemCalculado);
@@ -713,12 +768,8 @@
         tr.appendChild(criarCelula(formatarMoeda(item.lucroUnitario), item.lucroUnitario < 0 ? "status price-below-cost" : ""));
         tr.appendChild(criarCelula(formatarMoeda(item.valorEstoque)));
         tr.appendChild(criarCelula(formatarMoeda(item.capitalParado)));
-        tr.appendChild(criarCelula(
-          item.historicoInsuficiente
-            ? "histórico insuficiente"
-            : `${formatarNumero(item.vazaoMediaMensal)} / mês`,
-          item.historicoInsuficiente ? "muted" : ""
-        ));
+        tr.appendChild(criarCelula(formatarVazao(item.vazaoDiaria, item.unidade, "dia"), item.historicoInsuficiente ? "muted" : ""));
+        tr.appendChild(criarCelula(formatarVazao(item.vazaoMediaMensal, item.unidade, "mês"), item.historicoInsuficiente ? "muted" : ""));
         tr.appendChild(criarCelula(formatarMoeda(item.custoMensal)));
         tr.appendChild(criarCelula(formatarMoeda(item.lucroMensal)));
         tr.appendChild(criarCelula(formatarDias(item.payback), item.payback === null ? "muted" : ""));
@@ -769,8 +820,8 @@
         }
 
         const grupos = agruparPorProduto(estoqueResultado.data || []);
-        const itens = Array.from(grupos.entries())
-          .map(([produto, historico]) => calcularProduto(produto, historico, referenciasResultado.referencias))
+        const itens = Array.from(grupos.values())
+          .map((historico) => calcularProduto(historico, referenciasResultado.referencias))
           .sort((a, b) => b.valorEstoque - a.valorEstoque);
 
         atualizarCards(itens);
