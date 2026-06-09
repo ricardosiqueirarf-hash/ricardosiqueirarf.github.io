@@ -26,17 +26,25 @@
     .field { display: flex; flex-direction: column; gap: 6px; min-width: 280px; flex: 1; }
     .field label { font-weight: 600; color: #32445a; font-size: 0.95rem; }
 
-    .field textarea {
+    .field textarea,
+    .field select,
+    .field input {
       border: 1px solid #ccd6e0;
       border-radius: 8px;
       padding: 10px 12px;
       outline: none;
       font-size: 0.95rem;
-      min-height: 72px;
-      resize: vertical;
       transition: border-color 0.2s ease;
     }
-    .field textarea:focus { border-color: #1079ba; }
+    .field textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+    .field textarea:focus,
+    .field select:focus,
+    .field input:focus { border-color: #1079ba; }
+    .field-periodo { min-width: 180px; max-width: 220px; flex: 0 1 200px; }
+    .mode-help { font-size: 0.82rem; color: #65778a; line-height: 1.35; }
 
     .btn {
       border: none;
@@ -191,10 +199,43 @@
 
     <section class="panel">
       <div class="toolbar">
-        <div class="field">
+        <div class="field field-periodo">
+          <label for="modoCalculo">Modo de cálculo</label>
+          <select id="modoCalculo">
+            <option value="pedidos">Por número de pedidos</option>
+            <option value="mes">Por mês de aprovação</option>
+          </select>
+          <span class="mode-help">Escolha se a origem dos pedidos será manual ou pelo mês da DATA DE APROVAÇÃO.</span>
+        </div>
+
+        <div class="field" id="pedidoManualField">
           <label for="pedidoInput">ID/Número(s) do pedido</label>
           <textarea id="pedidoInput" placeholder="Ex: 1024, 1025, 1026"></textarea>
         </div>
+
+        <div class="field field-periodo" id="mesAprovacaoField" hidden>
+          <label for="mesAprovacao">Mês de aprovação</label>
+          <select id="mesAprovacao">
+            <option value="1">Janeiro</option>
+            <option value="2">Fevereiro</option>
+            <option value="3">Março</option>
+            <option value="4">Abril</option>
+            <option value="5">Maio</option>
+            <option value="6">Junho</option>
+            <option value="7">Julho</option>
+            <option value="8">Agosto</option>
+            <option value="9">Setembro</option>
+            <option value="10">Outubro</option>
+            <option value="11">Novembro</option>
+            <option value="12">Dezembro</option>
+          </select>
+        </div>
+
+        <div class="field field-periodo" id="anoAprovacaoField" hidden>
+          <label for="anoAprovacao">Ano de aprovação</label>
+          <input id="anoAprovacao" type="number" value="2026" min="2000" max="2100" step="1" />
+        </div>
+
         <button class="btn btn-primary" id="btnCalcular">Calcular consumo</button>
         <button class="btn btn-secondary" id="btnVoltar">Voltar</button>
       </div>
@@ -322,7 +363,13 @@
     const API_BASE = "https://colorglass.onrender.com";
 
     const refs = {
+      modoCalculo: document.getElementById("modoCalculo"),
+      pedidoManualField: document.getElementById("pedidoManualField"),
       pedidoInput: document.getElementById("pedidoInput"),
+      mesAprovacaoField: document.getElementById("mesAprovacaoField"),
+      mesAprovacao: document.getElementById("mesAprovacao"),
+      anoAprovacaoField: document.getElementById("anoAprovacaoField"),
+      anoAprovacao: document.getElementById("anoAprovacao"),
       btnCalcular: document.getElementById("btnCalcular"),
       btnVoltar: document.getElementById("btnVoltar"),
       statusMsg: document.getElementById("statusMsg"),
@@ -359,6 +406,20 @@
       fixos: [],
       variaveis: []
     };
+    const NOMES_MESES = [
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro"
+    ];
     let ultimoResumoMateriais = {
       custoTotal: 0,
       valorTotal: 0,
@@ -567,6 +628,64 @@
       const perda = parseNumero(perdaPercentual);
       if (perda <= 0) return base;
       return base * (1 + (perda / 100));
+    }
+
+    function atualizarCamposModoCalculo() {
+      const modo = refs.modoCalculo.value;
+      const modoMes = modo === "mes";
+
+      refs.pedidoManualField.hidden = modoMes;
+      refs.mesAprovacaoField.hidden = !modoMes;
+      refs.anoAprovacaoField.hidden = !modoMes;
+    }
+
+    function getNomeMes(mes) {
+      const indice = Number(mes) - 1;
+      return NOMES_MESES[indice] || String(mes);
+    }
+
+    function obterDataAprovacao(orcamento) {
+      return (
+        orcamento?.data_aprovacao
+        ?? orcamento?.dataAprovacao
+        ?? orcamento?.aprovado_em
+        ?? orcamento?.data_aprovado
+        ?? orcamento?.["DATA DE APROVAÇÃO"]
+        ?? orcamento?.["DATA DE APROVACAO"]
+        ?? ""
+      );
+    }
+
+    function pedidoEstaAprovado(orcamento) {
+      const statusNumero = Number(orcamento?.status);
+      if (Number.isFinite(statusNumero)) {
+        return [2, 3, 4, 5].includes(statusNumero);
+      }
+
+      const statusTexto = String(orcamento?.status_label || orcamento?.status || "").toLowerCase();
+      return ["aprovado", "em produção", "em producao", "separado", "entregue"].some((texto) => statusTexto.includes(texto));
+    }
+
+    function pedidoEstaNoMesAprovacao(orcamento, mes, ano) {
+      if (!pedidoEstaAprovado(orcamento)) return false;
+
+      const dataAprovacao = obterDataAprovacao(orcamento);
+      if (!dataAprovacao) return false;
+
+      const data = new Date(dataAprovacao);
+      if (Number.isNaN(data.getTime())) return false;
+
+      const inicioMes = new Date(Date.UTC(Number(ano), Number(mes) - 1, 1));
+      const inicioMesSeguinte = new Date(Date.UTC(Number(ano), Number(mes), 1));
+
+      return data >= inicioMes && data < inicioMesSeguinte;
+    }
+
+    function buscarPedidosAprovadosPorMes(orcamentos, mes, ano) {
+      return orcamentos
+        .filter((orcamento) => pedidoEstaNoMesAprovacao(orcamento, mes, ano))
+        .map((orcamento) => String(orcamento.numero_pedido ?? orcamento.id ?? "").trim())
+        .filter(Boolean);
     }
 
     async function carregarBases() {
@@ -856,77 +975,138 @@
       refs.emptyRankingMateriais.hidden = true;
     }
 
-    async function calcularConsumoPedido() {
-      const pedidosInformados = extrairPedidosInformados(refs.pedidoInput.value);
+    async function calcularEstoque2PorPedidos(listaPedidos, opcoes = {}) {
+      const pedidosInformados = Array.isArray(listaPedidos) ? listaPedidos.map((pedido) => String(pedido).trim()).filter(Boolean) : [];
       if (!pedidosInformados.length) {
-        setStatus("Informe ao menos um ID/número de pedido.", "warn");
-        refs.pedidoInput.focus();
-        return;
+        renderizarResumo(null, 0, []);
+        renderizarTabela([], []);
+        renderizarRankingMateriais([]);
+        setStatus(opcoes.mensagemSemPedidos || "Informe ao menos um ID/número de pedido.", "warn");
+        if (opcoes.focarPedidoInput !== false) refs.pedidoInput.focus();
+        return null;
       }
+
+      const bases = opcoes.bases || await carregarBases();
+      const mapaConsumoGlobal = new Map();
+      const pedidosEncontrados = [];
+      const gruposPedido = [];
+      const clientes = new Set();
+      let totalPortasGeral = 0;
+
+      for (const pedido of pedidosInformados) {
+        const orcamento = encontrarOrcamentoPorPedido(bases.orcamentos, pedido);
+        if (!orcamento) continue;
+
+        const portas = await carregarPortas(orcamento.id);
+        const mapaPedido = new Map();
+        const { itens: itensPedido, totalPortas } = consolidarConsumo(portas, bases, mapaPedido);
+        itensPedido.forEach((item) => {
+          const chaveGlobal = `${item.categoria}|${item.item}|${item.unidade}|${item.regra}`;
+          adicionarConsumo(mapaConsumoGlobal, chaveGlobal, item);
+        });
+        totalPortasGeral += totalPortas;
+        const numeroPedido = String(orcamento.numero_pedido ?? pedido);
+        pedidosEncontrados.push(numeroPedido);
+        gruposPedido.push({
+          pedido: numeroPedido,
+          cliente: orcamento.cliente_nome || "",
+          totalPortas,
+          itens: itensPedido
+        });
+        if (orcamento.cliente_nome) clientes.add(orcamento.cliente_nome);
+      }
+
+      const itens = Array.from(mapaConsumoGlobal.values()).sort((a, b) => a.item.localeCompare(b.item, "pt-BR"));
+
+      if (!pedidosEncontrados.length) {
+        renderizarResumo(null, 0, []);
+        renderizarTabela([], []);
+        renderizarRankingMateriais([]);
+        setStatus(opcoes.mensagemNaoEncontrado || "Nenhum pedido informado foi encontrado.", "warn");
+        return { pedidosInformados, pedidosEncontrados, itens };
+      }
+
+      const infoPedidos = {
+        pedidosTexto: pedidosEncontrados.join(", "),
+        clientesTexto: clientes.size ? Array.from(clientes).join(", ") : "--"
+      };
+
+      renderizarResumo(infoPedidos, totalPortasGeral, itens);
+      renderizarTabela(gruposPedido, itens);
+      renderizarRankingMateriais(itens);
+
+      const faltantes = pedidosInformados.length - pedidosEncontrados.length;
+      let statusFinal = faltantes > 0
+        ? `Consumo calculado para ${pedidosEncontrados.length} pedido(s). ${faltantes} não encontrado(s).`
+        : `Consumo calculado para ${pedidosEncontrados.length} pedido(s).`;
+
+      if (opcoes.modo === "mes") {
+        statusFinal = [
+          "Modo: Por mês de aprovação",
+          `Mês calculado: ${getNomeMes(opcoes.mes)}/${opcoes.ano}`,
+          `Pedidos encontrados: ${pedidosEncontrados.length}`,
+          `Pedidos considerados: ${pedidosEncontrados.join(", ")}`
+        ].join(" | ");
+      } else {
+        statusFinal = [
+          "Modo: Por número de pedidos",
+          `Pedidos encontrados: ${pedidosEncontrados.length}`,
+          `Pedidos considerados: ${pedidosEncontrados.join(", ")}`,
+          faltantes > 0 ? `${faltantes} não encontrado(s).` : ""
+        ].filter(Boolean).join(" | ");
+      }
+
+      setStatus(statusFinal, faltantes > 0 ? "warn" : "ok");
+      return { pedidosInformados, pedidosEncontrados, itens };
+    }
+
+    async function calcularConsumoPedido() {
+      const modo = refs.modoCalculo.value;
 
       try {
         setStatus("Carregando dados...", "");
-        const bases = await carregarBases();
-        const mapaConsumoGlobal = new Map();
-        const pedidosEncontrados = [];
-        const gruposPedido = [];
-        const clientes = new Set();
-        let totalPortasGeral = 0;
 
-        for (const pedido of pedidosInformados) {
-          const orcamento = encontrarOrcamentoPorPedido(bases.orcamentos, pedido);
-          if (!orcamento) continue;
+        if (modo === "mes") {
+          const mes = Number(refs.mesAprovacao.value);
+          const ano = Number(refs.anoAprovacao.value);
 
-          const portas = await carregarPortas(orcamento.id);
-          const mapaPedido = new Map();
-          const { itens: itensPedido, totalPortas } = consolidarConsumo(portas, bases, mapaPedido);
-          itensPedido.forEach((item) => {
-            const chaveGlobal = `${item.categoria}|${item.item}|${item.unidade}|${item.regra}`;
-            adicionarConsumo(mapaConsumoGlobal, chaveGlobal, item);
+          if (!Number.isInteger(mes) || mes < 1 || mes > 12 || !Number.isInteger(ano) || ano < 2000) {
+            setStatus("Informe mês e ano válidos para buscar pela DATA DE APROVAÇÃO.", "warn");
+            refs.anoAprovacao.focus();
+            return;
+          }
+
+          const bases = await carregarBases();
+          const pedidosDoMes = buscarPedidosAprovadosPorMes(bases.orcamentos, mes, ano);
+
+          if (!pedidosDoMes.length) {
+            renderizarResumo(null, 0, []);
+            renderizarTabela([], []);
+            renderizarRankingMateriais([]);
+            setStatus(`Nenhum pedido aprovado encontrado para ${getNomeMes(mes)}/${ano}.`, "warn");
+            return;
+          }
+
+          await calcularEstoque2PorPedidos(pedidosDoMes, {
+            bases,
+            modo: "mes",
+            mes,
+            ano,
+            focarPedidoInput: false,
+            mensagemSemPedidos: `Nenhum pedido aprovado encontrado para ${getNomeMes(mes)}/${ano}.`
           });
-          totalPortasGeral += totalPortas;
-          const numeroPedido = String(orcamento.numero_pedido ?? pedido);
-          pedidosEncontrados.push(numeroPedido);
-          gruposPedido.push({
-            pedido: numeroPedido,
-            cliente: orcamento.cliente_nome || "",
-            totalPortas,
-            itens: itensPedido
-          });
-          if (orcamento.cliente_nome) clientes.add(orcamento.cliente_nome);
-        }
-
-        const itens = Array.from(mapaConsumoGlobal.values()).sort((a, b) => a.item.localeCompare(b.item, "pt-BR"));
-
-        if (!pedidosEncontrados.length) {
-          renderizarResumo(null, 0, []);
-          renderizarTabela([], []);
-          renderizarRankingMateriais([]);
-          setStatus("Nenhum pedido informado foi encontrado.", "warn");
           return;
         }
 
-        const infoPedidos = {
-          pedidosTexto: pedidosEncontrados.join(", "),
-          clientesTexto: clientes.size ? Array.from(clientes).join(", ") : "--"
-        };
-
-        renderizarResumo(infoPedidos, totalPortasGeral, itens);
-        renderizarTabela(gruposPedido, itens);
-        renderizarRankingMateriais(itens);
-
-        const faltantes = pedidosInformados.length - pedidosEncontrados.length;
-        const statusFinal = faltantes > 0
-          ? `Consumo calculado para ${pedidosEncontrados.length} pedido(s). ${faltantes} não encontrado(s).`
-          : `Consumo calculado para ${pedidosEncontrados.length} pedido(s).`;
-
-        setStatus(statusFinal, faltantes > 0 ? "warn" : "ok");
+        const pedidosInformados = extrairPedidosInformados(refs.pedidoInput.value);
+        await calcularEstoque2PorPedidos(pedidosInformados, { modo: "pedidos" });
       } catch (erro) {
         console.error("Erro no cálculo de estoque:", erro);
         setStatus(`Erro ao calcular consumo: ${erro.message}`, "err");
       }
     }
 
+    refs.modoCalculo.addEventListener("change", atualizarCamposModoCalculo);
     refs.btnCalcular.addEventListener("click", calcularConsumoPedido);
     refs.btnVoltar.addEventListener("click", () => { window.location.href = "/"; });
     refs.btnAddCustoFixo.addEventListener("click", () => adicionarCusto("fixo"));
@@ -963,6 +1143,7 @@
       atualizarResumoMensal();
     });
 
+    atualizarCamposModoCalculo();
     renderizarCustos("fixo");
     renderizarCustos("variavel");
     atualizarResumoMensal();
