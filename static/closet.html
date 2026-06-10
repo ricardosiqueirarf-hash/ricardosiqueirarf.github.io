@@ -3,22 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Engine de Orçamento para Closet | ColorGlass</title>
-  <meta name="description" content="Monte e orce closets por caixas e módulos estruturais com visualização 2D proporcional.">
+  <title>Engine de Orçamento para Closet Evidence | ColorGlass</title>
+  <meta name="description" content="Engine de orçamento de closet Evidence com módulos laterais, centrais, fundo, topo, base e portas.">
   <style>
     :root {
-      --cg-blue: #1079ba;
-      --cg-blue-dark: #0d5d8c;
-      --cg-blue-soft: #e7f3fb;
-      --cg-gold: #d9a84c;
-      --cg-red: #dc3545;
-      --cg-text: #1f2933;
-      --cg-muted: #6b7280;
-      --cg-border: rgba(16, 121, 186, 0.16);
-      --cg-shadow: 0 18px 45px rgba(15, 44, 62, 0.12);
-      --cg-shadow-soft: 0 10px 24px rgba(15, 44, 62, 0.10);
-      --cg-structure: #314550;
-      --cg-glass: rgba(235, 246, 252, 0.78);
+      --blue: #1079ba;
+      --blue-dark: #0d5d8c;
+      --blue-soft: #e7f3fb;
+      --gold: #d6a955;
+      --red: #dc3545;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --line: rgba(16, 121, 186, .16);
+      --shadow: 0 18px 45px rgba(15, 44, 62, .12);
+      --dark: #2f434d;
+      --glass: rgba(236, 248, 253, .74);
     }
 
     * { box-sizing: border-box; }
@@ -26,41 +25,41 @@
     body {
       margin: 0;
       min-height: 100vh;
-      color: var(--cg-text);
+      color: var(--text);
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: radial-gradient(circle at top left, rgba(16, 121, 186, 0.18), transparent 35%), linear-gradient(135deg, #f5fbff 0%, #eef4f9 48%, #f8fbff 100%);
+      background: radial-gradient(circle at top left, rgba(16,121,186,.18), transparent 34%), linear-gradient(135deg, #f5fbff, #eef4f9 50%, #f8fbff);
     }
 
     button, input, select { font: inherit; }
 
-    .closet-app {
-      width: min(1500px, calc(100% - 32px));
+    .app {
+      width: min(1540px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 24px 0 48px;
+      padding: 24px 0 52px;
     }
 
     .hero {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 24px;
-      margin-bottom: 24px;
+      align-items: center;
+      gap: 22px;
       padding: 28px;
+      margin-bottom: 22px;
       color: #fff;
-      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
       border-radius: 24px;
-      box-shadow: var(--cg-shadow);
+      box-shadow: var(--shadow);
     }
 
     .eyebrow {
       margin: 0 0 8px;
-      color: rgba(255, 255, 255, 0.76);
-      font-weight: 800;
-      letter-spacing: 0.08em;
+      color: rgba(255,255,255,.75);
+      font-weight: 900;
+      letter-spacing: .08em;
       text-transform: uppercase;
     }
 
-    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3, h4, p { margin-top: 0; }
 
     .hero h1 {
       margin-bottom: 10px;
@@ -68,112 +67,108 @@
       line-height: 1.05;
     }
 
-    .hero__text {
-      max-width: 900px;
-      margin-bottom: 0;
-      color: rgba(255, 255, 255, 0.86);
-      font-size: 1.03rem;
-    }
+    .hero p:last-child { margin-bottom: 0; }
 
-    .hero__badge {
-      min-width: 170px;
+    .badge {
+      min-width: 180px;
       padding: 18px;
       text-align: center;
-      color: var(--cg-blue-dark);
+      color: var(--blue-dark);
       background: #fff;
       border-radius: 20px;
-      box-shadow: var(--cg-shadow-soft);
+      box-shadow: 0 10px 24px rgba(15,44,62,.10);
     }
 
-    .hero__badge span {
+    .badge strong {
       display: block;
       font-size: 1.45rem;
-      font-weight: 900;
+      font-weight: 950;
     }
 
-    .hero__badge small { color: var(--cg-muted); }
+    .badge span { color: var(--muted); font-weight: 800; }
 
-    .top-grid, .content-grid {
+    .grid-top, .grid-main {
       display: grid;
       gap: 20px;
     }
 
-    .top-grid { grid-template-columns: 410px minmax(0, 1fr); }
-    .content-grid { grid-template-columns: minmax(0, 1fr) 380px; margin-top: 20px; }
+    .grid-top { grid-template-columns: 420px minmax(0, 1fr); }
+    .grid-main { grid-template-columns: minmax(0, 1fr) 420px; margin-top: 20px; }
 
     .panel {
       padding: 22px;
-      background: rgba(255, 255, 255, 0.94);
-      border: 1px solid var(--cg-border);
+      background: rgba(255,255,255,.95);
+      border: 1px solid var(--line);
       border-radius: 22px;
-      box-shadow: var(--cg-shadow-soft);
+      box-shadow: 0 10px 24px rgba(15,44,62,.10);
     }
 
-    .panel__header {
+    .panel-head {
       display: flex;
-      align-items: flex-start;
       justify-content: space-between;
-      gap: 16px;
+      align-items: flex-start;
+      gap: 14px;
       margin-bottom: 18px;
     }
 
-    .panel__header h2 { margin-bottom: 6px; }
-    .panel__header p { margin-bottom: 0; color: var(--cg-muted); }
+    .panel-head h2 { margin-bottom: 6px; }
+    .panel-head p { margin-bottom: 0; color: var(--muted); }
 
-    .result-grid, .box-form, .module-form, .modules-grid {
+    .results, .config-grid, .box-grid, .cards-grid, .module-grid, .summary-grid {
       display: grid;
-      gap: 14px;
+      gap: 12px;
     }
 
-    .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .box-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .module-form { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .modules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .config-grid { grid-template-columns: 1fr; }
+    .box-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .module-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .summary-grid { grid-template-columns: 1fr; }
 
-    .result-card {
-      padding: 14px;
+    .result, .summary-row {
+      padding: 13px;
       background: #f8fbff;
-      border: 1px solid rgba(16, 121, 186, 0.12);
-      border-radius: 16px;
+      border: 1px solid rgba(16,121,186,.12);
+      border-radius: 15px;
     }
 
-    .result-card span {
+    .result span, .summary-row span {
       display: block;
-      color: var(--cg-muted);
-      font-size: 0.84rem;
-      font-weight: 800;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 900;
     }
 
-    .result-card strong {
+    .result strong, .summary-row strong {
       display: block;
       margin-top: 5px;
-      color: var(--cg-blue-dark);
-      font-size: 1.2rem;
-      font-weight: 900;
+      color: var(--blue-dark);
+      font-size: 1.12rem;
+      font-weight: 950;
     }
 
     .field {
       display: grid;
-      gap: 7px;
-      color: var(--cg-text);
-      font-weight: 800;
+      gap: 6px;
+      font-weight: 850;
     }
 
-    .field span { font-size: 0.84rem; }
+    .field span { font-size: .84rem; }
 
     .field input, .field select {
       width: 100%;
       padding: 10px 11px;
-      color: var(--cg-text);
+      color: var(--text);
       background: #fff;
-      border: 1px solid rgba(16, 121, 186, 0.22);
+      border: 1px solid rgba(16,121,186,.22);
       border-radius: 12px;
       outline: none;
     }
 
     .field input:focus, .field select:focus {
-      border-color: var(--cg-blue);
-      box-shadow: 0 0 0 4px rgba(16, 121, 186, 0.12);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(16,121,186,.12);
     }
 
     .btn {
@@ -185,98 +180,84 @@
       border: 0;
       border-radius: 999px;
       cursor: pointer;
-      font-weight: 900;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      font-weight: 950;
     }
 
-    .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--cg-shadow-soft); }
-    .btn:disabled { cursor: not-allowed; opacity: 0.48; }
-    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark)); }
-    .btn-secondary { color: var(--cg-blue-dark); background: var(--cg-blue-soft); }
-    .btn-danger { color: #fff; background: var(--cg-red); }
+    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--blue), var(--blue-dark)); }
+    .btn-secondary { color: var(--blue-dark); background: var(--blue-soft); }
+    .btn-danger { color: #fff; background: var(--red); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
 
-    .action-row {
+    .actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 18px;
+      margin-top: 16px;
     }
 
-    .hint-box {
+    .note {
       display: grid;
-      gap: 6px;
-      margin-top: 18px;
-      padding: 14px;
+      gap: 5px;
+      margin-top: 16px;
+      padding: 13px;
       color: #594414;
       background: #fff7df;
-      border: 1px solid rgba(240, 194, 76, 0.38);
-      border-radius: 16px;
+      border: 1px solid rgba(214,169,85,.38);
+      border-radius: 15px;
     }
 
-    .views-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
+    .preview-stack { display: grid; gap: 20px; }
+    .preview-block h3 { margin-bottom: 10px; color: var(--blue-dark); }
 
-    .preview-block h3 {
-      margin: 0 0 10px;
-      color: var(--cg-blue-dark);
-    }
-
-    .closet-viewport {
-      min-height: 390px;
-      padding: 28px 20px 38px;
+    .viewport {
+      min-height: 350px;
+      padding: 26px 18px 36px;
       overflow: auto;
-      background: linear-gradient(90deg, rgba(16, 121, 186, 0.07) 1px, transparent 1px), linear-gradient(rgba(16, 121, 186, 0.07) 1px, transparent 1px), #fbfdff;
+      background: linear-gradient(90deg, rgba(16,121,186,.07) 1px, transparent 1px), linear-gradient(rgba(16,121,186,.07) 1px, transparent 1px), #fbfdff;
       background-size: 24px 24px;
-      border: 1px dashed rgba(16, 121, 186, 0.30);
+      border: 1px dashed rgba(16,121,186,.30);
       border-radius: 18px;
     }
 
-    .closet2d-wrap {
-      min-width: 650px;
+    .preview-wrap {
+      min-width: 680px;
       display: grid;
       place-items: center;
       gap: 12px;
     }
 
-    .measure-line {
-      color: var(--cg-muted);
-      font-size: 0.88rem;
-      font-weight: 900;
+    .measure {
+      color: var(--muted);
+      font-size: .88rem;
+      font-weight: 950;
       text-align: center;
     }
 
-    .closet2d {
+    .front-view {
       position: relative;
-      width: min(100%, 880px);
+      width: min(100%, 900px);
       height: 330px;
       display: grid;
-      grid-template-columns: repeat(var(--boxes), minmax(90px, 1fr));
-      background: var(--cg-glass);
-      border: 6px solid var(--cg-structure);
-      box-shadow: inset 0 0 0 4px rgba(255,255,255,.45), 0 18px 42px rgba(15,44,62,.16);
+      grid-template-columns: repeat(var(--boxes), minmax(120px, 1fr));
+      background: var(--glass);
+      border: 6px solid var(--dark);
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,.45), 0 18px 38px rgba(15,44,62,.14);
     }
 
-    .closet2d--modules {
-      grid-template-columns: var(--module-columns);
-    }
-
-    .box-cell {
+    .door-box {
       position: relative;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      border-right: 4px solid var(--cg-structure);
-      background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(224, 239, 247, .35));
+      border-right: 4px solid var(--dark);
+      background: linear-gradient(180deg, rgba(255,255,255,.70), rgba(224,239,247,.35));
     }
 
-    .box-cell:last-child { border-right: 0; }
+    .door-box:last-child { border-right: 0; }
 
     .door {
       position: relative;
-      border-right: 2px solid rgba(56, 75, 84, 0.72);
-      background: linear-gradient(90deg, rgba(255,255,255,.52), rgba(125, 151, 165, .16));
+      border-right: 2px solid rgba(47,67,77,.72);
+      background: linear-gradient(90deg, rgba(255,255,255,.54), rgba(125,151,165,.16));
       overflow: hidden;
     }
 
@@ -293,253 +274,269 @@
       transform: skewX(-12deg);
     }
 
-    .shelf-line {
+    .shelf {
       position: absolute;
       left: 10%;
       right: 10%;
       height: 5px;
-      background: rgba(206, 155, 71, 0.78);
-      box-shadow: 0 0 15px rgba(240,194,76,.55);
+      background: rgba(214,169,85,.78);
+      box-shadow: 0 0 15px rgba(214,169,85,.52);
       z-index: 3;
     }
 
-    .shelf-line--one { top: 28%; }
-    .shelf-line--two { top: 52%; }
+    .shelf.one { top: 30%; }
+    .shelf.two { top: 54%; }
 
-    .box-label, .module-label {
+    .label {
       position: absolute;
       left: 8px;
       right: 8px;
       bottom: 8px;
-      z-index: 4;
+      z-index: 5;
       padding: 7px 8px;
       color: #24343d;
-      background: rgba(255,255,255,.82);
+      background: rgba(255,255,255,.84);
       border-radius: 10px;
-      font-size: .75rem;
-      font-weight: 900;
+      font-size: .74rem;
+      font-weight: 950;
       text-align: center;
     }
 
-    .module-strip {
+    .module-view {
       position: relative;
-      border-right: 3px solid var(--cg-structure);
-      background: rgba(232, 244, 250, .64);
+      width: min(100%, 900px);
+      height: 330px;
+      display: grid;
+      grid-template-columns: var(--module-columns);
+      background: rgba(239,248,252,.78);
+      border: 6px solid var(--dark);
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,.45), 0 18px 38px rgba(15,44,62,.14);
     }
 
-    .module-strip:last-child { border-right: 0; }
-
-    .module-strip--lateral, .module-strip--central {
-      background: linear-gradient(180deg, rgba(68, 89, 101, .28), rgba(255,255,255,.42));
+    .strip {
+      position: relative;
+      border-right: 3px solid var(--dark);
+      background: rgba(240,248,252,.62);
     }
 
-    .module-strip--superior {
+    .strip:last-child { border-right: 0; }
+    .strip.lat, .strip.central { background: linear-gradient(180deg, rgba(47,67,77,.30), rgba(255,255,255,.42)); }
+    .strip.vao { background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(224,239,247,.32)); }
+
+    .top-strip, .bottom-strip {
       position: absolute;
       left: 0;
-      top: 0;
       width: 100%;
-      height: 36px;
-      border-bottom: 5px solid var(--cg-structure);
-      background: rgba(217, 168, 76, .22);
-      z-index: 5;
+      height: 38px;
+      z-index: 4;
+      background: rgba(214,169,85,.22);
     }
 
-    .module-strip--inferior {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 36px;
-      border-top: 5px solid var(--cg-structure);
-      background: rgba(217, 168, 76, .22);
-      z-index: 5;
-    }
+    .top-strip { top: 0; border-bottom: 5px solid var(--dark); }
+    .bottom-strip { bottom: 0; border-top: 5px solid var(--dark); }
 
-    .modules-list { display: grid; gap: 18px; }
+    .editor-list { display: grid; gap: 18px; }
 
     .box-card {
       padding: 18px;
       background: #fff;
-      border: 1px solid rgba(16, 121, 186, 0.16);
+      border: 1px solid rgba(16,121,186,.16);
       border-radius: 20px;
     }
 
-    .box-card__header {
+    .box-card-head {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 14px;
-      margin-bottom: 14px;
       padding-bottom: 12px;
-      border-bottom: 1px solid rgba(16, 121, 186, 0.12);
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(16,121,186,.12);
     }
 
-    .box-card h3 { margin: 0 0 4px; color: var(--cg-blue-dark); }
-    .box-card__meta { color: var(--cg-muted); font-size: 0.9rem; font-weight: 700; }
+    .box-card h3 { margin-bottom: 4px; color: var(--blue-dark); }
+    .meta { color: var(--muted); font-size: .9rem; font-weight: 800; }
 
     .module-card {
       padding: 14px;
       background: #f8fbff;
-      border: 1px solid rgba(16, 121, 186, 0.12);
+      border: 1px solid rgba(16,121,186,.12);
       border-radius: 16px;
     }
 
-    .module-card h4 {
-      margin: 0 0 4px;
-      color: var(--cg-blue-dark);
-      font-size: 1rem;
+    .module-card h4 { margin-bottom: 4px; color: var(--blue-dark); }
+    .module-card .meta { margin-bottom: 12px; font-size: .84rem; }
+
+    .table-wrap { overflow: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
     }
 
-    .module-card__meta {
-      margin-bottom: 12px;
-      color: var(--cg-muted);
-      font-size: .86rem;
-      font-weight: 800;
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(16,121,186,.12);
+      text-align: left;
+      font-size: .9rem;
     }
 
-    .summary-list {
-      display: grid;
-      gap: 12px;
-      margin: 0;
+    th {
+      color: var(--blue-dark);
+      background: var(--blue-soft);
+      font-weight: 950;
     }
 
-    .summary-list div {
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 14px;
-      background: #f8fbff;
-      border: 1px solid rgba(16, 121, 186, 0.12);
-      border-radius: 14px;
-    }
-
-    .summary-list dt { color: var(--cg-muted); font-weight: 800; }
-    .summary-list dd { margin: 0; color: var(--cg-blue-dark); font-weight: 900; text-align: right; }
+    td strong { color: var(--blue-dark); }
 
     @media (max-width: 1180px) {
-      .top-grid, .content-grid { grid-template-columns: 1fr; }
+      .grid-top, .grid-main { grid-template-columns: 1fr; }
       .summary-panel { order: -1; }
     }
 
     @media (max-width: 760px) {
-      .closet-app { width: min(100% - 18px, 1500px); padding-top: 9px; }
-      .hero, .panel__header, .box-card__header { flex-direction: column; }
-      .result-grid, .box-form, .module-form, .modules-grid { grid-template-columns: 1fr; }
+      .app { width: min(100% - 18px, 1540px); padding-top: 9px; }
+      .hero, .panel-head, .box-card-head { flex-direction: column; }
+      .results, .box-grid, .cards-grid, .module-grid { grid-template-columns: 1fr; }
       .hero, .panel { padding: 18px; border-radius: 18px; }
-      .closet-viewport { min-height: 330px; padding: 20px 12px 32px; }
-      .closet2d-wrap { min-width: 560px; }
-      .closet2d { height: 300px; }
+      .preview-wrap { min-width: 560px; }
+      .front-view, .module-view { height: 300px; }
     }
   </style>
 </head>
 <body>
-  <main class="closet-app">
+  <main class="app">
     <header class="hero">
       <div>
-        <p class="eyebrow">ColorGlass · Closet por caixas e módulos</p>
+        <p class="eyebrow">ColorGlass · Linha Evidence</p>
         <h1>Engine de Orçamento para Closet</h1>
-        <p class="hero__text">Cada caixa representa um vão do closet. A página mostra a proporção frontal em 2D e detalha os módulos: laterais, superior, inferior e centrais.</p>
+        <p>Montagem baseada em módulos: lateral, travessas/fundo, central quando houver, lateral, topo, base e portas.</p>
       </div>
-      <div class="hero__badge">
-        <span id="badgePortas">2 portas</span>
-        <small id="badgeCaixas">1 caixa</small>
+      <div class="badge">
+        <strong id="badgePortas">2 portas</strong>
+        <span id="badgeCaixas">1 vão</span>
       </div>
     </header>
 
-    <section class="top-grid">
+    <section class="grid-top">
       <aside class="panel">
-        <div class="panel__header">
+        <div class="panel-head">
           <div>
-            <h2>Medidas gerais</h2>
-            <p>Resultado calculado com base nas caixas.</p>
+            <h2>Configuração geral</h2>
+            <p>As medidas gerais são resultado dos vãos.</p>
           </div>
         </div>
 
-        <div class="result-grid">
-          <div class="result-card"><span>Largura total</span><strong id="geralLargura">0 mm</strong></div>
-          <div class="result-card"><span>Altura total</span><strong id="geralAltura">0 mm</strong></div>
-          <div class="result-card"><span>Profundidade</span><strong id="geralProfundidade">0 mm</strong></div>
-          <div class="result-card"><span>Portas</span><strong id="geralPortas">0</strong></div>
+        <div class="config-grid">
+          <label class="field">
+            <span>Tipo de lateral</span>
+            <select id="tipoLateral">
+              <option value="9571">Vidro embutido · lateral 9571 + 9573</option>
+              <option value="9577">Vidro externo · lateral 9577 + 9573</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Altura padrão novo vão</span>
+            <input id="alturaPadrao" type="number" min="1" step="10" value="2400">
+          </label>
+          <label class="field">
+            <span>Profundidade padrão novo vão</span>
+            <input id="profundidadePadrao" type="number" min="1" step="10" value="600">
+          </label>
+          <label class="field">
+            <span>Largura padrão novo vão</span>
+            <input id="larguraPadrao" type="number" min="1" step="10" value="700">
+          </label>
         </div>
 
-        <div class="action-row">
-          <button id="btnAdicionarCaixa" class="btn btn-primary" type="button">Adicionar caixa central</button>
-          <button id="btnRemoverCaixa" class="btn btn-secondary" type="button">Remover última caixa</button>
+        <div class="actions">
+          <button id="btnAdicionar" class="btn btn-primary" type="button">Adicionar vão/módulo central</button>
+          <button id="btnRemover" class="btn btn-secondary" type="button">Remover último vão</button>
         </div>
 
-        <div class="hint-box">
-          <strong>Lógica:</strong>
-          <span>1 caixa = 2 portas. 2 caixas = 4 portas. 3 caixas = 6 portas. Entre caixas existe um módulo central/divisória.</span>
+        <div class="note">
+          <strong>Regra Evidence:</strong>
+          <span>1 vão usa 2 módulos laterais, topo, base, travessas/fundo e 2 portas. Cada vão adicional acrescenta 1 módulo central 9572 e mais 2 portas.</span>
         </div>
       </aside>
 
       <section class="panel">
-        <div class="panel__header">
+        <div class="panel-head">
           <div>
-            <h2>Visualizações 2D frontais</h2>
-            <p>Uma visão por portas e outra visão por módulos estruturais.</p>
+            <h2>Medidas gerais</h2>
+            <p>Calculadas automaticamente pelos vãos e módulos.</p>
           </div>
-          <div class="result-card"><span>Total</span><strong id="resumoCurto">0 × 0 × 0 mm</strong></div>
         </div>
-
-        <div class="views-grid">
-          <div class="preview-block">
-            <h3>1. Proporção frontal das portas</h3>
-            <div class="closet-viewport">
-              <div id="previewPortas" class="closet2d-wrap"></div>
-            </div>
-          </div>
-
-          <div class="preview-block">
-            <h3>2. Proporção frontal dos módulos</h3>
-            <div class="closet-viewport">
-              <div id="previewModulos" class="closet2d-wrap"></div>
-            </div>
-          </div>
+        <div class="results">
+          <div class="result"><span>Largura total</span><strong id="geralLargura">0 mm</strong></div>
+          <div class="result"><span>Altura máxima</span><strong id="geralAltura">0 mm</strong></div>
+          <div class="result"><span>Profundidade máxima</span><strong id="geralProfundidade">0 mm</strong></div>
+          <div class="result"><span>Portas</span><strong id="geralPortas">0</strong></div>
         </div>
       </section>
     </section>
 
-    <section class="content-grid">
+    <section class="grid-main">
       <section class="panel">
-        <div class="panel__header">
+        <div class="panel-head">
           <div>
-            <h2>Editar caixas/módulos</h2>
-            <p>Edite a caixa e, abaixo, os módulos separados com ML de altura e ML de largura.</p>
+            <h2>Visualização e edição</h2>
+            <p>Visualização 2D frontal + separação técnica por módulos.</p>
+          </div>
+          <div class="result"><span>Total</span><strong id="resumoCurto">0 × 0 × 0 mm</strong></div>
+        </div>
+
+        <div class="preview-stack">
+          <div class="preview-block">
+            <h3>1. Frente do closet por portas</h3>
+            <div class="viewport"><div id="previewPortas" class="preview-wrap"></div></div>
+          </div>
+          <div class="preview-block">
+            <h3>2. Frente do closet por módulos</h3>
+            <div class="viewport"><div id="previewModulos" class="preview-wrap"></div></div>
           </div>
         </div>
-        <div id="modulosEditor" class="modules-list"></div>
+
+        <div class="panel-head" style="margin-top:24px;">
+          <div>
+            <h2>Editar vãos e módulos</h2>
+            <p>Cada vão mostra seus módulos e os perfis usados conforme a linha Evidence.</p>
+          </div>
+        </div>
+        <div id="editor" class="editor-list"></div>
       </section>
 
       <aside class="panel summary-panel">
-        <div class="panel__header">
+        <div class="panel-head">
           <div>
-            <h2>Resumo final</h2>
-            <p>Totais calculados no navegador.</p>
+            <h2>Resumo técnico</h2>
+            <p>ML e acessórios estimados por regra de montagem.</p>
           </div>
         </div>
-
-        <dl class="summary-list">
-          <div><dt>Caixas / vãos</dt><dd id="resumoCaixas">0</dd></div>
-          <div><dt>Portas</dt><dd id="resumoPortas">0</dd></div>
-          <div><dt>Módulos laterais</dt><dd id="resumoLaterais">0</dd></div>
-          <div><dt>Módulos centrais</dt><dd id="resumoCentrais">0</dd></div>
-          <div><dt>Módulos superior</dt><dd id="resumoSuperiores">0</dd></div>
-          <div><dt>Módulos inferior</dt><dd id="resumoInferiores">0</dd></div>
-          <div><dt>ML altura</dt><dd id="resumoMlAltura">0 m</dd></div>
-          <div><dt>ML largura</dt><dd id="resumoMlLargura">0 m</dd></div>
-          <div><dt>ML total estrutura</dt><dd id="resumoMlTotal">0 m</dd></div>
-        </dl>
+        <div id="summary" class="summary-grid"></div>
       </aside>
+    </section>
+
+    <section class="panel" style="margin-top:20px;">
+      <div class="panel-head">
+        <div>
+          <h2>Lista de corte por perfil</h2>
+          <p>Agrupamento automático dos perfis 9566, 9567, 9571/9577, 9572 e 9573.</p>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="tabelaCorte"></table></div>
     </section>
   </main>
 
   <script>
-    const perfisDisponiveis = ["9700", "2215", "1036", "088", "3545", "3446"];
-
     const state = {
+      tipoLateral: "9571",
       contador: 1,
-      caixas: [criarCaixa(1, "Caixa 1", 700, 2400, 600)]
+      vaos: [criarVao(1, 700, 2400, 600)]
     };
 
     const el = {};
@@ -550,360 +547,314 @@
       atualizarTudo();
     });
 
-    function criarCaixa(numero, nome, largura, altura, profundidade) {
-      return {
-        id: `caixa-${numero}`,
-        nome,
-        largura,
-        altura,
-        profundidade,
-        perfis: {
-          lateralEsquerda: "9700",
-          lateralDireita: "9700",
-          superior: "9700",
-          inferior: "9700",
-          central: "9700"
-        }
-      };
+    function criarVao(numero, largura, altura, profundidade) {
+      return { id: `vao-${numero}`, nome: `Vão ${numero}`, largura, altura, profundidade };
     }
 
     function mapearElementos() {
-      el.btnAdicionarCaixa = document.getElementById("btnAdicionarCaixa");
-      el.btnRemoverCaixa = document.getElementById("btnRemoverCaixa");
-      el.modulosEditor = document.getElementById("modulosEditor");
-      el.previewPortas = document.getElementById("previewPortas");
-      el.previewModulos = document.getElementById("previewModulos");
+      el.tipoLateral = document.getElementById("tipoLateral");
+      el.alturaPadrao = document.getElementById("alturaPadrao");
+      el.profundidadePadrao = document.getElementById("profundidadePadrao");
+      el.larguraPadrao = document.getElementById("larguraPadrao");
+      el.btnAdicionar = document.getElementById("btnAdicionar");
+      el.btnRemover = document.getElementById("btnRemover");
       el.badgePortas = document.getElementById("badgePortas");
       el.badgeCaixas = document.getElementById("badgeCaixas");
-      el.resumoCurto = document.getElementById("resumoCurto");
       el.geralLargura = document.getElementById("geralLargura");
       el.geralAltura = document.getElementById("geralAltura");
       el.geralProfundidade = document.getElementById("geralProfundidade");
       el.geralPortas = document.getElementById("geralPortas");
-      el.resumoCaixas = document.getElementById("resumoCaixas");
-      el.resumoPortas = document.getElementById("resumoPortas");
-      el.resumoLaterais = document.getElementById("resumoLaterais");
-      el.resumoCentrais = document.getElementById("resumoCentrais");
-      el.resumoSuperiores = document.getElementById("resumoSuperiores");
-      el.resumoInferiores = document.getElementById("resumoInferiores");
-      el.resumoMlAltura = document.getElementById("resumoMlAltura");
-      el.resumoMlLargura = document.getElementById("resumoMlLargura");
-      el.resumoMlTotal = document.getElementById("resumoMlTotal");
+      el.resumoCurto = document.getElementById("resumoCurto");
+      el.previewPortas = document.getElementById("previewPortas");
+      el.previewModulos = document.getElementById("previewModulos");
+      el.editor = document.getElementById("editor");
+      el.summary = document.getElementById("summary");
+      el.tabelaCorte = document.getElementById("tabelaCorte");
     }
 
     function vincularEventos() {
-      el.btnAdicionarCaixa.addEventListener("click", adicionarCaixa);
-      el.btnRemoverCaixa.addEventListener("click", removerUltimaCaixa);
+      el.tipoLateral.addEventListener("change", () => {
+        state.tipoLateral = el.tipoLateral.value;
+        atualizarTudo();
+      });
+      el.btnAdicionar.addEventListener("click", adicionarVao);
+      el.btnRemover.addEventListener("click", removerUltimoVao);
     }
 
-    function numero(valor, minimo = 1) {
+    function num(valor, minimo = 1) {
       const n = Number(valor);
       return Number.isNaN(n) ? minimo : Math.max(minimo, n);
     }
 
-    function obterModulos(caixas) {
+    function mmParaM(mm) { return num(mm, 0) / 1000; }
+    function metro(valor) { return `${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`; }
+    function mm(valor) { return `${Math.round(valor).toLocaleString("pt-BR")} mm`; }
+
+    function obterCalculo() {
+      const vaos = state.vaos;
+      const totalVaos = vaos.length;
+      const larguraTotal = vaos.reduce((soma, vao) => soma + num(vao.largura), 0);
+      const alturaMax = vaos.reduce((max, vao) => Math.max(max, num(vao.altura)), 0);
+      const profundidadeMax = vaos.reduce((max, vao) => Math.max(max, num(vao.profundidade)), 0);
+      const portas = totalVaos * 2;
+      const tipoLateral = state.tipoLateral;
+      const perfilLateral = tipoLateral === "9571" ? "9571" : "9577";
+      const nomeLateral = tipoLateral === "9571" ? "Lateral vidro embutido" : "Lateral vidro externo";
       const modulos = [];
+      const cortes = [];
+      const acessorios = { "Conector 95P": 0, "Conector 115P": 0, "Conector 55P": 0, "Conector 120P": 0, "Baguete BA11/BA17": 0 };
 
-      caixas.forEach((caixa, index) => {
-        const numeroCaixa = index + 1;
-        modulos.push({
-          id: `${caixa.id}-lateral-esq`,
-          caixaId: caixa.id,
-          tipo: "lateralEsquerda",
-          nome: `Lateral esquerda · Caixa ${numeroCaixa}`,
-          perfil: caixa.perfis.lateralEsquerda,
-          mlAltura: numero(caixa.altura) / 1000,
-          mlLargura: numero(caixa.profundidade) / 1000,
-          larguraVisual: 45,
-          classe: "module-strip--lateral"
-        });
+      function addCorte(perfil, peca, qtd, medidaMm, modulo) {
+        cortes.push({ perfil, peca, qtd, medidaMm, modulo });
+      }
 
-        if (index > 0) {
-          modulos.push({
-            id: `${caixa.id}-central`,
-            caixaId: caixa.id,
-            tipo: "central",
-            nome: `Central/divisória · Entre caixa ${index} e ${numeroCaixa}`,
-            perfil: caixa.perfis.central,
-            mlAltura: numero(caixa.altura) / 1000,
-            mlLargura: numero(caixa.profundidade) / 1000,
-            larguraVisual: 35,
-            classe: "module-strip--central"
-          });
+      function addModulo(modulo) { modulos.push(modulo); }
+
+      vaos.forEach((vao, index) => {
+        const n = index + 1;
+        const largura = num(vao.largura);
+        const altura = num(vao.altura);
+        const prof = num(vao.profundidade);
+
+        if (index === 0) {
+          addModulo({ grupo: vao.nome, nome: "1º módulo lateral esquerdo", regra: `${nomeLateral}: 2 verticais ${perfilLateral} + 2 horizontais 9573`, perfilPrincipal: perfilLateral, perfilHorizontal: "9573", mlAltura: mmParaM(altura * 2), mlLargura: mmParaM(prof * 2), mlTotal: mmParaM((altura * 2) + (prof * 2)) });
+          addCorte(perfilLateral, "vertical lateral esquerda", 2, altura, vao.nome);
+          addCorte("9573", "horizontal lateral esquerda", 2, prof, vao.nome);
+          acessorios["Conector 95P"] += 4;
+          acessorios["Conector 115P"] += 2;
+          acessorios["Baguete BA11/BA17"] += 4;
         }
 
-        modulos.push({
-          id: `${caixa.id}-superior`,
-          caixaId: caixa.id,
-          tipo: "superior",
-          nome: `Superior · Caixa ${numeroCaixa}`,
-          perfil: caixa.perfis.superior,
-          mlAltura: 0,
-          mlLargura: numero(caixa.largura) / 1000,
-          larguraVisual: numero(caixa.largura),
-          classe: "module-strip--superior"
-        });
+        if (index > 0) {
+          addModulo({ grupo: vao.nome, nome: `4º módulo central entre vão ${index} e ${n}`, regra: "Módulo central: 2 verticais 9572 + 2 horizontais 9573", perfilPrincipal: "9572", perfilHorizontal: "9573", mlAltura: mmParaM(altura * 2), mlLargura: mmParaM(prof * 2), mlTotal: mmParaM((altura * 2) + (prof * 2)) });
+          addCorte("9572", "vertical módulo central", 2, altura, vao.nome);
+          addCorte("9573", "horizontal módulo central", 2, prof, vao.nome);
+          acessorios["Conector 95P"] += 4;
+          acessorios["Conector 115P"] += 2;
+          acessorios["Baguete BA11/BA17"] += 4;
+        }
 
-        modulos.push({
-          id: `${caixa.id}-inferior`,
-          caixaId: caixa.id,
-          tipo: "inferior",
-          nome: `Inferior · Caixa ${numeroCaixa}`,
-          perfil: caixa.perfis.inferior,
-          mlAltura: 0,
-          mlLargura: numero(caixa.largura) / 1000,
-          larguraVisual: numero(caixa.largura),
-          classe: "module-strip--inferior"
-        });
+        addModulo({ grupo: vao.nome, nome: "2º travessas de fixação do fundo", regra: "Travessas do fundo: perfil 9573 na largura do vão, superior e inferior", perfilPrincipal: "9573", perfilHorizontal: "9573", mlAltura: 0, mlLargura: mmParaM(largura * 2), mlTotal: mmParaM(largura * 2) });
+        addCorte("9573", "travessa fundo superior/inferior", 2, largura, vao.nome);
 
-        if (index === caixas.length - 1) {
-          modulos.push({
-            id: `${caixa.id}-lateral-dir`,
-            caixaId: caixa.id,
-            tipo: "lateralDireita",
-            nome: `Lateral direita · Caixa ${numeroCaixa}`,
-            perfil: caixa.perfis.lateralDireita,
-            mlAltura: numero(caixa.altura) / 1000,
-            mlLargura: numero(caixa.profundidade) / 1000,
-            larguraVisual: 45,
-            classe: "module-strip--lateral"
-          });
+        addModulo({ grupo: vao.nome, nome: "3º fundo", regra: "Painel/vidro de fundo encaixado nos baguetes e travessas", perfilPrincipal: "Material", perfilHorizontal: "9573", mlAltura: mmParaM(altura), mlLargura: mmParaM(largura), mlTotal: 0, material: true });
+
+        if (index === vaos.length - 1) {
+          addModulo({ grupo: vao.nome, nome: "5º módulo lateral direito", regra: `${nomeLateral}: 2 verticais ${perfilLateral} + 2 horizontais 9573`, perfilPrincipal: perfilLateral, perfilHorizontal: "9573", mlAltura: mmParaM(altura * 2), mlLargura: mmParaM(prof * 2), mlTotal: mmParaM((altura * 2) + (prof * 2)) });
+          addCorte(perfilLateral, "vertical lateral direita", 2, altura, vao.nome);
+          addCorte("9573", "horizontal lateral direita", 2, prof, vao.nome);
+          acessorios["Conector 95P"] += 4;
+          acessorios["Conector 115P"] += 2;
+          acessorios["Baguete BA11/BA17"] += 4;
         }
       });
 
-      return modulos;
-    }
+      const topBasePecas = [
+        { modulo: "6º topo", nome: "Topo - laterais 9566", perfil: "9566", qtd: 2, medida: profundidadeMax },
+        { modulo: "6º topo", nome: "Topo - traseiro 9566", perfil: "9566", qtd: 1, medida: larguraTotal },
+        { modulo: "6º topo", nome: "Topo - frontal 9567", perfil: "9567", qtd: 1, medida: larguraTotal },
+        { modulo: "7º base", nome: "Base - laterais 9566", perfil: "9566", qtd: 2, medida: profundidadeMax },
+        { modulo: "7º base", nome: "Base - traseiro 9566", perfil: "9566", qtd: 1, medida: larguraTotal },
+        { modulo: "7º base", nome: "Base - frontal 9567", perfil: "9567", qtd: 1, medida: larguraTotal }
+      ];
 
-    function calcular() {
-      const caixas = state.caixas;
-      const larguraTotal = caixas.reduce((total, caixa) => total + numero(caixa.largura), 0);
-      const alturaTotal = caixas.reduce((max, caixa) => Math.max(max, numero(caixa.altura)), 0);
-      const profundidadeTotal = caixas.reduce((max, caixa) => Math.max(max, numero(caixa.profundidade)), 0);
-      const totalCaixas = caixas.length;
-      const portas = totalCaixas * 2;
-      const modulos = obterModulos(caixas);
-      const laterais = totalCaixas + 1;
-      const centrais = Math.max(totalCaixas - 1, 0);
-      const superiores = totalCaixas;
-      const inferiores = totalCaixas;
-      const mlAltura = modulos.reduce((total, modulo) => total + modulo.mlAltura, 0);
-      const mlLargura = modulos.reduce((total, modulo) => total + modulo.mlLargura, 0);
+      addModulo({ grupo: "Móvel completo", nome: "6º módulo topo", regra: "Topo: 9566 nas laterais e traseiro + 9567 na frente", perfilPrincipal: "9566 / 9567", perfilHorizontal: "9566 / 9567", mlAltura: 0, mlLargura: mmParaM((profundidadeMax * 2) + (larguraTotal * 2)), mlTotal: mmParaM((profundidadeMax * 2) + (larguraTotal * 2)) });
+      addModulo({ grupo: "Móvel completo", nome: "7º módulo base", regra: "Base: 9566 nas laterais e traseiro + 9567 na frente", perfilPrincipal: "9566 / 9567", perfilHorizontal: "9566 / 9567", mlAltura: 0, mlLargura: mmParaM((profundidadeMax * 2) + (larguraTotal * 2)), mlTotal: mmParaM((profundidadeMax * 2) + (larguraTotal * 2)) });
+      addModulo({ grupo: "Móvel completo", nome: "8º portas", regra: "2 portas por vão. Detalhamento da porta depende do sistema de porta usado.", perfilPrincipal: "Porta", perfilHorizontal: "Porta", mlAltura: 0, mlLargura: 0, mlTotal: 0, material: true });
+
+      topBasePecas.forEach(item => addCorte(item.perfil, item.nome, item.qtd, item.medida, item.modulo));
+      acessorios["Conector 55P"] += 8;
+      acessorios["Conector 120P"] += Math.max(4, totalVaos * 4);
+
+      const totaisPorPerfil = cortes.reduce((acc, corte) => {
+        if (!acc[corte.perfil]) acc[corte.perfil] = { qtd: 0, ml: 0, pecas: [] };
+        acc[corte.perfil].qtd += corte.qtd;
+        acc[corte.perfil].ml += (corte.qtd * corte.medidaMm) / 1000;
+        acc[corte.perfil].pecas.push(corte);
+        return acc;
+      }, {});
+
+      const mlAltura = modulos.reduce((s, m) => s + (m.mlAltura || 0), 0);
+      const mlLargura = modulos.reduce((s, m) => s + (m.mlLargura || 0), 0);
       const mlTotal = mlAltura + mlLargura;
 
-      return { caixas, modulos, larguraTotal, alturaTotal, profundidadeTotal, totalCaixas, portas, laterais, centrais, superiores, inferiores, mlAltura, mlLargura, mlTotal };
+      return { vaos, totalVaos, larguraTotal, alturaMax, profundidadeMax, portas, perfilLateral, nomeLateral, modulos, cortes, totaisPorPerfil, acessorios, mlAltura, mlLargura, mlTotal };
     }
 
     function atualizarTudo() {
-      const c = calcular();
-      renderizarEditor(c);
-      renderizarPreviewPortas(c);
-      renderizarPreviewModulos(c);
-      renderizarResumo(c);
+      const c = obterCalculo();
+      renderResumoGeral(c);
+      renderPreviewPortas(c);
+      renderPreviewModulos(c);
+      renderEditor(c);
+      renderResumoTecnico(c);
+      renderTabelaCorte(c);
     }
 
-    function renderizarPreviewPortas(c) {
+    function renderResumoGeral(c) {
+      el.badgePortas.textContent = `${c.portas} portas`;
+      el.badgeCaixas.textContent = `${c.totalVaos} ${c.totalVaos === 1 ? "vão" : "vãos"}`;
+      el.geralLargura.textContent = mm(c.larguraTotal);
+      el.geralAltura.textContent = mm(c.alturaMax);
+      el.geralProfundidade.textContent = mm(c.profundidadeMax);
+      el.geralPortas.textContent = c.portas;
+      el.resumoCurto.textContent = `${mm(c.larguraTotal)} × ${mm(c.alturaMax)} × ${mm(c.profundidadeMax)}`;
+      el.btnRemover.disabled = c.totalVaos <= 1;
+    }
+
+    function renderPreviewPortas(c) {
       el.previewPortas.innerHTML = `
-        <div class="measure-line">Largura total: ${c.larguraTotal} mm</div>
-        <div class="closet2d" style="--boxes:${c.totalCaixas};">
-          ${c.caixas.map((caixa, index) => `
-            <div class="box-cell">
-              <div class="door"></div>
-              <div class="door"></div>
-              <span class="shelf-line shelf-line--one"></span>
-              <span class="shelf-line shelf-line--two"></span>
-              <div class="box-label">Caixa ${index + 1} · ${caixa.largura} × ${caixa.altura}</div>
-            </div>
-          `).join("")}
+        <div class="measure">Largura total: ${mm(c.larguraTotal)}</div>
+        <div class="front-view" style="--boxes:${c.totalVaos};">
+          ${c.vaos.map((vao, i) => `
+            <div class="door-box">
+              <div class="door"></div><div class="door"></div>
+              <span class="shelf one"></span><span class="shelf two"></span>
+              <div class="label">Vão ${i + 1}<br>${mm(vao.largura)} × ${mm(vao.altura)}</div>
+            </div>`).join("")}
         </div>
-        <div class="measure-line">Altura: ${c.alturaTotal} mm · Profundidade: ${c.profundidadeTotal} mm · ${c.portas} portas</div>
-      `;
+        <div class="measure">Altura máxima: ${mm(c.alturaMax)} · Profundidade máxima: ${mm(c.profundidadeMax)} · ${c.portas} portas</div>`;
     }
 
-    function renderizarPreviewModulos(c) {
-      const colunas = [];
-      c.caixas.forEach((caixa, index) => {
-        if (index === 0) colunas.push("45px");
-        if (index > 0) colunas.push("35px");
-        colunas.push(`${Math.max(numero(caixa.largura), 180)}fr`);
-        if (index === c.caixas.length - 1) colunas.push("45px");
+    function renderPreviewModulos(c) {
+      const cols = [];
+      c.vaos.forEach((vao, i) => {
+        if (i === 0) cols.push("52px");
+        if (i > 0) cols.push("42px");
+        cols.push(`${Math.max(num(vao.largura), 180)}fr`);
+        if (i === c.vaos.length - 1) cols.push("52px");
+      });
+
+      const strips = [];
+      c.vaos.forEach((vao, i) => {
+        if (i === 0) strips.push(`<div class="strip lat"><div class="label">Lat. Esq<br>${c.perfilLateral}</div></div>`);
+        if (i > 0) strips.push(`<div class="strip central"><div class="label">Central<br>9572</div></div>`);
+        strips.push(`<div class="strip vao"><div class="label">Vão ${i + 1}<br>${mm(vao.largura)}</div></div>`);
+        if (i === c.vaos.length - 1) strips.push(`<div class="strip lat"><div class="label">Lat. Dir<br>${c.perfilLateral}</div></div>`);
       });
 
       el.previewModulos.innerHTML = `
-        <div class="measure-line">Módulos frontais proporcionais à largura dos vãos</div>
-        <div class="closet2d closet2d--modules" style="--module-columns:${colunas.join(" ")};">
-          ${renderizarTirasModulos(c)}
-          <div class="module-strip module-strip--superior"><div class="module-label">Superior · ${formatarMetro(c.larguraTotal / 1000)}</div></div>
-          <div class="module-strip module-strip--inferior"><div class="module-label">Inferior · ${formatarMetro(c.larguraTotal / 1000)}</div></div>
+        <div class="measure">Módulos frontais: laterais ${c.perfilLateral}, centrais 9572, topo/base 9566 + 9567</div>
+        <div class="module-view" style="--module-columns:${cols.join(" ")};">
+          ${strips.join("")}
+          <div class="top-strip"><div class="label">Topo · 9566 traseiro/laterais + 9567 frontal</div></div>
+          <div class="bottom-strip"><div class="label">Base · 9566 traseiro/laterais + 9567 frontal</div></div>
         </div>
-        <div class="measure-line">Laterais/centrais = ML altura + profundidade · Superior/inferior = ML largura</div>
-      `;
+        <div class="measure">Travessas de fundo: 9573 por vão · Fundo encaixado nos baguetes</div>`;
     }
 
-    function renderizarTirasModulos(c) {
-      const partes = [];
-      c.caixas.forEach((caixa, index) => {
-        if (index === 0) {
-          partes.push(`<div class="module-strip module-strip--lateral"><div class="module-label">Lat. Esq<br>${formatarMetro(caixa.altura / 1000)}</div></div>`);
-        }
-        if (index > 0) {
-          partes.push(`<div class="module-strip module-strip--central"><div class="module-label">Central<br>${formatarMetro(caixa.altura / 1000)}</div></div>`);
-        }
-        partes.push(`<div class="module-strip"><div class="module-label">Vão ${index + 1}<br>${caixa.largura} mm</div></div>`);
-        if (index === c.caixas.length - 1) {
-          partes.push(`<div class="module-strip module-strip--lateral"><div class="module-label">Lat. Dir<br>${formatarMetro(caixa.altura / 1000)}</div></div>`);
-        }
-      });
-      return partes.join("");
-    }
-
-    function renderizarEditor(c) {
-      el.modulosEditor.innerHTML = "";
-
-      c.caixas.forEach((caixa, index) => {
-        const card = document.createElement("article");
-        card.className = "box-card";
-        card.innerHTML = `
-          <div class="box-card__header">
-            <div>
-              <h3>${caixa.nome}</h3>
-              <div class="box-card__meta">Vão ${index + 1} · 2 portas · ${caixa.largura} × ${caixa.altura} × ${caixa.profundidade} mm</div>
+    function renderEditor(c) {
+      el.editor.innerHTML = c.vaos.map((vao, index) => {
+        const n = index + 1;
+        const temCentral = index > 0;
+        return `
+          <article class="box-card">
+            <div class="box-card-head">
+              <div>
+                <h3>${vao.nome}</h3>
+                <div class="meta">${mm(vao.largura)} largura · ${mm(vao.altura)} altura · ${mm(vao.profundidade)} profundidade · 2 portas</div>
+              </div>
+              ${c.totalVaos > 1 ? `<button class="btn btn-danger" type="button" data-remove="${vao.id}">Remover vão</button>` : ""}
             </div>
-            ${c.totalCaixas > 1 ? `<button class="btn btn-danger" type="button" data-remover-caixa="${caixa.id}">Remover caixa</button>` : ""}
-          </div>
+            <div class="box-grid">
+              <label class="field"><span>Largura do vão</span><input type="number" min="1" step="10" value="${vao.largura}" data-id="${vao.id}" data-campo="largura"></label>
+              <label class="field"><span>Altura</span><input type="number" min="1" step="10" value="${vao.altura}" data-id="${vao.id}" data-campo="altura"></label>
+              <label class="field"><span>Profundidade</span><input type="number" min="1" step="10" value="${vao.profundidade}" data-id="${vao.id}" data-campo="profundidade"></label>
+            </div>
+            <div class="cards-grid" style="margin-top:16px;">
+              ${index === 0 ? moduloHtml("1º módulo lateral esquerdo", `${c.nomeLateral}`, `${c.perfilLateral}: 2 peças altura · 9573: 2 peças profundidade`, mmParaM(vao.altura * 2), mmParaM(vao.profundidade * 2)) : ""}
+              ${temCentral ? moduloHtml(`4º módulo central`, "Central 9572", `9572: 2 peças altura · 9573: 2 peças profundidade`, mmParaM(vao.altura * 2), mmParaM(vao.profundidade * 2)) : ""}
+              ${moduloHtml("2º travessas do fundo", "Perfil 9573", `9573: 2 peças na largura do vão`, 0, mmParaM(vao.largura * 2))}
+              ${moduloHtml("3º fundo", "Material de fundo", `Fundo do vão ${n}: ${mm(vao.largura)} × ${mm(vao.altura)}`, mmParaM(vao.altura), mmParaM(vao.largura), true)}
+              ${index === c.vaos.length - 1 ? moduloHtml("5º módulo lateral direito", `${c.nomeLateral}`, `${c.perfilLateral}: 2 peças altura · 9573: 2 peças profundidade`, mmParaM(vao.altura * 2), mmParaM(vao.profundidade * 2)) : ""}
+            </div>
+          </article>`;
+      }).join("");
 
-          <div class="box-form">
-            <label class="field">
-              <span>Largura da caixa/vão</span>
-              <input type="number" min="1" step="10" value="${caixa.largura}" data-id="${caixa.id}" data-campo="largura">
-            </label>
-            <label class="field">
-              <span>Altura da caixa</span>
-              <input type="number" min="1" step="10" value="${caixa.altura}" data-id="${caixa.id}" data-campo="altura">
-            </label>
-            <label class="field">
-              <span>Profundidade da caixa</span>
-              <input type="number" min="1" step="10" value="${caixa.profundidade}" data-id="${caixa.id}" data-campo="profundidade">
-            </label>
-          </div>
-
-          <div class="modules-grid" style="margin-top:16px;">
-            ${renderizarModuloCard(caixa, "lateralEsquerda", "Módulo lateral esquerdo", caixa.altura, caixa.profundidade)}
-            ${renderizarModuloCard(caixa, "lateralDireita", "Módulo lateral direito", caixa.altura, caixa.profundidade)}
-            ${renderizarModuloCard(caixa, "superior", "Módulo superior", 0, caixa.largura)}
-            ${renderizarModuloCard(caixa, "inferior", "Módulo inferior", 0, caixa.largura)}
-            ${index > 0 ? renderizarModuloCard(caixa, "central", "Módulo central/divisória", caixa.altura, caixa.profundidade) : ""}
-          </div>
-        `;
-
-        el.modulosEditor.appendChild(card);
-      });
-
-      el.modulosEditor.querySelectorAll("[data-campo]").forEach((input) => {
-        input.addEventListener("input", alterarCaixa);
-      });
-
-      el.modulosEditor.querySelectorAll("[data-perfil]").forEach((select) => {
-        select.addEventListener("change", alterarPerfil);
-      });
-
-      el.modulosEditor.querySelectorAll("[data-remover-caixa]").forEach((btn) => {
-        btn.addEventListener("click", () => removerCaixa(btn.dataset.removerCaixa));
-      });
+      el.editor.querySelectorAll("[data-campo]").forEach(input => input.addEventListener("input", alterarVao));
+      el.editor.querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", () => removerVao(btn.dataset.remove)));
     }
 
-    function renderizarModuloCard(caixa, tipo, nome, mlAlturaMm, mlLarguraMm) {
+    function moduloHtml(titulo, perfil, regra, mlAltura, mlLargura, material = false) {
+      const total = material ? 0 : mlAltura + mlLargura;
       return `
         <div class="module-card">
-          <h4>${nome}</h4>
-          <div class="module-card__meta">ML altura: ${formatarMetro(mlAlturaMm / 1000)} · ML largura: ${formatarMetro(mlLarguraMm / 1000)}</div>
-          <div class="module-form">
-            <label class="field">
-              <span>Perfil</span>
-              <select data-id="${caixa.id}" data-perfil="${tipo}">
-                ${perfisDisponiveis.map((perfil) => `<option value="${perfil}" ${perfil === caixa.perfis[tipo] ? "selected" : ""}>${perfil}</option>`).join("")}
-              </select>
-            </label>
-            <label class="field">
-              <span>ML altura</span>
-              <input type="text" value="${formatarMetro(mlAlturaMm / 1000)}" readonly>
-            </label>
-            <label class="field">
-              <span>ML largura</span>
-              <input type="text" value="${formatarMetro(mlLarguraMm / 1000)}" readonly>
-            </label>
-            <label class="field">
-              <span>ML total</span>
-              <input type="text" value="${formatarMetro((mlAlturaMm + mlLarguraMm) / 1000)}" readonly>
-            </label>
+          <h4>${titulo}</h4>
+          <div class="meta"><strong>${perfil}</strong><br>${regra}</div>
+          <div class="module-grid">
+            <label class="field"><span>ML altura</span><input readonly value="${metro(mlAltura)}"></label>
+            <label class="field"><span>ML largura/profund.</span><input readonly value="${metro(mlLargura)}"></label>
+            <label class="field"><span>ML total alumínio</span><input readonly value="${material ? "Material" : metro(total)}"></label>
+            <label class="field"><span>Perfil principal</span><input readonly value="${perfil}"></label>
           </div>
-        </div>
+        </div>`;
+    }
+
+    function renderResumoTecnico(c) {
+      const porPerfil = Object.entries(c.totaisPorPerfil).map(([perfil, dados]) => `<div class="summary-row"><span>Perfil ${perfil}</span><strong>${dados.qtd} peças · ${metro(dados.ml)}</strong></div>`).join("");
+      const acess = Object.entries(c.acessorios).map(([nome, qtd]) => `<div class="summary-row"><span>${nome}</span><strong>${qtd} un.</strong></div>`).join("");
+      el.summary.innerHTML = `
+        <div class="summary-row"><span>Vãos / portas</span><strong>${c.totalVaos} vãos · ${c.portas} portas</strong></div>
+        <div class="summary-row"><span>Sequência de montagem</span><strong>Lateral → Travessas/Fundo → Central → Lateral → Topo → Base → Portas</strong></div>
+        <div class="summary-row"><span>ML altura</span><strong>${metro(c.mlAltura)}</strong></div>
+        <div class="summary-row"><span>ML largura/profundidade</span><strong>${metro(c.mlLargura)}</strong></div>
+        <div class="summary-row"><span>ML total estrutura</span><strong>${metro(c.mlTotal)}</strong></div>
+        ${porPerfil}
+        ${acess}
       `;
     }
 
-    function renderizarResumo(c) {
-      el.badgePortas.textContent = `${c.portas} portas`;
-      el.badgeCaixas.textContent = `${c.totalCaixas} ${c.totalCaixas === 1 ? "caixa" : "caixas"}`;
-      el.resumoCurto.textContent = `${c.larguraTotal} × ${c.alturaTotal} × ${c.profundidadeTotal} mm`;
-      el.geralLargura.textContent = `${c.larguraTotal} mm`;
-      el.geralAltura.textContent = `${c.alturaTotal} mm`;
-      el.geralProfundidade.textContent = `${c.profundidadeTotal} mm`;
-      el.geralPortas.textContent = c.portas;
-      el.resumoCaixas.textContent = c.totalCaixas;
-      el.resumoPortas.textContent = c.portas;
-      el.resumoLaterais.textContent = c.laterais;
-      el.resumoCentrais.textContent = c.centrais;
-      el.resumoSuperiores.textContent = c.superiores;
-      el.resumoInferiores.textContent = c.inferiores;
-      el.resumoMlAltura.textContent = formatarMetro(c.mlAltura);
-      el.resumoMlLargura.textContent = formatarMetro(c.mlLargura);
-      el.resumoMlTotal.textContent = formatarMetro(c.mlTotal);
-      el.btnRemoverCaixa.disabled = c.totalCaixas <= 1;
+    function renderTabelaCorte(c) {
+      const linhas = c.cortes.map(corte => `
+        <tr>
+          <td><strong>${corte.perfil}</strong></td>
+          <td>${corte.peca}</td>
+          <td>${corte.modulo}</td>
+          <td>${corte.qtd}</td>
+          <td>${mm(corte.medidaMm)}</td>
+          <td>${metro((corte.qtd * corte.medidaMm) / 1000)}</td>
+        </tr>`).join("");
+
+      el.tabelaCorte.innerHTML = `
+        <thead><tr><th>Perfil</th><th>Peça</th><th>Módulo</th><th>Qtd.</th><th>Medida de corte</th><th>ML total</th></tr></thead>
+        <tbody>${linhas}</tbody>`;
     }
 
-    function alterarCaixa(event) {
-      const caixa = state.caixas.find((item) => item.id === event.target.dataset.id);
-      if (!caixa) return;
-      caixa[event.target.dataset.campo] = numero(event.target.value, 1);
+    function alterarVao(event) {
+      const vao = state.vaos.find(item => item.id === event.target.dataset.id);
+      if (!vao) return;
+      vao[event.target.dataset.campo] = num(event.target.value);
       atualizarTudo();
     }
 
-    function alterarPerfil(event) {
-      const caixa = state.caixas.find((item) => item.id === event.target.dataset.id);
-      const tipo = event.target.dataset.perfil;
-      if (!caixa || !perfisDisponiveis.includes(event.target.value)) return;
-      caixa.perfis[tipo] = event.target.value;
-      atualizarTudo();
-    }
-
-    function adicionarCaixa() {
-      const ultima = state.caixas[state.caixas.length - 1];
+    function adicionarVao() {
       state.contador += 1;
-      state.caixas.push(criarCaixa(state.contador, `Caixa ${state.contador}`, ultima.largura, ultima.altura, ultima.profundidade));
+      const largura = num(el.larguraPadrao.value);
+      const altura = num(el.alturaPadrao.value);
+      const profundidade = num(el.profundidadePadrao.value);
+      state.vaos.push(criarVao(state.contador, largura, altura, profundidade));
+      renomearVaos();
       atualizarTudo();
     }
 
-    function removerUltimaCaixa() {
-      if (state.caixas.length <= 1) return;
-      state.caixas.pop();
-      renomearCaixas();
+    function removerUltimoVao() {
+      if (state.vaos.length <= 1) return;
+      state.vaos.pop();
+      renomearVaos();
       atualizarTudo();
     }
 
-    function removerCaixa(id) {
-      if (state.caixas.length <= 1) return;
-      state.caixas = state.caixas.filter((caixa) => caixa.id !== id);
-      renomearCaixas();
+    function removerVao(id) {
+      if (state.vaos.length <= 1) return;
+      state.vaos = state.vaos.filter(vao => vao.id !== id);
+      renomearVaos();
       atualizarTudo();
     }
 
-    function renomearCaixas() {
-      state.caixas.forEach((caixa, index) => {
-        caixa.nome = `Caixa ${index + 1}`;
+    function renomearVaos() {
+      state.vaos.forEach((vao, index) => {
+        vao.nome = `Vão ${index + 1}`;
       });
-    }
-
-    function formatarMetro(valor) {
-      return `${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
     }
   </script>
 </body>
