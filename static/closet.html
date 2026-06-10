@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engine de Orçamento para Closet | ColorGlass</title>
+  <meta name="description" content="Monte e orce closets por módulos estruturais com perfis editáveis e visualização 2D.">
+  <link rel="stylesheet" href="/static/closet.css">
+</head>
+<body>
+  <main class="closet-app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">ColorGlass · MVP independente</p>
+        <h1>Engine de Orçamento para Closet</h1>
+        <p class="hero__text">
+          Configure módulos estruturais, escolha os perfis de cada posição e acompanhe as medidas e a metragem aproximada de alumínio em tempo real.
+        </p>
+      </div>
+      <div class="hero__badge">
+        <span id="badgeModulos">4 módulos</span>
+        <small>estrutura mínima</small>
+      </div>
+    </header>
+
+    <section class="layout-grid" aria-label="Montador de closet">
+      <aside class="panel controls-panel">
+        <div class="panel__header">
+          <h2>Medidas gerais</h2>
+          <p>Valores em milímetros.</p>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Profundidade geral</span>
+            <input id="inputProfundidade" type="number" min="1" step="10" value="600">
+          </label>
+
+          <label class="field">
+            <span>Altura útil/geral</span>
+            <input id="inputAlturaUtil" type="number" min="1" step="10" value="2400">
+          </label>
+
+          <label class="field">
+            <span>Largura dos módulos laterais</span>
+            <input id="inputLarguraLateral" type="number" min="1" step="10" value="350">
+          </label>
+
+          <label class="field">
+            <span>Altura módulo superior</span>
+            <input id="inputAlturaSuperior" type="number" min="1" step="10" value="100">
+          </label>
+
+          <label class="field">
+            <span>Altura módulo inferior</span>
+            <input id="inputAlturaInferior" type="number" min="1" step="10" value="100">
+          </label>
+
+          <label class="field">
+            <span>Largura padrão central</span>
+            <input id="inputLarguraCentralPadrao" type="number" min="1" step="10" value="700">
+          </label>
+        </div>
+
+        <div class="action-row">
+          <button id="btnAdicionarCentral" class="btn btn-primary" type="button">Adicionar módulo central</button>
+          <button id="btnRemoverUltimoCentral" class="btn btn-secondary" type="button">Remover último central</button>
+        </div>
+
+        <div class="hint-box">
+          <strong>Regra inicial de cálculo:</strong>
+          <span>cada módulo tem 4 perfis. A metragem soma 2 perfis verticais e 2 horizontais, variando pela função modular do tipo de módulo.</span>
+        </div>
+      </aside>
+
+      <section class="panel visualization-panel">
+        <div class="panel__header panel__header--row">
+          <div>
+            <h2>Visualização 2D aproximada</h2>
+            <p>Diagrama atualizado automaticamente.</p>
+          </div>
+          <div class="dimensions-pill" id="dimensoesResumoCurto">0 × 0 × 0 mm</div>
+        </div>
+
+        <div class="closet-preview-wrap">
+          <div id="closetPreview" class="closet-preview" aria-live="polite"></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="content-grid">
+      <section class="panel modules-panel">
+        <div class="panel__header panel__header--row">
+          <div>
+            <h2>Editar módulos e perfis</h2>
+            <p>Defina medidas e selecione manualmente os 4 perfis de cada módulo.</p>
+          </div>
+        </div>
+        <div id="modulosEditor" class="modules-list"></div>
+      </section>
+
+      <aside class="panel summary-panel">
+        <div class="panel__header">
+          <h2>Resumo final</h2>
+          <p>Totais calculados no navegador.</p>
+        </div>
+
+        <dl class="summary-list">
+          <div>
+            <dt>Quantidade total de módulos</dt>
+            <dd id="resumoTotalModulos">0</dd>
+          </div>
+          <div>
+            <dt>Quantidade total de perfis</dt>
+            <dd id="resumoTotalPerfis">0</dd>
+          </div>
+          <div>
+            <dt>Metragem aproximada de alumínio</dt>
+            <dd id="resumoMetragemAluminio">0 m</dd>
+          </div>
+          <div>
+            <dt>Altura total</dt>
+            <dd id="resumoAlturaTotal">0 mm</dd>
+          </div>
+          <div>
+            <dt>Largura total</dt>
+            <dd id="resumoLarguraTotal">0 mm</dd>
+          </div>
+          <div>
+            <dt>Profundidade total</dt>
+            <dd id="resumoProfundidadeTotal">0 mm</dd>
+          </div>
+        </dl>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/static/closet.js" defer></script>
+</body>
+</html>
