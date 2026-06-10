@@ -4,20 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Engine de Orçamento para Closet | ColorGlass</title>
-  <meta name="description" content="Monte e orce closets por caixas estruturais com visualização 3D e cálculo de portas.">
+  <meta name="description" content="Monte e orce closets por caixas e módulos estruturais com visualização 2D proporcional.">
   <style>
     :root {
       --cg-blue: #1079ba;
       --cg-blue-dark: #0d5d8c;
       --cg-blue-soft: #e7f3fb;
-      --cg-gold: #f0c24c;
+      --cg-gold: #d9a84c;
       --cg-red: #dc3545;
       --cg-text: #1f2933;
       --cg-muted: #6b7280;
       --cg-border: rgba(16, 121, 186, 0.16);
       --cg-shadow: 0 18px 45px rgba(15, 44, 62, 0.12);
       --cg-shadow-soft: 0 10px 24px rgba(15, 44, 62, 0.10);
-      --cg-structure: #384b54;
+      --cg-structure: #314550;
+      --cg-glass: rgba(235, 246, 252, 0.78);
     }
 
     * { box-sizing: border-box; }
@@ -33,7 +34,7 @@
     button, input, select { font: inherit; }
 
     .closet-app {
-      width: min(1480px, calc(100% - 32px));
+      width: min(1500px, calc(100% - 32px));
       margin: 0 auto;
       padding: 24px 0 48px;
     }
@@ -68,7 +69,7 @@
     }
 
     .hero__text {
-      max-width: 880px;
+      max-width: 900px;
       margin-bottom: 0;
       color: rgba(255, 255, 255, 0.86);
       font-size: 1.03rem;
@@ -98,7 +99,7 @@
     }
 
     .top-grid { grid-template-columns: 410px minmax(0, 1fr); }
-    .content-grid { grid-template-columns: minmax(0, 1fr) 360px; margin-top: 20px; }
+    .content-grid { grid-template-columns: minmax(0, 1fr) 380px; margin-top: 20px; }
 
     .panel {
       padding: 22px;
@@ -119,15 +120,15 @@
     .panel__header h2 { margin-bottom: 6px; }
     .panel__header p { margin-bottom: 0; color: var(--cg-muted); }
 
-    .result-grid, .form-grid, .module-grid, .profile-grid {
+    .result-grid, .box-form, .module-form, .modules-grid {
       display: grid;
       gap: 14px;
     }
 
     .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .module-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .profile-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .box-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .module-form { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .modules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
     .result-card {
       padding: 14px;
@@ -158,11 +159,11 @@
       font-weight: 800;
     }
 
-    .field span { font-size: 0.88rem; }
+    .field span { font-size: 0.84rem; }
 
     .field input, .field select {
       width: 100%;
-      padding: 11px 12px;
+      padding: 10px 11px;
       color: var(--cg-text);
       background: #fff;
       border: 1px solid rgba(16, 121, 186, 0.22);
@@ -212,9 +213,20 @@
       border-radius: 16px;
     }
 
+    .views-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .preview-block h3 {
+      margin: 0 0 10px;
+      color: var(--cg-blue-dark);
+    }
+
     .closet-viewport {
-      min-height: 560px;
-      padding: 36px 24px 54px;
+      min-height: 390px;
+      padding: 28px 20px 38px;
       overflow: auto;
       background: linear-gradient(90deg, rgba(16, 121, 186, 0.07) 1px, transparent 1px), linear-gradient(rgba(16, 121, 186, 0.07) 1px, transparent 1px), #fbfdff;
       background-size: 24px 24px;
@@ -222,11 +234,11 @@
       border-radius: 18px;
     }
 
-    .closet3d-wrap {
-      min-width: 720px;
+    .closet2d-wrap {
+      min-width: 650px;
       display: grid;
       place-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .measure-line {
@@ -236,109 +248,30 @@
       text-align: center;
     }
 
-    .closet3d {
-      --depth: 68px;
-      --front-width: calc(100% - var(--depth));
-      --front-height: calc(100% - var(--depth));
+    .closet2d {
       position: relative;
-      width: min(100%, 960px);
-      height: 385px;
-      padding: 0;
-    }
-
-    .closet-face {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: var(--front-width);
-      height: var(--front-height);
+      width: min(100%, 880px);
+      height: 330px;
       display: grid;
       grid-template-columns: repeat(var(--boxes), minmax(90px, 1fr));
-      gap: 0;
-      background: rgba(242, 248, 252, 0.86);
-      border: 5px solid var(--cg-structure);
-      box-shadow: inset 0 0 0 4px rgba(255,255,255,.45), 0 20px 42px rgba(15,44,62,.18);
-      z-index: 4;
+      background: var(--cg-glass);
+      border: 6px solid var(--cg-structure);
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,.45), 0 18px 42px rgba(15,44,62,.16);
     }
 
-    .depth-line,
-    .back-line {
-      position: absolute;
-      display: block;
-      background: var(--cg-structure);
-      border-radius: 999px;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .depth-line {
-      height: 4px;
-      width: calc(var(--depth) * 1.42);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-    }
-
-    .depth-line--lt {
-      left: 0;
-      top: var(--depth);
-    }
-
-    .depth-line--rt {
-      left: var(--front-width);
-      top: var(--depth);
-    }
-
-    .depth-line--rb {
-      left: var(--front-width);
-      bottom: 0;
-    }
-
-    .back-line--top {
-      left: var(--depth);
-      top: 0;
-      width: var(--front-width);
-      height: 4px;
-    }
-
-    .back-line--right {
-      right: 0;
-      top: 0;
-      width: 4px;
-      height: var(--front-height);
-    }
-
-    .back-line--bottom-right {
-      right: 0;
-      bottom: var(--depth);
-      width: 4px;
-      height: var(--depth);
-      opacity: .55;
+    .closet2d--modules {
+      grid-template-columns: var(--module-columns);
     }
 
     .box-cell {
       position: relative;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      min-width: 90px;
       border-right: 4px solid var(--cg-structure);
       background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(224, 239, 247, .35));
     }
 
     .box-cell:last-child { border-right: 0; }
-
-    .box-cell::before, .box-cell::after {
-      content: "";
-      position: absolute;
-      left: 12%;
-      right: 12%;
-      height: 5px;
-      background: rgba(206, 155, 71, 0.75);
-      box-shadow: 0 0 15px rgba(240,194,76,.55);
-      z-index: 2;
-    }
-
-    .box-cell::before { top: 24%; }
-    .box-cell::after { top: 44%; }
 
     .door {
       position: relative;
@@ -360,7 +293,20 @@
       transform: skewX(-12deg);
     }
 
-    .box-label {
+    .shelf-line {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      height: 5px;
+      background: rgba(206, 155, 71, 0.78);
+      box-shadow: 0 0 15px rgba(240,194,76,.55);
+      z-index: 3;
+    }
+
+    .shelf-line--one { top: 28%; }
+    .shelf-line--two { top: 52%; }
+
+    .box-label, .module-label {
       position: absolute;
       left: 8px;
       right: 8px;
@@ -368,32 +314,88 @@
       z-index: 4;
       padding: 7px 8px;
       color: #24343d;
-      background: rgba(255,255,255,.78);
+      background: rgba(255,255,255,.82);
       border-radius: 10px;
       font-size: .75rem;
       font-weight: 900;
       text-align: center;
     }
 
-    .modules-list { display: grid; gap: 16px; }
-
-    .module-card {
-      padding: 16px;
-      background: #fff;
-      border: 1px solid rgba(16, 121, 186, 0.14);
-      border-radius: 18px;
+    .module-strip {
+      position: relative;
+      border-right: 3px solid var(--cg-structure);
+      background: rgba(232, 244, 250, .64);
     }
 
-    .module-card__header {
+    .module-strip:last-child { border-right: 0; }
+
+    .module-strip--lateral, .module-strip--central {
+      background: linear-gradient(180deg, rgba(68, 89, 101, .28), rgba(255,255,255,.42));
+    }
+
+    .module-strip--superior {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 36px;
+      border-bottom: 5px solid var(--cg-structure);
+      background: rgba(217, 168, 76, .22);
+      z-index: 5;
+    }
+
+    .module-strip--inferior {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 36px;
+      border-top: 5px solid var(--cg-structure);
+      background: rgba(217, 168, 76, .22);
+      z-index: 5;
+    }
+
+    .modules-list { display: grid; gap: 18px; }
+
+    .box-card {
+      padding: 18px;
+      background: #fff;
+      border: 1px solid rgba(16, 121, 186, 0.16);
+      border-radius: 20px;
+    }
+
+    .box-card__header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 14px;
       margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(16, 121, 186, 0.12);
     }
 
-    .module-card h3 { margin: 0 0 4px; color: var(--cg-blue-dark); }
-    .module-card__meta { color: var(--cg-muted); font-size: 0.9rem; }
+    .box-card h3 { margin: 0 0 4px; color: var(--cg-blue-dark); }
+    .box-card__meta { color: var(--cg-muted); font-size: 0.9rem; font-weight: 700; }
+
+    .module-card {
+      padding: 14px;
+      background: #f8fbff;
+      border: 1px solid rgba(16, 121, 186, 0.12);
+      border-radius: 16px;
+    }
+
+    .module-card h4 {
+      margin: 0 0 4px;
+      color: var(--cg-blue-dark);
+      font-size: 1rem;
+    }
+
+    .module-card__meta {
+      margin-bottom: 12px;
+      color: var(--cg-muted);
+      font-size: .86rem;
+      font-weight: 800;
+    }
 
     .summary-list {
       display: grid;
@@ -414,19 +416,19 @@
     .summary-list dt { color: var(--cg-muted); font-weight: 800; }
     .summary-list dd { margin: 0; color: var(--cg-blue-dark); font-weight: 900; text-align: right; }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1180px) {
       .top-grid, .content-grid { grid-template-columns: 1fr; }
       .summary-panel { order: -1; }
     }
 
     @media (max-width: 760px) {
-      .closet-app { width: min(100% - 18px, 1480px); padding-top: 9px; }
-      .hero, .panel__header, .module-card__header { flex-direction: column; }
-      .result-grid, .form-grid, .module-grid, .profile-grid { grid-template-columns: 1fr; }
+      .closet-app { width: min(100% - 18px, 1500px); padding-top: 9px; }
+      .hero, .panel__header, .box-card__header { flex-direction: column; }
+      .result-grid, .box-form, .module-form, .modules-grid { grid-template-columns: 1fr; }
       .hero, .panel { padding: 18px; border-radius: 18px; }
-      .closet-viewport { min-height: 430px; padding: 24px 12px 40px; }
-      .closet3d-wrap { min-width: 560px; }
-      .closet3d { height: 330px; }
+      .closet-viewport { min-height: 330px; padding: 20px 12px 32px; }
+      .closet2d-wrap { min-width: 560px; }
+      .closet2d { height: 300px; }
     }
   </style>
 </head>
@@ -434,9 +436,9 @@
   <main class="closet-app">
     <header class="hero">
       <div>
-        <p class="eyebrow">ColorGlass · Closet por caixas estruturais</p>
+        <p class="eyebrow">ColorGlass · Closet por caixas e módulos</p>
         <h1>Engine de Orçamento para Closet</h1>
-        <p class="hero__text">Cada caixa representa um vão do closet. A estrutura mínima tem 1 caixa: lateral esquerda, lateral direita, superior e inferior. Cada caixa gera 2 portas.</p>
+        <p class="hero__text">Cada caixa representa um vão do closet. A página mostra a proporção frontal em 2D e detalha os módulos: laterais, superior, inferior e centrais.</p>
       </div>
       <div class="hero__badge">
         <span id="badgePortas">2 portas</span>
@@ -449,7 +451,7 @@
         <div class="panel__header">
           <div>
             <h2>Medidas gerais</h2>
-            <p>Resultado calculado pelos módulos/caixas.</p>
+            <p>Resultado calculado com base nas caixas.</p>
           </div>
         </div>
 
@@ -466,22 +468,34 @@
         </div>
 
         <div class="hint-box">
-          <strong>Regra visual:</strong>
-          <span>1 caixa = 2 portas. 2 caixas = 4 portas. 3 caixas = 6 portas, como na referência.</span>
+          <strong>Lógica:</strong>
+          <span>1 caixa = 2 portas. 2 caixas = 4 portas. 3 caixas = 6 portas. Entre caixas existe um módulo central/divisória.</span>
         </div>
       </aside>
 
       <section class="panel">
         <div class="panel__header">
           <div>
-            <h2>Visualização 3D aproximada</h2>
-            <p>Caixa com largura, altura e profundidade. Cada vão tem duas portas.</p>
+            <h2>Visualizações 2D frontais</h2>
+            <p>Uma visão por portas e outra visão por módulos estruturais.</p>
           </div>
           <div class="result-card"><span>Total</span><strong id="resumoCurto">0 × 0 × 0 mm</strong></div>
         </div>
 
-        <div class="closet-viewport">
-          <div id="closetPreview" class="closet3d-wrap"></div>
+        <div class="views-grid">
+          <div class="preview-block">
+            <h3>1. Proporção frontal das portas</h3>
+            <div class="closet-viewport">
+              <div id="previewPortas" class="closet2d-wrap"></div>
+            </div>
+          </div>
+
+          <div class="preview-block">
+            <h3>2. Proporção frontal dos módulos</h3>
+            <div class="closet-viewport">
+              <div id="previewModulos" class="closet2d-wrap"></div>
+            </div>
+          </div>
         </div>
       </section>
     </section>
@@ -491,7 +505,7 @@
         <div class="panel__header">
           <div>
             <h2>Editar caixas/módulos</h2>
-            <p>Altere largura, altura, profundidade e perfis de cada caixa.</p>
+            <p>Edite a caixa e, abaixo, os módulos separados com ML de altura e ML de largura.</p>
           </div>
         </div>
         <div id="modulosEditor" class="modules-list"></div>
@@ -508,13 +522,13 @@
         <dl class="summary-list">
           <div><dt>Caixas / vãos</dt><dd id="resumoCaixas">0</dd></div>
           <div><dt>Portas</dt><dd id="resumoPortas">0</dd></div>
-          <div><dt>Laterais estruturais</dt><dd id="resumoLaterais">0</dd></div>
-          <div><dt>Módulos superior/inferior</dt><dd id="resumoSupInf">2</dd></div>
-          <div><dt>Perfis estimados</dt><dd id="resumoPerfis">0</dd></div>
-          <div><dt>Metragem alumínio</dt><dd id="resumoAluminio">0 m</dd></div>
-          <div><dt>Largura total</dt><dd id="resumoLargura">0 mm</dd></div>
-          <div><dt>Altura total</dt><dd id="resumoAltura">0 mm</dd></div>
-          <div><dt>Profundidade</dt><dd id="resumoProfundidade">0 mm</dd></div>
+          <div><dt>Módulos laterais</dt><dd id="resumoLaterais">0</dd></div>
+          <div><dt>Módulos centrais</dt><dd id="resumoCentrais">0</dd></div>
+          <div><dt>Módulos superior</dt><dd id="resumoSuperiores">0</dd></div>
+          <div><dt>Módulos inferior</dt><dd id="resumoInferiores">0</dd></div>
+          <div><dt>ML altura</dt><dd id="resumoMlAltura">0 m</dd></div>
+          <div><dt>ML largura</dt><dd id="resumoMlLargura">0 m</dd></div>
+          <div><dt>ML total estrutura</dt><dd id="resumoMlTotal">0 m</dd></div>
         </dl>
       </aside>
     </section>
@@ -543,7 +557,13 @@
         largura,
         altura,
         profundidade,
-        perfis: ["9700", "9700", "9700", "9700"]
+        perfis: {
+          lateralEsquerda: "9700",
+          lateralDireita: "9700",
+          superior: "9700",
+          inferior: "9700",
+          central: "9700"
+        }
       };
     }
 
@@ -551,7 +571,8 @@
       el.btnAdicionarCaixa = document.getElementById("btnAdicionarCaixa");
       el.btnRemoverCaixa = document.getElementById("btnRemoverCaixa");
       el.modulosEditor = document.getElementById("modulosEditor");
-      el.closetPreview = document.getElementById("closetPreview");
+      el.previewPortas = document.getElementById("previewPortas");
+      el.previewModulos = document.getElementById("previewModulos");
       el.badgePortas = document.getElementById("badgePortas");
       el.badgeCaixas = document.getElementById("badgeCaixas");
       el.resumoCurto = document.getElementById("resumoCurto");
@@ -562,12 +583,12 @@
       el.resumoCaixas = document.getElementById("resumoCaixas");
       el.resumoPortas = document.getElementById("resumoPortas");
       el.resumoLaterais = document.getElementById("resumoLaterais");
-      el.resumoSupInf = document.getElementById("resumoSupInf");
-      el.resumoPerfis = document.getElementById("resumoPerfis");
-      el.resumoAluminio = document.getElementById("resumoAluminio");
-      el.resumoLargura = document.getElementById("resumoLargura");
-      el.resumoAltura = document.getElementById("resumoAltura");
-      el.resumoProfundidade = document.getElementById("resumoProfundidade");
+      el.resumoCentrais = document.getElementById("resumoCentrais");
+      el.resumoSuperiores = document.getElementById("resumoSuperiores");
+      el.resumoInferiores = document.getElementById("resumoInferiores");
+      el.resumoMlAltura = document.getElementById("resumoMlAltura");
+      el.resumoMlLargura = document.getElementById("resumoMlLargura");
+      el.resumoMlTotal = document.getElementById("resumoMlTotal");
     }
 
     function vincularEventos() {
@@ -580,6 +601,79 @@
       return Number.isNaN(n) ? minimo : Math.max(minimo, n);
     }
 
+    function obterModulos(caixas) {
+      const modulos = [];
+
+      caixas.forEach((caixa, index) => {
+        const numeroCaixa = index + 1;
+        modulos.push({
+          id: `${caixa.id}-lateral-esq`,
+          caixaId: caixa.id,
+          tipo: "lateralEsquerda",
+          nome: `Lateral esquerda · Caixa ${numeroCaixa}`,
+          perfil: caixa.perfis.lateralEsquerda,
+          mlAltura: numero(caixa.altura) / 1000,
+          mlLargura: numero(caixa.profundidade) / 1000,
+          larguraVisual: 45,
+          classe: "module-strip--lateral"
+        });
+
+        if (index > 0) {
+          modulos.push({
+            id: `${caixa.id}-central`,
+            caixaId: caixa.id,
+            tipo: "central",
+            nome: `Central/divisória · Entre caixa ${index} e ${numeroCaixa}`,
+            perfil: caixa.perfis.central,
+            mlAltura: numero(caixa.altura) / 1000,
+            mlLargura: numero(caixa.profundidade) / 1000,
+            larguraVisual: 35,
+            classe: "module-strip--central"
+          });
+        }
+
+        modulos.push({
+          id: `${caixa.id}-superior`,
+          caixaId: caixa.id,
+          tipo: "superior",
+          nome: `Superior · Caixa ${numeroCaixa}`,
+          perfil: caixa.perfis.superior,
+          mlAltura: 0,
+          mlLargura: numero(caixa.largura) / 1000,
+          larguraVisual: numero(caixa.largura),
+          classe: "module-strip--superior"
+        });
+
+        modulos.push({
+          id: `${caixa.id}-inferior`,
+          caixaId: caixa.id,
+          tipo: "inferior",
+          nome: `Inferior · Caixa ${numeroCaixa}`,
+          perfil: caixa.perfis.inferior,
+          mlAltura: 0,
+          mlLargura: numero(caixa.largura) / 1000,
+          larguraVisual: numero(caixa.largura),
+          classe: "module-strip--inferior"
+        });
+
+        if (index === caixas.length - 1) {
+          modulos.push({
+            id: `${caixa.id}-lateral-dir`,
+            caixaId: caixa.id,
+            tipo: "lateralDireita",
+            nome: `Lateral direita · Caixa ${numeroCaixa}`,
+            perfil: caixa.perfis.lateralDireita,
+            mlAltura: numero(caixa.altura) / 1000,
+            mlLargura: numero(caixa.profundidade) / 1000,
+            larguraVisual: 45,
+            classe: "module-strip--lateral"
+          });
+        }
+      });
+
+      return modulos;
+    }
+
     function calcular() {
       const caixas = state.caixas;
       const larguraTotal = caixas.reduce((total, caixa) => total + numero(caixa.largura), 0);
@@ -587,24 +681,79 @@
       const profundidadeTotal = caixas.reduce((max, caixa) => Math.max(max, numero(caixa.profundidade)), 0);
       const totalCaixas = caixas.length;
       const portas = totalCaixas * 2;
+      const modulos = obterModulos(caixas);
       const laterais = totalCaixas + 1;
-      const modulosSupInf = 2;
-      const perfisLaterais = laterais * 2;
-      const perfisSupInf = totalCaixas * 4;
-      const perfisPortas = portas * 4;
-      const perfisEstimados = perfisLaterais + perfisSupInf + perfisPortas;
-      const aluminioEstruturaMm = (laterais * alturaTotal * 2) + (larguraTotal * 4) + (profundidadeTotal * laterais * 2);
-      const aluminioPortasMm = caixas.reduce((total, caixa) => total + ((numero(caixa.altura) * 2 + numero(caixa.largura)) * 2), 0);
-      const aluminioTotalM = (aluminioEstruturaMm + aluminioPortasMm) / 1000;
+      const centrais = Math.max(totalCaixas - 1, 0);
+      const superiores = totalCaixas;
+      const inferiores = totalCaixas;
+      const mlAltura = modulos.reduce((total, modulo) => total + modulo.mlAltura, 0);
+      const mlLargura = modulos.reduce((total, modulo) => total + modulo.mlLargura, 0);
+      const mlTotal = mlAltura + mlLargura;
 
-      return { caixas, larguraTotal, alturaTotal, profundidadeTotal, totalCaixas, portas, laterais, modulosSupInf, perfisEstimados, aluminioTotalM };
+      return { caixas, modulos, larguraTotal, alturaTotal, profundidadeTotal, totalCaixas, portas, laterais, centrais, superiores, inferiores, mlAltura, mlLargura, mlTotal };
     }
 
     function atualizarTudo() {
       const c = calcular();
       renderizarEditor(c);
-      renderizar3D(c);
+      renderizarPreviewPortas(c);
+      renderizarPreviewModulos(c);
       renderizarResumo(c);
+    }
+
+    function renderizarPreviewPortas(c) {
+      el.previewPortas.innerHTML = `
+        <div class="measure-line">Largura total: ${c.larguraTotal} mm</div>
+        <div class="closet2d" style="--boxes:${c.totalCaixas};">
+          ${c.caixas.map((caixa, index) => `
+            <div class="box-cell">
+              <div class="door"></div>
+              <div class="door"></div>
+              <span class="shelf-line shelf-line--one"></span>
+              <span class="shelf-line shelf-line--two"></span>
+              <div class="box-label">Caixa ${index + 1} · ${caixa.largura} × ${caixa.altura}</div>
+            </div>
+          `).join("")}
+        </div>
+        <div class="measure-line">Altura: ${c.alturaTotal} mm · Profundidade: ${c.profundidadeTotal} mm · ${c.portas} portas</div>
+      `;
+    }
+
+    function renderizarPreviewModulos(c) {
+      const colunas = [];
+      c.caixas.forEach((caixa, index) => {
+        if (index === 0) colunas.push("45px");
+        if (index > 0) colunas.push("35px");
+        colunas.push(`${Math.max(numero(caixa.largura), 180)}fr`);
+        if (index === c.caixas.length - 1) colunas.push("45px");
+      });
+
+      el.previewModulos.innerHTML = `
+        <div class="measure-line">Módulos frontais proporcionais à largura dos vãos</div>
+        <div class="closet2d closet2d--modules" style="--module-columns:${colunas.join(" ")};">
+          ${renderizarTirasModulos(c)}
+          <div class="module-strip module-strip--superior"><div class="module-label">Superior · ${formatarMetro(c.larguraTotal / 1000)}</div></div>
+          <div class="module-strip module-strip--inferior"><div class="module-label">Inferior · ${formatarMetro(c.larguraTotal / 1000)}</div></div>
+        </div>
+        <div class="measure-line">Laterais/centrais = ML altura + profundidade · Superior/inferior = ML largura</div>
+      `;
+    }
+
+    function renderizarTirasModulos(c) {
+      const partes = [];
+      c.caixas.forEach((caixa, index) => {
+        if (index === 0) {
+          partes.push(`<div class="module-strip module-strip--lateral"><div class="module-label">Lat. Esq<br>${formatarMetro(caixa.altura / 1000)}</div></div>`);
+        }
+        if (index > 0) {
+          partes.push(`<div class="module-strip module-strip--central"><div class="module-label">Central<br>${formatarMetro(caixa.altura / 1000)}</div></div>`);
+        }
+        partes.push(`<div class="module-strip"><div class="module-label">Vão ${index + 1}<br>${caixa.largura} mm</div></div>`);
+        if (index === c.caixas.length - 1) {
+          partes.push(`<div class="module-strip module-strip--lateral"><div class="module-label">Lat. Dir<br>${formatarMetro(caixa.altura / 1000)}</div></div>`);
+        }
+      });
+      return partes.join("");
     }
 
     function renderizarEditor(c) {
@@ -612,33 +761,37 @@
 
       c.caixas.forEach((caixa, index) => {
         const card = document.createElement("article");
-        card.className = "module-card";
+        card.className = "box-card";
         card.innerHTML = `
-          <div class="module-card__header">
+          <div class="box-card__header">
             <div>
               <h3>${caixa.nome}</h3>
-              <div class="module-card__meta">Vão ${index + 1} · 2 portas · ${caixa.largura} × ${caixa.altura} × ${caixa.profundidade} mm</div>
+              <div class="box-card__meta">Vão ${index + 1} · 2 portas · ${caixa.largura} × ${caixa.altura} × ${caixa.profundidade} mm</div>
             </div>
-            ${c.totalCaixas > 1 ? `<button class="btn btn-danger" type="button" data-remover-caixa="${caixa.id}">Remover</button>` : ""}
+            ${c.totalCaixas > 1 ? `<button class="btn btn-danger" type="button" data-remover-caixa="${caixa.id}">Remover caixa</button>` : ""}
           </div>
 
-          <div class="module-grid">
+          <div class="box-form">
             <label class="field">
-              <span>Largura do vão</span>
+              <span>Largura da caixa/vão</span>
               <input type="number" min="1" step="10" value="${caixa.largura}" data-id="${caixa.id}" data-campo="largura">
             </label>
             <label class="field">
-              <span>Altura</span>
+              <span>Altura da caixa</span>
               <input type="number" min="1" step="10" value="${caixa.altura}" data-id="${caixa.id}" data-campo="altura">
             </label>
             <label class="field">
-              <span>Profundidade</span>
+              <span>Profundidade da caixa</span>
               <input type="number" min="1" step="10" value="${caixa.profundidade}" data-id="${caixa.id}" data-campo="profundidade">
             </label>
           </div>
 
-          <div class="profile-grid" style="margin-top:14px;">
-            ${caixa.perfis.map((perfil, posicao) => criarSelectPerfil(caixa.id, posicao, perfil)).join("")}
+          <div class="modules-grid" style="margin-top:16px;">
+            ${renderizarModuloCard(caixa, "lateralEsquerda", "Módulo lateral esquerdo", caixa.altura, caixa.profundidade)}
+            ${renderizarModuloCard(caixa, "lateralDireita", "Módulo lateral direito", caixa.altura, caixa.profundidade)}
+            ${renderizarModuloCard(caixa, "superior", "Módulo superior", 0, caixa.largura)}
+            ${renderizarModuloCard(caixa, "inferior", "Módulo inferior", 0, caixa.largura)}
+            ${index > 0 ? renderizarModuloCard(caixa, "central", "Módulo central/divisória", caixa.altura, caixa.profundidade) : ""}
           </div>
         `;
 
@@ -658,38 +811,32 @@
       });
     }
 
-    function criarSelectPerfil(id, posicao, atual) {
-      const labels = ["Vertical esquerdo", "Vertical direito", "Superior", "Inferior"];
-      const options = perfisDisponiveis.map((perfil) => `<option value="${perfil}" ${perfil === atual ? "selected" : ""}>${perfil}</option>`).join("");
+    function renderizarModuloCard(caixa, tipo, nome, mlAlturaMm, mlLarguraMm) {
       return `
-        <label class="field">
-          <span>${labels[posicao]}</span>
-          <select data-id="${id}" data-perfil="${posicao}">${options}</select>
-        </label>
-      `;
-    }
-
-    function renderizar3D(c) {
-      el.closetPreview.innerHTML = `
-        <div class="measure-line">Largura total: ${c.larguraTotal} mm</div>
-        <div class="closet3d" style="--boxes:${c.totalCaixas};">
-          <span class="depth-line depth-line--lt"></span>
-          <span class="depth-line depth-line--rt"></span>
-          <span class="depth-line depth-line--rb"></span>
-          <span class="back-line back-line--top"></span>
-          <span class="back-line back-line--right"></span>
-          <span class="back-line back-line--bottom-right"></span>
-          <div class="closet-face">
-            ${c.caixas.map((caixa, index) => `
-              <div class="box-cell">
-                <div class="door"></div>
-                <div class="door"></div>
-                <div class="box-label">${index + 1} · ${caixa.largura} × ${caixa.altura} × ${caixa.profundidade}</div>
-              </div>
-            `).join("")}
+        <div class="module-card">
+          <h4>${nome}</h4>
+          <div class="module-card__meta">ML altura: ${formatarMetro(mlAlturaMm / 1000)} · ML largura: ${formatarMetro(mlLarguraMm / 1000)}</div>
+          <div class="module-form">
+            <label class="field">
+              <span>Perfil</span>
+              <select data-id="${caixa.id}" data-perfil="${tipo}">
+                ${perfisDisponiveis.map((perfil) => `<option value="${perfil}" ${perfil === caixa.perfis[tipo] ? "selected" : ""}>${perfil}</option>`).join("")}
+              </select>
+            </label>
+            <label class="field">
+              <span>ML altura</span>
+              <input type="text" value="${formatarMetro(mlAlturaMm / 1000)}" readonly>
+            </label>
+            <label class="field">
+              <span>ML largura</span>
+              <input type="text" value="${formatarMetro(mlLarguraMm / 1000)}" readonly>
+            </label>
+            <label class="field">
+              <span>ML total</span>
+              <input type="text" value="${formatarMetro((mlAlturaMm + mlLarguraMm) / 1000)}" readonly>
+            </label>
           </div>
         </div>
-        <div class="measure-line">Altura: ${c.alturaTotal} mm · Profundidade: ${c.profundidadeTotal} mm · ${c.portas} portas</div>
       `;
     }
 
@@ -704,12 +851,12 @@
       el.resumoCaixas.textContent = c.totalCaixas;
       el.resumoPortas.textContent = c.portas;
       el.resumoLaterais.textContent = c.laterais;
-      el.resumoSupInf.textContent = c.modulosSupInf;
-      el.resumoPerfis.textContent = c.perfisEstimados;
-      el.resumoAluminio.textContent = formatarMetro(c.aluminioTotalM);
-      el.resumoLargura.textContent = `${c.larguraTotal} mm`;
-      el.resumoAltura.textContent = `${c.alturaTotal} mm`;
-      el.resumoProfundidade.textContent = `${c.profundidadeTotal} mm`;
+      el.resumoCentrais.textContent = c.centrais;
+      el.resumoSuperiores.textContent = c.superiores;
+      el.resumoInferiores.textContent = c.inferiores;
+      el.resumoMlAltura.textContent = formatarMetro(c.mlAltura);
+      el.resumoMlLargura.textContent = formatarMetro(c.mlLargura);
+      el.resumoMlTotal.textContent = formatarMetro(c.mlTotal);
       el.btnRemoverCaixa.disabled = c.totalCaixas <= 1;
     }
 
@@ -722,9 +869,9 @@
 
     function alterarPerfil(event) {
       const caixa = state.caixas.find((item) => item.id === event.target.dataset.id);
-      const posicao = Number(event.target.dataset.perfil);
+      const tipo = event.target.dataset.perfil;
       if (!caixa || !perfisDisponiveis.includes(event.target.value)) return;
-      caixa.perfis[posicao] = event.target.value;
+      caixa.perfis[tipo] = event.target.value;
       atualizarTudo();
     }
 
@@ -738,6 +885,7 @@
     function removerUltimaCaixa() {
       if (state.caixas.length <= 1) return;
       state.caixas.pop();
+      renomearCaixas();
       atualizarTudo();
     }
 
