@@ -17,6 +17,7 @@
       --cg-border: rgba(16, 121, 186, 0.16);
       --cg-shadow: 0 18px 45px rgba(15, 44, 62, 0.12);
       --cg-shadow-soft: 0 10px 24px rgba(15, 44, 62, 0.10);
+      --cg-structure: #384b54;
     }
 
     * { box-sizing: border-box; }
@@ -236,55 +237,82 @@
     }
 
     .closet3d {
-      --depth: 58px;
+      --depth: 68px;
+      --front-width: calc(100% - var(--depth));
+      --front-height: calc(100% - var(--depth));
       position: relative;
       width: min(100%, 960px);
       height: 385px;
       padding: 0;
-      transform-style: preserve-3d;
     }
 
     .closet-face {
       position: absolute;
       left: 0;
       bottom: 0;
-      width: calc(100% - var(--depth));
-      height: calc(100% - var(--depth));
+      width: var(--front-width);
+      height: var(--front-height);
       display: grid;
       grid-template-columns: repeat(var(--boxes), minmax(90px, 1fr));
       gap: 0;
       background: rgba(242, 248, 252, 0.86);
-      border: 5px solid #384b54;
+      border: 5px solid var(--cg-structure);
       box-shadow: inset 0 0 0 4px rgba(255,255,255,.45), 0 20px 42px rgba(15,44,62,.18);
-      z-index: 3;
+      z-index: 4;
     }
 
-    .closet-side {
+    .depth-line,
+    .back-line {
       position: absolute;
-      right: 0;
-      bottom: var(--depth);
-      width: var(--depth);
-      height: calc(100% - var(--depth));
-      background: linear-gradient(135deg, rgba(45, 64, 74, 0.88), rgba(98, 122, 135, 0.42));
-      border: 4px solid #384b54;
-      border-left: 0;
-      transform: skewY(-38deg);
-      transform-origin: left bottom;
+      display: block;
+      background: var(--cg-structure);
+      border-radius: 999px;
       z-index: 2;
+      pointer-events: none;
     }
 
-    .closet-top {
-      position: absolute;
+    .depth-line {
+      height: 4px;
+      width: calc(var(--depth) * 1.42);
+      transform: rotate(-45deg);
+      transform-origin: left center;
+    }
+
+    .depth-line--lt {
+      left: 0;
+      top: var(--depth);
+    }
+
+    .depth-line--rt {
+      left: var(--front-width);
+      top: var(--depth);
+    }
+
+    .depth-line--rb {
+      left: var(--front-width);
+      bottom: 0;
+    }
+
+    .back-line--top {
       left: var(--depth);
       top: 0;
-      width: calc(100% - var(--depth));
+      width: var(--front-width);
+      height: 4px;
+    }
+
+    .back-line--right {
+      right: 0;
+      top: 0;
+      width: 4px;
+      height: var(--front-height);
+    }
+
+    .back-line--bottom-right {
+      right: 0;
+      bottom: var(--depth);
+      width: 4px;
       height: var(--depth);
-      background: linear-gradient(135deg, rgba(255,255,255,.74), rgba(63, 90, 103, .38));
-      border: 4px solid #384b54;
-      border-bottom: 0;
-      transform: skewX(-52deg);
-      transform-origin: left bottom;
-      z-index: 1;
+      opacity: .55;
     }
 
     .box-cell {
@@ -292,7 +320,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-width: 90px;
-      border-right: 4px solid #384b54;
+      border-right: 4px solid var(--cg-structure);
       background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(224, 239, 247, .35));
     }
 
@@ -645,8 +673,12 @@
       el.closetPreview.innerHTML = `
         <div class="measure-line">Largura total: ${c.larguraTotal} mm</div>
         <div class="closet3d" style="--boxes:${c.totalCaixas};">
-          <div class="closet-top"></div>
-          <div class="closet-side"></div>
+          <span class="depth-line depth-line--lt"></span>
+          <span class="depth-line depth-line--rt"></span>
+          <span class="depth-line depth-line--rb"></span>
+          <span class="back-line back-line--top"></span>
+          <span class="back-line back-line--right"></span>
+          <span class="back-line back-line--bottom-right"></span>
           <div class="closet-face">
             ${c.caixas.map((caixa, index) => `
               <div class="box-cell">
