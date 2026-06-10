@@ -5,7 +5,405 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Engine de Orçamento para Closet | ColorGlass</title>
   <meta name="description" content="Monte e orce closets por módulos estruturais com perfis editáveis e visualização 2D.">
-  <link rel="stylesheet" href="/static/closet.css">
+  <style>
+    :root {
+      --cg-blue: #1079ba;
+      --cg-blue-dark: #0d5d8c;
+      --cg-blue-soft: #e7f3fb;
+      --cg-gold: #f0c24c;
+      --cg-red: #dc3545;
+      --cg-text: #1f2933;
+      --cg-muted: #6b7280;
+      --cg-border: rgba(16, 121, 186, 0.16);
+      --cg-shadow: 0 18px 45px rgba(15, 44, 62, 0.12);
+      --cg-shadow-soft: 0 10px 24px rgba(15, 44, 62, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(16, 121, 186, 0.18), transparent 35%), linear-gradient(135deg, #f5fbff 0%, #eef4f9 48%, #f8fbff 100%);
+      color: var(--cg-text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    .closet-app {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding: 28px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+      border-radius: 24px;
+      box-shadow: var(--cg-shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: rgba(255, 255, 255, 0.76);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero h1, .panel h2 { margin: 0; }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.05;
+    }
+
+    .hero__text {
+      max-width: 820px;
+      margin: 14px 0 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 1.03rem;
+    }
+
+    .hero__badge {
+      min-width: 150px;
+      padding: 18px;
+      text-align: center;
+      color: var(--cg-blue-dark);
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .hero__badge span {
+      display: block;
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+
+    .hero__badge small { color: var(--cg-muted); }
+
+    .layout-grid, .content-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .layout-grid {
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      align-items: stretch;
+    }
+
+    .content-grid {
+      grid-template-columns: minmax(0, 1fr) 360px;
+      margin-top: 20px;
+    }
+
+    .panel {
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--cg-border);
+      border-radius: 22px;
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .panel__header { margin-bottom: 18px; }
+
+    .panel__header--row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .panel__header p {
+      margin: 6px 0 0;
+      color: var(--cg-muted);
+    }
+
+    .form-grid, .module-card__grid, .profile-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      color: var(--cg-text);
+      font-weight: 700;
+    }
+
+    .field span { font-size: 0.88rem; }
+
+    .field input, .field select {
+      width: 100%;
+      padding: 11px 12px;
+      color: var(--cg-text);
+      background: #fff;
+      border: 1px solid rgba(16, 121, 186, 0.22);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--cg-blue);
+      box-shadow: 0 0 0 4px rgba(16, 121, 186, 0.12);
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: var(--cg-shadow-soft);
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
+    }
+
+    .btn-secondary {
+      color: var(--cg-blue-dark);
+      background: var(--cg-blue-soft);
+    }
+
+    .btn-danger {
+      color: #fff;
+      background: var(--cg-red);
+    }
+
+    .hint-box {
+      display: grid;
+      gap: 6px;
+      margin-top: 18px;
+      padding: 14px;
+      color: #594414;
+      background: #fff7df;
+      border: 1px solid rgba(240, 194, 76, 0.38);
+      border-radius: 16px;
+    }
+
+    .dimensions-pill {
+      flex: 0 0 auto;
+      padding: 10px 14px;
+      color: var(--cg-blue-dark);
+      background: var(--cg-blue-soft);
+      border-radius: 999px;
+      font-weight: 800;
+    }
+
+    .closet-preview-wrap {
+      min-height: 470px;
+      padding: 18px;
+      overflow: auto;
+      background: linear-gradient(90deg, rgba(16, 121, 186, 0.07) 1px, transparent 1px), linear-gradient(rgba(16, 121, 186, 0.07) 1px, transparent 1px), #fbfdff;
+      background-size: 24px 24px;
+      border: 1px dashed rgba(16, 121, 186, 0.30);
+      border-radius: 18px;
+    }
+
+    .closet-preview { min-width: 620px; }
+
+    .preview-shell {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .preview-measure {
+      color: var(--cg-muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .preview-body {
+      display: grid;
+      gap: 8px;
+    }
+
+    .preview-top, .preview-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+      padding: 8px;
+      color: #604914;
+      background: linear-gradient(135deg, #fff3c4, #f7d36e);
+      border: 2px solid rgba(112, 85, 21, 0.30);
+      border-radius: 14px;
+      font-weight: 800;
+    }
+
+    .preview-columns {
+      display: grid;
+      gap: 8px;
+      min-height: 285px;
+    }
+
+    .preview-module {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 74px;
+      min-height: 210px;
+      padding: 10px;
+      overflow: hidden;
+      color: #fff;
+      background: linear-gradient(145deg, rgba(16, 121, 186, 0.96), rgba(13, 93, 140, 0.96));
+      border: 2px solid rgba(255, 255, 255, 0.60);
+      border-radius: 16px;
+      box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.12);
+      text-align: center;
+    }
+
+    .preview-module.central { background: linear-gradient(145deg, #19a8d8, #1079ba); }
+
+    .preview-module::before, .preview-module::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      pointer-events: none;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      border-radius: 10px;
+    }
+
+    .preview-module__content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 6px;
+    }
+
+    .preview-module__name { font-weight: 900; }
+
+    .preview-module__measure {
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.76rem;
+    }
+
+    .modules-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .module-card {
+      padding: 16px;
+      background: #fff;
+      border: 1px solid rgba(16, 121, 186, 0.14);
+      border-radius: 18px;
+    }
+
+    .module-card__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .module-card__title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .module-card__title h3 {
+      margin: 0;
+      color: var(--cg-blue-dark);
+    }
+
+    .module-card__meta {
+      color: var(--cg-muted);
+      font-size: 0.9rem;
+    }
+
+    .module-card__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 14px;
+    }
+
+    .profile-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .summary-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+    }
+
+    .summary-list div {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px;
+      background: #f8fbff;
+      border: 1px solid rgba(16, 121, 186, 0.12);
+      border-radius: 14px;
+    }
+
+    .summary-list dt {
+      color: var(--cg-muted);
+      font-weight: 700;
+    }
+
+    .summary-list dd {
+      margin: 0;
+      color: var(--cg-blue-dark);
+      font-weight: 900;
+      text-align: right;
+    }
+
+    @media (max-width: 1100px) {
+      .layout-grid, .content-grid { grid-template-columns: 1fr; }
+      .summary-panel { order: -1; }
+    }
+
+    @media (max-width: 760px) {
+      .closet-app {
+        width: min(100% - 18px, 1440px);
+        padding-top: 9px;
+      }
+      .hero, .panel__header--row, .module-card__header { flex-direction: column; }
+      .form-grid, .module-card__grid, .profile-grid { grid-template-columns: 1fr; }
+      .hero, .panel {
+        padding: 18px;
+        border-radius: 18px;
+      }
+      .closet-preview-wrap { min-height: 380px; }
+    }
+  </style>
 </head>
 <body>
   <main class="closet-app">
@@ -106,35 +504,360 @@
         </div>
 
         <dl class="summary-list">
-          <div>
-            <dt>Quantidade total de módulos</dt>
-            <dd id="resumoTotalModulos">0</dd>
-          </div>
-          <div>
-            <dt>Quantidade total de perfis</dt>
-            <dd id="resumoTotalPerfis">0</dd>
-          </div>
-          <div>
-            <dt>Metragem aproximada de alumínio</dt>
-            <dd id="resumoMetragemAluminio">0 m</dd>
-          </div>
-          <div>
-            <dt>Altura total</dt>
-            <dd id="resumoAlturaTotal">0 mm</dd>
-          </div>
-          <div>
-            <dt>Largura total</dt>
-            <dd id="resumoLarguraTotal">0 mm</dd>
-          </div>
-          <div>
-            <dt>Profundidade total</dt>
-            <dd id="resumoProfundidadeTotal">0 mm</dd>
-          </div>
+          <div><dt>Quantidade total de módulos</dt><dd id="resumoTotalModulos">0</dd></div>
+          <div><dt>Quantidade total de perfis</dt><dd id="resumoTotalPerfis">0</dd></div>
+          <div><dt>Metragem aproximada de alumínio</dt><dd id="resumoMetragemAluminio">0 m</dd></div>
+          <div><dt>Altura total</dt><dd id="resumoAlturaTotal">0 mm</dd></div>
+          <div><dt>Largura total</dt><dd id="resumoLarguraTotal">0 mm</dd></div>
+          <div><dt>Profundidade total</dt><dd id="resumoProfundidadeTotal">0 mm</dd></div>
         </dl>
       </aside>
     </section>
   </main>
 
-  <script src="/static/closet.js" defer></script>
+  <script>
+    const perfisDisponiveis = ["9700", "2215", "1036", "088", "3545", "3446"];
+
+    const closetState = {
+      profundidade: 600,
+      alturaUtil: 2400,
+      larguraLateral: 350,
+      larguraCentralPadrao: 700,
+      alturaSuperior: 100,
+      alturaInferior: 100,
+      contadorCentral: 0,
+      modulos: []
+    };
+
+    const elementos = {};
+
+    document.addEventListener("DOMContentLoaded", () => {
+      mapearElementos();
+      inicializarCloset();
+      vincularEventosGerais();
+      atualizarInterface();
+    });
+
+    function mapearElementos() {
+      elementos.profundidade = document.getElementById("inputProfundidade");
+      elementos.alturaUtil = document.getElementById("inputAlturaUtil");
+      elementos.larguraLateral = document.getElementById("inputLarguraLateral");
+      elementos.alturaSuperior = document.getElementById("inputAlturaSuperior");
+      elementos.alturaInferior = document.getElementById("inputAlturaInferior");
+      elementos.larguraCentralPadrao = document.getElementById("inputLarguraCentralPadrao");
+      elementos.btnAdicionarCentral = document.getElementById("btnAdicionarCentral");
+      elementos.btnRemoverUltimoCentral = document.getElementById("btnRemoverUltimoCentral");
+      elementos.modulosEditor = document.getElementById("modulosEditor");
+      elementos.closetPreview = document.getElementById("closetPreview");
+      elementos.badgeModulos = document.getElementById("badgeModulos");
+      elementos.dimensoesResumoCurto = document.getElementById("dimensoesResumoCurto");
+      elementos.resumoTotalModulos = document.getElementById("resumoTotalModulos");
+      elementos.resumoTotalPerfis = document.getElementById("resumoTotalPerfis");
+      elementos.resumoMetragemAluminio = document.getElementById("resumoMetragemAluminio");
+      elementos.resumoAlturaTotal = document.getElementById("resumoAlturaTotal");
+      elementos.resumoLarguraTotal = document.getElementById("resumoLarguraTotal");
+      elementos.resumoProfundidadeTotal = document.getElementById("resumoProfundidadeTotal");
+    }
+
+    function inicializarCloset() {
+      closetState.contadorCentral = 0;
+      closetState.modulos = [
+        criarModuloBase("lateral-esquerdo", "lateral", "Lateral esquerdo", closetState.larguraLateral, closetState.alturaUtil),
+        criarModuloBase("lateral-direito", "lateral", "Lateral direito", closetState.larguraLateral, closetState.alturaUtil),
+        criarModuloBase("superior", "superior", "Superior", calcularLarguraEstrutural(), closetState.alturaSuperior),
+        criarModuloBase("inferior", "inferior", "Inferior", calcularLarguraEstrutural(), closetState.alturaInferior)
+      ];
+      sincronizarModulosEstruturais();
+    }
+
+    function criarModuloBase(id, tipo, nome, largura, altura) {
+      return { id, tipo, nome, largura, altura, profundidade: closetState.profundidade, perfis: ["9700", "9700", "9700", "9700"] };
+    }
+
+    function criarModuloCentral(largura = closetState.larguraCentralPadrao) {
+      closetState.contadorCentral += 1;
+      return criarModuloBase(`central-${closetState.contadorCentral}`, "central", `Central ${closetState.contadorCentral}`, largura, closetState.alturaUtil);
+    }
+
+    function vincularEventosGerais() {
+      elementos.profundidade.addEventListener("input", (event) => {
+        closetState.profundidade = normalizarNumero(event.target.value, 1);
+        sincronizarModulosEstruturais();
+        atualizarInterface();
+      });
+
+      elementos.alturaUtil.addEventListener("input", (event) => {
+        closetState.alturaUtil = normalizarNumero(event.target.value, 1);
+        sincronizarModulosEstruturais();
+        atualizarInterface();
+      });
+
+      elementos.larguraLateral.addEventListener("input", (event) => {
+        closetState.larguraLateral = normalizarNumero(event.target.value, 1);
+        sincronizarModulosEstruturais();
+        atualizarInterface();
+      });
+
+      elementos.alturaSuperior.addEventListener("input", (event) => {
+        closetState.alturaSuperior = normalizarNumero(event.target.value, 1);
+        sincronizarModulosEstruturais();
+        atualizarInterface();
+      });
+
+      elementos.alturaInferior.addEventListener("input", (event) => {
+        closetState.alturaInferior = normalizarNumero(event.target.value, 1);
+        sincronizarModulosEstruturais();
+        atualizarInterface();
+      });
+
+      elementos.larguraCentralPadrao.addEventListener("input", (event) => {
+        closetState.larguraCentralPadrao = normalizarNumero(event.target.value, 1);
+      });
+
+      elementos.btnAdicionarCentral.addEventListener("click", adicionarModuloCentral);
+      elementos.btnRemoverUltimoCentral.addEventListener("click", removerUltimoModuloCentral);
+    }
+
+    function normalizarNumero(valor, minimo = 0) {
+      const numero = Number(valor);
+      return Number.isNaN(numero) ? minimo : Math.max(minimo, numero);
+    }
+
+    function obterModulosCentrais() {
+      return closetState.modulos.filter((modulo) => modulo.tipo === "central");
+    }
+
+    function obterModulosVerticais() {
+      return closetState.modulos.filter((modulo) => modulo.tipo === "lateral" || modulo.tipo === "central");
+    }
+
+    function calcularLarguraEstrutural() {
+      return obterModulosVerticais().reduce((total, modulo) => total + normalizarNumero(modulo.largura), 0);
+    }
+
+    function calcularAlturaTotal() {
+      return closetState.alturaInferior + closetState.alturaUtil + closetState.alturaSuperior;
+    }
+
+    function sincronizarModulosEstruturais() {
+      const larguraEstrutural = calcularLarguraEstrutural();
+
+      closetState.modulos.forEach((modulo) => {
+        modulo.profundidade = closetState.profundidade;
+
+        if (modulo.tipo === "lateral") {
+          modulo.largura = closetState.larguraLateral;
+          modulo.altura = closetState.alturaUtil;
+        }
+
+        if (modulo.tipo === "central") modulo.altura = closetState.alturaUtil;
+
+        if (modulo.tipo === "superior") {
+          modulo.largura = larguraEstrutural;
+          modulo.altura = closetState.alturaSuperior;
+        }
+
+        if (modulo.tipo === "inferior") {
+          modulo.largura = larguraEstrutural;
+          modulo.altura = closetState.alturaInferior;
+        }
+      });
+    }
+
+    function calcularModulo(modulo) {
+      const largura = normalizarNumero(modulo.largura);
+      const altura = normalizarNumero(modulo.altura);
+      const profundidade = normalizarNumero(modulo.profundidade);
+      let comprimentosPerfis;
+
+      if (modulo.tipo === "lateral") {
+        comprimentosPerfis = [altura, altura, profundidade, profundidade];
+      } else if (modulo.tipo === "superior" || modulo.tipo === "inferior") {
+        comprimentosPerfis = [largura, largura, profundidade, profundidade];
+      } else {
+        comprimentosPerfis = [altura, altura, largura, largura];
+      }
+
+      const totalAluminioMm = comprimentosPerfis.reduce((total, comprimento) => total + comprimento, 0);
+
+      return { ...modulo, comprimentosPerfis, totalPerfis: modulo.perfis.length, totalAluminioMm, totalAluminioM: totalAluminioMm / 1000 };
+    }
+
+    function calcularCloset() {
+      sincronizarModulosEstruturais();
+      const modulosCalculados = closetState.modulos.map(calcularModulo);
+      const larguraTotal = calcularLarguraEstrutural();
+      const alturaTotal = calcularAlturaTotal();
+      const profundidadeTotal = closetState.profundidade;
+      const totalPerfis = modulosCalculados.reduce((total, modulo) => total + modulo.totalPerfis, 0);
+      const totalAluminioMm = modulosCalculados.reduce((total, modulo) => total + modulo.totalAluminioMm, 0);
+
+      return { modulosCalculados, totalModulos: modulosCalculados.length, totalPerfis, totalAluminioMm, totalAluminioM: totalAluminioMm / 1000, larguraTotal, alturaTotal, profundidadeTotal };
+    }
+
+    function atualizarInterface() {
+      const calculo = calcularCloset();
+      renderizarModulos(calculo);
+      renderizarVisualizacao(calculo);
+      renderizarResumo(calculo);
+    }
+
+    function renderizarModulos(calculo) {
+      elementos.modulosEditor.innerHTML = "";
+
+      calculo.modulosCalculados.forEach((modulo) => {
+        const card = document.createElement("article");
+        card.className = "module-card";
+        card.innerHTML = `
+          <div class="module-card__header">
+            <div class="module-card__title">
+              <h3>${modulo.nome}</h3>
+              <span class="module-card__meta">Tipo: ${modulo.tipo} · Alumínio: ${formatarMetro(modulo.totalAluminioM)}</span>
+            </div>
+            ${modulo.tipo === "central" ? `<button class="btn btn-danger" type="button" data-remove-central="${modulo.id}">Remover</button>` : ""}
+          </div>
+          <div class="module-card__grid">
+            <label class="field">
+              <span>Largura</span>
+              <input type="number" min="1" step="10" value="${modulo.largura}" data-modulo-medida="largura" data-modulo-id="${modulo.id}" ${modulo.tipo === "superior" || modulo.tipo === "inferior" ? "readonly" : ""}>
+            </label>
+            <label class="field">
+              <span>Altura</span>
+              <input type="number" min="1" step="10" value="${modulo.altura}" data-modulo-medida="altura" data-modulo-id="${modulo.id}" ${modulo.tipo !== "central" ? "readonly" : ""}>
+            </label>
+            <label class="field">
+              <span>Profundidade</span>
+              <input type="number" min="1" step="10" value="${modulo.profundidade}" data-modulo-medida="profundidade" data-modulo-id="${modulo.id}" readonly>
+            </label>
+          </div>
+          <div class="profile-grid">
+            ${modulo.perfis.map((perfil, index) => criarSelectPerfilHtml(modulo.id, index, perfil, modulo.comprimentosPerfis[index])).join("")}
+          </div>
+        `;
+        elementos.modulosEditor.appendChild(card);
+      });
+
+      elementos.modulosEditor.querySelectorAll("[data-modulo-medida]").forEach((input) => {
+        input.addEventListener("input", alterarMedidaModulo);
+      });
+
+      elementos.modulosEditor.querySelectorAll("[data-perfil-posicao]").forEach((select) => {
+        select.addEventListener("change", (event) => {
+          atualizarPerfilModulo(event.target.dataset.moduloId, Number(event.target.dataset.perfilPosicao), event.target.value);
+        });
+      });
+
+      elementos.modulosEditor.querySelectorAll("[data-remove-central]").forEach((button) => {
+        button.addEventListener("click", () => removerModuloCentral(button.dataset.removeCentral));
+      });
+    }
+
+    function criarSelectPerfilHtml(idModulo, posicaoPerfil, perfilAtual, comprimento) {
+      const opcoes = perfisDisponiveis.map((perfil) => {
+        const selected = perfil === perfilAtual ? "selected" : "";
+        return `<option value="${perfil}" ${selected}>${perfil}</option>`;
+      }).join("");
+
+      return `
+        <label class="field">
+          <span>Perfil ${posicaoPerfil + 1} · ${comprimento} mm</span>
+          <select data-modulo-id="${idModulo}" data-perfil-posicao="${posicaoPerfil}">
+            ${opcoes}
+          </select>
+        </label>
+      `;
+    }
+
+    function alterarMedidaModulo(event) {
+      const modulo = closetState.modulos.find((item) => item.id === event.target.dataset.moduloId);
+      const medida = event.target.dataset.moduloMedida;
+      if (!modulo || !medida) return;
+
+      modulo[medida] = normalizarNumero(event.target.value, 1);
+
+      if (modulo.tipo === "lateral" && medida === "largura") {
+        closetState.larguraLateral = modulo.largura;
+        elementos.larguraLateral.value = modulo.largura;
+      }
+
+      if (modulo.tipo === "central" && medida === "altura") {
+        closetState.alturaUtil = modulo.altura;
+        elementos.alturaUtil.value = modulo.altura;
+      }
+
+      sincronizarModulosEstruturais();
+      atualizarInterface();
+    }
+
+    function renderizarVisualizacao(calculo) {
+      const verticais = obterModulosVerticais();
+      const totalLargura = Math.max(calculo.larguraTotal, 1);
+      const gridTemplateColumns = verticais.map((modulo) => `${Math.max((modulo.largura / totalLargura) * 100, 8)}fr`).join(" ");
+
+      elementos.closetPreview.innerHTML = `
+        <div class="preview-shell">
+          <div class="preview-measure">Largura total: ${calculo.larguraTotal} mm</div>
+          <div class="preview-body">
+            <div class="preview-top">Módulo superior · ${calculo.larguraTotal} × ${closetState.alturaSuperior} × ${calculo.profundidadeTotal} mm</div>
+            <div class="preview-columns" style="grid-template-columns: ${gridTemplateColumns};">
+              ${verticais.map((modulo) => `
+                <div class="preview-module ${modulo.tipo}">
+                  <div class="preview-module__content">
+                    <span class="preview-module__name">${modulo.nome}</span>
+                    <span class="preview-module__measure">${modulo.largura} × ${modulo.altura} × ${modulo.profundidade} mm</span>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+            <div class="preview-bottom">Módulo inferior · ${calculo.larguraTotal} × ${closetState.alturaInferior} × ${calculo.profundidadeTotal} mm</div>
+          </div>
+          <div class="preview-measure">Altura total: ${calculo.alturaTotal} mm · Profundidade: ${calculo.profundidadeTotal} mm</div>
+        </div>
+      `;
+    }
+
+    function renderizarResumo(calculo) {
+      elementos.badgeModulos.textContent = `${calculo.totalModulos} módulos`;
+      elementos.dimensoesResumoCurto.textContent = `${calculo.larguraTotal} × ${calculo.alturaTotal} × ${calculo.profundidadeTotal} mm`;
+      elementos.resumoTotalModulos.textContent = calculo.totalModulos;
+      elementos.resumoTotalPerfis.textContent = calculo.totalPerfis;
+      elementos.resumoMetragemAluminio.textContent = formatarMetro(calculo.totalAluminioM);
+      elementos.resumoAlturaTotal.textContent = `${calculo.alturaTotal} mm`;
+      elementos.resumoLarguraTotal.textContent = `${calculo.larguraTotal} mm`;
+      elementos.resumoProfundidadeTotal.textContent = `${calculo.profundidadeTotal} mm`;
+      elementos.btnRemoverUltimoCentral.disabled = obterModulosCentrais().length === 0;
+    }
+
+    function adicionarModuloCentral() {
+      const novoModulo = criarModuloCentral();
+      const indiceLateralDireito = closetState.modulos.findIndex((modulo) => modulo.id === "lateral-direito");
+      closetState.modulos.splice(indiceLateralDireito, 0, novoModulo);
+      sincronizarModulosEstruturais();
+      atualizarInterface();
+    }
+
+    function removerUltimoModuloCentral() {
+      const centrais = obterModulosCentrais();
+      const ultimoCentral = centrais[centrais.length - 1];
+      if (ultimoCentral) removerModuloCentral(ultimoCentral.id);
+    }
+
+    function removerModuloCentral(id) {
+      closetState.modulos = closetState.modulos.filter((modulo) => modulo.id !== id || modulo.tipo !== "central");
+      sincronizarModulosEstruturais();
+      atualizarInterface();
+    }
+
+    function atualizarPerfilModulo(idModulo, posicaoPerfil, perfilSelecionado) {
+      const modulo = closetState.modulos.find((item) => item.id === idModulo);
+      if (!modulo || !perfisDisponiveis.includes(perfilSelecionado)) return;
+      modulo.perfis[posicaoPerfil] = perfilSelecionado;
+      atualizarInterface();
+    }
+
+    function formatarMetro(valor) {
+      return `${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
+    }
+  </script>
 </body>
 </html>
