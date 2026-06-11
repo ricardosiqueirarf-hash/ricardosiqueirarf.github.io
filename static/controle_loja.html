@@ -192,12 +192,13 @@
         <div>
           <h1>Status da produção (somente visualização)</h1>
           <p>
-            Esta tela é apenas para consulta do andamento dos pedidos.
-            A ordenação mostra primeiro os pedidos com data de aprovação mais recente; depois os pedidos sem data, pelo maior número de pedido.
+            Esta tela mostra primeiro os pedidos em andamento nos status <b>1, 2, 3 e 4</b>.
+            Pedidos <b>5 - Entregue</b> ficam ocultos inicialmente e podem ser exibidos em <b>Ver mais entregues</b>.
           </p>
         </div>
         <div class="toolbar">
           <button class="btn-outline" onclick="voltar()">Voltar</button>
+          <button class="btn-outline" id="btnVerEntregues" onclick="alternarEntregues()" style="display:none;">Ver mais entregues</button>
           <button class="btn-primary" id="btnRecarregar" onclick="carregarPedidosProducao()">Recarregar</button>
         </div>
       </div>
@@ -230,7 +231,9 @@
 
   <script>
     const API_BASE = "https://colorglass.onrender.com";
-    const STATUS_PRODUCAO = [2, 3, 4, 5];
+    const STATUS_VISIVEIS_INICIALMENTE = [1, 2, 3, 4];
+    const STATUS_ENTREGUE = 5;
+    const STATUS_BUSCA = [1, 2, 3, 4, 5];
     const STATUS_LABELS = {
       0: "Cancelado",
       1: "Orçamento",
@@ -239,6 +242,11 @@
       4: "Separado",
       5: "Entregue"
     };
+
+    let mostrarEntregues = false;
+    let pedidosVisiveisOrdenados = [];
+    let pedidosEntreguesOrdenados = [];
+    let lojasPorStoreIDAtual = new Map();
 
     function getToken() {
       return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
@@ -478,6 +486,41 @@
       }).join("");
     }
 
+    function atualizarBotaoEntregues() {
+      const btn = document.getElementById("btnVerEntregues");
+      if (!btn) return;
+
+      if (!pedidosEntreguesOrdenados.length) {
+        btn.style.display = "none";
+        return;
+      }
+
+      btn.style.display = "inline-block";
+      btn.textContent = mostrarEntregues
+        ? `Ocultar entregues (${pedidosEntreguesOrdenados.length})`
+        : `Ver mais entregues (${pedidosEntreguesOrdenados.length})`;
+    }
+
+    function renderizarPedidosComFiltro() {
+      const pedidosParaRenderizar = mostrarEntregues
+        ? [...pedidosVisiveisOrdenados, ...pedidosEntreguesOrdenados]
+        : pedidosVisiveisOrdenados;
+
+      renderTabela(pedidosParaRenderizar, lojasPorStoreIDAtual);
+      atualizarBotaoEntregues();
+    }
+
+    function alternarEntregues() {
+      mostrarEntregues = !mostrarEntregues;
+      renderizarPedidosComFiltro();
+      setStatusGlobal(
+        mostrarEntregues
+          ? `Mostrando ${pedidosVisiveisOrdenados.length} pedido(s) em andamento e ${pedidosEntreguesOrdenados.length} entregue(s).`
+          : `Mostrando ${pedidosVisiveisOrdenados.length} pedido(s) em andamento. Entregues ocultos: ${pedidosEntreguesOrdenados.length}.`,
+        "ok"
+      );
+    }
+
     async function carregarMapaLojas(token) {
       const res = await fetch(`${API_BASE}/api/usuarios`, {
         headers: token ? { "Authorization": `Bearer ${token}` } : {}
@@ -537,7 +580,7 @@
 
       try {
         const [res, lojasPorStoreID] = await Promise.all([
-          fetch(`${API_BASE}/api/financeiro?status=2,3,4,5&limit=2000`, {
+          fetch(`${API_BASE}/api/financeiro?status=1,2,3,4,5&limit=2000`, {
             headers: { "Authorization": `Bearer ${token}` }
           }),
           carregarMapaLojas(token)
@@ -548,11 +591,19 @@
           throw new Error(data?.error || "Falha ao carregar pedidos.");
         }
 
-        const emProducao = data.filter(o => STATUS_PRODUCAO.includes(Number(o.status)));
-        const emProducaoOrdenado = ordenarPedidosProducao(emProducao);
-        const pedidosComValorPago = await carregarValoresPagosPedidos(emProducaoOrdenado, token);
-        renderTabela(pedidosComValorPago, lojasPorStoreID);
-        setStatusGlobal(`Foram encontrados ${pedidosComValorPago.length} pedido(s). Ordenação: aprovados por data mais recente; sem data por maior número de pedido.`, "ok");
+        const pedidosStatusBusca = data.filter(o => STATUS_BUSCA.includes(Number(o.status)));
+        const pedidosComValorPago = await carregarValoresPagosPedidos(pedidosStatusBusca, token);
+
+        const pedidosVisiveis = pedidosComValorPago.filter(o => STATUS_VISIVEIS_INICIALMENTE.includes(Number(o.status)));
+        const pedidosEntregues = pedidosComValorPago.filter(o => Number(o.status) === STATUS_ENTREGUE);
+
+        pedidosVisiveisOrdenados = ordenarPedidosProducao(pedidosVisiveis);
+        pedidosEntreguesOrdenados = ordenarPedidosProducao(pedidosEntregues);
+        lojasPorStoreIDAtual = lojasPorStoreID;
+        mostrarEntregues = false;
+
+        renderizarPedidosComFiltro();
+        setStatusGlobal(`Mostrando ${pedidosVisiveisOrdenados.length} pedido(s) em andamento. Entregues ocultos: ${pedidosEntreguesOrdenados.length}.`, "ok");
       } catch (err) {
         console.error(err);
         setStatusGlobal(err.message || "Erro ao buscar pedidos.", "erro");
