@@ -216,8 +216,7 @@
           <h1>Pedidos em controle (status 2, 3 e 4)</h1>
           <p>
             Esta tela lista pedidos nos status <b>Aprovado (2)</b>, <b>Em Produção (3)</b> e <b>Separado (4)</b>.
-            Você pode alterar entre os status permitidos e para <b>Entregue (5)</b>. Ao salvar como
-            <b>5 - Entregue</b>, o pedido sai da listagem.
+            A ordenação mostra primeiro os pedidos com data de aprovação mais recente; depois os pedidos sem data, pelo maior número de pedido.
           </p>
         </div>
         <div class="toolbar">
@@ -311,6 +310,37 @@
       }
       const parsed = Number(normalizado);
       return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function parseNumeroPedido(numeroPedido) {
+      const numero = Number(String(numeroPedido ?? "").replace(/[^0-9.-]/g, ""));
+      return Number.isFinite(numero) ? numero : 0;
+    }
+
+    function parseDataAprovacao(dataAprovacao) {
+      if (!dataAprovacao) return null;
+      const timestamp = new Date(dataAprovacao).getTime();
+      return Number.isFinite(timestamp) ? timestamp : null;
+    }
+
+    function ordenarPedidosEmControle(pedidos) {
+      return [...pedidos].sort((a, b) => {
+        const dataA = parseDataAprovacao(a?.data_aprovacao);
+        const dataB = parseDataAprovacao(b?.data_aprovacao);
+        const aTemData = dataA !== null;
+        const bTemData = dataB !== null;
+
+        if (aTemData && !bTemData) return -1;
+        if (!aTemData && bTemData) return 1;
+
+        if (aTemData && bTemData) {
+          const diferencaData = dataB - dataA;
+          if (diferencaData !== 0) return diferencaData;
+          return parseNumeroPedido(b?.numero_pedido) - parseNumeroPedido(a?.numero_pedido);
+        }
+
+        return parseNumeroPedido(b?.numero_pedido) - parseNumeroPedido(a?.numero_pedido);
+      });
     }
 
     function getStatusLabel(status) {
@@ -466,8 +496,9 @@
         }
 
         const emControle = data.filter(o => STATUS_EM_CONTROLE.includes(Number(o.status)));
-        renderTabela(emControle, lojasPorStoreID);
-        setStatusGlobal(`Foram encontrados ${emControle.length} pedido(s) nos status 2, 3 e 4.`, "ok");
+        const emControleOrdenado = ordenarPedidosEmControle(emControle);
+        renderTabela(emControleOrdenado, lojasPorStoreID);
+        setStatusGlobal(`Foram encontrados ${emControleOrdenado.length} pedido(s) nos status 2, 3 e 4. Ordenação: aprovados por data mais recente; sem data por maior número de pedido.`, "ok");
       } catch (err) {
         console.error(err);
         setStatusGlobal(err.message || "Erro ao buscar pedidos em controle.", "erro");
@@ -476,7 +507,6 @@
         btn.disabled = false;
       }
     }
-
 
     async function atualizarPago(uuid, inputId, btnId) {
       const token = getToken();
