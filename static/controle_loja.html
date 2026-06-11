@@ -193,7 +193,7 @@
           <h1>Status da produção (somente visualização)</h1>
           <p>
             Esta tela é apenas para consulta do andamento dos pedidos.
-            Não é possível alterar status por aqui.
+            A ordenação mostra primeiro os pedidos com data de aprovação mais recente; depois os pedidos sem data, pelo maior número de pedido.
           </p>
         </div>
         <div class="toolbar">
@@ -340,6 +340,38 @@
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit"
+      });
+    }
+
+    function parseNumeroPedido(numeroPedido) {
+      const numero = Number(String(numeroPedido ?? "").replace(/[^0-9.-]/g, ""));
+      return Number.isFinite(numero) ? numero : 0;
+    }
+
+    function parseDataAprovacaoPedido(pedido) {
+      const valor = getDataAprovacao(pedido);
+      if (!valor) return null;
+      const timestamp = new Date(valor).getTime();
+      return Number.isFinite(timestamp) ? timestamp : null;
+    }
+
+    function ordenarPedidosProducao(pedidos) {
+      return [...pedidos].sort((a, b) => {
+        const dataA = parseDataAprovacaoPedido(a);
+        const dataB = parseDataAprovacaoPedido(b);
+        const aTemData = dataA !== null;
+        const bTemData = dataB !== null;
+
+        if (aTemData && !bTemData) return -1;
+        if (!aTemData && bTemData) return 1;
+
+        if (aTemData && bTemData) {
+          const diferencaData = dataB - dataA;
+          if (diferencaData !== 0) return diferencaData;
+          return parseNumeroPedido(b?.numero_pedido) - parseNumeroPedido(a?.numero_pedido);
+        }
+
+        return parseNumeroPedido(b?.numero_pedido) - parseNumeroPedido(a?.numero_pedido);
       });
     }
 
@@ -517,9 +549,10 @@
         }
 
         const emProducao = data.filter(o => STATUS_PRODUCAO.includes(Number(o.status)));
-        const pedidosComValorPago = await carregarValoresPagosPedidos(emProducao, token);
+        const emProducaoOrdenado = ordenarPedidosProducao(emProducao);
+        const pedidosComValorPago = await carregarValoresPagosPedidos(emProducaoOrdenado, token);
         renderTabela(pedidosComValorPago, lojasPorStoreID);
-        setStatusGlobal(`Foram encontrados ${pedidosComValorPago.length} pedido(s).`, "ok");
+        setStatusGlobal(`Foram encontrados ${pedidosComValorPago.length} pedido(s). Ordenação: aprovados por data mais recente; sem data por maior número de pedido.`, "ok");
       } catch (err) {
         console.error(err);
         setStatusGlobal(err.message || "Erro ao buscar pedidos.", "erro");
