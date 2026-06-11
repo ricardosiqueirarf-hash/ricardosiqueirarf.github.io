@@ -1,0 +1,46 @@
+{
+  "name": "ColorGlass Sistema",
+  "short_name": "ColorGlass",
+  "description": "Sistema interno da ColorGlass para loja, aprovação, portas e controle de produção.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1079ba",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Login",
+      "short_name": "Login",
+      "url": "/login.html"
+    },
+    {
+      "name": "Loja",
+      "short_name": "Loja",
+      "url": "/index_loja.html"
+    },
+    {
+      "name": "Aprovação",
+      "short_name": "Aprovação",
+      "url": "/aprovacao.html"
+    },
+    {
+      "name": "Portas",
+      "short_name": "Portas",
+      "url": "/portas.html"
+    },
+    {
+      "name": "Controle Loja",
+      "short_name": "Controle",
+      "url": "/controle_loja.html"
+    }
+  ]
+}
