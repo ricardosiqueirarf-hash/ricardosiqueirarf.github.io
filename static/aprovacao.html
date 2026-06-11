@@ -4,9 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aprovar Pedido | ColorGlass</title>
-<meta name="description" content="Aprovação de pedido ColorGlass com emissão de boleto." />
+<meta name="description" content="Aprovação de pedido ColorGlass com diagnóstico de erro." />
 <meta name="robots" content="noindex, nofollow" />
-
 <style>
 :root {
   --cg-blue: #1079ba;
@@ -17,10 +16,10 @@
   --cg-text: #1f2933;
   --cg-muted: #6b7280;
   --cg-border: rgba(16, 121, 186, 0.10);
+  --cg-error: #c23616;
+  --cg-ok: #0c7c3c;
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
-
 body {
   background:
     radial-gradient(circle at top, rgba(16,121,186,0.15), transparent 55%),
@@ -32,16 +31,7 @@ body {
   justify-content: center;
   padding: 32px 20px;
 }
-
-.page {
-  width: min(1100px, 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  animation: fadeIn 0.9s ease;
-}
-
-/* Header igual ao seu padrão */
+.page { width: min(1100px, 100%); display: flex; flex-direction: column; gap: 24px; }
 .brand {
   display: flex;
   align-items: center;
@@ -50,25 +40,10 @@ body {
   background: var(--cg-white);
   border-radius: 18px;
   box-shadow: 0 10px 30px rgba(15, 44, 62, 0.12);
-  position: relative;
-  overflow: hidden;
-
-  /* evita "esticado" */
   max-width: 860px;
   width: 100%;
   margin: 0 auto;
 }
-
-.brand::after {
-  content: "";
-  position: absolute;
-  right: -80px;
-  top: -120px;
-  width: 240px;
-  height: 240px;
-  background: radial-gradient(circle, rgba(16,121,186,0.25), transparent 60%);
-}
-
 .logo-mark {
   width: 52px;
   height: 52px;
@@ -80,81 +55,21 @@ body {
   overflow: hidden;
   box-shadow: 0 8px 18px rgba(16, 121, 186, 0.35);
 }
-
-.logo-mark img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.brand h1 {
-  font-size: 1.6rem;
-  color: var(--cg-blue-dark);
-}
-
-.brand span {
-  color: var(--cg-blue);
-  font-weight: 700;
-}
-
-.brand p {
-  margin-top: 4px;
-  color: #4b5563;
-  font-size: 0.95rem;
-}
-
-/* layout principal */
-.container {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 24px;
-
-  /* evita esticar demais */
-  max-width: 980px;
-  margin: 0 auto;
-}
-
-@media (max-width: 900px) {
-  .container { grid-template-columns: 1fr; }
-}
-
+.logo-mark img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.brand h1 { font-size: 1.6rem; color: var(--cg-blue-dark); }
+.brand span { color: var(--cg-blue); font-weight: 700; }
+.brand p { margin-top: 4px; color: #4b5563; font-size: 0.95rem; }
+.container { width: 100%; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; max-width: 980px; margin: 0 auto; }
+@media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
 .card {
   background: var(--cg-white);
   border-radius: 18px;
   padding: 26px;
   box-shadow: 0 12px 30px rgba(15, 44, 62, 0.12);
   border: 1px solid var(--cg-border);
-  position: relative;
-  overflow: hidden;
-  animation: floatIn 0.8s ease;
 }
-
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(16,121,186,0.08), transparent 55%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-.card:hover::before { opacity: 1; }
-
-.card h2 {
-  color: var(--cg-blue);
-  margin-bottom: 10px;
-  font-size: 1.25rem;
-}
-
-.sub {
-  color: var(--cg-muted);
-  font-size: 0.92rem;
-  line-height: 1.35;
-  margin-bottom: 16px;
-}
-
+.card h2 { color: var(--cg-blue); margin-bottom: 10px; font-size: 1.25rem; }
+.sub { color: var(--cg-muted); font-size: 0.92rem; line-height: 1.35; margin-bottom: 16px; }
 .pill {
   display: inline-flex;
   align-items: center;
@@ -166,63 +81,20 @@ body {
   font-size: 0.85rem;
   margin-bottom: 14px;
 }
-.pill span {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--cg-gold);
-  box-shadow: 0 0 8px rgba(240, 194, 76, 0.6);
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media (max-width: 520px) {
-  .grid-2 { grid-template-columns: 1fr; }
-}
-
-label {
-  font-size: 0.93rem;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-  color: #374151;
-}
-
-input, select {
+.pill span { width: 8px; height: 8px; border-radius: 999px; background: var(--cg-gold); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .grid-2 { grid-template-columns: 1fr; } }
+label { font-size: 0.93rem; display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; color: #374151; }
+input {
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid #d4d9df;
   font-size: 0.95rem;
   background: #fdfefe;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
-
-input:focus, select:focus {
-  outline: none;
-  border-color: var(--cg-blue);
-  box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
-}
-
-hr {
-  border: none;
-  border-top: 1px solid rgba(16,121,186,0.12);
-  margin: 14px 0;
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  padding: 8px 0;
-  color: #374151;
-}
-.summary-row strong { color: var(--cg-text); }
-
+hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; }
+.summary-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; color: #374151; }
+.summary-row strong { color: var(--cg-text); text-align: right; }
 .total {
   display: flex;
   justify-content: space-between;
@@ -233,12 +105,7 @@ hr {
   border: 1px solid rgba(16,121,186,0.12);
   margin-top: 10px;
 }
-.total .big {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--cg-blue-dark);
-}
-
+.total .big { font-size: 1.35rem; font-weight: 800; color: var(--cg-blue-dark); }
 .btn {
   background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
   color: #fff;
@@ -248,40 +115,14 @@ hr {
   font-weight: 700;
   cursor: pointer;
   width: 100%;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   box-shadow: 0 8px 16px rgba(16, 121, 186, 0.25);
 }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(16, 121, 186, 0.28); }
-.btn:active { transform: translateY(0); }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-
-.btn-outline {
-  background: transparent;
-  color: var(--cg-blue-dark);
-  border: 1px solid rgba(16,121,186,0.25);
-  box-shadow: none;
-}
-.btn-outline:hover {
-  background: rgba(16,121,186,0.06);
-  transform: translateY(-2px);
-}
-
-.status {
-  margin-top: 10px;
-  font-size: 0.92rem;
-  min-height: 20px;
-  color: #555;
-}
-.status.ok { color: #0c7c3c; }
-.status.erro { color: #c23616; }
-
-.hint {
-  font-size: 0.85rem;
-  color: var(--cg-muted);
-  line-height: 1.4;
-  margin-top: 10px;
-}
-
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(--cg-blue-dark); border: 1px solid rgba(16,121,186,0.25); box-shadow: none; }
+.status { margin-top: 10px; font-size: 0.92rem; min-height: 20px; color: #555; white-space: pre-wrap; }
+.status.ok { color: var(--cg-ok); }
+.status.erro { color: var(--cg-error); }
+.hint { font-size: 0.85rem; color: var(--cg-muted); line-height: 1.4; margin-top: 10px; }
 .badge-secure {
   display: flex;
   align-items: center;
@@ -293,294 +134,209 @@ hr {
   color: var(--cg-blue-dark);
   margin-top: 12px;
 }
-.badge-secure b { color: var(--cg-blue-dark); }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.debug-box {
+  display: none;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #111827;
+  color: #e5e7eb;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-x: auto;
 }
-@keyframes floatIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 680px) {
-  .brand { flex-direction: column; align-items: flex-start; }
-  .brand h1 { font-size: 1.35rem; }
-}
+.debug-box.show { display: block; }
+.debug-actions { display: none; gap: 10px; margin-top: 10px; }
+.debug-actions.show { display: flex; }
 </style>
 </head>
-
 <body>
 <div class="page">
-
   <header class="brand">
-    <div class="logo-mark">
-      <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo.jpg" alt="Logo ColorGlass">
-    </div>
+    <div class="logo-mark"><img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo.jpg" alt="Logo ColorGlass"></div>
     <div>
       <h1>ColorGlass <span>Aprovação</span></h1>
-      <p>Aprovação de pedido com emissão de boleto via Asaas. Confirmação após pagamento.</p>
+      <p>Aprovação de pedido via Telegram com diagnóstico detalhado de erro.</p>
     </div>
   </header>
-
   <div class="container">
-
-    <!-- ESQUERDA: dados + aprovação -->
     <section class="card">
       <div class="pill"><span></span>Solicitar aprovação</div>
       <h2>Detalhes</h2>
       <p class="sub">Os dados abaixo serão preenchidos automaticamente pelo UUID do orçamento.</p>
-
       <div class="grid-2">
-        <label>Nº do pedido
-          <input id="numero_pedido" type="text" placeholder="Carregando..." readonly>
-        </label>
-
-        <label>Orçamento UUID
-          <input id="orcamento_uuid" type="text" placeholder="uuid do orçamento" readonly>
-        </label>
+        <label>Nº do pedido<input id="numero_pedido" type="text" placeholder="Carregando..." readonly></label>
+        <label>Orçamento UUID<input id="orcamento_uuid" type="text" placeholder="uuid do orçamento" readonly></label>
       </div>
-
       <div class="grid-2">
-        <label>Cliente
-          <input id="cliente_nome" type="text" placeholder="Carregando..." readonly>
-        </label>
-
-        <label>Valor (R$)
-          <input id="valor_total" type="number" step="0.01" min="0" placeholder="Carregando..." readonly>
-        </label>
+        <label>Cliente<input id="cliente_nome" type="text" placeholder="Carregando..." readonly></label>
+        <label>Valor (R$)<input id="valor_total" type="number" step="0.01" min="0" placeholder="Carregando..." readonly></label>
       </div>
-
       <div class="badge-secure">
         <div style="font-size: 1.2rem;">📲</div>
-        <div>
-          <b>Aprovação via Telegram</b><br>
-          <span style="color:#4b5563;">Ao solicitar, a equipe recebe uma mensagem no Telegram e somente os botões do Telegram aprovam ou negam o pedido.</span>
-        </div>
+        <div><b>Aprovação via Telegram</b><br><span style="color:#4b5563;">Ao solicitar, a equipe recebe uma mensagem no Telegram e somente os botões do Telegram aprovam ou negam o pedido.</span></div>
       </div>
-
       <hr>
-
       <button class="btn" id="btnAprovar" onclick="solicitarAprovacaoTelegram()">📲 Solicitar aprovação</button>
       <button class="btn btn-outline" style="margin-top:10px;" onclick="voltar()">Voltar</button>
-
       <div id="status" class="status"></div>
-
-      <p class="hint">
-        Esta página lê o <b>orcamento_uuid</b> da URL e busca automaticamente <b>numero_pedido</b>,
-        <b>cliente_nome</b> e <b>valor_total</b> no Supabase através do endpoint <b>/api/orcamentos</b>.
-      </p>
+      <div id="debug" class="debug-box"></div>
+      <div id="debugActions" class="debug-actions"><button class="btn btn-outline" onclick="copiarDiagnostico()">📋 Copiar diagnóstico</button></div>
+      <p class="hint">Esta página agora exibe no HTML e no console o status HTTP, URL chamada, resposta bruta e detalhes retornados pelo backend.</p>
     </section>
-
-    <!-- DIREITA: resumo -->
     <aside class="card">
       <div class="pill"><span></span>Resumo</div>
       <h2>Pedido</h2>
       <p class="sub">Confira os dados carregados do orçamento.</p>
-
-      <div class="summary-row">
-        <span>Pedido</span>
-        <strong id="s_pedido">--</strong>
-      </div>
-      <div class="summary-row">
-        <span>Cliente</span>
-        <strong id="s_cliente">--</strong>
-      </div>
-      <div class="summary-row">
-        <span>UUID</span>
-        <strong id="s_uuid" style="font-size:0.88rem; word-break:break-all;">--</strong>
-      </div>
-      <div class="summary-row">
-        <span>Forma</span>
-        <strong>Boleto</strong>
-      </div>
-
-      <div class="total">
-        <span>Total</span>
-        <span class="big" id="s_total">R$ 0,00</span>
-      </div>
-
-      <p class="hint">
-        <b>Importante:</b> o boleto pode levar algumas horas para compensar.
-        Use webhook do Asaas para atualizar status automaticamente.
-      </p>
-
+      <div class="summary-row"><span>Pedido</span><strong id="s_pedido">--</strong></div>
+      <div class="summary-row"><span>Cliente</span><strong id="s_cliente">--</strong></div>
+      <div class="summary-row"><span>UUID</span><strong id="s_uuid" style="font-size:0.88rem; word-break:break-all;">--</strong></div>
+      <div class="summary-row"><span>Forma</span><strong>Boleto</strong></div>
+      <div class="total"><span>Total</span><span class="big" id="s_total">R$ 0,00</span></div>
+      <p class="hint"><b>Importante:</b> se aparecer <b>Unauthorized</b>, primeiro copie o diagnóstico mostrado na tela.</p>
       <hr>
-
       <div class="pill"><span></span>Link do boleto</div>
-      <p class="sub" style="margin-bottom:10px;">Após a aprovação pelo Telegram e a geração do boleto, o link aparecerá aqui.</p>
-
-      <label>URL do boleto
-        <input id="boleto_url" type="text" placeholder="Ainda não gerado" readonly>
-      </label>
-
+      <label>URL do boleto<input id="boleto_url" type="text" placeholder="Ainda não gerado" readonly></label>
       <button class="btn btn-outline" onclick="copiarBoleto()">📋 Copiar link</button>
       <button class="btn btn-outline" style="margin-top:10px;" onclick="abrirBoleto()">🔗 Abrir boleto</button>
     </aside>
-
   </div>
 </div>
-
 <script>
 const API_BASE = "https://colorglass.onrender.com";
-
-function qs(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
-
-function moneyBR(v) {
-  const n = Number(v || 0);
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
+let ultimoDiagnostico = "";
+function qs(name) { return new URLSearchParams(window.location.search).get(name); }
+function moneyBR(v) { const n = Number(v || 0); return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
 function parseValorTotal(valor) {
   if (valor === null || valor === undefined) return 0;
   if (typeof valor === "number") return valor;
   const bruto = String(valor).trim();
   if (!bruto) return 0;
-
   let normalizado = bruto.replace(/[^0-9,.-]/g, "");
-
-  if (normalizado.includes(",")) {
-    normalizado = normalizado.replace(/\./g, "").replace(",", ".");
-  } else {
-    normalizado = normalizado.replace(/,/g, "");
-  }
-
+  if (normalizado.includes(",")) normalizado = normalizado.replace(/\./g, "").replace(",", ".");
+  else normalizado = normalizado.replace(/,/g, "");
   const parsed = Number(normalizado);
   return Number.isFinite(parsed) ? parsed : 0;
 }
-
 function setStatus(msg, tipo="") {
   const el = document.getElementById("status");
   el.textContent = msg;
   el.className = "status " + tipo;
 }
-
-function getToken() {
-  return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+function setDebug(info) {
+  const debug = document.getElementById("debug");
+  const actions = document.getElementById("debugActions");
+  ultimoDiagnostico = typeof info === "string" ? info : JSON.stringify(info, null, 2);
+  debug.textContent = ultimoDiagnostico;
+  debug.classList.add("show");
+  actions.classList.add("show");
+  console.group("Diagnóstico aprovação Telegram");
+  console.log(info);
+  console.groupEnd();
 }
-
+async function copiarDiagnostico() {
+  try {
+    await navigator.clipboard.writeText(ultimoDiagnostico || "");
+    setStatus("Diagnóstico copiado.", "ok");
+  } catch (err) {
+    console.error("Erro ao copiar diagnóstico", err);
+    setStatus("Não foi possível copiar. Selecione o texto do diagnóstico manualmente.", "erro");
+  }
+}
+function getToken() { return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || ""; }
 function updateResumoFromInputs() {
   const pedido = document.getElementById("numero_pedido").value.trim() || "--";
   const cliente = document.getElementById("cliente_nome").value.trim() || "--";
   const uuid = document.getElementById("orcamento_uuid").value.trim() || "--";
   const valor = document.getElementById("valor_total").value.trim() || "--";
-
   document.getElementById("s_pedido").textContent = pedido;
   document.getElementById("s_cliente").textContent = cliente;
   document.getElementById("s_uuid").textContent = uuid;
   document.getElementById("s_total").textContent = moneyBR(valor);
 }
-
-/**
- * ✅ BUSCA DADOS PELO UUID USANDO O ENDPOINT QUE VOCÊ JÁ TEM:
- * GET /api/orcamentos
- * Depois encontra o orçamento pelo id == uuid e preenche os campos.
- *
- * Sem redirect, sem lógica de nível, sem mexer em backend.
- */
+async function parseResponse(res) {
+  const raw = await res.text();
+  let json = null;
+  try { json = raw ? JSON.parse(raw) : null; } catch (err) { json = null; }
+  return { raw, json };
+}
 async function carregarDadosDoOrcamento(uuid) {
   const token = getToken();
-
-  if (!uuid) {
-    setStatus("UUID não informado na URL. Use: ?orcamento_uuid=...", "erro");
-    return;
-  }
-
-  // UI loading
+  const url = `${API_BASE}/api/orcamentos`;
+  if (!uuid) { setStatus("UUID não informado na URL. Use: ?orcamento_uuid=...", "erro"); return; }
   document.getElementById("numero_pedido").value = "Carregando...";
   document.getElementById("cliente_nome").value = "Carregando...";
   document.getElementById("valor_total").value = "Carregando...";
   updateResumoFromInputs();
-
   try {
     setStatus("Buscando dados do orçamento...");
-
-    const res = await fetch(`${API_BASE}/api/orcamentos`, {
-      headers: token ? { "Authorization": `Bearer ${token}` } : {}
-    });
-
-    const data = await res.json();
-
-    if (!data.success || !Array.isArray(data.orcamentos)) {
-      setStatus(data.error || "Não foi possível carregar a lista de orçamentos.", "erro");
+    console.log("Buscando orçamento", { url, uuid, temTokenSessao: Boolean(token) });
+    const res = await fetch(url, { headers: token ? { "Authorization": `Bearer ${token}` } : {} });
+    const parsed = await parseResponse(res);
+    const data = parsed.json || {};
+    if (!res.ok || !data.success || !Array.isArray(data.orcamentos)) {
+      setDebug({ etapa: "carregarDadosDoOrcamento", url, httpStatus: res.status, httpStatusText: res.statusText, respostaJson: parsed.json, respostaBruta: parsed.raw, uuid, temTokenSessao: Boolean(token) });
+      setStatus(data.error || `Erro ao carregar orçamento. HTTP ${res.status} ${res.statusText}`, "erro");
       return;
     }
-
     const orc = data.orcamentos.find(o => String(o.id) === String(uuid));
     if (!orc) {
+      setDebug({ etapa: "carregarDadosDoOrcamento", erro: "Orçamento não encontrado para este UUID", uuid, quantidadeOrcamentosRecebidos: data.orcamentos.length });
       setStatus("Orçamento não encontrado para este UUID.", "erro");
       return;
     }
-
-
     document.getElementById("numero_pedido").value = (orc.numero_pedido ?? "");
     document.getElementById("cliente_nome").value = (orc.cliente_nome ?? "");
     const valorTotal = parseValorTotal(orc.valor_total);
     document.getElementById("valor_total").value = valorTotal ? valorTotal.toFixed(2) : "";
-
     updateResumoFromInputs();
     setStatus("Dados carregados. Solicite a aprovação via Telegram.", "ok");
-
   } catch (err) {
-    console.error(err);
-    setStatus("Erro ao buscar dados do orçamento. Veja o console.", "erro");
+    setDebug({ etapa: "carregarDadosDoOrcamento", url, erroNome: err?.name, erroMensagem: err?.message, stack: err?.stack, uuid, temTokenSessao: Boolean(token) });
+    setStatus("Erro de rede/JavaScript ao buscar dados do orçamento. Veja o diagnóstico abaixo.", "erro");
   }
 }
-
-/**
- * ✅ Solicita aprovação pelo Telegram.
- * O frontend apenas dispara a solicitação; a aprovação/negação acontece no Telegram.
- */
 async function solicitarAprovacaoTelegram() {
   const btn = document.getElementById("btnAprovar");
   const token = getToken();
   const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
-
-  if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
-  if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
-
+  const url = `${API_BASE}/api/orcamento/${encodeURIComponent(orcamento_uuid)}/solicitar-aprovacao`;
+  if (!token) {
+    setDebug({ etapa: "solicitarAprovacaoTelegram", erro: "Token de sessão ausente no localStorage", localStorageKeys: Object.keys(localStorage) });
+    setStatus("Sessão não encontrada. Faça login novamente.", "erro");
+    return;
+  }
+  if (!orcamento_uuid) {
+    setDebug({ etapa: "solicitarAprovacaoTelegram", erro: "UUID do orçamento ausente" });
+    setStatus("UUID do orçamento ausente.", "erro");
+    return;
+  }
   try {
     btn.disabled = true;
     setStatus("Enviando solicitação...");
-
-    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(orcamento_uuid)}/solicitar-aprovacao`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      }
-    });
-
-    const data = await res.json().catch(() => ({}));
-
+    const requestInfo = { etapa: "solicitarAprovacaoTelegram", url, metodo: "POST", uuid: orcamento_uuid, temTokenSessao: Boolean(token), tokenSessaoTamanho: token.length };
+    console.log("Enviando solicitação de aprovação", requestInfo);
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` } });
+    const parsed = await parseResponse(res);
+    const data = parsed.json || {};
     if (!res.ok || !data.success) {
-      setStatus(data.error || "Não foi possível enviar a solicitação para o Telegram.", "erro");
+      setDebug({ ...requestInfo, httpStatus: res.status, httpStatusText: res.statusText, respostaJson: parsed.json, respostaBruta: parsed.raw, erroBackend: data.error || null, observacao: "Se aparecer Unauthorized aqui, veja se o backend está usando TELEGRAM_TOKEN antigo ou se o token do BotFather está inválido." });
+      setStatus(data.error || `Não foi possível enviar para o Telegram. HTTP ${res.status} ${res.statusText}`, "erro");
       return;
     }
-
+    setDebug({ ...requestInfo, httpStatus: res.status, respostaJson: data, resultado: "Solicitação enviada com sucesso" });
     setStatus("Solicitação enviada para o Telegram. Aguarde aprovação.", "ok");
   } catch (err) {
-    console.error(err);
-    setStatus("Erro ao enviar solicitação para o Telegram. Verifique o console.", "erro");
+    setDebug({ etapa: "solicitarAprovacaoTelegram", url, uuid: orcamento_uuid, temTokenSessao: Boolean(token), erroNome: err?.name, erroMensagem: err?.message, stack: err?.stack });
+    setStatus("Erro de rede/JavaScript ao enviar solicitação. Veja o diagnóstico abaixo.", "erro");
   } finally {
     btn.disabled = false;
   }
 }
-
-async function copiarBoleto() {
-  setStatus("O boleto ainda não foi gerado nesta página.", "erro");
-}
-
-function abrirBoleto() {
-  setStatus("O boleto ainda não foi gerado nesta página.", "erro");
-}
-
+async function copiarBoleto() { setStatus("O boleto ainda não foi gerado nesta página.", "erro"); }
+function abrirBoleto() { setStatus("O boleto ainda não foi gerado nesta página.", "erro"); }
 function voltar() { history.back(); }
-
-// ✅ init: pega uuid da URL, preenche input, puxa dados e atualiza resumo
 (function init() {
   const uuid = qs("orcamento_uuid") || "";
   document.getElementById("orcamento_uuid").value = uuid;
@@ -588,11 +344,5 @@ function voltar() { history.back(); }
   carregarDadosDoOrcamento(uuid);
 })();
 </script>
-
 </body>
 </html>
-
-
-
-
-
