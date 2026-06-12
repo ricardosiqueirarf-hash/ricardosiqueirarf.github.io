@@ -1,18 +1,21 @@
 {
-  "name": "colorglass-crm-whatsapp-mvp",
-  "version": "1.0.0",
+  "name": "colorglass-crm-whatsapp-monitor-qr",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node qr-monitor-server.js",
+    "dev": "node --watch qr-monitor-server.js"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
+    "@whiskeysockets/baileys": "^6.7.18",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "pino": "^9.5.0",
+    "qrcode": "^1.5.4"
   }
 }
