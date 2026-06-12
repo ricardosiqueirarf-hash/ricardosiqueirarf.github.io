@@ -1,50 +1,98 @@
-# CRM ColorGlass — MVP WhatsApp
+# ColorGlass CRM WhatsApp MVP
 
-Este diretório guarda o MVP de integração do CRM com WhatsApp Cloud API oficial.
+MVP executavel para Render com:
 
-## Objetivo do MVP
+- Webhook oficial da WhatsApp Cloud API.
+- Criacao automatica de lead quando chega mensagem nova.
+- Criacao automatica de conversa.
+- Inbox web simples para visualizar conversas.
+- Resposta pelo navegador usando WhatsApp Cloud API.
+- Registro de mensagens no Supabase.
 
-- Receber mensagens do WhatsApp via webhook da Meta.
-- Criar/reutilizar lead automaticamente.
-- Criar/reutilizar conversa na Inbox.
-- Salvar mensagens recebidas no Supabase.
-- Permitir resposta pelo CRM usando WhatsApp Cloud API.
-- Atualizar status básico de mensagem: enviada, entregue, lida ou falhou.
+## Arquivos essenciais
 
-## Arquivos principais do MVP
+```txt
+CRM/
+  package.json
+  server.js
+  public/index.html
+  supabase/mvp_schema.sql
+  .env.example
+  render.yaml
+```
 
-- `docs/WHATSAPP_MVP_COLORGLASS.md`
-- `src/lib/whatsapp-mvp.server.ts`
-- `src/routes/api/public/whatsapp/webhook.ts`
-- `src/lib/transport/adapters.ts`
-- `src/lib/conversations.functions.ts`
-- `.env.example`
+Os arquivos antigos em `src/` foram mantidos como referencia do CRM maior, mas este MVP executavel no Render usa `server.js` e `public/index.html`.
 
-## Variáveis necessárias no deploy
+## Deploy no Render
+
+Configurar como Web Service:
+
+```txt
+Root Directory: CRM
+Build Command: npm install
+Start Command: npm start
+```
+
+Variaveis de ambiente obrigatorias:
 
 ```env
+NODE_VERSION=22
+CRM_ACCESS_PASSWORD=
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 WHATSAPP_ACCESS_TOKEN=
 WHATSAPP_PHONE_NUMBER_ID=
 WHATSAPP_VERIFY_TOKEN=
-WHATSAPP_DEFAULT_COMPANY_ID=
 WHATSAPP_APP_SECRET=
 WHATSAPP_GRAPH_VERSION=v23.0
 ```
 
-## Webhook na Meta
+`CRM_ACCESS_PASSWORD` protege a tela e as APIs internas. Use uma senha simples para MVP.
 
-Após publicar o CRM em um domínio com HTTPS, configurar na Meta:
+## Banco Supabase
+
+Antes de testar, rode no Supabase:
 
 ```txt
-https://SEU-DOMINIO.com/api/public/whatsapp/webhook
+CRM/supabase/mvp_schema.sql
 ```
 
-O `WHATSAPP_VERIFY_TOKEN` do ambiente precisa ser igual ao token configurado no painel da Meta.
+Isso cria:
 
-## Observação importante
+```txt
+crm_leads
+crm_conversations
+crm_messages
+```
 
-O arquivo `.env` real não deve ser versionado no GitHub porque contém chaves. Use apenas `.env.example` no repositório e configure os valores reais no ambiente de deploy.
+## Webhook da Meta
 
-## Status
+Depois que o Render gerar a URL, configure na Meta:
 
-MVP funcional em nível de código. Falta plugar credenciais reais da Meta, criar/configurar o canal WhatsApp e testar com número oficial.
+```txt
+https://SEU-APP.onrender.com/api/public/whatsapp/webhook
+```
+
+O Verify Token deve ser igual ao valor de `WHATSAPP_VERIFY_TOKEN` no Render.
+
+## Teste rapido
+
+Acesse:
+
+```txt
+https://SEU-APP.onrender.com/health
+```
+
+Se retornar `ok: true`, o servidor subiu.
+
+Depois acesse:
+
+```txt
+https://SEU-APP.onrender.com
+```
+
+Digite a senha configurada em `CRM_ACCESS_PASSWORD` e use a Inbox.
+
+## Importante
+
+Nao coloque `.env` real no GitHub. Configure chaves reais somente no painel do Render.
