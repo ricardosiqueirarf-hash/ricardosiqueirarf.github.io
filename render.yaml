@@ -1,0 +1,6 @@
+services:
+- type: static
+  name: colorglass-promob-mvp
+  rootDir: PROMOB
+  buildCommand: npm install && npm run build
+  staticPublishPath: dist
