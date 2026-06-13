@@ -16,7 +16,7 @@ pages.forEach(p => {
    Filtros avançados para index_loja.html
    - Só roda na tela index_loja
    - Não mexe na lógica original da tabela
-   - Filtra por status, pagamento, loja e período
+   - Filtra por status, pagamento e período
    ========================================================= */
 (function setupIndexLojaFilters() {
   const currentPage = (window.location.pathname.split("/").pop() || "").toLowerCase();
@@ -102,7 +102,6 @@ pages.forEach(p => {
 
     return {
       status: find("status", "situacao", "situação"),
-      loja: find("loja"),
       data: find("data", "criacao", "criação"),
       total: find("total", "valor"),
       pago: find("pago", "pagamento", "recebido")
@@ -143,20 +142,6 @@ pages.forEach(p => {
     }
 
     return "";
-  };
-
-  const inferLoja = (row, map) => {
-    const lojaSelect = row.querySelector(".loja-select");
-
-    if (lojaSelect) {
-      return normalize(
-        lojaSelect.selectedOptions?.[0]?.textContent ||
-        lojaSelect.value ||
-        ""
-      );
-    }
-
-    return normalize(getCellText(row, map.loja));
   };
 
   const inferPagamento = (row, map) => {
@@ -312,10 +297,6 @@ pages.forEach(p => {
         <option value="pago">Pago</option>
       </select>
 
-      <select id="cgFiltroLoja" title="Filtrar por loja">
-        <option value="">Todas as lojas</option>
-      </select>
-
       <select id="cgFiltroPeriodo" title="Filtrar por período">
         <option value="">Todos os períodos</option>
         <option value="hoje">Hoje</option>
@@ -348,12 +329,12 @@ pages.forEach(p => {
       document.body.appendChild(box);
     }
 
-    ["cgFiltroStatus", "cgFiltroPagamento", "cgFiltroLoja", "cgFiltroPeriodo"].forEach(id => {
+    ["cgFiltroStatus", "cgFiltroPagamento", "cgFiltroPeriodo"].forEach(id => {
       document.getElementById(id)?.addEventListener("change", applyFilters);
     });
 
     document.getElementById("cgLimparFiltros")?.addEventListener("click", () => {
-      ["cgFiltroStatus", "cgFiltroPagamento", "cgFiltroLoja", "cgFiltroPeriodo"].forEach(id => {
+      ["cgFiltroStatus", "cgFiltroPagamento", "cgFiltroPeriodo"].forEach(id => {
         const element = document.getElementById(id);
         if (element) element.value = "";
       });
@@ -362,65 +343,14 @@ pages.forEach(p => {
     });
   };
 
-  const refreshLojaOptions = () => {
-    const lojaFilter = document.getElementById("cgFiltroLoja");
-    const table = getTable();
-
-    if (!lojaFilter || !table) return;
-
-    const currentValue = lojaFilter.value;
-    const map = getHeaderMap(table);
-    const rows = getRows(table);
-    const lojas = new Map();
-
-    rows.forEach(row => {
-      const value = inferLoja(row, map);
-      if (!value) return;
-
-      const label =
-        row.querySelector(".loja-select")?.selectedOptions?.[0]?.textContent?.trim() ||
-        getCellText(row, map.loja).trim() ||
-        value;
-
-      const normalizedLabel = normalize(label);
-
-      if (
-        normalizedLabel &&
-        normalizedLabel !== "sem loja" &&
-        normalizedLabel !== "selecionar loja" &&
-        normalizedLabel !== "todas as lojas"
-      ) {
-        lojas.set(value, label);
-      }
-    });
-
-    lojaFilter.innerHTML = `<option value="">Todas as lojas</option>`;
-
-    Array.from(lojas.entries())
-      .sort((a, b) => a[1].localeCompare(b[1], "pt-BR"))
-      .forEach(([value, label]) => {
-        const option = document.createElement("option");
-        option.value = value;
-        option.textContent = label;
-        lojaFilter.appendChild(option);
-      });
-
-    if (Array.from(lojaFilter.options).some(option => option.value === currentValue)) {
-      lojaFilter.value = currentValue;
-    }
-  };
-
   function applyFilters() {
     const table = getTable();
     if (!table) return;
-
-    refreshLojaOptions();
 
     const map = getHeaderMap(table);
 
     const selectedStatus = document.getElementById("cgFiltroStatus")?.value || "";
     const selectedPagamento = document.getElementById("cgFiltroPagamento")?.value || "";
-    const selectedLoja = document.getElementById("cgFiltroLoja")?.value || "";
     const selectedPeriodo = document.getElementById("cgFiltroPeriodo")?.value || "";
 
     const rows = getRows(table);
@@ -429,15 +359,13 @@ pages.forEach(p => {
     rows.forEach(row => {
       const rowStatus = inferStatus(row, map);
       const rowPagamento = inferPagamento(row, map);
-      const rowLoja = inferLoja(row, map);
       const rowDate = inferData(row, map);
 
       const okStatus = !selectedStatus || rowStatus === selectedStatus;
       const okPagamento = !selectedPagamento || rowPagamento === selectedPagamento;
-      const okLoja = !selectedLoja || rowLoja === selectedLoja;
       const okPeriodo = matchesPeriod(rowDate, selectedPeriodo);
 
-      const visible = okStatus && okPagamento && okLoja && okPeriodo;
+      const visible = okStatus && okPagamento && okPeriodo;
 
       row.classList.toggle("cg-filter-hidden", !visible);
 
