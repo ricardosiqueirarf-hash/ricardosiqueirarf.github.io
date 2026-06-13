@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ProjectTemplate, TemplateCategory } from './templateTypes';
+import './templatePanel.css';
 
 const categories:Array<'todos'|TemplateCategory>=['todos','ambiente','closet','cristaleira','adega','bancada','porta','divisoria'];
 
