@@ -3,14 +3,14 @@ import requests
 from flask import Blueprint, request, jsonify
 
 # =====================
-# CONFIG SUPABASE (AQUI MESMO)
+# CONFIG SUPABASE
 # =====================
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não configurados")
+    raise RuntimeError("SUPABASE_URL ou chave do Supabase não configurados")
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -25,7 +25,7 @@ HEADERS = {
 puxadores_bp = Blueprint("puxadores_bp", __name__)
 
 # =====================
-# ROTAS INSUMOS
+# ROTAS PUXADORES
 # =====================
 
 @puxadores_bp.route("/api/puxadores", methods=["GET"])
@@ -100,7 +100,7 @@ def editar_puxadores(id):
 def deletar_puxadores(id):
     try:
         r = requests.delete(
-            f"{SUPABASE_URL}/rest/v1/puxaores?id=eq.{id}",
+            f"{SUPABASE_URL}/rest/v1/puxadores?id=eq.{id}",
             headers=HEADERS
         )
         r.raise_for_status()
