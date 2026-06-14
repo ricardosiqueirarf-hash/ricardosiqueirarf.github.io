@@ -484,6 +484,7 @@ input:hover, select:hover, textarea:hover{
 <script src="ui.js" defer></script>
 <script src="print.js" defer></script>
 <script src="estruturas3d.js" defer></script>
+<script src="validation.js" defer></script>
 </head>
 
 <body>
@@ -533,6 +534,13 @@ input:hover, select:hover, textarea:hover{
             <div class="helper-text" style="margin-top:8px;">
                 A Ordem de Produção só pode ser impressa com pedido aprovado (status 2 ou superior).
             </div>
+        </div>
+
+        <div class="section-card" id="orcamentoAuditoriaCard">
+            <h2>Verificação do Orçamento</h2>
+            <div id="orcamentoHealthStatus">Status: aguardando verificação</div>
+            <div id="orcamentoChecklist"></div>
+            <button class="btn" onclick="verificarOrcamentoAtual()">Verificar orçamento</button>
         </div>
 
         <div class="section-card">
