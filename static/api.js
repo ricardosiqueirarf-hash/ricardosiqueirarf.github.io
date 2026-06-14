@@ -64,16 +64,16 @@ async function carregarOrcamentoInfo() {
 }
 
 async function salvarPortasBackend(portasComUUID) {
-    return fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+    const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ portas: portasComUUID })
-    }).then((res) => res.json()).then((dataPortas) => {
-        if (!dataPortas.success) {
-            throw new Error(dataPortas.error || "Erro ao salvar portas");
-        }
-        return dataPortas;
     });
+    const dataPortas = await resPortas.json();
+    if (!dataPortas.success) {
+        throw new Error(dataPortas.error || "Erro ao salvar portas");
+    }
+    return dataPortas;
 }
 
 window.carregarPerfis = carregarPerfis;
