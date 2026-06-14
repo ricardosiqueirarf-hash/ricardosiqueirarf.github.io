@@ -54,7 +54,39 @@ var todasTags = [];
 
 var estruturas3D = [];
 
+// =====================
+// PREVIEW 3D
+// =====================
+function carregarScriptPortas(src) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.src = src;
+        script.defer = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`Erro ao carregar script: ${src}`));
+        document.head.appendChild(script);
+    });
+}
+
+async function carregarPreview3DPortas() {
+    try {
+        await carregarScriptPortas("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js");
+        await carregarScriptPortas("door3d.js");
+        if (typeof renderizarPorta3D === "function") {
+            renderizarPorta3D();
+        }
+    } catch (err) {
+        console.error("Erro ao inicializar preview 3D:", err);
+    }
+}
+
 function initMain() {
+    carregarPreview3DPortas();
     carregarPerfis();
     carregarVidros();
     carregarInsumos();
@@ -73,5 +105,4 @@ window.go = go;
 window.authHeader = authHeader;
 window.formatarMoeda = formatarMoeda;
 window.initMain = initMain;
-
-
+window.carregarPreview3DPortas = carregarPreview3DPortas;
