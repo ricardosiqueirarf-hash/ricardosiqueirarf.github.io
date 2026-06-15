@@ -45,8 +45,6 @@ body {
     box-shadow: 0 10px 30px rgba(15, 44, 62, 0.12);
     position: relative;
     overflow: hidden;
-
-    /* ✅ AJUSTE: limita largura do topo sem fixar, mantém responsivo */
     max-width: 780px;
     width: 100%;
     margin: 0 auto;
@@ -102,8 +100,6 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
-
-    /* ✅ AJUSTE: limita largura do bloco do login sem fixar, mantém responsivo */
     max-width: 520px;
     margin: 0 auto;
 }
@@ -129,124 +125,26 @@ body {
     pointer-events: none;
 }
 
-.card:hover::before {
-    opacity: 1;
-}
-
-.card h2 {
-    color: var(--cg-blue);
-    margin-bottom: 12px;
-    font-size: 1.3rem;
-}
-
-label {
-    font-size: 0.95rem;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 12px;
-    color: #374151;
-}
-
-input {
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1px solid #d4d9df;
-    font-size: 0.95rem;
-    transition: border 0.2s ease, box-shadow 0.2s ease;
-    background: #fdfefe;
-}
-
-input:focus {
-    outline: none;
-    border-color: var(--cg-blue);
-    box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
-}
-
-.btn {
-    background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 8px 16px rgba(16, 121, 186, 0.25);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 22px rgba(16, 121, 186, 0.28);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.status {
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: #555;
-    min-height: 20px;
-}
-
+.card:hover::before { opacity: 1; }
+.card h2 { color: var(--cg-blue); margin-bottom: 12px; font-size: 1.3rem; }
+label { font-size: 0.95rem; display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; color: #374151; }
+input { padding: 12px 14px; border-radius: 10px; border: 1px solid #d4d9df; font-size: 0.95rem; transition: border 0.2s ease, box-shadow 0.2s ease; background: #fdfefe; }
+input:focus { outline: none; border-color: var(--cg-blue); box-shadow: 0 0 0 3px rgba(16,121,186,0.15); }
+.btn { background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark)); color: #fff; border: none; border-radius: 12px; padding: 12px; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; box-shadow: 0 8px 16px rgba(16, 121, 186, 0.25); }
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(16, 121, 186, 0.28); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+.btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+.status { margin-top: 10px; font-size: 0.9rem; color: #555; min-height: 20px; }
 .status.ok { color: #0c7c3c; }
 .status.erro { color: #c23616; }
-
-.hint {
-    font-size: 0.85rem;
-    color: #6b7280;
-    line-height: 1.4;
-    margin-top: 8px;
-}
-
-.hint a {
-    color: var(--cg-blue);
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.hint a:hover {
-    text-decoration: underline;
-}
-
-.pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--cg-blue-soft);
-    color: var(--cg-blue-dark);
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    margin-bottom: 16px;
-}
-
-.pill span {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--cg-gold);
-    box-shadow: 0 0 8px rgba(240, 194, 76, 0.6);
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes floatIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 680px) {
-    .brand { flex-direction: column; align-items: flex-start; }
-    .brand h1 { font-size: 1.4rem; }
-}
+.hint { font-size: 0.85rem; color: #6b7280; line-height: 1.4; margin-top: 8px; }
+.hint a { color: var(--cg-blue); font-weight: 600; text-decoration: none; }
+.hint a:hover { text-decoration: underline; }
+.pill { display: inline-flex; align-items: center; gap: 8px; background: var(--cg-blue-soft); color: var(--cg-blue-dark); padding: 6px 12px; border-radius: 999px; font-size: 0.85rem; margin-bottom: 16px; }
+.pill span { display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: var(--cg-gold); box-shadow: 0 0 8px rgba(240, 194, 76, 0.6); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes floatIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 680px) { .brand { flex-direction: column; align-items: flex-start; } .brand h1 { font-size: 1.4rem; } }
 </style>
 </head>
 <body>
@@ -266,13 +164,13 @@ input:focus {
             <div class="pill"><span></span>Já possui acesso?</div>
             <h2>Login</h2>
             <label>Usuário
-                <input type="text" id="loginUser" placeholder="Digite seu usuário">
+                <input type="text" id="loginUser" placeholder="Digite seu usuário" autocomplete="username">
             </label>
             <label>Senha
-                <input type="password" id="loginPass" placeholder="Digite sua senha">
+                <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password">
             </label>
-            <button class="btn" onclick="logar()">Entrar</button>
-            <div id="loginStatus" class="status"></div>
+            <button class="btn" type="button" id="loginBtn" onclick="logar()">Entrar</button>
+            <div id="loginStatus" class="status" aria-live="polite"></div>
             <p class="hint">Ainda não tem conta? <a href="cadastro.html">Crie seu cadastro</a>.</p>
         </div>
     </div>
@@ -280,72 +178,117 @@ input:focus {
 
 <script>
 const API_BASE = "https://colorglass.onrender.com";
+let loginEmAndamento = false;
 
 function setStatus(elementId, message, tipo) {
     const el = document.getElementById(elementId);
-    el.textContent = message;
+    if (!el) return;
+    el.textContent = message || "";
     el.classList.remove("ok", "erro");
     if (tipo) el.classList.add(tipo);
 }
 
-// ==================== LOGIN ====================
+function setLoginLoading(loading) {
+    const btn = document.getElementById("loginBtn");
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? "Verificando..." : "Entrar";
+}
 
-async function logar() { 
-    const user = document.getElementById("loginUser").value.trim(); // INPUT USER, TRIM REVOME ESPACOS
-    const pass = document.getElementById("loginPass").value.trim(); // INPUT PASS, TRIM REMOVE ESPACOS
-    if (!user || !pass) { // CONDICIONAL DE ERRO PARA QUANDO USER OU PASS ESTIVER VAZIO
+async function lerJsonSeguro(res) {
+    try { return await res.json(); } catch (err) { return {}; }
+}
+
+function mensagemLoginFalhou(status, data) {
+    if (status === 429) return data.error || "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+    if (status === 403 && data && data.error) return data.error;
+    return "Usuário, senha ou acesso inválido.";
+}
+
+async function logar() {
+    if (loginEmAndamento) return;
+
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value;
+
+    if (!user || !pass) {
         setStatus("loginStatus", "Preencha usuário e senha.", "erro");
         return;
     }
 
-    try { // SE TANTO USER COMO PASS ESTIVER PREENCHIDOS TENTA VERIFICAR COM API
+    loginEmAndamento = true;
+    setLoginLoading(true);
+    let redirecionando = false;
+
+    try {
         setStatus("loginStatus", "Verificando...");
         const res = await fetch(`${API_BASE}/api/usuarios/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ user, pass })
         });
-        const data = await res.json();
+        const data = await lerJsonSeguro(res);
 
-        if (!data.success) { // SE API NEGAR MOSTRA ERRO
-            setStatus("loginStatus", data.error || "Login inválido.", "erro");
+        if (!res.ok || !data.success || !data.token) {
+            setStatus("loginStatus", mensagemLoginFalhou(res.status, data), "erro");
             return;
         }
-// SALVAR TOKEN LOCALMENTE, VERIFICAR A REAL NECESSIDADE DISSO
+
         localStorage.setItem("USER_TOKEN", data.token);
         localStorage.setItem("ADMIN_TOKEN", data.token);
-        setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
+        setStatus("loginStatus", "Login autorizado. Validando permissões...", "ok");
 
-        const resAuth = await fetch(`${API_BASE}/api/auth/validar`, { //VERIFICA SE USUARIO POSSUI PERMISSAO
+        const resAuth = await fetch(`${API_BASE}/api/auth/validar`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${data.token}`
             }
         });
-        const dataAuth = await resAuth.json();
+        const dataAuth = await lerJsonSeguro(resAuth);
 
-        if (!dataAuth.success) { // SE NAO TIVER PERMISSAO NEGA 
-            setStatus("loginStatus", dataAuth.error || "Sessão inválida.", "erro");
+        if (!resAuth.ok || !dataAuth.success) {
+            setStatus("loginStatus", "Sessão inválida. Faça login novamente.", "erro");
             return;
         }
 
-        setTimeout(() => {
-            window.location.href = dataAuth.redirect || "index_loja.html"; // DECIDE SE MANDA PRO INDEX OU INDEX_LOJA
-        }, 400); // TEMPO DE ESPERA PARA O REDIRECIONAMENTO EM MILISEGUNDOS
+        localStorage.setItem("USER_LEVEL", String(dataAuth.level ?? ""));
+        if (dataAuth.storeid) localStorage.setItem("USER_STOREID", dataAuth.storeid);
+
+        const destino = Number(dataAuth.level) === 3
+            ? "index_admin.html"
+            : (dataAuth.redirect || "index_loja.html");
+
+        setStatus("loginStatus", "Acesso validado. Redirecionando...", "ok");
+        redirecionando = true;
+        setTimeout(() => { window.location.href = destino; }, 400);
     } catch (err) {
         console.error(err);
-        setStatus("loginStatus", "Erro inesperado, Contate o suporte.", "erro"); //DEBUG CASO DE ALGUM ERRO IMPREVISTO
+        setStatus("loginStatus", "Erro inesperado. Contate o suporte.", "erro");
+    } finally {
+        if (!redirecionando) {
+            loginEmAndamento = false;
+            setLoginLoading(false);
+        }
     }
 }
+
+window.logar = logar;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const userInput = document.getElementById("loginUser");
+    const passInput = document.getElementById("loginPass");
+    if (userInput) userInput.focus();
+    [userInput, passInput].forEach((input) => {
+        if (!input) return;
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                logar();
+            }
+        });
+    });
+});
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
