@@ -95,6 +95,10 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("dobradicas-auto-fix.js");
         await carregarScriptPortas("required-fields-panel.js");
         await carregarScriptPortas("side-conflict-fix.js");
+        await carregarScriptPortas("portas-layout-cleanup.js");
+        await carregarScriptPortas("portas-field-groups.js");
+        await carregarScriptPortas("portas-saved-table.js");
+        await carregarScriptPortas("portas-verification-collapse.js");
         await carregarScriptPortas("portas-actions.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
