@@ -1,5 +1,8 @@
 // Renderização compacta das portas salvas em tabela.
 
+let carregandoSistemasParaTabela = false;
+let tabelaPortasAguardandoSistemas = false;
+
 function adicionarEstilosTabelaPortas() {
     if (document.getElementById('portasSavedTableStyles')) return;
     const style = document.createElement('style');
@@ -13,6 +16,7 @@ function adicionarEstilosTabelaPortas() {
         .portas-table-actions{display:flex;gap:6px;flex-wrap:wrap;}
         .portas-table-actions .btn{padding:8px 10px;font-size:.78rem;box-shadow:none;border-radius:10px;}
         .portas-empty-state{border:1px dashed rgba(16,121,186,.24);color:#6b7280;background:rgba(248,251,255,.86);border-radius:14px;padding:14px;font-weight:700;}
+        .sistema-loading{color:#6b7280;font-style:italic;}
     `;
     document.head.appendChild(style);
 }
@@ -32,13 +36,52 @@ function nomeVidroTabelaPortas(id) {
     return [vidro.tipo, vidro.espessura ? `${vidro.espessura}mm` : ''].filter(Boolean).join(' ');
 }
 
-function nomeSistemaTabelaPortas(id) {
-    if (typeof sistemasLista === 'undefined' || !Array.isArray(sistemasLista)) return '-';
-    return sistemasLista.find(sistema => String(sistema.id) === String(id))?.nome || '-';
+function tabelaPrecisaDeSistemas() {
+    return Array.isArray(portas) && portas.some(porta => {
+        const tipo = porta?.tipo;
+        return (tipo === 'deslizante' || tipo === 'correr') && porta?.dados?.sistemas;
+    });
 }
 
-function celulaTextoPortas(texto, forte = false) {
+function garantirSistemasParaTabela() {
+    if (!tabelaPrecisaDeSistemas()) return;
+    if (typeof sistemasLista !== 'undefined' && Array.isArray(sistemasLista) && sistemasLista.length > 0) return;
+    if (carregandoSistemasParaTabela) return;
+    if (typeof carregarSistemas !== 'function') return;
+
+    carregandoSistemasParaTabela = true;
+    tabelaPortasAguardandoSistemas = true;
+
+    Promise.resolve(carregarSistemas())
+        .then(() => {
+            carregandoSistemasParaTabela = false;
+            if (tabelaPortasAguardandoSistemas) {
+                tabelaPortasAguardandoSistemas = false;
+                renderPortas();
+            }
+        })
+        .catch((err) => {
+            carregandoSistemasParaTabela = false;
+            console.error('Erro ao carregar sistemas para tabela de portas:', err);
+        });
+}
+
+function nomeSistemaTabelaPortas(id) {
+    const valorSalvo = id ? String(id) : '';
+    if (!valorSalvo) return '-';
+
+    if (typeof sistemasLista !== 'undefined' && Array.isArray(sistemasLista) && sistemasLista.length > 0) {
+        const sistema = sistemasLista.find(item => String(item.id) === valorSalvo);
+        if (sistema?.nome) return sistema.nome;
+    }
+
+    garantirSistemasParaTabela();
+    return valorSalvo ? `Carregando (${valorSalvo})` : '-';
+}
+
+function celulaTextoPortas(texto, forte = false, extraClass = '') {
     const td = document.createElement('td');
+    if (extraClass) td.className = extraClass;
     if (forte) {
         const strong = document.createElement('strong');
         strong.textContent = texto;
@@ -60,6 +103,8 @@ function botaoTabelaPortas(texto, classe, acao) {
 
 function renderPortas() {
     adicionarEstilosTabelaPortas();
+    garantirSistemasParaTabela();
+
     const container = document.getElementById('portasSalvas');
     if (!container) return;
     container.textContent = '';
@@ -99,7 +144,10 @@ function renderPortas() {
         tr.appendChild(celulaTextoPortas(medida));
         tr.appendChild(celulaTextoPortas(nomePerfilTabelaPortas(dados.perfil)));
         tr.appendChild(celulaTextoPortas(nomeVidroTabelaPortas(dados.vidro)));
-        tr.appendChild(celulaTextoPortas((porta.tipo === 'deslizante' || porta.tipo === 'correr') ? nomeSistemaTabelaPortas(dados.sistemas) : '-'));
+
+        const sistemaTexto = (porta.tipo === 'deslizante' || porta.tipo === 'correr') ? nomeSistemaTabelaPortas(dados.sistemas) : '-';
+        tr.appendChild(celulaTextoPortas(sistemaTexto, false, sistemaTexto.startsWith('Carregando') ? 'sistema-loading' : ''));
+
         tr.appendChild(celulaTextoPortas(moedaTabelaPortas(porta.preco), true));
 
         const tdAcoes = document.createElement('td');
@@ -122,4 +170,5 @@ function renderPortas() {
 }
 
 window.renderPortas = renderPortas;
-setTimeout(() => { if (Array.isArray(window.portas)) renderPortas(); }, 900);
+setTimeout(() => { if (Array.isArray(portas)) renderPortas(); }, 900);
+setTimeout(() => { if (Array.isArray(portas)) renderPortas(); }, 1800);
