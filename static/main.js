@@ -30,14 +30,12 @@ const params = new URLSearchParams(window.location.search);
 const ORCAMENTO_UUID = params.get("orcamento_uuid");
 var orcamentoInfo = { cliente_nome: null, numero_pedido: null, cliente_cidade: null };
 
-const infoOrcamentoEl = document.getElementById("infoOrcamento");
 if (!ORCAMENTO_UUID) {
-    if (infoOrcamentoEl) {
-        infoOrcamentoEl.innerHTML = "<strong style='color:red'>UUID do orçamento não encontrado</strong>";
-    }
+    window.location.replace("login.html");
     throw new Error("orcamento_uuid ausente");
 }
 
+const infoOrcamentoEl = document.getElementById("infoOrcamento");
 if (infoOrcamentoEl) {
     infoOrcamentoEl.textContent = "";
 }
