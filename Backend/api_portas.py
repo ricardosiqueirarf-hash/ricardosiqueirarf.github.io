@@ -50,13 +50,13 @@ def _buscar_contexto_precificacao(contexto_extra=None):
     vidros = contexto_extra.get("vidros") or contexto_extra.get("todosVidros") or _buscar_tabela_supabase("vidros", "tipo.asc")
     puxadores = contexto_extra.get("puxadores") or contexto_extra.get("todosPuxadores") or _buscar_tabela_supabase("puxadores", "nome.asc")
     sistemas = contexto_extra.get("sistemas") or contexto_extra.get("sistemasLista") or _buscar_tabela_supabase("sistemas", "nome.asc")
-    insumos = contexto_extra.get("insumos") or contexto_extra.get("todosInsumos") or _buscar_tabela_supabase("insumos", "nome.asc")
+    materiais = contexto_extra.get("materiais") or contexto_extra.get("insumos") or contexto_extra.get("todosInsumos") or _buscar_tabela_supabase("materiais", "nome.asc")
     trilhos = contexto_extra.get("trilhos") or contexto_extra.get("todosTrilhos") or _buscar_tabela_supabase("trilhos", "nome.asc")
     tags = contexto_extra.get("tags") or contexto_extra.get("todasTags") or _buscar_tabela_supabase("tags")
 
     # O engine procura trilhos dentro de "insumos" para reaproveitar a mesma
-    # regra de referência/material. Por isso combinamos insumos + trilhos.
-    materiais_para_busca = list(insumos or []) + list(trilhos or [])
+    # regra de referência/material. Por isso combinamos materiais + trilhos.
+    materiais_para_busca = list(materiais or []) + list(trilhos or [])
 
     return {
         "perfis": perfis,
@@ -64,6 +64,7 @@ def _buscar_contexto_precificacao(contexto_extra=None):
         "puxadores": puxadores,
         "sistemas": sistemas,
         "insumos": materiais_para_busca,
+        "materiais": materiais,
         "trilhos": trilhos,
         "tags": tags,
     }
