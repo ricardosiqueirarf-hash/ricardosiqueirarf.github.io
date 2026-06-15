@@ -46,6 +46,7 @@ CORS(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
+STATIC_DIR = os.path.join(ROOT_DIR, "static")
 
 # =====================
 # HEALTH CHECK
@@ -111,6 +112,22 @@ def index_loja_html_page():
 def index_admin_page():
     return send_from_directory(BASE_DIR, "index.html")
 
+@app.route("/admin")
+def admin_dashboard_page():
+    return send_from_directory(STATIC_DIR, "index_admin.html")
+
+@app.route("/index_admin.html")
+def index_admin_html_page():
+    return send_from_directory(STATIC_DIR, "index_admin.html")
+
+@app.route("/usuarios_admin")
+def usuarios_admin_page():
+    return send_from_directory(STATIC_DIR, "usuarios_admin.html")
+
+@app.route("/usuarios_admin.html")
+def usuarios_admin_html_page():
+    return send_from_directory(STATIC_DIR, "usuarios_admin.html")
+
 @app.route("/portas")
 def portas_page():
     return send_from_directory(BASE_DIR, "portas.html")
@@ -137,19 +154,19 @@ def aprovacao_html_page():
 
 @app.route("/controle")
 def controle_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gerenciar_aprovados.html")
+    return send_from_directory(STATIC_DIR, "gerenciar_aprovados.html")
 
 @app.route("/controle.html")
 def controle_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gerenciar_aprovados.html")
+    return send_from_directory(STATIC_DIR, "gerenciar_aprovados.html")
 
 @app.route("/controle_loja")
 def controle_loja_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "controle_loja.html")
+    return send_from_directory(STATIC_DIR, "controle_loja.html")
 
 @app.route("/controle_loja.html")
 def controle_loja_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "controle_loja.html")
+    return send_from_directory(STATIC_DIR, "controle_loja.html")
 
 @app.route("/tags")
 def tags_page():
@@ -260,7 +277,7 @@ def promob_export_page():
     return send_from_directory(BASE_DIR, "promob_export.html")
 
 def _crm_directory():
-    static_crm_dir = os.path.join(ROOT_DIR, "static", "crm")
+    static_crm_dir = os.path.join(STATIC_DIR, "crm")
     if os.path.exists(os.path.join(static_crm_dir, "index.html")):
         return static_crm_dir
     return os.path.join(ROOT_DIR, "CRM")
@@ -282,43 +299,43 @@ def promob_export_html_page():
 
 @app.route("/gestao-carteira")
 def gestao_carteira_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gestao-carteira.html")
+    return send_from_directory(STATIC_DIR, "gestao-carteira.html")
 
 @app.route("/gestao-carteira.html")
 def gestao_carteira_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "gestao-carteira.html")
+    return send_from_directory(STATIC_DIR, "gestao-carteira.html")
 
 @app.route("/pagamentos")
 def pagamentos_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "pagamentos.html")
+    return send_from_directory(STATIC_DIR, "pagamentos.html")
 
 @app.route("/pagamentos.html")
 def pagamentos_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "pagamentos.html")
+    return send_from_directory(STATIC_DIR, "pagamentos.html")
 
 @app.route("/fornecedores")
 def fornecedores_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "fornecedores.html")
+    return send_from_directory(STATIC_DIR, "fornecedores.html")
 
 @app.route("/fornecedores.html")
 def fornecedores_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "fornecedores.html")
+    return send_from_directory(STATIC_DIR, "fornecedores.html")
 
 @app.route("/estoquecontagens")
 def estoquecontagens_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquecontagens.html")
+    return send_from_directory(STATIC_DIR, "estoquecontagens.html")
 
 @app.route("/estoquecontagens.html")
 def estoquecontagens_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquecontagens.html")
+    return send_from_directory(STATIC_DIR, "estoquecontagens.html")
 
 @app.route("/estoquedashboard")
 def estoquedashboard_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquedashboard.html")
+    return send_from_directory(STATIC_DIR, "estoquedashboard.html")
 
 @app.route("/estoquedashboard.html")
 def estoquedashboard_html_page():
-    return send_from_directory(os.path.join(ROOT_DIR, "static"), "estoquedashboard.html")
+    return send_from_directory(STATIC_DIR, "estoquedashboard.html")
 
 @app.route("/3dteste")
 def d3teste_page():
@@ -342,6 +359,7 @@ from api_corte import corte_bp
 from api_puxadores import puxadores_bp
 from api_estruturas3d import estruturas3d_bp
 from api_cadastroelogin import cadastro_login_bp
+from api_admin_usuarios import admin_usuarios_bp
 from api_tags import tags_bp
 from api_comprovantes import comprovantes_bp
 from api_imagetags import imagetags_bp
@@ -363,6 +381,7 @@ app.register_blueprint(corte_bp)
 app.register_blueprint(puxadores_bp)
 app.register_blueprint(estruturas3d_bp)
 app.register_blueprint(cadastro_login_bp)
+app.register_blueprint(admin_usuarios_bp)
 app.register_blueprint(tags_bp)
 app.register_blueprint(comprovantes_bp)
 app.register_blueprint(imagetags_bp)
@@ -377,11 +396,3 @@ app.register_blueprint(fornecedores_bp)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
-
