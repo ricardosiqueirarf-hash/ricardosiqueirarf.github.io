@@ -103,6 +103,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("deslizante-edit-fix.js");
         await carregarScriptPortas("edit-mode-visual-fix.js");
         await carregarScriptPortas("portas-actions.js");
+        await carregarScriptPortas("closet-evidence-fix.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
     }
