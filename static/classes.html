@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classes do Orçamento | ColorGlass</title>
+<link rel="icon" href="/favicon.ico?v=4" sizes="any">
+<script src="global.js"></script>
+<style>
+:root{
+  --cg-blue:#1079ba;
+  --cg-blue-dark:#0d5d8c;
+  --cg-blue-soft:#e7f3fb;
+  --cg-gold:#f0c24c;
+  --cg-white:#ffffff;
+  --cg-text:#1f2933;
+  --cg-muted:#6b7280;
+  --cg-border:rgba(16,121,186,0.12);
+  --cg-shadow:0 12px 30px rgba(15,44,62,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,rgba(16,121,186,.16),transparent 55%),linear-gradient(135deg,#f5fbff 0%,#eef4f9 45%,#f8fbff 100%);
+  color:var(--cg-text);
+}
+.app{display:grid;grid-template-columns:240px 1fr;gap:18px;padding:18px;min-height:100vh;}
+.sidebar{
+  background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));
+  color:#fff;border-radius:18px;box-shadow:var(--cg-shadow);padding:22px 18px;
+  display:flex;flex-direction:column;gap:12px;position:sticky;top:18px;height:calc(100vh - 36px);
+}
+.sidebar h3{font-size:1.25rem;margin-bottom:8px;letter-spacing:.8px;}
+.sidebar button{
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);color:#fff;
+  padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-weight:700;
+  transition:.2s ease;
+}
+.sidebar button:hover{background:rgba(255,255,255,.22);transform:translateX(4px);}
+.content{
+  padding:22px;border-radius:18px;background:rgba(255,255,255,.62);border:1px solid rgba(16,121,186,.10);
+  box-shadow:0 10px 24px rgba(15,44,62,.10);backdrop-filter:blur(10px);
+}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+.header h1{color:var(--cg-blue-dark);font-size:1.75rem;margin-bottom:6px;}
+.header p{color:var(--cg-muted);font-weight:700;line-height:1.4;}
+.badge{
+  background:var(--cg-blue-soft);color:var(--cg-blue-dark);border:1px solid rgba(16,121,186,.18);
+  border-radius:999px;padding:8px 12px;font-weight:900;white-space:nowrap;
+}
+.class-section{margin-top:20px;}
+.class-title{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.class-title h2{font-size:1.18rem;color:var(--cg-blue);}
+.class-title span{height:8px;width:8px;background:var(--cg-blue);border-radius:999px;display:inline-block;}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:16px;}
+.card{
+  border:1px solid rgba(16,121,186,.12);border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,44,62,.10);
+  overflow:hidden;cursor:pointer;transition:.22s ease;min-height:330px;display:flex;flex-direction:column;
+}
+.card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(15,44,62,.15);border-color:rgba(16,121,186,.30);}
+.card-head{padding:14px 16px;background:linear-gradient(135deg,rgba(231,243,251,.96),rgba(255,255,255,.82));border-bottom:1px solid rgba(16,121,186,.10);}
+.card-head h3{color:var(--cg-blue-dark);font-size:1.05rem;margin-bottom:4px;}
+.card-head p{color:var(--cg-muted);font-size:.86rem;font-weight:700;}
+.card-body{flex:1;display:grid;place-items:center;padding:18px;background:linear-gradient(180deg,#fbfdff,#eef7fc);perspective:900px;}
+.card-foot{padding:12px 16px;border-top:1px solid rgba(16,121,186,.10);color:#4b5563;font-size:.84rem;font-weight:800;background:#fff;}
+.door3d{position:relative;width:118px;height:235px;transform-style:preserve-3d;transform:rotateX(-8deg) rotateY(-24deg);}
+.door-panel{position:absolute;inset:0;border:7px solid #263944;background:linear-gradient(135deg,rgba(255,255,255,.70),rgba(133,184,210,.28));box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),0 18px 28px rgba(15,44,62,.22);}
+.door-side{position:absolute;top:0;right:-18px;width:18px;height:100%;background:linear-gradient(90deg,#263944,#516875);transform:rotateY(90deg);transform-origin:left center;}
+.door-top{position:absolute;top:-18px;left:0;width:100%;height:18px;background:linear-gradient(#516875,#263944);transform:rotateX(90deg);transform-origin:bottom center;}
+.hinge{position:absolute;left:-12px;width:12px;height:28px;border-radius:4px;background:#d6a955;box-shadow:0 0 8px rgba(214,169,85,.5);}
+.hinge.h1{top:34px}.hinge.h2{bottom:34px}.hinge.h3{top:50%;transform:translateY(-50%);}
+.handle{position:absolute;right:15px;top:50%;height:64px;width:7px;border-radius:999px;background:#d6a955;box-shadow:0 0 10px rgba(214,169,85,.45);}
+.track{position:absolute;left:-16px;right:-16px;height:10px;border-radius:999px;background:#263944;box-shadow:0 8px 12px rgba(15,44,62,.18);}
+.track.top{top:-24px}.track.bottom{bottom:-24px}
+.door3d.sliding .door-panel{transform:translateX(10px) rotateY(-4deg);}
+.door3d.running .door-panel{transform:translateX(-8px) rotateY(3deg);}
+.double-line{position:absolute;top:0;bottom:0;left:50%;width:5px;background:#263944;opacity:.85;}
+.disabled-card{opacity:.62;cursor:not-allowed;}
+.disabled-card:hover{transform:none;box-shadow:0 10px 24px rgba(15,44,62,.10);}
+.placeholder{
+  min-height:210px;width:100%;border:1px dashed rgba(16,121,186,.22);border-radius:16px;display:grid;place-items:center;
+  color:var(--cg-muted);font-weight:900;text-align:center;padding:20px;background:rgba(248,251,255,.8);
+}
+@media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{height:auto;position:relative;top:0}.cards{grid-template-columns:1fr}.sidebar{flex-direction:row;flex-wrap:wrap}.sidebar button{text-align:center;flex:1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h3>COLOR GLASS</h3>
+    <button onclick="voltar()">Voltar</button>
+    <button onclick="irAprovacao()">Aprovação</button>
+  </aside>
+
+  <main class="content">
+    <div class="header">
+      <div>
+        <h1>Escolha a classe do orçamento</h1>
+        <p>Selecione a classe e a tipologia. Para portas, o sistema abre direto em portas.html com a tipologia escolhida.</p>
+      </div>
+      <div class="badge" id="pedidoBadge">Orçamento</div>
+    </div>
+
+    <section class="class-section">
+      <div class="class-title"><span></span><h2>Portas</h2></div>
+      <div class="cards">
+        <article class="card" onclick="abrirPorta('giro')">
+          <div class="card-head"><h3>Giro</h3><p>Porta 2000 × 800 mm</p></div>
+          <div class="card-body">
+            <div class="door3d">
+              <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
+              <span class="hinge h1"></span><span class="hinge h2"></span><span class="handle"></span>
+            </div>
+          </div>
+          <div class="card-foot">Abrir orçamento com tipologia Giro</div>
+        </article>
+
+        <article class="card" onclick="abrirPorta('deslizante')">
+          <div class="card-head"><h3>Deslizante</h3><p>Porta 2000 × 800 mm com trilhos</p></div>
+          <div class="card-body">
+            <div class="door3d sliding">
+              <span class="track top"></span><span class="track bottom"></span>
+              <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
+              <span class="handle"></span>
+            </div>
+          </div>
+          <div class="card-foot">Abrir orçamento com tipologia Deslizante</div>
+        </article>
+
+        <article class="card" onclick="abrirPorta('correr')">
+          <div class="card-head"><h3>Correr</h3><p>Porta 2000 × 800 mm em sistema de correr</p></div>
+          <div class="card-body">
+            <div class="door3d running">
+              <span class="track top"></span><span class="track bottom"></span>
+              <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
+              <span class="double-line"></span>
+            </div>
+          </div>
+          <div class="card-foot">Abrir orçamento com tipologia Correr</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="class-section">
+      <div class="class-title"><span></span><h2>Estruturas</h2></div>
+      <div class="cards">
+        <article class="card disabled-card">
+          <div class="card-head"><h3>Estruturas</h3><p>Em preparação</p></div>
+          <div class="card-body"><div class="placeholder">Classe reservada para estruturas.</div></div>
+          <div class="card-foot">Ainda não abre página específica.</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="class-section">
+      <div class="class-title"><span></span><h2>Closet</h2></div>
+      <div class="cards">
+        <article class="card disabled-card">
+          <div class="card-head"><h3>Closet Evidence</h3><p>Separado das portas</p></div>
+          <div class="card-body"><div class="placeholder">Classe reservada para closet, fora do fluxo de portas.</div></div>
+          <div class="card-foot">Preview e cálculo serão tratados em página própria.</div>
+        </article>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const ORCAMENTO_UUID = params.get('orcamento_uuid');
+
+function tokenParam() {
+  const token = localStorage.getItem('USER_TOKEN') || params.get('token');
+  return token ? `&token=${encodeURIComponent(token)}` : '';
+}
+
+function atualizarBadge() {
+  const badge = document.getElementById('pedidoBadge');
+  if (!badge) return;
+  badge.textContent = ORCAMENTO_UUID ? `Orçamento ${ORCAMENTO_UUID}` : 'Orçamento não informado';
+}
+
+function abrirPorta(tipologia) {
+  if (!ORCAMENTO_UUID) {
+    alert('Orçamento não encontrado. Volte e selecione um orçamento.');
+    return;
+  }
+  window.location.href = `portas.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}&tipologia=${encodeURIComponent(tipologia)}${tokenParam()}`;
+}
+
+function voltar() {
+  window.location.href = 'index_loja.html' + (params.get('token') ? `?token=${encodeURIComponent(params.get('token'))}` : '');
+}
+
+function irAprovacao() {
+  if (!ORCAMENTO_UUID) return;
+  window.location.href = `aprovacao.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}${tokenParam()}`;
+}
+
+atualizarBadge();
+</script>
+</body>
+</html>
