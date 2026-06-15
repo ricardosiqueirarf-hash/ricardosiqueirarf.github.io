@@ -14,7 +14,7 @@ function EntradaMobil() {
       </section>
 
       <section className="entryGrid">
-        <a className="entryCard factory" href="/fabrica.html">
+        <a className="entryCard factory" href="fabrica.html">
           <span>MOBIL Fábrica</span>
           <h2>Configurar produtos, módulos e templates</h2>
           <p>
@@ -23,7 +23,7 @@ function EntradaMobil() {
           <b>Abrir configurador da fábrica →</b>
         </a>
 
-        <a className="entryCard store" href="/loja.html">
+        <a className="entryCard store" href="loja.html">
           <span>MOBIL Loja</span>
           <h2>Importar fábrica e projetar para o cliente</h2>
           <p>
