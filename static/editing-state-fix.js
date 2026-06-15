@@ -1,10 +1,8 @@
-// Corrige estado híbrido entre editar e novo ao trocar tipologia manualmente.
+// Regra final: se o usuário mudar manualmente a tipologia, sai do modo edição.
 
 (function () {
-    function portaEditandoAtual() {
-        if (typeof editando === 'undefined' || editando === null) return null;
-        if (!Array.isArray(portas)) return null;
-        return portas.find(p => String(p.id) === String(editando)) || null;
+    function estaEditando() {
+        return typeof editando !== 'undefined' && editando !== null;
     }
 
     function garantirPreviewSvgPadrao() {
@@ -15,19 +13,25 @@
         preview.innerHTML = '<svg id="portaSVG"></svg>';
     }
 
-    function cancelarEdicaoSeTipologiaMudou() {
-        const porta = portaEditandoAtual();
-        if (!porta) return false;
-        const tipoAtual = document.getElementById('tipologia')?.value || '';
-        if (!tipoAtual || tipoAtual === porta.tipo) return false;
+    function sairDoModoEdicaoPorTrocaTipologia() {
+        if (!estaEditando()) return false;
 
         editando = null;
+
         const qtd = document.getElementById('quantidade');
         if (qtd) qtd.value = '1';
 
+        document.querySelectorAll('.porta-row-editando').forEach(row => row.classList.remove('porta-row-editando'));
+        document.querySelectorAll('.porta-editando-badge').forEach(badge => badge.remove());
+
+        const botaoSalvar = Array.from(document.querySelectorAll('.door-form button, #doorActionsFooter button'))
+            .find(btn => String(btn.getAttribute('onclick') || '').includes('salvarPorta'));
+        if (botaoSalvar) botaoSalvar.textContent = 'Salvar Porta';
+
         if (typeof atualizarVisualModoEdicaoPortas === 'function') {
-            atualizarVisualModoEdicaoPortas();
+            setTimeout(() => atualizarVisualModoEdicaoPortas(), 0);
         }
+
         return true;
     }
 
@@ -59,17 +63,17 @@
         if (typeof atualizarVisualModoEdicaoPortas === 'function') setTimeout(() => atualizarVisualModoEdicaoPortas(), 0);
     }
 
-    function tratarTrocaTipologia() {
-        cancelarEdicaoSeTipologiaMudou();
+    function tratarTrocaTipologiaManual() {
+        sairDoModoEdicaoPorTrocaTipologia();
         reprocessarTipologiaAtual();
     }
 
     function instalarEditingStateFix() {
         document.addEventListener('change', (ev) => {
             if (ev.target?.id === 'tipologia') {
-                setTimeout(tratarTrocaTipologia, 0);
-                setTimeout(tratarTrocaTipologia, 180);
-                setTimeout(tratarTrocaTipologia, 500);
+                setTimeout(tratarTrocaTipologiaManual, 0);
+                setTimeout(tratarTrocaTipologiaManual, 180);
+                setTimeout(tratarTrocaTipologiaManual, 500);
             }
         }, true);
 
@@ -83,7 +87,9 @@
         }, true);
     }
 
+    window.sairDoModoEdicaoPorTrocaTipologia = sairDoModoEdicaoPorTrocaTipologia;
     window.instalarEditingStateFix = instalarEditingStateFix;
+
     document.addEventListener('DOMContentLoaded', instalarEditingStateFix);
     setTimeout(instalarEditingStateFix, 900);
 })();
