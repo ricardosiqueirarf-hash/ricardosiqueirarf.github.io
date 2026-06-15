@@ -45,17 +45,44 @@ async function carregarTags() {
     atualizarFerramentaOrcamentoAposCarga();
 }
 
+function exibirErroPortasSalvas(mensagem) {
+    const box = document.getElementById("portasSalvas");
+    if (!box) return;
+    box.innerHTML = `<div class="portas-empty-state" style="color:#991b1b;border-color:#fecaca;background:#fff5f5;">${mensagem}</div>`;
+}
+
+function normalizarPortasResposta(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.portas)) return data.portas;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.rows)) return data.rows;
+    return [];
+}
+
 async function carregarPortas() {
     try {
         const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`);
-        const data = await res.json();
-        if (data.success && data.portas) {
-            portas = data.portas.map((p) => ({ ...p, id: idCounter++ }));
-            renderPortas();
-            atualizarFerramentaOrcamentoAposCarga();
+        let data = null;
+        try {
+            data = await res.json();
+        } catch (jsonErr) {
+            throw new Error("Resposta inválida ao carregar portas.");
         }
+
+        if (!res.ok || data?.success === false) {
+            throw new Error(data?.error || `Erro HTTP ${res.status}`);
+        }
+
+        const portasRecebidas = normalizarPortasResposta(data);
+        portas = portasRecebidas.map((p) => ({ ...p, id: idCounter++ }));
+
+        if (typeof renderPortas === "function") {
+            renderPortas();
+        }
+        atualizarFerramentaOrcamentoAposCarga();
     } catch (err) {
-        console.error(err);
+        console.error("Erro ao carregar portas salvas:", err);
+        exibirErroPortasSalvas(`Erro ao carregar portas salvas: ${err.message}`);
     }
 }
 
