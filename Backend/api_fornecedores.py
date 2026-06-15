@@ -28,6 +28,19 @@ HEADERS = {
 fornecedores_bp = Blueprint("fornecedores_bp", __name__)
 
 # =====================
+# INSTALAÇÃO DO PATCH ASAAS NO FLUXO DO TELEGRAM
+# api_fornecedores.py já é importado pelo app.py depois de api_orcamentos.py.
+# Por isso este ponto é confiável para ligar a emissão 50/50 sem editar api_orcamentos.py.
+# =====================
+
+try:
+    import api_orcamentos as _api_orcamentos
+    import asaas_orcamentos_patch as _asaas_orcamentos_patch
+    _asaas_orcamentos_patch.install(_api_orcamentos)
+except Exception as exc:
+    print(f"[ASAAS] Falha ao instalar patch de boletos no Telegram: {exc}")
+
+# =====================
 # HELPERS
 # =====================
 
