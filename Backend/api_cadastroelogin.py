@@ -1,10 +1,82 @@
 from flask import Blueprint, request, jsonify, make_response
 import requests
 import uuid
+import time
 
 from auth_utils import buscar_usuario_por_token, construir_permissoes, extrair_token, gerar_token_usuario, pagina_por_nivel
 
 cadastro_login_bp = Blueprint("cadastro_login_bp", __name__)
+
+# =====================
+# RATE LIMIT SIMPLES DO LOGIN
+# =====================
+# Conservador para não quebrar acesso normal.
+# Limita tentativas por IP e por combinação IP + usuário.
+LOGIN_ATTEMPTS = {}
+LOGIN_WINDOW_SECONDS = 15 * 60
+LOGIN_MAX_BY_USER_IP = 8
+LOGIN_MAX_BY_IP = 30
+
+
+def _agora():
+    return time.time()
+
+
+def _request_is_https():
+    proto = (request.headers.get("X-Forwarded-Proto") or "").split(",")[0].strip().lower()
+    return request.is_secure or proto == "https"
+
+
+def _client_ip():
+    forwarded = request.headers.get("X-Forwarded-For") or ""
+    if forwarded:
+        return forwarded.split(",")[0].strip() or "unknown"
+    return request.remote_addr or "unknown"
+
+
+def _normalizar_login(login):
+    return str(login or "").strip().lower()
+
+
+def _limpar_tentativas_antigas():
+    now = _agora()
+    # Evita crescimento infinito em memória.
+    for key in list(LOGIN_ATTEMPTS.keys()):
+        recentes = [ts for ts in LOGIN_ATTEMPTS.get(key, []) if now - ts < LOGIN_WINDOW_SECONDS]
+        if recentes:
+            LOGIN_ATTEMPTS[key] = recentes
+        else:
+            LOGIN_ATTEMPTS.pop(key, None)
+
+
+def _rate_keys(login):
+    ip = _client_ip()
+    login_norm = _normalizar_login(login)
+    return f"ip:{ip}", f"ip_user:{ip}:{login_norm}"
+
+
+def _rate_limit_excedido(login):
+    _limpar_tentativas_antigas()
+    ip_key, user_ip_key = _rate_keys(login)
+    return (
+        len(LOGIN_ATTEMPTS.get(user_ip_key, [])) >= LOGIN_MAX_BY_USER_IP
+        or len(LOGIN_ATTEMPTS.get(ip_key, [])) >= LOGIN_MAX_BY_IP
+    )
+
+
+def _registrar_falha_login(login, motivo="credenciais_invalidas"):
+    now = _agora()
+    ip_key, user_ip_key = _rate_keys(login)
+    LOGIN_ATTEMPTS.setdefault(ip_key, []).append(now)
+    LOGIN_ATTEMPTS.setdefault(user_ip_key, []).append(now)
+    print(f"[AUTH] falha_login ip={_client_ip()} user={_normalizar_login(login)} motivo={motivo}")
+
+
+def _limpar_falhas_login(login):
+    ip_key, user_ip_key = _rate_keys(login)
+    LOGIN_ATTEMPTS.pop(user_ip_key, None)
+    # Não limpa o contador geral do IP para não permitir rotação agressiva de usuários.
+    print(f"[AUTH] login_ok ip={_client_ip()} user={_normalizar_login(login)}")
 
 
 def _storeid_usuario(usuario):
@@ -76,33 +148,47 @@ def cadastrar_usuario():
 def login_usuario():
     data = request.json or {}
     login = (data.get("user") or "").strip()
+    # Mantido com strip no backend por compatibilidade com senhas já cadastradas pelo fluxo antigo.
+    # O frontend novo não altera mais o valor digitado da senha.
     senha = (data.get("pass") or "").strip()
 
     if not login or not senha:
         return jsonify({"success": False, "error": "Usuário e senha são obrigatórios."}), 400
 
+    if _rate_limit_excedido(login):
+        print(f"[AUTH] rate_limit ip={_client_ip()} user={_normalizar_login(login)}")
+        return jsonify({
+            "success": False,
+            "error": "Muitas tentativas. Aguarde alguns minutos e tente novamente."
+        }), 429
+
     try:
         encontrados = _buscar_usuario_por_login(login)
         if not encontrados:
-            return jsonify({"success": False, "error": "Usuário não encontrado."}), 404
+            _registrar_falha_login(login, "usuario_ou_senha_invalidos")
+            return jsonify({"success": False, "error": "Usuário ou senha inválidos."}), 401
 
         usuario = encontrados[0]
         if usuario.get("pass") != senha:
-            return jsonify({"success": False, "error": "Senha inválida."}), 401
+            _registrar_falha_login(login, "usuario_ou_senha_invalidos")
+            return jsonify({"success": False, "error": "Usuário ou senha inválidos."}), 401
 
         token_usuario = usuario.get("token") or ""
         if not token_usuario:
+            print(f"[AUTH] login_sem_aprovacao ip={_client_ip()} user={_normalizar_login(login)}")
             return jsonify({
                 "success": False,
                 "error": "Usuário ainda não aprovado pelo admin."
             }), 403
 
+        _limpar_falhas_login(login)
         token_sessao = gerar_token_usuario(usuario)
 
         response = make_response(jsonify({
             "success": True,
             "userid": usuario.get("userid"),
             "user": usuario.get("user"),
+            "level": usuario.get("level"),
             "token": token_sessao,
             "message": "Login autorizado."
         }))
@@ -111,13 +197,15 @@ def login_usuario():
             token_sessao,
             max_age=12 * 60 * 60,
             httponly=True,
+            secure=_request_is_https(),
             samesite="Lax",
             path="/"
         )
         return response
 
     except Exception as exc:
-        return jsonify({"success": False, "error": str(exc)}), 500
+        print(f"[AUTH] erro_login ip={_client_ip()} user={_normalizar_login(login)} erro={exc}")
+        return jsonify({"success": False, "error": "Erro interno ao validar login."}), 500
 
 
 @cadastro_login_bp.route("/api/usuarios", methods=["GET", "OPTIONS"])
@@ -167,8 +255,4 @@ def validar_token():
         })
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
-
-
-
-
 
