@@ -4,26 +4,28 @@ from flask import Blueprint, jsonify, request, make_response
 
 from auth_utils import buscar_usuario_por_token, extrair_token
 
-api_financeiro_bp = Blueprint("api_financeiro_bp", __name__) 
+api_financeiro_bp = Blueprint("api_financeiro_bp", __name__)
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não definidos (api_financeiro.py)")
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+    raise RuntimeError("SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não definidos (api_financeiro.py)")
 
 HEADERS = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "apikey": SUPABASE_SERVICE_ROLE_KEY,
+    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 }
+
 
 def _int_or_default(value, default):
     try:
         return int(value)
     except Exception:
         return default
+
 
 @api_financeiro_bp.route("/api/financeiro", methods=["GET"])
 def api_financeiro():
@@ -45,8 +47,6 @@ def api_financeiro():
 
     order = (request.args.get("order") or "numero_pedido.asc").strip()
 
-    # IMPORTANTÍSSIMO: não pedir coluna que não existe.
-    # Pelo seu erro anterior, 'data_status' não existe. Use 'data_criacao'.
     select_campos = ",".join([
         "id",
         "numero_pedido",
@@ -56,7 +56,8 @@ def api_financeiro():
         "status",
         "valor_total",
         "valor_pago",
-        "lojaid"
+        "lojaid",
+        "quantidade_total"
     ])
 
     status_in = ",".join(status_list)
@@ -112,5 +113,4 @@ def api_financeiro():
             "details": r.text
         }), 500)
 
-    # Resposta JSON direta
     return jsonify(r.json())
