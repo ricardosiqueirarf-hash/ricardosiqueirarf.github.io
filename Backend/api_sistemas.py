@@ -24,6 +24,19 @@ HEADERS = {
 
 sistemas_bp = Blueprint("sistemas_bp", __name__)
 
+
+def normalizar_tipologia(valor):
+    return "divisao_ambiente" if str(valor or "").strip() == "correr" else str(valor or "").strip()
+
+
+def normalizar_tipologias(lista):
+    resultado = []
+    for item in lista or []:
+        valor = normalizar_tipologia(item)
+        if valor and valor not in resultado:
+            resultado.append(valor)
+    return resultado
+
 # =====================
 # ROTAS SISTEMAS
 # =====================
@@ -39,7 +52,10 @@ def listar_sistemas():
         )
         if not r.ok:
             return jsonify({"error": r.text, "status": r.status_code}), r.status_code
-        return jsonify(r.json())
+        sistemas = r.json()
+        for sistema in sistemas:
+            sistema["tipo"] = normalizar_tipologias(sistema.get("tipo", []))
+        return jsonify(sistemas)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -59,7 +75,7 @@ def criar_sistema():
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
-            "tipo": data.get("tipo", []),
+            "tipo": normalizar_tipologias(data.get("tipo", [])),
             "trilhossup": data.get("trilhossup", []),
             "trilhosinf": data.get("trilhosinf", []),
         }
@@ -93,7 +109,7 @@ def editar_sistema(id):
             "custo": data["custo"],
             "margem": data["margem"],
             "preco": round(preco, 2),
-            "tipo": data.get("tipo", []),
+            "tipo": normalizar_tipologias(data.get("tipo", [])),
             "trilhossup": data.get("trilhossup", []),
             "trilhosinf": data.get("trilhosinf", []),
         }
@@ -126,7 +142,3 @@ def deletar_sistema(id):
         return jsonify({"status": "deleted"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-
-
