@@ -9,100 +9,15 @@
 <link rel="shortcut icon" href="/favicon.ico?v=4">
 <link rel="icon" type="image/png" sizes="512x512" href="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo-512.png?v=4">
 <meta name="theme-color" content="#1079ba">
+<script src="global.js"></script>
 <style>
-:root{
-  --cg-blue:#1079ba;
-  --cg-blue-dark:#0d5d8c;
-  --cg-blue-soft:#e7f3fb;
-  --cg-gold:#f0c24c;
-  --cg-white:#ffffff;
-  --cg-text:#1f2933;
-  --cg-muted:#6b7280;
-  --cg-border:rgba(16,121,186,0.12);
-  --cg-shadow:0 12px 30px rgba(15,44,62,0.12);
-  --cg-shadow-soft:0 10px 24px rgba(15,44,62,0.10);
-  --danger:#c23616;
-  --ok:#0c7c3c;
-}
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
-body{
-  min-height:100vh;
-  display:flex;
-  background:radial-gradient(circle at top,rgba(16,121,186,.16),transparent 55%),linear-gradient(135deg,#f5fbff 0%,#eef4f9 45%,#f8fbff 100%);
-  color:var(--cg-text);
-}
-.app{display:flex;width:100%;gap:18px;padding:18px;animation:fadeIn .7s ease}
-.sidebar{
-  width:250px;
-  background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  padding:22px 18px;
-  gap:10px;
-  border-radius:18px;
-  box-shadow:var(--cg-shadow);
-  position:sticky;
-  top:18px;
-  height:calc(100vh - 36px);
-  overflow:auto;
-}
-.sidebar h3{font-size:1.25rem;margin-bottom:4px;letter-spacing:.8px}
-.sidebar .group-title{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;opacity:.78;margin-top:10px;margin-bottom:2px}
-.sidebar button{
-  background:rgba(255,255,255,.14);
-  padding:11px 12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.18);
-  cursor:pointer;
-  text-align:left;
-  font-weight:700;
-  transition:transform .2s ease,background .2s ease,box-shadow .2s ease;
-  color:#fff;
-}
-.sidebar button:hover{background:rgba(255,255,255,.22);transform:translateX(4px);box-shadow:0 10px 18px rgba(0,0,0,.14)}
-.content{
-  flex:1;
-  padding:20px;
-  overflow-y:auto;
-  border-radius:18px;
-  background:rgba(255,255,255,.55);
-  border:1px solid rgba(16,121,186,.10);
-  box-shadow:var(--cg-shadow-soft);
-  backdrop-filter:blur(10px);
-}
-.header-card,.card{
-  background:var(--cg-white);
-  border:1px solid var(--cg-border);
-  border-radius:18px;
-  box-shadow:var(--cg-shadow-soft);
-}
-.header-card{padding:20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.header-card h1{font-size:1.6rem;color:var(--cg-blue-dark);margin-bottom:4px}
-.header-card p{color:var(--cg-muted);font-size:.94rem}
-.badge{display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:var(--cg-blue-soft);color:var(--cg-blue-dark);padding:8px 12px;font-weight:800;font-size:.88rem}
-.badge::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--cg-gold);box-shadow:0 0 8px rgba(240,194,76,.65)}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:14px;margin-bottom:16px}
-.card{padding:16px;position:relative;overflow:hidden}
-.card h2{font-size:.9rem;color:var(--cg-muted);font-weight:700;margin-bottom:8px}
-.card .number{font-size:2rem;color:var(--cg-blue-dark);font-weight:900;line-height:1}
-.card .hint{font-size:.82rem;color:var(--cg-muted);margin-top:8px}
-.section{background:var(--cg-white);border:1px solid var(--cg-border);border-radius:18px;box-shadow:var(--cg-shadow-soft);padding:16px;margin-top:16px}
-.section h2{font-size:1.12rem;color:var(--cg-blue);margin-bottom:12px}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.btn{padding:11px 14px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));color:#fff;font-weight:800;box-shadow:0 10px 18px rgba(16,121,186,.22)}
-.btn.secondary{background:#fff;color:var(--cg-blue-dark);border:1px solid var(--cg-border);box-shadow:none}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}
-th,td{padding:11px 12px;border-bottom:1px solid #edf2f7;text-align:left;font-size:.9rem;vertical-align:top}
-th{background:#eef7fc;color:var(--cg-blue-dark);font-size:.82rem;text-transform:uppercase;letter-spacing:.03em}
-.status-text{font-size:.9rem;color:var(--cg-muted);margin-top:8px}
-.status-text.erro{color:var(--danger);font-weight:800}
-.status-pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-size:.78rem;font-weight:800;background:#eef7fc;color:var(--cg-blue-dark)}
-.status-pill.ok{background:#e9f8ee;color:var(--ok)}
-.status-pill.warn{background:#fff7df;color:#8a6200}
-@media(max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(160px,1fr))}.app{flex-direction:column}.sidebar{position:relative;top:0;width:100%;height:auto;max-height:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.sidebar h3,.sidebar .group-title{grid-column:1/-1}}
-@media(max-width:640px){.grid{grid-template-columns:1fr}.content{padding:14px}.app{padding:12px}.header-card{padding:16px}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+:root{--cg-blue:#1079ba;--cg-blue-dark:#0d5d8c;--cg-blue-soft:#e7f3fb;--cg-gold:#f0c24c;--cg-white:#fff;--cg-text:#1f2933;--cg-muted:#6b7280;--cg-border:rgba(16,121,186,.12);--cg-shadow:0 12px 30px rgba(15,44,62,.12);--cg-shadow-soft:0 10px 24px rgba(15,44,62,.10);--danger:#c23616;--ok:#0c7c3c;--warn:#8a6200}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,GeneVA,Verdana,sans-serif}
+body{min-height:100vh;display:flex;background:radial-gradient(circle at top,rgba(16,121,186,.16),transparent 55%),linear-gradient(135deg,#f5fbff 0%,#eef4f9 45%,#f8fbff 100%);color:var(--cg-text)}
+.app{display:flex;width:100%;gap:18px;padding:18px;animation:fadeIn .7s ease}.sidebar{width:255px;background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));color:#fff;display:flex;flex-direction:column;padding:22px 18px;gap:10px;border-radius:18px;box-shadow:var(--cg-shadow);position:sticky;top:18px;height:calc(100vh - 36px);overflow:auto}.sidebar h3{font-size:1.25rem;margin-bottom:4px;letter-spacing:.8px}.sidebar .group-title{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;opacity:.78;margin-top:10px;margin-bottom:2px}.sidebar button{background:rgba(255,255,255,.14);padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);cursor:pointer;text-align:left;font-weight:700;transition:.2s ease;color:#fff}.sidebar button:hover{background:rgba(255,255,255,.22);transform:translateX(4px);box-shadow:0 10px 18px rgba(0,0,0,.14)}
+.content{flex:1;padding:20px;overflow-y:auto;border-radius:18px;background:rgba(255,255,255,.55);border:1px solid rgba(16,121,186,.10);box-shadow:var(--cg-shadow-soft);backdrop-filter:blur(10px)}.header-card,.card,.section{background:var(--cg-white);border:1px solid var(--cg-border);border-radius:18px;box-shadow:var(--cg-shadow-soft)}.header-card{padding:20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.header-card h1{font-size:1.6rem;color:var(--cg-blue-dark);margin-bottom:4px}.header-card p{color:var(--cg-muted);font-size:.94rem}.badge{display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:var(--cg-blue-soft);color:var(--cg-blue-dark);padding:8px 12px;font-weight:800;font-size:.88rem}.badge::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--cg-gold);box-shadow:0 0 8px rgba(240,194,76,.65)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:14px;margin-bottom:16px}.card{padding:16px;position:relative;overflow:hidden}.card h2{font-size:.86rem;color:var(--cg-muted);font-weight:800;margin-bottom:8px;text-transform:uppercase;letter-spacing:.03em}.card .number{font-size:1.85rem;color:var(--cg-blue-dark);font-weight:900;line-height:1}.card .hint{font-size:.82rem;color:var(--cg-muted);margin-top:8px}.section{padding:16px;margin-top:16px}.section h2{font-size:1.12rem;color:var(--cg-blue);margin-bottom:12px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.toolbar input,.toolbar select{padding:11px 13px;border-radius:12px;border:1px solid #d4d9df;background:#fff;font-size:.92rem}.toolbar input{flex:1;min-width:220px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{padding:10px 13px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));color:#fff;font-weight:800;box-shadow:0 10px 18px rgba(16,121,186,.22)}.btn.secondary{background:#fff;color:var(--cg-blue-dark);border:1px solid var(--cg-border);box-shadow:none}.btn.small{padding:8px 10px;font-size:.82rem}table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}th,td{padding:10px 11px;border-bottom:1px solid #edf2f7;text-align:left;font-size:.88rem;vertical-align:top}th{background:#eef7fc;color:var(--cg-blue-dark);font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}.status-text{font-size:.9rem;color:var(--cg-muted);margin-top:8px}.status-text.erro{color:var(--danger);font-weight:800}.pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-size:.78rem;font-weight:800;background:#eef7fc;color:var(--cg-blue-dark)}.pill.ok{background:#e9f8ee;color:var(--ok)}.pill.warn{background:#fff7df;color:var(--warn)}.pill.danger{background:#ffe9e6;color:var(--danger)}.money{font-weight:900;color:var(--cg-blue-dark)}
+@media(max-width:1200px){.grid{grid-template-columns:repeat(2,minmax(160px,1fr))}.app{flex-direction:column}.sidebar{position:relative;top:0;width:100%;height:auto;max-height:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.sidebar h3,.sidebar .group-title{grid-column:1/-1}}@media(max-width:640px){.grid{grid-template-columns:1fr}.content{padding:14px}.app{padding:12px}.header-card{padding:16px}table{display:block;overflow-x:auto;white-space:nowrap}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -115,204 +30,53 @@ th{background:#eef7fc;color:var(--cg-blue-dark);font-size:.82rem;text-transform:
     <button onclick="go('controle_loja.html')">Acompanhamento</button>
     <button onclick="go('pagamentos.html')">Pagamentos</button>
     <button onclick="go('gestao-carteira.html')">Carteira</button>
-
     <div class="group-title">Cadastros técnicos</div>
-    <button onclick="go('perfis.html')">Perfis</button>
-    <button onclick="go('vidros.html')">Vidros</button>
-    <button onclick="go('insumos.html')">Insumos</button>
-    <button onclick="go('puxadores.html')">Puxadores</button>
-    <button onclick="go('sistemas.html')">Sistemas</button>
-    <button onclick="go('trilhos.html')">Trilhos</button>
-    <button onclick="go('fornecedores.html')">Fornecedores</button>
-
+    <button onclick="go('perfis.html')">Perfis</button><button onclick="go('vidros.html')">Vidros</button><button onclick="go('insumos.html')">Insumos</button><button onclick="go('puxadores.html')">Puxadores</button><button onclick="go('sistemas.html')">Sistemas</button><button onclick="go('trilhos.html')">Trilhos</button><button onclick="go('fornecedores.html')">Fornecedores</button>
     <div class="group-title">Operação</div>
-    <button onclick="go('estoquecontagens.html')">Contagem Estoque</button>
-    <button onclick="go('estoquedashboard.html')">Dashboard Estoque</button>
-    <button onclick="go('tarefas.html')">Tarefas</button>
-    <button onclick="go('promob_export.html')">Exportar Promob</button>
-    <button onclick="go('crm')">CRM</button>
-
+    <button onclick="go('estoquecontagens.html')">Contagem Estoque</button><button onclick="go('estoquedashboard.html')">Dashboard Estoque</button><button onclick="go('tarefas.html')">Tarefas</button><button onclick="go('promob_export.html')">Exportar Promob</button><button onclick="go('crm')">CRM</button>
     <div class="group-title">Administração</div>
-    <button onclick="go('usuarios_admin.html')">Usuários</button>
-    <button onclick="logout()">Sair</button>
+    <button onclick="go('usuarios_admin.html')">Usuários</button><button onclick="logout()">Sair</button>
   </aside>
 
   <main class="content">
     <section class="header-card">
-      <div>
-        <h1>Painel Administrativo</h1>
-        <p>Área separada para controle interno da ColorGlass. Acesso permitido apenas para usuário nível 3.</p>
-      </div>
+      <div><h1>Painel Administrativo</h1><p>Visão geral de vendas, status, recebimentos e atalhos operacionais.</p></div>
       <div class="badge" id="adminBadge">Validando acesso</div>
     </section>
 
     <section class="grid">
       <div class="card"><h2>Total de orçamentos</h2><div class="number" id="cardOrcamentos">--</div><div class="hint">Todos os pedidos carregados</div></div>
-      <div class="card"><h2>Pedidos aprovados+</h2><div class="number" id="cardAprovados">--</div><div class="hint">Status 2 a 5</div></div>
-      <div class="card"><h2>Usuários</h2><div class="number" id="cardUsuarios">--</div><div class="hint">Cadastros no banco</div></div>
-      <div class="card"><h2>Usuários pendentes</h2><div class="number" id="cardPendentes">--</div><div class="hint">Sem aprovação/token</div></div>
+      <div class="card"><h2>Vendido no mês</h2><div class="number" id="cardMes">--</div><div class="hint">Soma dos pedidos criados neste mês</div></div>
+      <div class="card"><h2>Recebido</h2><div class="number" id="cardRecebido">--</div><div class="hint">Soma estimada de valor pago</div></div>
+      <div class="card"><h2>Pendente</h2><div class="number" id="cardPendente">--</div><div class="hint">Valor total menos recebido</div></div>
+      <div class="card"><h2>Aprovados</h2><div class="number" id="cardAprovados">--</div><div class="hint">Status 2</div></div>
+      <div class="card"><h2>Em produção</h2><div class="number" id="cardProducao">--</div><div class="hint">Status 3</div></div>
+      <div class="card"><h2>Entregues</h2><div class="number" id="cardEntregues">--</div><div class="hint">Status 5</div></div>
+      <div class="card"><h2>Usuários pendentes</h2><div class="number" id="cardPendentes">--</div><div class="hint">Cadastros aguardando aprovação</div></div>
     </section>
 
-    <section class="section">
-      <h2>Ações rápidas</h2>
-      <div class="actions">
-        <button class="btn" onclick="go('usuarios_admin.html')">Gerenciar usuários</button>
-        <button class="btn" onclick="go('perfis.html')">Editar perfis</button>
-        <button class="btn" onclick="go('vidros.html')">Editar vidros</button>
-        <button class="btn" onclick="go('insumos.html')">Editar insumos</button>
-        <button class="btn secondary" onclick="go('pagamentos.html')">Abrir pagamentos</button>
-        <button class="btn secondary" onclick="go('estoquedashboard.html')">Ver estoque</button>
-      </div>
-    </section>
+    <section class="section"><h2>Ações rápidas</h2><div class="actions">
+      <button class="btn" onclick="go('index_loja.html')">Novo orçamento</button><button class="btn" onclick="go('usuarios_admin.html')">Gerenciar usuários</button><button class="btn" onclick="go('perfis.html')">Perfis</button><button class="btn" onclick="go('vidros.html')">Vidros</button><button class="btn" onclick="go('insumos.html')">Insumos</button><button class="btn secondary" onclick="go('pagamentos.html')">Pagamentos</button><button class="btn secondary" onclick="go('controle_loja.html')">Acompanhamento</button><button class="btn secondary" onclick="go('estoquedashboard.html')">Estoque</button>
+    </div></section>
 
     <section class="section">
-      <h2>Últimos orçamentos</h2>
-      <div id="orcamentosRecentes"><em>Carregando...</em></div>
-      <div class="status-text" id="statusPainel"></div>
+      <h2>Orçamentos</h2>
+      <div class="toolbar"><input id="busca" placeholder="Buscar pedido, cliente, loja ou status" oninput="renderOrcamentos()"><select id="filtroStatus" onchange="renderOrcamentos()"><option value="">Todos os status</option><option value="1">Orçamento</option><option value="2">Aprovado</option><option value="3">Em produção</option><option value="4">Separado</option><option value="5">Entregue</option><option value="0">Cancelado</option></select></div>
+      <div id="orcamentosRecentes"><em>Carregando...</em></div><div class="status-text" id="statusPainel"></div>
     </section>
   </main>
 </div>
-
 <script>
-const API_BASE = "https://colorglass.onrender.com";
-let session = { level:null, storeid:null };
-
-function getToken(){
-  const params = new URLSearchParams(window.location.search);
-  const tokenUrl = params.get("token");
-  if (tokenUrl) {
-    localStorage.setItem("USER_TOKEN", tokenUrl);
-    localStorage.setItem("ADMIN_TOKEN", tokenUrl);
-    params.delete("token");
-    const clean = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
-    window.history.replaceState({}, document.title, clean);
-    return tokenUrl;
-  }
-  return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
-}
-
-function authHeaders(){
-  const token = getToken();
-  return token ? { "Authorization": `Bearer ${token}` } : {};
-}
-
-function go(url){ window.location.href = url; }
-
-function logout(){
-  localStorage.removeItem("USER_TOKEN");
-  localStorage.removeItem("ADMIN_TOKEN");
-  window.location.href = "login.html";
-}
-
-function escapeHtml(value){
-  return String(value ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function formatarData(dataISO){
-  if (!dataISO) return "-";
-  const d = new Date(dataISO);
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleString("pt-BR");
-}
-
-function statusLabel(status){
-  const mapa = {0:"Cancelado",1:"Orçamento",2:"Aprovado",3:"Em Produção",4:"Separado",5:"Entregue"};
-  return mapa[Number(status)] || "Desconhecido";
-}
-
-async function validarAdmin(){
-  const token = getToken();
-  if (!token) {
-    window.location.href = "login.html";
-    return false;
-  }
-
-  const res = await fetch(`${API_BASE}/api/auth/validar`, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${token}` }
-  });
-  const data = await res.json();
-
-  if (!res.ok || !data.success) {
-    window.location.href = "login.html";
-    return false;
-  }
-
-  session = { level:Number(data.level || 0), storeid:data.storeid || null };
-  if (session.level !== 3) {
-    document.querySelector(".content").innerHTML = `
-      <section class="header-card">
-        <div>
-          <h1>Acesso negado</h1>
-          <p>Esta área é exclusiva para administrador nível 3.</p>
-        </div>
-        <button class="btn" onclick="go('index_loja.html')">Voltar para loja</button>
-      </section>`;
-    return false;
-  }
-
-  document.getElementById("adminBadge").textContent = "Admin nível 3";
-  return true;
-}
-
-async function carregarPainel(){
-  const status = document.getElementById("statusPainel");
-  try {
-    const [resOrc, resUsers] = await Promise.all([
-      fetch(`${API_BASE}/api/orcamentos`, { headers:authHeaders() }),
-      fetch(`${API_BASE}/api/admin/usuarios`, { headers:authHeaders() })
-    ]);
-
-    const dataOrc = await resOrc.json();
-    const dataUsers = await resUsers.json();
-    const orcamentos = Array.isArray(dataOrc.orcamentos) ? dataOrc.orcamentos : [];
-    const usuarios = Array.isArray(dataUsers.usuarios) ? dataUsers.usuarios : [];
-
-    document.getElementById("cardOrcamentos").textContent = orcamentos.length;
-    document.getElementById("cardAprovados").textContent = orcamentos.filter(o => Number(o.status) >= 2 && Number(o.status) <= 5).length;
-    document.getElementById("cardUsuarios").textContent = usuarios.length;
-    document.getElementById("cardPendentes").textContent = usuarios.filter(u => !u.aprovado).length;
-
-    renderOrcamentos(orcamentos.slice().sort((a,b) => Number(b.numero_pedido || 0) - Number(a.numero_pedido || 0)).slice(0,12));
-    status.textContent = "Painel carregado.";
-  } catch (err) {
-    console.error(err);
-    status.textContent = "Erro ao carregar painel.";
-    status.classList.add("erro");
-  }
-}
-
-function renderOrcamentos(orcamentos){
-  const el = document.getElementById("orcamentosRecentes");
-  if (!orcamentos.length) {
-    el.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
-    return;
-  }
-
-  el.innerHTML = `
-    <table>
-      <thead><tr><th>Pedido</th><th>Cliente</th><th>Status</th><th>Loja</th><th>Valor</th><th>Data</th><th>Ação</th></tr></thead>
-      <tbody>
-        ${orcamentos.map(o => `
-          <tr>
-            <td>${escapeHtml(o.numero_pedido ?? "-")}</td>
-            <td>${escapeHtml(o.cliente_nome || "-")}</td>
-            <td><span class="status-pill ${Number(o.status) >= 2 ? "ok" : "warn"}">${escapeHtml(o.status_label || statusLabel(o.status))}</span></td>
-            <td>${escapeHtml(o.lojaid || "-")}</td>
-            <td>R$ ${Number(o.valor_total || 0).toFixed(2)}</td>
-            <td>${formatarData(o.data_criacao)}</td>
-            <td><button class="btn secondary" onclick="go('vizualizacao.html?orcamento_uuid=${encodeURIComponent(o.id)}')">Ver</button></td>
-          </tr>`).join("")}
-      </tbody>
-    </table>`;
-}
-
-validarAdmin().then(ok => { if (ok) carregarPainel(); });
+const API_BASE="https://colorglass.onrender.com";let session={level:null,storeid:null};let orcamentosCache=[];let usuariosCache=[];
+function getToken(){return localStorage.getItem("USER_TOKEN")||localStorage.getItem("ADMIN_TOKEN")||""}function authHeaders(){const token=getToken();return token?{"Authorization":`Bearer ${token}`}:{}}function go(url){window.location.href=url}function logout(){localStorage.removeItem("USER_TOKEN");localStorage.removeItem("ADMIN_TOKEN");window.location.href="login.html"}
+function escapeHtml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}function moeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0})}function dataBR(d){if(!d)return"-";const dt=new Date(d);return Number.isNaN(dt.getTime())?"-":dt.toLocaleDateString("pt-BR")}function statusLabel(s){return({0:"Cancelado",1:"Orçamento",2:"Aprovado",3:"Em produção",4:"Separado",5:"Entregue"})[Number(s)]||"Desconhecido"}
+function somaPago(valorPago){if(!valorPago)return 0;if(typeof valorPago==="number")return valorPago;if(Array.isArray(valorPago))return valorPago.reduce((t,p)=>t+Number(p?.valor||p?.value||p||0),0);if(typeof valorPago==="object")return Object.values(valorPago).reduce((t,p)=>t+Number(p?.valor||p?.value||p||0),0);return Number(valorPago||0)}
+async function validarAdmin(){const token=getToken();if(!token){window.location.href="login.html";return false}const res=await fetch(`${API_BASE}/api/auth/validar`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}});const data=await res.json();if(!res.ok||!data.success){window.location.href="login.html";return false}session={level:Number(data.level||0),storeid:data.storeid||null};if(session.level!==3){document.querySelector(".content").innerHTML=`<section class="header-card"><div><h1>Acesso negado</h1><p>Esta área é exclusiva para administrador nível 3.</p></div><button class="btn" onclick="go('index_loja.html')">Voltar para loja</button></section>`;return false}document.getElementById("adminBadge").textContent="Admin nível 3";return true}
+async function carregarPainel(){const status=document.getElementById("statusPainel");try{const [resOrc,resUsers]=await Promise.all([fetch(`${API_BASE}/api/orcamentos`,{headers:authHeaders()}),fetch(`${API_BASE}/api/admin/usuarios`,{headers:authHeaders()})]);const dataOrc=await resOrc.json();const dataUsers=await resUsers.json();orcamentosCache=Array.isArray(dataOrc.orcamentos)?dataOrc.orcamentos:[];usuariosCache=Array.isArray(dataUsers.usuarios)?dataUsers.usuarios:[];atualizarCards();renderOrcamentos();status.textContent="Painel carregado."}catch(err){console.error(err);status.textContent="Erro ao carregar painel.";status.classList.add("erro")}}
+function atualizarCards(){const hoje=new Date();const mes=hoje.getMonth();const ano=hoje.getFullYear();const total=orcamentosCache.reduce((t,o)=>t+Number(o.valor_total||0),0);const recebido=orcamentosCache.reduce((t,o)=>t+somaPago(o.valor_pago),0);const vendidoMes=orcamentosCache.filter(o=>{const d=new Date(o.data_criacao);return !Number.isNaN(d.getTime())&&d.getMonth()===mes&&d.getFullYear()===ano}).reduce((t,o)=>t+Number(o.valor_total||0),0);document.getElementById("cardOrcamentos").textContent=orcamentosCache.length;document.getElementById("cardMes").textContent=moeda(vendidoMes);document.getElementById("cardRecebido").textContent=moeda(recebido);document.getElementById("cardPendente").textContent=moeda(Math.max(total-recebido,0));document.getElementById("cardAprovados").textContent=orcamentosCache.filter(o=>Number(o.status)===2).length;document.getElementById("cardProducao").textContent=orcamentosCache.filter(o=>Number(o.status)===3).length;document.getElementById("cardEntregues").textContent=orcamentosCache.filter(o=>Number(o.status)===5).length;document.getElementById("cardPendentes").textContent=usuariosCache.filter(u=>!u.aprovado).length}
+function filtrarOrcamentos(){const busca=(document.getElementById("busca")?.value||"").toLowerCase().trim();const filtroStatus=document.getElementById("filtroStatus")?.value||"";return orcamentosCache.filter(o=>{if(filtroStatus!==""&&String(o.status)!==filtroStatus)return false;if(!busca)return true;return [o.numero_pedido,o.cliente_nome,o.lojaid,o.status_label,statusLabel(o.status)].join(" ").toLowerCase().includes(busca)}).sort((a,b)=>Number(b.numero_pedido||0)-Number(a.numero_pedido||0))}
+function classeStatus(s){s=Number(s);if(s===0)return"danger";if(s>=2)return"ok";return"warn"}function renderOrcamentos(){const lista=filtrarOrcamentos().slice(0,80);const el=document.getElementById("orcamentosRecentes");if(!lista.length){el.innerHTML="<em>Nenhum orçamento encontrado.</em>";return}el.innerHTML=`<table><thead><tr><th>Pedido</th><th>Cliente</th><th>Status</th><th>Loja</th><th>Valor</th><th>Pago</th><th>Pendente</th><th>Data</th><th>Ações</th></tr></thead><tbody>${lista.map(o=>{const total=Number(o.valor_total||0);const pago=somaPago(o.valor_pago);return`<tr><td>${escapeHtml(o.numero_pedido??"-")}</td><td>${escapeHtml(o.cliente_nome||"-")}</td><td><span class="pill ${classeStatus(o.status)}">${escapeHtml(o.status_label||statusLabel(o.status))}</span></td><td>${escapeHtml(o.lojaid||"-")}</td><td class="money">${moeda(total)}</td><td>${moeda(pago)}</td><td>${moeda(Math.max(total-pago,0))}</td><td>${dataBR(o.data_criacao)}</td><td><div class="actions"><button class="btn small secondary" onclick="go('portas.html?orcamento_uuid=${encodeURIComponent(o.id)}')">Portas</button><button class="btn small secondary" onclick="go('vizualizacao.html?orcamento_uuid=${encodeURIComponent(o.id)}')">Ver</button><button class="btn small secondary" onclick="go('aprovacao.html?orcamento_uuid=${encodeURIComponent(o.id)}')">Aprovar</button></div></td></tr>`}).join("")}</tbody></table>`;document.getElementById("statusPainel").textContent=`Mostrando ${lista.length} orçamento(s).`}
+validarAdmin().then(ok=>{if(ok)carregarPainel()});
 </script>
 </body>
 </html>
