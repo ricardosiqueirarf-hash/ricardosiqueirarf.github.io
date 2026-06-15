@@ -99,6 +99,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("portas-saved-table.js");
         await carregarScriptPortas("portas-verification-collapse.js");
         await carregarScriptPortas("approval-navigation-fix.js");
+        await carregarScriptPortas("orcamento-info-button.js");
         await carregarScriptPortas("deslizante-edit-fix.js");
         await carregarScriptPortas("edit-mode-visual-fix.js");
         await carregarScriptPortas("portas-actions.js");
