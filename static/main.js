@@ -131,7 +131,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("dobradicas-auto-fix.js");
         await carregarScriptPortas("dobradicas-fields-final-fix.js");
         await carregarScriptPortas("editing-state-fix.js");
-        await carregarScriptPortas("portas-nan-svg-fix.js?v=1");
+        await carregarScriptPortas("portas-nan-svg-fix.js?v=2");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
     }
