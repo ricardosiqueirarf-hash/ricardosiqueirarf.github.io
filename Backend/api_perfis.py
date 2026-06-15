@@ -3,11 +3,24 @@ import requests
 from functools import wraps
 
 perfis_bp = Blueprint("perfis_bp", __name__)
- 
+
 # ===================== UTIL =====================
 def calcular_preco(custo, margem, perda):
     custo_com_perda = custo * (1 + perda / 100)
     return custo_com_perda * (1 + margem / 100)
+
+
+def normalizar_tipologia(valor):
+    return "divisao_ambiente" if str(valor or "").strip() == "correr" else str(valor or "").strip()
+
+
+def normalizar_tipologias(lista):
+    resultado = []
+    for item in lista or []:
+        valor = normalizar_tipologia(item)
+        if valor and valor not in resultado:
+            resultado.append(valor)
+    return resultado
 
 # ===================== ROTAS PERFIS =====================
 @perfis_bp.route("/api/perfis", methods=["GET"])
@@ -15,7 +28,10 @@ def listar_perfis():
     from app import SUPABASE_URL, HEADERS
     r = requests.get(f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc", headers=HEADERS)
     r.raise_for_status()
-    return jsonify(r.json())
+    perfis = r.json()
+    for perfil in perfis:
+        perfil["tipologias"] = normalizar_tipologias(perfil.get("tipologias", []))
+    return jsonify(perfis)
 
 @perfis_bp.route("/api/perfis", methods=["POST"])
 def criar_perfil():
@@ -28,8 +44,8 @@ def criar_perfil():
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", []),
-        "insumos": data.get("insumos", [])  # <-- adicionado
+        "tipologias": normalizar_tipologias(data.get("tipologias", [])),
+        "insumos": data.get("insumos", [])
     }
     r = requests.post(f"{SUPABASE_URL}/rest/v1/perfis", headers=HEADERS, json=payload)
     r.raise_for_status()
@@ -46,8 +62,8 @@ def editar_perfil(id):
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", []),
-        "insumos": data.get("insumos", [])  # <-- adicionado
+        "tipologias": normalizar_tipologias(data.get("tipologias", [])),
+        "insumos": data.get("insumos", [])
     }
     r = requests.patch(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS, json=payload)
     r.raise_for_status()
@@ -59,4 +75,3 @@ def deletar_perfil(id):
     r = requests.delete(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS)
     r.raise_for_status()
     return jsonify({"status": "deleted"})
-
