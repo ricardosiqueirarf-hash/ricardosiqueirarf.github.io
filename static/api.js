@@ -1,34 +1,48 @@
 // =====================
 // BACKEND / FETCH
 // =====================
+function atualizarFerramentaOrcamentoAposCarga() {
+    if (typeof renderizarConferenciaCalculoPorta === "function") {
+        renderizarConferenciaCalculoPorta();
+    }
+    if (typeof prepararCardUnificadoOrcamento === "function") {
+        prepararCardUnificadoOrcamento();
+    }
+}
+
 async function carregarPerfis() {
     const res = await fetch(`${API_BASE}/api/perfis`);
     todosPerfis = await res.json();
     atualizarPerfisSelect();
+    atualizarFerramentaOrcamentoAposCarga();
 }
 
 async function carregarVidros() {
     const res = await fetch(`${API_BASE}/api/vidros`);
     todosVidros = await res.json();
     atualizarVidrosSelect();
+    atualizarFerramentaOrcamentoAposCarga();
 }
 
 async function carregarInsumos() {
     const res = await fetch(`${API_BASE}/api/materiais`);
     todosInsumos = await res.json();
     atualizarDetalhesCusto();
+    atualizarFerramentaOrcamentoAposCarga();
 }
 
 async function carregarPuxadores() {
     const res = await fetch(`${API_BASE}/api/puxadores`, { headers: authHeader() });
     todosPuxadores = await res.json();
     atualizarPuxadoresSelect();
+    atualizarFerramentaOrcamentoAposCarga();
 }
 
 async function carregarTags() {
     const res = await fetch(`${API_BASE}/api/tags`);
     todasTags = await res.json();
     atualizarPrecoPorta();
+    atualizarFerramentaOrcamentoAposCarga();
 }
 
 async function carregarPortas() {
@@ -38,6 +52,7 @@ async function carregarPortas() {
         if (data.success && data.portas) {
             portas = data.portas.map((p) => ({ ...p, id: idCounter++ }));
             renderPortas();
+            atualizarFerramentaOrcamentoAposCarga();
         }
     } catch (err) {
         console.error(err);
@@ -84,3 +99,4 @@ window.carregarTags = carregarTags;
 window.carregarPortas = carregarPortas;
 window.carregarOrcamentoInfo = carregarOrcamentoInfo;
 window.salvarPortasBackend = salvarPortasBackend;
+window.atualizarFerramentaOrcamentoAposCarga = atualizarFerramentaOrcamentoAposCarga;
