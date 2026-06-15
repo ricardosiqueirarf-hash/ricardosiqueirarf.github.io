@@ -105,10 +105,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("portas-actions.js");
         await carregarScriptPortas("dobradicas-auto-fix.js");
         await carregarScriptPortas("dobradicas-fields-final-fix.js");
-        await carregarScriptPortas("closet-evidence-fix.js");
-        await carregarScriptPortas("closet-evidence-no-preview.js");
         await carregarScriptPortas("editing-state-fix.js");
-        await carregarScriptPortas("portas-preselect-tipologia.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
     }
