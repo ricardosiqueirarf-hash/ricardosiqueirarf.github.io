@@ -1,278 +1,76 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Financeiro - Pedidos Aprovados</title>
-
-<style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-  background: #f5f7fa;
-  color: #111;
-  padding: 24px;
-}
-
-h1 {
-  margin-bottom: 8px;
-  color: #1079ba;
-}
-
-.hint {
-  color: #555;
-  margin-bottom: 18px;
-  font-size: 0.9rem;
-}
-
-.btn {
-  background: #1079ba;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn:hover {
-  background: #0d5d8c;
-}
-
-.table-wrapper {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 760px;
-}
-
-th, td {
-  padding: 12px 14px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-th {
-  background: #e6f0fa;
-  color: #1f2937;
-  font-weight: 700;
-}
-
-tr:last-child td {
-  border-bottom: none;
-}
-
-tr.debito-em-aberto {
-  background: rgba(239, 68, 68, 0.12);
-}
-
-.status-select {
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #cbd5f5;
-  background: #f8fafc;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.status {
-  margin-top: 12px;
-  font-size: 0.9rem;
-  color: #555;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Receber | Financeiro ColorGlass</title>
+  <style>
+    :root {
+      --bg:#f4f7fb; --card:#fff; --text:#172033; --muted:#64748b; --line:#e2e8f0;
+      --blue:#1079ba; --blue-dark:#0d5d8c; --green:#15803d; --amber:#b45309; --red:#b91c1c;
+      --shadow:0 16px 38px rgba(15,23,42,.09);
+    }
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:32px 20px;background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:white}
+    .wrap{width:min(1280px,calc(100% - 32px));margin:0 auto}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    h1{margin:0 0 8px;font-size:clamp(2rem,4vw,2.8rem);letter-spacing:-.04em}.sub{margin:0;opacity:.92}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    main{padding:26px 0 44px;display:grid;gap:18px}.btn,button,a.btn{border:0;border-radius:999px;padding:10px 15px;font-size:.9rem;font-weight:800;cursor:pointer;color:white;background:var(--blue);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}.btn:hover,button:hover:not(:disabled){background:var(--blue-dark)}button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#334155}.success{background:var(--green)}.danger{background:var(--red)}.small{padding:8px 11px;font-size:.8rem}
+    .cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:13px}.metric{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:17px}.metric span{display:block;color:var(--muted);font-weight:900;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}.metric strong{display:block;font-size:clamp(1.25rem,2vw,1.65rem);letter-spacing:-.04em}.metric small{display:block;margin-top:7px;color:var(--muted);font-weight:700}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}.card-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.card-head h2{margin:0;color:var(--blue-dark);font-size:1.18rem}
+    .filters{padding:16px 20px;display:grid;grid-template-columns:220px minmax(240px,1fr) auto;gap:12px;align-items:end;border-bottom:1px solid var(--line);background:#f8fafc}label{display:grid;gap:7px;font-weight:900;color:#334155;font-size:.88rem}select,input{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:11px 12px;font-size:.95rem;color:#0f172a;background:white;outline:none}select:focus,input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(16,121,186,.12)}
+    .status{padding:12px 20px;color:var(--muted);font-weight:800;min-height:45px;display:flex;align-items:center;border-bottom:1px solid var(--line)}.status.ok{color:var(--green)}.status.erro{color:var(--red)}.table-wrap{overflow-x:auto}table{width:100%;min-width:1120px;border-collapse:collapse}th,td{padding:12px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;white-space:nowrap}th{background:#f8fafc;color:#475569;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em}tbody tr:hover{background:#f8fafc}.cliente{max-width:280px;overflow:hidden;text-overflow:ellipsis}.money{font-weight:900;color:var(--blue-dark)}.empty{padding:28px;color:var(--muted);text-align:center;font-weight:900}
+    .badge{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:.78rem;font-weight:900;border:1px solid transparent}.a_vencer{color:#0f766e;background:#ccfbf1;border-color:#99f6e4}.vence_hoje{color:#92400e;background:#fef3c7;border-color:#fde68a}.vencido{color:#991b1b;background:#fee2e2;border-color:#fecaca}.recebido{color:#166534;background:#dcfce7;border-color:#bbf7d0}.cancelado{color:#475569;background:#e2e8f0;border-color:#cbd5e1}.row-actions{display:flex;gap:7px;flex-wrap:wrap}
+    @media(max-width:1120px){.cards{grid-template-columns:repeat(3,1fr)}}@media(max-width:760px){.wrap{width:min(100% - 22px,1280px)}.cards{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.btn,button,a.btn{width:100%}.actions{width:100%}}
+  </style>
 </head>
-
 <body>
-
-<h1>Financeiro</h1>
-<p class="hint">
-  Pedidos aprovados (status 2, 3, 4, 5).  
-  Dados carregados com segurança via backend.
-</p>
-
-<button class="btn" onclick="carregarPedidos()">Atualizar</button>
-
-<br><br>
-
-<div class="table-wrapper">
-  <table>
-    <thead>
-      <tr>
-        <th>Nº Pedido</th>
-        <th>Cliente</th>
-        <th>Data</th>
-        <th>Valor Total</th>
-        <th>Valor Pago</th>
-        <th>Status do Pedido</th>
-      </tr>
-    </thead>
-    <tbody id="tabelaPedidos">
-      <tr>
-        <td colspan="6"><em>Carregando...</em></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="status" id="statusMensagem"></div>
-
+  <header><div class="wrap"><div class="top"><div><h1>A Receber</h1><p class="sub">ERP financeiro dos boletos Asaas gerados na aprovação dos pedidos.</p></div><div class="actions"><button id="btnAtualizarTopo">Atualizar</button></div></div></div></header>
+  <main class="wrap">
+    <section class="cards">
+      <div class="metric"><span>Total aberto</span><strong id="mTotalAberto">R$ 0,00</strong><small id="mQtdAberto">0 cobranças abertas</small></div>
+      <div class="metric"><span>Vence hoje</span><strong id="mHoje">R$ 0,00</strong><small>entrada prevista hoje</small></div>
+      <div class="metric"><span>Vencidos</span><strong id="mVencidos">R$ 0,00</strong><small>precisa cobrança</small></div>
+      <div class="metric"><span>Próximos 7 dias</span><strong id="m7Dias">R$ 0,00</strong><small>a vencer</small></div>
+      <div class="metric"><span>Próximos 30 dias</span><strong id="m30Dias">R$ 0,00</strong><small>a vencer</small></div>
+      <div class="metric"><span>Recebido no mês</span><strong id="mRecebidoMes">R$ 0,00</strong><small id="mQtdRecebido">0 recebidos</small></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Recebíveis</h2><button id="btnAtualizar" class="secondary small">Atualizar lista</button></div>
+      <div class="filters">
+        <label>Período / Status<select id="periodo"><option value="aberto">Abertos</option><option value="hoje">Vence hoje</option><option value="7dias">Próximos 7 dias</option><option value="mes">Próximos 30 dias</option><option value="vencidos">Vencidos</option><option value="recebidos">Recebidos</option><option value="cancelados">Cancelados</option><option value="todos">Todos</option></select></label>
+        <label>Buscar<input id="busca" type="search" placeholder="Pedido, cliente, payment_id ou status..." /></label>
+        <button id="btnFiltrar">Filtrar</button>
+      </div>
+      <div id="statusLine" class="status">Carregando recebíveis...</div>
+      <div class="table-wrap"><table><thead><tr><th>Vencimento</th><th>Pedido</th><th>Cliente</th><th>Parcela</th><th>Valor</th><th>Status</th><th>Asaas</th><th>Ações</th></tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody></table></div>
+    </section>
+  </main>
 <script>
-function setStatus(msg) {
-  document.getElementById("statusMensagem").textContent = msg;
-}
-
-function parseValor(v) {
-  if (v === null || v === undefined || v === "") return 0;
-  if (typeof v === "number") return v;
-
-  return Number(
-    String(v)
-      .replace(/[^0-9,.-]/g, "")
-      .replace(/\./g, "")
-      .replace(",", ".")
-  ) || 0;
-}
-
-function formatarData(v) {
-  if (!v) return "--";
-  const d = new Date(v);
-  return isNaN(d) ? v : d.toLocaleString("pt-BR");
-}
-
-function renderizarPedidos(pedidos) {
-  const tbody = document.getElementById("tabelaPedidos");
-  tbody.innerHTML = "";
-
-  if (!pedidos || !pedidos.length) {
-    tbody.innerHTML =
-      "<tr><td colspan='6'><em>Nenhum pedido encontrado.</em></td></tr>";
-    return;
-  }
-
-  const fmt = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
-
-  const statusLabels = {
-    0: "Cancelado",
-    1: "Orçamento",
-    2: "Aprovado",
-    3: "Em Produção",
-    4: "Separado",
-    5: "Entregue"
-  };
-
-  async function atualizarStatusPedido(uuid, novoStatus, selectEl) {
-    if (!uuid) {
-      setStatus("Não foi possível identificar o pedido para atualizar o status.");
-      selectEl.value = selectEl.dataset.previousValue;
-      return;
-    }
-
-    try {
-      setStatus("Atualizando status...");
-      const res = await fetch(`/api/orcamento/${uuid}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: Number(novoStatus) })
-      });
-
-      const payload = await res.json();
-      if (!res.ok || !payload.success) {
-        throw new Error(payload.error || "Falha ao atualizar status.");
-      }
-
-      selectEl.dataset.previousValue = selectEl.value;
-      setStatus(`Status atualizado para ${selectEl.value}.`);
-    } catch (err) {
-      console.error(err);
-      setStatus("Erro ao atualizar status do pedido.");
-      selectEl.value = selectEl.dataset.previousValue;
-    }
-  }
-
-  pedidos.forEach(p => {
-    const total = parseValor(p.valor_total);
-    const pago = parseValor(p.valor_pago);
-    const statusAtual = String(p.status ?? "1");
-
-    const selectStatus = document.createElement("select");
-    selectStatus.className = "status-select";
-    ["0", "1", "2", "3", "4", "5"].forEach(opcao => {
-      const label = statusLabels[Number(opcao)] || opcao;
-      const option = document.createElement("option");
-      option.value = opcao;
-      option.textContent = `${opcao} - ${label}`;
-      if (opcao === statusAtual) option.selected = true;
-      selectStatus.appendChild(option);
-    });
-    selectStatus.dataset.previousValue = selectStatus.value;
-    selectStatus.addEventListener("change", event => {
-      const target = event.currentTarget;
-      const confirmar = window.confirm(
-        "tem certeza que eseja alterar status?"
-      );
-      if (!confirmar) {
-        target.value = target.dataset.previousValue;
-        return;
-      }
-      atualizarStatusPedido(p.id, target.value, target);
-    });
-
-    const tr = document.createElement("tr");
-    if (total > pago) tr.classList.add("debito-em-aberto");
-
-    tr.innerHTML = `
-      <td>${p.numero_pedido ?? "--"}</td>
-      <td>${p.cliente_nome ?? "--"}</td>
-      <td>${formatarData(p.data_criacao)}</td>
-      <td>${fmt.format(total)}</td>
-      <td>${fmt.format(pago)}</td>
-    `;
-    const statusTd = document.createElement("td");
-    statusTd.appendChild(selectStatus);
-    tr.appendChild(statusTd);
-
-    tbody.appendChild(tr);
-  });
-}
-
-async function carregarPedidos() {
-  try {
-    setStatus("Carregando pedidos...");
-    const res = await fetch("/api/financeiro");
-
-    if (!res.ok) {
-      throw new Error("Erro ao buscar dados do financeiro");
-    }
-
-    const dados = await res.json();
-    renderizarPedidos(dados);
-    setStatus(`${dados.length} pedido(s) carregado(s).`);
-  } catch (err) {
-    console.error(err);
-    setStatus("Erro ao carregar pedidos.");
-  }
-}
-
-document.addEventListener("DOMContentLoaded", carregarPedidos);
+const API_BASE = "";
+const $ = (id)=>document.getElementById(id);
+const els={periodo:$("periodo"),busca:$("busca"),tbody:$("tbody"),status:$("statusLine"),btnFiltrar:$("btnFiltrar"),btnAtualizar:$("btnAtualizar"),btnAtualizarTopo:$("btnAtualizarTopo"),mTotalAberto:$("mTotalAberto"),mQtdAberto:$("mQtdAberto"),mHoje:$("mHoje"),mVencidos:$("mVencidos"),m7Dias:$("m7Dias"),m30Dias:$("m30Dias"),mRecebidoMes:$("mRecebidoMes"),mQtdRecebido:$("mQtdRecebido")};
+function getToken(){return localStorage.getItem("USER_TOKEN")||localStorage.getItem("ADMIN_TOKEN")||""}
+function headers(extra={}){const t=getToken();return {...extra,...(t?{Authorization:`Bearer ${t}`}:{})}}
+async function parse(res){const raw=await res.text();let json=null;try{json=raw?JSON.parse(raw):null}catch{}return{raw,json}}
+async function apiGet(path){const res=await fetch(API_BASE+path,{headers:headers()});const p=await parse(res);if(!res.ok||!p.json?.success)throw new Error(p.json?.error||`HTTP ${res.status}`);return p.json}
+async function apiPost(path,body={}){const res=await fetch(API_BASE+path,{method:"POST",headers:headers({"Content-Type":"application/json"}),body:JSON.stringify(body)});const p=await parse(res);if(!res.ok||!p.json?.success)throw new Error(p.json?.error||`HTTP ${res.status}`);return p.json}
+function money(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function dataBR(v){if(!v)return"—";const [a,m,d]=String(v).slice(0,10).split("-");return a&&m&&d?`${d}/${m}/${a}`:v}
+function setStatus(msg,t=""){els.status.textContent=msg;els.status.className=`status ${t}`.trim()}
+function loading(v){[els.btnFiltrar,els.btnAtualizar,els.btnAtualizarTopo].forEach(b=>b.disabled=v)}
+function renderResumo(r={}){els.mTotalAberto.textContent=money(r.total_aberto);els.mQtdAberto.textContent=`${r.quantidade_abertos||0} cobranças abertas`;els.mHoje.textContent=money(r.vence_hoje);els.mVencidos.textContent=money(r.vencidos);els.m7Dias.textContent=money(r.a_vencer_7_dias);els.m30Dias.textContent=money(r.a_vencer_30_dias);els.mRecebidoMes.textContent=money(r.recebido_mes);els.mQtdRecebido.textContent=`${r.quantidade_recebidos||0} recebidos`}
+function td(txt,cls=""){const c=document.createElement("td");c.textContent=txt??"—";if(cls)c.className=cls;return c}
+function btn(txt,cls,fn){const b=document.createElement("button");b.type="button";b.textContent=txt;b.className=`small ${cls||""}`.trim();b.onclick=fn;return b}
+function link(txt,href){const a=document.createElement("a");a.textContent=txt;a.href=href;a.target="_blank";a.rel="noopener noreferrer";a.className="btn small";return a}
+function empty(msg){els.tbody.innerHTML="";const tr=document.createElement("tr");const c=td(msg,"empty");c.colSpan=8;tr.appendChild(c);els.tbody.appendChild(tr)}
+function badge(item){const s=document.createElement("span");s.className=`badge ${item.status_categoria||"a_vencer"}`;s.textContent=item.status_label||item.status_raw||"—";return s}
+function pode(item){return !["recebido","cancelado"].includes(item.status_categoria)}
+function renderItens(itens=[]){els.tbody.innerHTML="";if(!itens.length){empty("Nenhum recebível encontrado para este filtro.");return}itens.forEach(item=>{const tr=document.createElement("tr");tr.appendChild(td(dataBR(item.vencimento)));tr.appendChild(td(item.numero_pedido||"—"));tr.appendChild(td(item.cliente_nome||"—","cliente"));tr.appendChild(td(item.parcela?`${item.parcela}/2`:"—"));tr.appendChild(td(money(item.valor),"money"));const st=document.createElement("td");st.appendChild(badge(item));tr.appendChild(st);tr.appendChild(td(item.asaas_payment_id||"—"));const ac=document.createElement("td");const w=document.createElement("div");w.className="row-actions";const url=item.invoice_url||item.bank_slip_url;if(url)w.appendChild(link("Abrir boleto",url));if(item.asaas_payment_id)w.appendChild(btn("Sincronizar","secondary",()=>sync(item)));if(pode(item)){w.appendChild(btn("Baixar manual","success",()=>baixar(item)));w.appendChild(btn("Cancelar local","danger",()=>cancelar(item)))}ac.appendChild(w);tr.appendChild(ac);els.tbody.appendChild(tr)})}
+async function carregar(){if(!getToken()){empty("Sessão não encontrada. Faça login novamente.");setStatus("Sessão não encontrada. Faça login novamente.","erro");return}loading(true);setStatus("Carregando recebíveis...");try{const periodo=encodeURIComponent(els.periodo.value||"aberto");const q=encodeURIComponent(els.busca.value||"");const data=await apiGet(`/api/financeiro/a-receber?periodo=${periodo}&q=${q}`);renderResumo(data.resumo);renderItens(data.itens||[]);setStatus(`${data.total_filtrado||0} recebível(is) encontrado(s).`,"ok")}catch(e){empty(`Erro ao carregar: ${e.message}`);setStatus(`Erro ao carregar: ${e.message}`,"erro")}finally{loading(false)}}
+async function sync(item){loading(true);setStatus(`Sincronizando pedido ${item.numero_pedido||"—"}...`);try{const data=await apiPost(`/api/financeiro/a-receber/${encodeURIComponent(item.id)}/sincronizar`);setStatus(`Sincronizado. Status atual: ${data.status||"—"}.`,"ok");await carregar()}catch(e){setStatus(`Erro ao sincronizar: ${e.message}`,"erro")}finally{loading(false)}}
+async function baixar(item){const forma=prompt("Forma de pagamento recebida por fora? Ex: dinheiro, pix, transferencia","dinheiro");if(!forma)return;const obs=prompt("Observação da baixa manual:","Recebido por fora do Asaas")||"";if(!confirm(`Confirmar baixa manual de ${money(item.valor)} do pedido ${item.numero_pedido||"—"}?`))return;loading(true);setStatus("Registrando baixa manual...");try{await apiPost(`/api/financeiro/a-receber/${encodeURIComponent(item.id)}/baixar-manual`,{forma_pagamento:forma,observacao:obs});setStatus("Baixa manual registrada.","ok");await carregar()}catch(e){setStatus(`Erro ao baixar manualmente: ${e.message}`,"erro")}finally{loading(false)}}
+async function cancelar(item){const motivo=prompt("Motivo do cancelamento local:","Boleto cancelado/substituído ou recebido por fora")||"";if(!motivo)return;if(!confirm(`Cancelar localmente a cobrança de ${money(item.valor)} do pedido ${item.numero_pedido||"—"}?`))return;loading(true);setStatus("Cancelando cobrança localmente...");try{await apiPost(`/api/financeiro/a-receber/${encodeURIComponent(item.id)}/cancelar-local`,{motivo});setStatus("Cobrança cancelada localmente.","ok");await carregar()}catch(e){setStatus(`Erro ao cancelar: ${e.message}`,"erro")}finally{loading(false)}}
+els.btnFiltrar.onclick=carregar;els.btnAtualizar.onclick=carregar;els.btnAtualizarTopo.onclick=carregar;els.periodo.onchange=carregar;els.busca.addEventListener("keydown",e=>{if(e.key==="Enter")carregar()});carregar();
 </script>
-
 </body>
 </html>
-
-
-
