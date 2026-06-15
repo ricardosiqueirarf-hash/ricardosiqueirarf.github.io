@@ -34,6 +34,61 @@ function normalizarTagValor(valor) {
         .trim();
 }
 
+function normalizarChaveInsumo(valor) {
+    return String(valor ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "")
+        .trim();
+}
+
+function extrairReferenciaInsumo(valor) {
+    if (valor == null) return "";
+    if (typeof valor === "object") {
+        return valor.nome ?? valor.name ?? valor.id ?? valor.codigo ?? valor.codigo_interno ?? "";
+    }
+    return valor;
+}
+
+function encontrarInsumoDoPerfil(referencia) {
+    if (!Array.isArray(todosInsumos) || todosInsumos.length === 0) return null;
+
+    const textoOriginal = String(extrairReferenciaInsumo(referencia) ?? "").trim();
+    if (!textoOriginal) return null;
+
+    const matchDireto = todosInsumos.find((insumo) =>
+        String(insumo.nome ?? "").trim() === textoOriginal ||
+        String(insumo.id ?? "").trim() === textoOriginal ||
+        String(insumo.codigo ?? "").trim() === textoOriginal ||
+        String(insumo.codigo_interno ?? "").trim() === textoOriginal
+    );
+    if (matchDireto) return matchDireto;
+
+    const chave = normalizarChaveInsumo(textoOriginal);
+    if (!chave) return null;
+
+    const matchNormalizado = todosInsumos.find((insumo) =>
+        normalizarChaveInsumo(insumo.nome) === chave ||
+        normalizarChaveInsumo(insumo.id) === chave ||
+        normalizarChaveInsumo(insumo.codigo) === chave ||
+        normalizarChaveInsumo(insumo.codigo_interno) === chave
+    );
+    if (matchNormalizado) return matchNormalizado;
+
+    return todosInsumos.find((insumo) => {
+        const nome = normalizarChaveInsumo(insumo.nome);
+        return nome && (nome.includes(chave) || chave.includes(nome));
+    }) || null;
+}
+
+function obterInsumosDoPerfil(perfil) {
+    const referencias = Array.isArray(perfil?.insumos) ? perfil.insumos : [];
+    return referencias
+        .map((referencia) => encontrarInsumoDoPerfil(referencia))
+        .filter(Boolean);
+}
+
 function obterTagCorrespondente() {
     const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value);
     const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value);
@@ -132,9 +187,7 @@ function calcularPrecoPorta() {
     const quantidadePortas = +document.getElementById("quantidade")?.value || 1;
     const valorAdicional = +document.getElementById("valor_adicional")?.value || 0;
     const perimetro = medidas.perimetro;
-    const insumos = (perfil?.insumos || [])
-        .map((nome) => todosInsumos.find((insumo) => insumo.nome === nome))
-        .filter(Boolean);
+    const insumos = obterInsumosDoPerfil(perfil);
 
     let total = 0;
     if (perfil) total += perfil.preco * 2 * (largura + altura);
@@ -166,8 +219,10 @@ function calcularPrecoPorta() {
 
 window.obterDadosPuxador = obterDadosPuxador;
 window.normalizarTagValor = normalizarTagValor;
+window.normalizarChaveInsumo = normalizarChaveInsumo;
+window.encontrarInsumoDoPerfil = encontrarInsumoDoPerfil;
+window.obterInsumosDoPerfil = obterInsumosDoPerfil;
 window.obterTagCorrespondente = obterTagCorrespondente;
 window.calcularMedidasPorta = calcularMedidasPorta;
 window.calcularTagAplicada = calcularTagAplicada;
 window.calcularPrecoPorta = calcularPrecoPorta;
-
