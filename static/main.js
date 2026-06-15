@@ -93,9 +93,21 @@ async function carregarAcoesPortas() {
     }
 }
 
+async function carregarConferenciaCalculoPortas() {
+    try {
+        await carregarScriptPortas("calculation-check.js");
+        if (typeof inicializarConferenciaCalculoPorta === "function") {
+            inicializarConferenciaCalculoPorta();
+        }
+    } catch (err) {
+        console.error("Erro ao carregar conferência do cálculo:", err);
+    }
+}
+
 function initMain() {
     carregarAcoesPortas();
     carregarPreview3DPortas();
+    carregarConferenciaCalculoPortas();
     carregarPerfis();
     carregarVidros();
     carregarInsumos();
@@ -116,3 +128,4 @@ window.formatarMoeda = formatarMoeda;
 window.initMain = initMain;
 window.carregarPreview3DPortas = carregarPreview3DPortas;
 window.carregarAcoesPortas = carregarAcoesPortas;
+window.carregarConferenciaCalculoPortas = carregarConferenciaCalculoPortas;
