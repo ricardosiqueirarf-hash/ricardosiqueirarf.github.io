@@ -23,9 +23,7 @@ body{min-height:100vh;background:radial-gradient(circle at top,rgba(16,121,186,.
 <div class="app">
   <aside class="sidebar">
     <h3>COLOR GLASS</h3>
-    <button onclick="voltarPortas()">Voltar para portas</button>
-    <button onclick="irAprovacao()">Aprovação</button>
-    <button onclick="irIndex()">Orçamentos</button>
+    <button onclick="voltarOrcamentos()">Voltar para orçamentos</button>
   </aside>
   <main class="content">
     <div class="header"><div><h1>Informações do orçamento</h1><div class="subtitle" id="subtitulo">Carregando dados do orçamento...</div></div><div class="status-pill" id="statusPedido">Status</div></div>
@@ -38,7 +36,7 @@ body{min-height:100vh;background:radial-gradient(circle at top,rgba(16,121,186,.
 <script>
 const BACKEND_URL="https://colorglass.onrender.com";const params=new URLSearchParams(window.location.search);const ORCAMENTO_UUID=params.get('orcamento_uuid');
 function tokenAtual(){return localStorage.getItem('USER_TOKEN')||params.get('token')||''}function tokenParam(prefix='&'){const token=tokenAtual();return token?`${prefix}token=${encodeURIComponent(token)}`:''}function authHeaders(){const token=tokenAtual();return token?{Authorization:`Bearer ${token}`}:{}}function moeda(v){const n=Number(v);return Number.isFinite(n)?`R$ ${n.toFixed(2)}`:'-'}function texto(v){return(v===null||v===undefined||v==='')?'-':String(v)}function dataLocal(v){const d=new Date(v);return Number.isNaN(d.getTime())?'-':d.toLocaleString('pt-BR')}function escapeHtml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
-function voltarPortas(){if(!ORCAMENTO_UUID){window.location.href='index_loja.html';return}window.location.href=`portas.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}${tokenParam()}`}function irAprovacao(){if(!ORCAMENTO_UUID)return;window.location.href=`aprovacao.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}${tokenParam()}`}function irIndex(){window.location.href='index_loja.html'+tokenParam('?')}
+function voltarOrcamentos(){window.location.href='index_loja.html'+tokenParam('?')}
 function renderInfoItem(label,value){return`<div class="info-item"><b>${escapeHtml(label)}</b><span>${escapeHtml(texto(value))}</span></div>`}
 function renderOrcamento(o){const numero=o?.numero_pedido??o?.numero??'-';const cliente=o?.cliente_nome??o?.nome_cliente??o?.cliente??'-';const status=o?.status_label??o?.status??'-';document.getElementById('subtitulo').textContent=`${cliente} · Pedido #${numero}`;document.getElementById('statusPedido').textContent=`Status: ${status}`;document.getElementById('kpiPedido').textContent=`#${numero}`;document.getElementById('kpiCliente').textContent=cliente;document.getElementById('kpiQtd').textContent=texto(o?.quantidade_total);document.getElementById('kpiValor').textContent=moeda(o?.valor_total);document.getElementById('dadosGerais').innerHTML=[renderInfoItem('ID do orçamento',ORCAMENTO_UUID),renderInfoItem('Número do pedido',numero),renderInfoItem('Cliente',cliente),renderInfoItem('Cidade',o?.cliente_cidade??o?.cidade),renderInfoItem('LojaID',o?.lojaid??o?.lojaID??o?.storeID??o?.storeid),renderInfoItem('Status',status),renderInfoItem('Quantidade total',o?.quantidade_total),renderInfoItem('Valor total',moeda(o?.valor_total)),renderInfoItem('Data de criação',dataLocal(o?.data_criacao??o?.created_at)),renderInfoItem('Última atualização',dataLocal(o?.updated_at??o?.data_atualizacao))].join('')}
 function valorCampo(obj,nomes){for(const nome of nomes){if(obj&&obj[nome]!==undefined&&obj[nome]!==null&&obj[nome]!=='')return obj[nome]}return'-'}
