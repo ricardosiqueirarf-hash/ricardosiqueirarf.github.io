@@ -1,8 +1,8 @@
 // =====================
 // CORREÇÃO DO CÁLCULO DOS TRILHOS DESLIZANTES
-// Para deslizante, o campo vão superior/inferior representa o ML do trilho.
-// Não soma largura da porta + vão.
-// Também força o preço estimado a usar esta regra.
+// Campo vão é digitado em mm e convertido para metro linear.
+// Ex: 3000 mm = 3,000 m de trilho.
+// Para deslizante, trilho = vão em metros, NÃO largura + vão.
 // =====================
 
 function calcularComprimentoTrilhoSelecionado(trilhoSelecionado, medidas, tipo) {
@@ -20,14 +20,31 @@ function calcularComprimentoTrilhoSelecionado(trilhoSelecionado, medidas, tipo) 
 function obterFormulaTrilhoSelecionado(trilhoSelecionado, medidas, tipo) {
     if (tipo === "deslizante") {
         if (trilhoSelecionado.posicao === "superior") {
-            return `${(numeroCampoMm("vao_trilhos_superior") / 1000).toFixed(3)}m vão superior`;
+            return `${numeroCampoMm("vao_trilhos_superior").toFixed(0)} mm ÷ 1000`;
         }
         if (trilhoSelecionado.posicao === "inferior") {
-            return `${(numeroCampoMm("vao_trilhos_inferior") / 1000).toFixed(3)}m vão inferior`;
+            return `${numeroCampoMm("vao_trilhos_inferior").toFixed(0)} mm ÷ 1000`;
         }
     }
 
     return "largura da porta";
+}
+
+function calcularLinhaTrilhoPorMetroLinear(trilhoSelecionado, medidas, tipo) {
+    const trilho = trilhoSelecionado.material;
+    const comprimentoM = calcularComprimentoTrilhoSelecionado(trilhoSelecionado, medidas, tipo);
+    const precoMetro = Number(trilho?.preco) || 0;
+
+    return {
+        categoria: `trilho_${trilhoSelecionado.posicao}`,
+        item: trilho,
+        nome: `Trilho ${trilhoSelecionado.label} (${trilho?.nome || trilhoSelecionado.referencia || "não encontrado"})`,
+        quantidade: comprimentoM,
+        unidade: "m",
+        unitario: precoMetro,
+        total: precoMetro * comprimentoM,
+        formula: obterFormulaTrilhoSelecionado(trilhoSelecionado, medidas, tipo)
+    };
 }
 
 function calcularComponentesPortaAtual() {
@@ -96,20 +113,14 @@ function calcularComponentesPortaAtual() {
         }
 
         obterTrilhosSelecionados().forEach((trilhoSelecionado) => {
-            const trilho = trilhoSelecionado.material;
-            const comprimentoM = calcularComprimentoTrilhoSelecionado(trilhoSelecionado, medidas, tipo);
-            const calculo = calcularTotalMaterialPorta(trilho, medidas, { comprimentoM, base: "largura" });
-            const unidade = trilho.tipo_medida === "metro_linear" ? "m" : (trilho.tipo_medida === "m2" ? "m²" : "un");
-            componentes.linhas.push({
-                categoria: `trilho_${trilhoSelecionado.posicao}`,
-                item: trilho,
-                nome: `Trilho ${trilhoSelecionado.label} (${trilho.nome})`,
-                quantidade: calculo.quantidade,
-                unidade,
-                unitario: Number(trilho.preco) || 0,
-                total: calculo.total,
-                formula: unidade === "m" ? obterFormulaTrilhoSelecionado(trilhoSelecionado, medidas, tipo) : "1 unidade por porta"
-            });
+            // Deslizante: trilho sempre em metro linear do vão em mm / 1000.
+            if (tipo === "deslizante") {
+                componentes.linhas.push(calcularLinhaTrilhoPorMetroLinear(trilhoSelecionado, medidas, tipo));
+                return;
+            }
+
+            // Correr: por enquanto mantém largura da porta em metro linear.
+            componentes.linhas.push(calcularLinhaTrilhoPorMetroLinear(trilhoSelecionado, medidas, tipo));
         });
     }
 
@@ -175,6 +186,7 @@ function atualizarPrecoPortaDeslizanteFix() {
 
 window.calcularComprimentoTrilhoSelecionado = calcularComprimentoTrilhoSelecionado;
 window.obterFormulaTrilhoSelecionado = obterFormulaTrilhoSelecionado;
+window.calcularLinhaTrilhoPorMetroLinear = calcularLinhaTrilhoPorMetroLinear;
 window.calcularComponentesPortaAtual = calcularComponentesPortaAtual;
 window.calcularPrecoPorta = calcularPrecoPorta;
 window.atualizarPrecoPorta = atualizarPrecoPortaDeslizanteFix;
