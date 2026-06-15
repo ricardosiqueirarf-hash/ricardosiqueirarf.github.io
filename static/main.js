@@ -11,13 +11,12 @@ function go(p) {
 // =====================
 const API_BASE = "https://colorglass.onrender.com";
 
-function authHeader(extraHeaders = {}) {
-    const baseHeaders = { ...(extraHeaders || {}) };
+function authHeader() {
     if (window.ColorGlassAuth && typeof window.ColorGlassAuth.authHeaders === "function") {
-        return window.ColorGlassAuth.authHeaders(baseHeaders);
+        return window.ColorGlassAuth.authHeaders();
     }
     const token = localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
-    return token ? { ...baseHeaders, "Authorization": "Bearer " + token } : baseHeaders;
+    return token ? { "Authorization": "Bearer " + token } : {};
 }
 
 function formatarMoeda(valor) {
@@ -59,7 +58,7 @@ var todasTags = [];
 // =====================
 function carregarScriptPortas(src) {
     return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`) || document.querySelector(`script[src="/static/${src}"]`)) {
+        if (document.querySelector(`script[src="${src}"]`)) {
             resolve();
             return;
         }
@@ -68,18 +67,7 @@ function carregarScriptPortas(src) {
         script.src = src;
         script.defer = true;
         script.onload = resolve;
-        script.onerror = () => {
-            if (!src.startsWith("/static/") && !src.startsWith("http")) {
-                const fallback = document.createElement("script");
-                fallback.src = `/static/${src}`;
-                fallback.defer = true;
-                fallback.onload = resolve;
-                fallback.onerror = () => reject(new Error(`Erro ao carregar script: ${src}`));
-                document.head.appendChild(fallback);
-                return;
-            }
-            reject(new Error(`Erro ao carregar script: ${src}`));
-        };
+        script.onerror = () => reject(new Error(`Erro ao carregar script: ${src}`));
         document.head.appendChild(script);
     });
 }
