@@ -43,7 +43,6 @@ body{
 }
 .header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
 .header h1{color:var(--cg-blue-dark);font-size:1.75rem;margin-bottom:6px;}
-.header p{color:var(--cg-muted);font-weight:700;line-height:1.4;}
 .badge{
   background:var(--cg-blue-soft);color:var(--cg-blue-dark);border:1px solid rgba(16,121,186,.18);
   border-radius:18px;padding:9px 13px;font-weight:900;min-width:220px;text-align:right;
@@ -56,14 +55,13 @@ body{
 .cards{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:16px;}
 .card{
   border:1px solid rgba(16,121,186,.12);border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,44,62,.10);
-  overflow:hidden;cursor:pointer;transition:.22s ease;min-height:330px;display:flex;flex-direction:column;
+  overflow:hidden;cursor:pointer;transition:.22s ease;min-height:286px;display:flex;flex-direction:column;
 }
 .card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(15,44,62,.15);border-color:rgba(16,121,186,.30);}
 .card-head{padding:14px 16px;background:linear-gradient(135deg,rgba(231,243,251,.96),rgba(255,255,255,.82));border-bottom:1px solid rgba(16,121,186,.10);}
 .card-head h3{color:var(--cg-blue-dark);font-size:1.05rem;margin-bottom:4px;}
 .card-head p{color:var(--cg-muted);font-size:.86rem;font-weight:700;}
 .card-body{flex:1;display:grid;place-items:center;padding:18px;background:linear-gradient(180deg,#fbfdff,#eef7fc);perspective:900px;}
-.card-foot{padding:12px 16px;border-top:1px solid rgba(16,121,186,.10);color:#4b5563;font-size:.84rem;font-weight:800;background:#fff;}
 .door3d{position:relative;width:118px;height:235px;transform-style:preserve-3d;transform:rotateX(-8deg) rotateY(-24deg);}
 .door-panel{position:absolute;inset:0;border:7px solid #263944;background:linear-gradient(135deg,rgba(255,255,255,.70),rgba(133,184,210,.28));box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),0 18px 28px rgba(15,44,62,.22);}
 .door-side{position:absolute;top:0;right:-18px;width:18px;height:100%;background:linear-gradient(90deg,#263944,#516875);transform:rotateY(90deg);transform-origin:left center;}
@@ -75,7 +73,7 @@ body{
 .disabled-card:hover{transform:none;box-shadow:0 10px 24px rgba(15,44,62,.10);}
 .placeholder{
   min-height:210px;width:100%;border:1px dashed rgba(16,121,186,.22);border-radius:16px;display:grid;place-items:center;
-  color:var(--cg-muted);font-weight:900;text-align:center;padding:20px;background:rgba(248,251,255,.8);
+  color:var(--cg-muted);font-weight:950;text-align:center;padding:20px;background:rgba(248,251,255,.8);letter-spacing:.08em;
 }
 @media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{height:auto;position:relative;top:0}.cards{grid-template-columns:1fr}.sidebar{flex-direction:row;flex-wrap:wrap}.sidebar button{text-align:center;flex:1}.badge{text-align:left;width:100%;}}
 </style>
@@ -85,14 +83,12 @@ body{
   <aside class="sidebar">
     <h3>COLOR GLASS</h3>
     <button onclick="voltar()">Voltar</button>
-    <button onclick="irAprovacao()">Aprovação</button>
   </aside>
 
   <main class="content">
     <div class="header">
       <div>
         <h1>Escolha a classe do orçamento</h1>
-        <p>Selecione a classe. Para portas, o sistema abre em portas.html mantendo o orçamento atual.</p>
       </div>
       <div class="badge" id="pedidoBadge">Carregando orçamento...</div>
     </div>
@@ -107,7 +103,6 @@ body{
               <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
             </div>
           </div>
-          <div class="card-foot">Abrir orçamento de portas</div>
         </article>
 
         <article class="card" onclick="abrirPorta()">
@@ -118,7 +113,6 @@ body{
               <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
             </div>
           </div>
-          <div class="card-foot">Abrir orçamento de portas</div>
         </article>
 
         <article class="card" onclick="abrirPorta()">
@@ -129,7 +123,6 @@ body{
               <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
             </div>
           </div>
-          <div class="card-foot">Abrir orçamento de portas</div>
         </article>
       </div>
     </section>
@@ -138,9 +131,8 @@ body{
       <div class="class-title"><span></span><h2>Estruturas</h2></div>
       <div class="cards">
         <article class="card disabled-card">
-          <div class="card-head"><h3>Estruturas</h3><p>Em preparação</p></div>
-          <div class="card-body"><div class="placeholder">Classe reservada para estruturas.</div></div>
-          <div class="card-foot">Ainda não abre página específica.</div>
+          <div class="card-head"><h3>Estruturas</h3></div>
+          <div class="card-body"><div class="placeholder">INDISPONIVEL</div></div>
         </article>
       </div>
     </section>
@@ -149,9 +141,8 @@ body{
       <div class="class-title"><span></span><h2>Closet</h2></div>
       <div class="cards">
         <article class="card disabled-card">
-          <div class="card-head"><h3>Closet Evidence</h3><p>Separado das portas</p></div>
-          <div class="card-body"><div class="placeholder">Classe reservada para closet, fora do fluxo de portas.</div></div>
-          <div class="card-foot">Preview e cálculo serão tratados em página própria.</div>
+          <div class="card-head"><h3>Closet Evidence</h3></div>
+          <div class="card-body"><div class="placeholder">INDISPONIVEL</div></div>
         </article>
       </div>
     </section>
@@ -225,11 +216,6 @@ function abrirPorta() {
 
 function voltar() {
   window.location.href = 'index_loja.html' + (params.get('token') ? `?token=${encodeURIComponent(params.get('token'))}` : '');
-}
-
-function irAprovacao() {
-  if (!ORCAMENTO_UUID) return;
-  window.location.href = `aprovacao.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}${tokenParam()}`;
 }
 
 carregarDadosOrcamento();
