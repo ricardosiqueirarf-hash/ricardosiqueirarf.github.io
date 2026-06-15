@@ -12,7 +12,10 @@ function go(p) {
 const API_BASE = "https://colorglass.onrender.com";
 
 function authHeader() {
-    const token = localStorage.getItem("ADMIN_TOKEN");
+    if (window.ColorGlassAuth && typeof window.ColorGlassAuth.authHeaders === "function") {
+        return window.ColorGlassAuth.authHeaders();
+    }
+    const token = localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
     return token ? { "Authorization": "Bearer " + token } : {};
 }
 
