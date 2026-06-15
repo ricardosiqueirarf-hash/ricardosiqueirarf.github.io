@@ -3,19 +3,19 @@
 // =====================
 function obterDadosPuxador() {
     const puxadorId = document.getElementById("puxador")?.value;
-    if (puxadorId === "sem_puxador") return null;
+    if (!puxadorId || puxadorId === "sem_puxador") return null;
     const puxador = todosPuxadores.find(p => p.id == puxadorId);
     if (!puxador) return null;
 
     const tipoMedida = puxador.tipo_medida;
-    const quantidadePortas = +document.getElementById("quantidade")?.value || 1;
     const medidaPuxadorMm = +document.getElementById("medida_puxador")?.value || 0;
 
     let quantidade = 0;
     if (tipoMedida === "metro_linear") {
         quantidade = medidaPuxadorMm / 1000;
     } else {
-        quantidade = quantidadePortas;
+        // Quantidade por porta. A quantidade total de portas é aplicada só no final.
+        quantidade = 1;
     }
 
     return {
@@ -89,6 +89,168 @@ function obterInsumosDoPerfil(perfil) {
         .filter(Boolean);
 }
 
+function obterTipoPortaAtual() {
+    return document.getElementById("tipologia")?.value || "";
+}
+
+function obterSistemaSelecionado() {
+    const sistemaId = document.getElementById("sistemas")?.value;
+    if (!sistemaId) return null;
+    if (typeof sistemasLista === "undefined" || !Array.isArray(sistemasLista)) return null;
+    return sistemasLista.find((sistema) => String(sistema.id) === String(sistemaId)) || null;
+}
+
+function calcularQuantidadeMaterialPorta(material, medidas, contexto = {}) {
+    const tipo = material?.tipo_medida;
+    if (tipo === "metro_linear") {
+        if (contexto.base === "largura") return medidas.larguraM;
+        return medidas.perimetro;
+    }
+    if (tipo === "m2") return medidas.area;
+    if (tipo === "unidade") return 1;
+    return 0;
+}
+
+function calcularTotalMaterialPorta(material, medidas, contexto = {}) {
+    const quantidade = calcularQuantidadeMaterialPorta(material, medidas, contexto);
+    return {
+        material,
+        quantidade,
+        total: (Number(material?.preco) || 0) * quantidade
+    };
+}
+
+function obterTrilhosSelecionados() {
+    const selecionados = [
+        document.getElementById("trilhos_superior")?.value,
+        document.getElementById("trilhos_inferior")?.value
+    ].filter(Boolean);
+
+    return selecionados.map((nome) => encontrarInsumoDoPerfil(nome)).filter(Boolean);
+}
+
+function calcularComponentesPortaAtual() {
+    const medidas = calcularMedidasPorta();
+    const tipo = obterTipoPortaAtual();
+    const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value);
+    const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value);
+    const sistema = obterSistemaSelecionado();
+    const valorAdicional = +document.getElementById("valor_adicional")?.value || 0;
+
+    const componentes = {
+        tipo,
+        medidas,
+        perfil,
+        vidro,
+        sistema,
+        linhas: []
+    };
+
+    if (perfil) {
+        componentes.linhas.push({
+            categoria: "perfil",
+            item: perfil,
+            nome: `Perfil (${perfil.nome})`,
+            quantidade: medidas.perimetro,
+            unidade: "m",
+            unitario: Number(perfil.preco) || 0,
+            total: (Number(perfil.preco) || 0) * medidas.perimetro
+        });
+    }
+
+    if (vidro) {
+        componentes.linhas.push({
+            categoria: "vidro",
+            item: vidro,
+            nome: `Vidro (${vidro.tipo}${vidro.espessura ? ` ${vidro.espessura}mm` : ""})`,
+            quantidade: medidas.area,
+            unidade: "m²",
+            unitario: Number(vidro.preco) || 0,
+            total: (Number(vidro.preco) || 0) * medidas.area
+        });
+    }
+
+    obterInsumosDoPerfil(perfil).forEach((insumo) => {
+        const calculo = calcularTotalMaterialPorta(insumo, medidas);
+        componentes.linhas.push({
+            categoria: "insumo_perfil",
+            item: insumo,
+            nome: `Insumo do perfil (${insumo.nome})`,
+            quantidade: calculo.quantidade,
+            unidade: insumo.tipo_medida === "metro_linear" ? "m" : (insumo.tipo_medida === "m2" ? "m²" : "un"),
+            unitario: Number(insumo.preco) || 0,
+            total: calculo.total
+        });
+    });
+
+    if (tipo === "deslizante" || tipo === "correr") {
+        if (sistema) {
+            componentes.linhas.push({
+                categoria: "sistema",
+                item: sistema,
+                nome: `Sistema (${sistema.nome})`,
+                quantidade: 1,
+                unidade: "un",
+                unitario: Number(sistema.preco) || 0,
+                total: Number(sistema.preco) || 0
+            });
+        }
+
+        obterTrilhosSelecionados().forEach((trilho) => {
+            const calculo = calcularTotalMaterialPorta(trilho, medidas, { base: "largura" });
+            componentes.linhas.push({
+                categoria: "trilho",
+                item: trilho,
+                nome: `Trilho (${trilho.nome})`,
+                quantidade: calculo.quantidade,
+                unidade: trilho.tipo_medida === "metro_linear" ? "m" : (trilho.tipo_medida === "m2" ? "m²" : "un"),
+                unitario: Number(trilho.preco) || 0,
+                total: calculo.total
+            });
+        });
+    }
+
+    const puxadorInfo = obterDadosPuxador();
+    if (puxadorInfo) {
+        componentes.linhas.push({
+            categoria: "puxador",
+            item: puxadorInfo.puxador,
+            nome: `Puxador (${puxadorInfo.puxador.nome})`,
+            quantidade: puxadorInfo.quantidade,
+            unidade: puxadorInfo.tipoMedida === "metro_linear" ? "m" : "un",
+            unitario: Number(puxadorInfo.puxador.preco) || 0,
+            total: (Number(puxadorInfo.puxador.preco) || 0) * puxadorInfo.quantidade
+        });
+    }
+
+    const tagAplicada = calcularTagAplicada(obterTagCorrespondente(), medidas);
+    if (tagAplicada) {
+        componentes.linhas.push({
+            categoria: "tag",
+            item: tagAplicada.tag,
+            nome: "Tag aplicada",
+            quantidade: tagAplicada.quantidade,
+            unidade: tagAplicada.tag.medida === "m2" ? "m²" : (tagAplicada.tag.medida === "perimetro" ? "m" : "un"),
+            unitario: Number(tagAplicada.tag.valor) || 0,
+            total: tagAplicada.total
+        });
+    }
+
+    if (valorAdicional > 0) {
+        componentes.linhas.push({
+            categoria: "adicional",
+            item: null,
+            nome: "Valor adicional",
+            quantidade: 1,
+            unidade: "un",
+            unitario: valorAdicional,
+            total: valorAdicional
+        });
+    }
+
+    return componentes;
+}
+
 function obterTagCorrespondente() {
     const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value);
     const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value);
@@ -106,41 +268,25 @@ function obterTagCorrespondente() {
         vidro.tipo
     ].filter(Boolean).map(normalizarTagValor);
 
-    // DEBUG opcional
-    console.group("🔍 TAG MATCHING (fix)");
-    console.log("Perfil:", perfilIdKey, perfil.nome);
-    console.log("Vidro:", vidroIdKey, vidro.tipo, vidro.espessura);
-    console.log("VidroKeys:", vidroKeys);
-
     const match = todasTags.find((tag) => {
         const perfisTagRaw = tag.perfis != null ? String(tag.perfis) : "";
         const vidrosTagRaw = tag.vidros != null ? String(tag.vidros) : "";
         const tagsArr = Array.isArray(tag.tags) ? tag.tags.map(normalizarTagValor) : [];
 
-        // 1) Match forte (por colunas perfis/vidros)
         const matchesPerfis = perfisTagRaw ? perfisTagRaw === perfilIdKey : true;
-
         const vidrosTagNorm = normalizarTagValor(vidrosTagRaw);
         const matchesVidros = vidrosTagRaw
             ? (vidrosTagRaw === vidroIdKey || vidroKeys.includes(vidrosTagNorm))
             : true;
 
         const strongMatch = (perfisTagRaw || vidrosTagRaw) && matchesPerfis && matchesVidros;
-
-        // 2) Match fraco (apenas pelo array tags[]), NÃO bloqueia o forte
         const weakMatch =
             tagsArr.includes(perfilIdKey) &&
             (tagsArr.includes(vidroIdKey) || vidroKeys.some(k => tagsArr.includes(k)));
 
-        const ok = strongMatch || weakMatch;
-
-        if (ok) console.log("✅ MATCH:", tag);
-        else console.log("❌ NO MATCH:", { tag, perfisTagRaw, vidrosTagRaw, tagsArr, matchesPerfis, matchesVidros, strongMatch, weakMatch });
-
-        return ok;
+        return strongMatch || weakMatch;
     }) || null;
 
-    console.groupEnd();
     return match;
 }
 
@@ -179,42 +325,10 @@ function calcularTagAplicada(tag, medidas) {
 }
 
 function calcularPrecoPorta() {
-    const medidas = calcularMedidasPorta();
-    const largura = medidas.larguraM;
-    const altura = medidas.alturaM;
-    const perfil = todosPerfis.find(p => p.id == document.getElementById("perfil")?.value);
-    const vidro = todosVidros.find(v => v.id == document.getElementById("vidro")?.value);
     const quantidadePortas = +document.getElementById("quantidade")?.value || 1;
-    const valorAdicional = +document.getElementById("valor_adicional")?.value || 0;
-    const perimetro = medidas.perimetro;
-    const insumos = obterInsumosDoPerfil(perfil);
-
-    let total = 0;
-    if (perfil) total += perfil.preco * 2 * (largura + altura);
-    if (vidro) total += vidro.preco * largura * altura;
-    insumos.forEach((insumo) => {
-        const tipo = insumo.tipo_medida;
-        let quantidadeInsumo = 0;
-        if (tipo === "metro_linear") {
-            quantidadeInsumo = perimetro;
-        } else if (tipo === "unidade") {
-            quantidadeInsumo = 1;
-        }
-        total += (insumo.preco || 0) * quantidadeInsumo;
-    });
-
-    const puxadorInfo = obterDadosPuxador();
-    if (puxadorInfo) {
-        total += (puxadorInfo.puxador.preco || 0) * puxadorInfo.quantidade;
-    }
-
-    const tagAplicada = calcularTagAplicada(obterTagCorrespondente(), medidas);
-    if (tagAplicada) {
-        total += tagAplicada.total;
-    }
-
-    total += valorAdicional;
-    return total * quantidadePortas;
+    const componentes = calcularComponentesPortaAtual();
+    const totalPorPorta = componentes.linhas.reduce((acc, linha) => acc + (Number(linha.total) || 0), 0);
+    return totalPorPorta * quantidadePortas;
 }
 
 window.obterDadosPuxador = obterDadosPuxador;
@@ -222,6 +336,12 @@ window.normalizarTagValor = normalizarTagValor;
 window.normalizarChaveInsumo = normalizarChaveInsumo;
 window.encontrarInsumoDoPerfil = encontrarInsumoDoPerfil;
 window.obterInsumosDoPerfil = obterInsumosDoPerfil;
+window.obterTipoPortaAtual = obterTipoPortaAtual;
+window.obterSistemaSelecionado = obterSistemaSelecionado;
+window.calcularQuantidadeMaterialPorta = calcularQuantidadeMaterialPorta;
+window.calcularTotalMaterialPorta = calcularTotalMaterialPorta;
+window.obterTrilhosSelecionados = obterTrilhosSelecionados;
+window.calcularComponentesPortaAtual = calcularComponentesPortaAtual;
 window.obterTagCorrespondente = obterTagCorrespondente;
 window.calcularMedidasPorta = calcularMedidasPorta;
 window.calcularTagAplicada = calcularTagAplicada;
