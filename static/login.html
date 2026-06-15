@@ -191,17 +191,23 @@ input:focus {
     font-weight: 600;
     cursor: pointer;
     width: 100%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
     box-shadow: 0 8px 16px rgba(16, 121, 186, 0.25);
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 12px 22px rgba(16, 121, 186, 0.28);
 }
 
-.btn:active {
+.btn:active:not(:disabled) {
     transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .status {
@@ -285,13 +291,13 @@ input:focus {
             <div class="pill"><span></span>Já possui acesso?</div>
             <h2>Login</h2>
             <label>Usuário
-                <input type="text" id="loginUser" placeholder="Digite seu usuário">
+                <input type="text" id="loginUser" placeholder="Digite seu usuário" autocomplete="username">
             </label>
             <label>Senha
-                <input type="password" id="loginPass" placeholder="Digite sua senha">
+                <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password">
             </label>
-            <button class="btn" onclick="logar()">Entrar</button>
-            <div id="loginStatus" class="status"></div>
+            <button class="btn" type="button" id="loginBtn" onclick="logar()">Entrar</button>
+            <div id="loginStatus" class="status" aria-live="polite"></div>
             <p class="hint">Ainda não tem conta? <a href="cadastro.html">Crie seu cadastro</a>.</p>
         </div>
     </div>
@@ -299,80 +305,134 @@ input:focus {
 
 <script>
 const API_BASE = "https://colorglass.onrender.com";
+let loginEmAndamento = false;
 
 function setStatus(elementId, message, tipo) {
     const el = document.getElementById(elementId);
-    el.textContent = message;
+    if (!el) return;
+    el.textContent = message || "";
     el.classList.remove("ok", "erro");
     if (tipo) el.classList.add(tipo);
 }
 
+function setLoginLoading(loading) {
+    const btn = document.getElementById("loginBtn");
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? "Verificando..." : "Entrar";
+}
+
+async function lerJsonSeguro(res) {
+    try {
+        return await res.json();
+    } catch (err) {
+        return {};
+    }
+}
+
+function mensagemLoginFalhou(status, data) {
+    if (status === 429) {
+        return data.error || "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+    }
+    if (status === 403 && data && data.error) {
+        return data.error;
+    }
+    return "Usuário, senha ou acesso inválido.";
+}
+
 // ==================== LOGIN ====================
 
-async function logar() { 
-    const user = document.getElementById("loginUser").value.trim(); // INPUT USER, TRIM REVOME ESPACOS
-    const pass = document.getElementById("loginPass").value.trim(); // INPUT PASS, TRIM REMOVE ESPACOS
-    if (!user || !pass) { // CONDICIONAL DE ERRO PARA QUANDO USER OU PASS ESTIVER VAZIO
+async function logar() {
+    if (loginEmAndamento) return;
+
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value; // não usar trim em senha
+
+    if (!user || !pass) {
         setStatus("loginStatus", "Preencha usuário e senha.", "erro");
         return;
     }
 
-    try { // SE TANTO USER COMO PASS ESTIVER PREENCHIDOS TENTA VERIFICAR COM API
+    loginEmAndamento = true;
+    setLoginLoading(true);
+    let redirecionando = false;
+
+    try {
         setStatus("loginStatus", "Verificando...");
+
         const res = await fetch(`${API_BASE}/api/usuarios/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ user, pass })
         });
-        const data = await res.json();
+        const data = await lerJsonSeguro(res);
 
-        if (!data.success) { // SE API NEGAR MOSTRA ERRO
-            setStatus("loginStatus", data.error || "Login inválido.", "erro");
+        if (!res.ok || !data.success || !data.token) {
+            setStatus("loginStatus", mensagemLoginFalhou(res.status, data), "erro");
             return;
         }
-// SALVAR TOKEN LOCALMENTE, VERIFICAR A REAL NECESSIDADE DISSO
+
+        // Compatibilidade: muitas telas antigas ainda buscam ADMIN_TOKEN.
+        // Não remover até padronizar todos os authHeaders do sistema.
         localStorage.setItem("USER_TOKEN", data.token);
         localStorage.setItem("ADMIN_TOKEN", data.token);
-        setStatus("loginStatus", "Login autorizado. Redirecionando...", "ok");
+        setStatus("loginStatus", "Login autorizado. Validando permissões...", "ok");
 
-        const resAuth = await fetch(`${API_BASE}/api/auth/validar`, { //VERIFICA SE USUARIO POSSUI PERMISSAO
+        const resAuth = await fetch(`${API_BASE}/api/auth/validar`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${data.token}`
             }
         });
-        const dataAuth = await resAuth.json();
+        const dataAuth = await lerJsonSeguro(resAuth);
 
-        if (!dataAuth.success) { // SE NAO TIVER PERMISSAO NEGA 
-            setStatus("loginStatus", dataAuth.error || "Sessão inválida.", "erro");
+        if (!resAuth.ok || !dataAuth.success) {
+            setStatus("loginStatus", "Sessão inválida. Faça login novamente.", "erro");
             return;
         }
+
+        localStorage.setItem("USER_LEVEL", String(dataAuth.level ?? ""));
+        if (dataAuth.storeid) localStorage.setItem("USER_STOREID", dataAuth.storeid);
 
         const destino = Number(dataAuth.level) === 3
             ? "index_admin.html"
             : (dataAuth.redirect || "index_loja.html");
 
+        setStatus("loginStatus", "Acesso validado. Redirecionando...", "ok");
+        redirecionando = true;
+
         setTimeout(() => {
-            window.location.href = destino; // LEVEL 3 VAI PARA INDEX_ADMIN, LOJA/GERÊNCIA PARA O FLUXO NORMAL
-        }, 400); // TEMPO DE ESPERA PARA O REDIRECIONAMENTO EM MILISEGUNDOS
+            window.location.href = destino;
+        }, 400);
     } catch (err) {
         console.error(err);
-        setStatus("loginStatus", "Erro inesperado, Contate o suporte.", "erro"); //DEBUG CASO DE ALGUM ERRO IMPREVISTO
+        setStatus("loginStatus", "Erro inesperado. Contate o suporte.", "erro");
+    } finally {
+        if (!redirecionando) {
+            loginEmAndamento = false;
+            setLoginLoading(false);
+        }
     }
 }
+
+window.logar = logar;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const userInput = document.getElementById("loginUser");
+    const passInput = document.getElementById("loginPass");
+    if (userInput) userInput.focus();
+
+    [userInput, passInput].forEach((input) => {
+        if (!input) return;
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                logar();
+            }
+        });
+    });
+});
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
