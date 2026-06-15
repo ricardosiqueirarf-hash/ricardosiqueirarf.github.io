@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, make_response, request
 from flask_cors import CORS 
 import jwt
 import datetime
@@ -34,15 +34,46 @@ HEADERS = {
 # APP
 # =====================
 
+ALLOWED_CORS_ORIGINS = {
+    "https://colorglass.onrender.com",
+    "https://ricardosiqueirarf-hash.github.io",
+    "https://ricardosiqueirarf.github.io",
+    "http://localhost:3000",
+    "http://localhost:5000",
+    "http://localhost:8080",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5000",
+    "http://127.0.0.1:8080",
+}
+
 app = Flask(__name__)
 CORS(
     app,
     resources={
         r"/api/*": {
-            "origins": "*"
+            "origins": list(ALLOWED_CORS_ORIGINS),
+            "allow_headers": ["Content-Type", "Authorization", "X-Auth-Token"],
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
         }
     }
 )
+
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    if origin in ALLOWED_CORS_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Auth-Token"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    return response
+
+
+@app.route("/api/<path:unused_path>", methods=["OPTIONS"])
+def api_preflight(unused_path):
+    return make_response("", 204)
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
