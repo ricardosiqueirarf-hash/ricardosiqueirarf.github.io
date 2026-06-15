@@ -94,6 +94,54 @@ def _validar_token_webhook_asaas():
     )
     return recebido == esperado
 
+
+def _extrair_payment_do_webhook(data):
+    data = data or {}
+    payment = data.get("payment") or data.get("pagamento") or {}
+    if not isinstance(payment, dict):
+        payment = {}
+
+    payment_id = (
+        payment.get("id")
+        or data.get("payment_id")
+        or data.get("paymentId")
+        or data.get("id")
+    )
+    status = payment.get("status") or data.get("status")
+    evento = data.get("event") or data.get("eventType") or data.get("type")
+
+    if not status and evento:
+        evento_str = str(evento).upper()
+        if "DELETED" in evento_str or "CANCEL" in evento_str:
+            status = "CANCELLED"
+        elif "RECEIVED" in evento_str:
+            status = "RECEIVED"
+        elif "CONFIRMED" in evento_str:
+            status = "CONFIRMED"
+        elif "OVERDUE" in evento_str:
+            status = "OVERDUE"
+
+    return payment_id, status, evento
+
+
+def _atualizar_cobranca_por_payment_id(payment_id, status, payload):
+    if not payment_id:
+        return []
+
+    r = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/{SUPABASE_TABLE_ASAAS_COBRANCAS}?asaas_payment_id=eq.{payment_id}",
+        headers=_asaas_headers_json(),
+        json={"status": status, "payload": payload},
+        timeout=20,
+    )
+    r.raise_for_status()
+    return r.json() if r.content else []
+
+
+def _consultar_asaas_payment(payment_id):
+    from asaas_client import consultar_cobranca
+    return consultar_cobranca(payment_id)
+
 # =====================
 # ROTAS FORNECEDORES
 # =====================
@@ -190,21 +238,64 @@ def asaas_webhook():
         return jsonify({"success": False, "error": "Token do webhook inválido."}), 401
 
     data = request.get_json(silent=True) or {}
-    payment = data.get("payment") or {}
-    payment_id = payment.get("id")
-    status = payment.get("status")
+    payment_id, status, evento = _extrair_payment_do_webhook(data)
 
     if not payment_id:
-        return jsonify({"success": True, "message": "Evento ignorado: payment.id ausente."})
+        return jsonify({
+            "success": True,
+            "message": "Evento ignorado: payment.id ausente.",
+            "event": evento,
+        })
+
+    if not status:
+        status = "EVENT_RECEIVED"
 
     try:
-        r = requests.patch(
-            f"{SUPABASE_URL}/rest/v1/{SUPABASE_TABLE_ASAAS_COBRANCAS}?asaas_payment_id=eq.{payment_id}",
-            headers=_asaas_headers_json(),
-            json={"status": status, "payload": data},
-            timeout=20,
-        )
-        r.raise_for_status()
-        return jsonify({"success": True, "payment_id": payment_id, "status": status})
+        registros = _atualizar_cobranca_por_payment_id(payment_id, status, data)
+        return jsonify({
+            "success": True,
+            "payment_id": payment_id,
+            "status": status,
+            "event": evento,
+            "updated": len(registros),
+        })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@fornecedores_bp.route("/api/asaas/sync/<payment_id>", methods=["POST", "GET"])
+def sincronizar_cobranca_asaas(payment_id):
+    """Consulta o status atual direto no Asaas e atualiza asaas_cobrancas.
+
+    Use token=<ASAAS_WEBHOOK_TOKEN> na query ou envie o mesmo token em X-Webhook-Token.
+    """
+    if not _validar_token_webhook_asaas():
+        return jsonify({"success": False, "error": "Token inválido para sincronização."}), 401
+
+    try:
+        cobranca = _consultar_asaas_payment(payment_id)
+        status = cobranca.get("status") or "SYNCED"
+        registros = _atualizar_cobranca_por_payment_id(payment_id, status, cobranca)
+        return jsonify({
+            "success": True,
+            "payment_id": payment_id,
+            "status": status,
+            "updated": len(registros),
+            "asaas": cobranca,
+        })
+    except Exception as e:
+        erro = str(e)
+        # Se a cobrança foi excluída/cancelada no Asaas, algumas consultas podem voltar 404.
+        # Como o payment_id já existia na nossa base, marcamos como CANCELLED_NOT_FOUND
+        # para ele sair do A Receber aberto, mantendo histórico.
+        if "HTTP 404" in erro or "not found" in erro.lower() or "não encontrada" in erro.lower():
+            payload = {"sync_error": erro, "status_assumido": "CANCELLED_NOT_FOUND"}
+            registros = _atualizar_cobranca_por_payment_id(payment_id, "CANCELLED_NOT_FOUND", payload)
+            return jsonify({
+                "success": True,
+                "payment_id": payment_id,
+                "status": "CANCELLED_NOT_FOUND",
+                "updated": len(registros),
+                "warning": "Cobrança não encontrada no Asaas; marcada como cancelada/não encontrada.",
+            })
+        return jsonify({"success": False, "error": erro}), 500
