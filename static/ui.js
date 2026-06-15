@@ -17,7 +17,7 @@ function atualizarPerfisSelect() {
     perfilSelect.innerHTML = "<option value=''>Selecione</option>";
     todosPerfis.filter(p => p.tipologias.includes(tipo))
         .forEach(p => {
-            perfilSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/m</option>`;
+            perfilSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
         });
 }
 
@@ -26,7 +26,7 @@ function atualizarVidrosSelect() {
     if (!vidroSelect) return;
     vidroSelect.innerHTML = "<option value=''>Selecione</option>";
     todosVidros.forEach(v => {
-        vidroSelect.innerHTML += `<option value="${v.id}">${v.tipo} ${v.espessura || ""}mm - R$ ${v.preco}/m²</option>`;
+        vidroSelect.innerHTML += `<option value="${v.id}">${v.tipo} ${v.espessura || ""}mm</option>`;
     });
 }
 
@@ -62,7 +62,7 @@ function atualizarSistemasSelect() {
     sistemasFiltrados.forEach((sistema) => {
         const opt = document.createElement("option");
         opt.value = sistema.id;
-        opt.textContent = `${sistema.nome}${sistema.preco ? ` - R$ ${Number(sistema.preco).toFixed(2)}` : ""}`;
+        opt.textContent = sistema.nome;
         sistemasSelect.appendChild(opt);
     });
     sistemasSelect.value = valorAtual;
@@ -140,8 +140,7 @@ function atualizarPuxadoresSelect() {
     puxadorSelect.innerHTML = "<option value=''>Selecione</option>";
     puxadorSelect.innerHTML += "<option value='sem_puxador'>Sem puxador</option>";
     todosPuxadores.forEach(p => {
-        const unidade = p.tipo_medida === "metro_linear" ? "m" : "un";
-        puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco}/${unidade}</option>`;
+        puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
     });
 }
 
@@ -240,30 +239,51 @@ function atualizarDobradicasInputs() {
         input.min = "0";
         input.placeholder = `Altura da dobradiça ${i + 1} (mm)`;
         input.className = "dobradica-altura";
-        input.oninput = () => { desenharPorta(); atualizarCamposObrigatorios(); };
+        input.dataset.required = "true";
+        input.oninput = () => {
+            desenharPorta();
+            atualizarCamposObrigatorios();
+        };
         container.appendChild(input);
     }
     desenharPorta();
+    atualizarCamposObrigatorios();
 }
 
 function atualizarLimiteDobradicas() {
-    const alturaInput = document.getElementById("altura");
-    const dobradicasInput = document.getElementById("dobradicas");
-    if (!alturaInput || !dobradicasInput) return;
-    const altura = parseFloat(alturaInput.value || "0");
-    dobradicasInput.max = altura >= 2400 ? "4" : "3";
+    const qtdInput = document.getElementById("dobradicas");
+    const tipologia = document.getElementById("tipologia")?.value;
+    if (!qtdInput) return;
+    if (tipologia === "giro") {
+        qtdInput.min = "1";
+        if (Number(qtdInput.value) < 1) qtdInput.value = "1";
+    }
 }
 
-function obterAlturasDobradicas() {
-    return Array.from(document.querySelectorAll(".dobradica-altura"))
-        .map(input => input.value)
-        .filter(Boolean);
+function renderizarPortas() {
+    const box = document.getElementById("portasSalvas");
+    if (!box) return;
+    box.innerHTML = portas.map((p, i) => {
+        const perfilNome = todosPerfis.find(perfil => perfil.id == p.dados.perfil)?.nome || "-";
+        const vidroNome = todosVidros.find(vidro => vidro.id == p.dados.vidro)?.tipo || "-";
+        const puxadorNome = p.dados.puxador === "sem_puxador"
+            ? "Sem puxador"
+            : (todosPuxadores.find(pux => pux.id == p.dados.puxador)?.nome || "-");
+        return `
+        <div>
+            <strong>${p.tipo}</strong><br>
+            Qtd: ${p.quantidade} | ${p.dados.largura || "-"} x ${p.dados.altura || "-"} mm<br>
+            Perfil: ${perfilNome} | Vidro: ${vidroNome}<br>
+            Puxador: ${puxadorNome}<br>
+            Preço: ${formatarMoeda(p.preco || 0)}<br>
+            <button class="btn" onclick="editarPorta(${i})">Editar</button>
+            <button class="btn btn-danger" onclick="excluirPorta(${i})">Excluir</button>
+        </div>`;
+    }).join("");
 }
 
-window.TIPOLOGIAS = TIPOLOGIAS;
 window.atualizarPerfisSelect = atualizarPerfisSelect;
 window.atualizarVidrosSelect = atualizarVidrosSelect;
-window.carregarSistemas = carregarSistemas;
 window.atualizarSistemasSelect = atualizarSistemasSelect;
 window.atualizarTrilhosDoSistema = atualizarTrilhosDoSistema;
 window.atualizarResumoTrilhos = atualizarResumoTrilhos;
@@ -272,4 +292,4 @@ window.renderCampos = renderCampos;
 window.atualizarPuxadorTipo = atualizarPuxadorTipo;
 window.atualizarDobradicasInputs = atualizarDobradicasInputs;
 window.atualizarLimiteDobradicas = atualizarLimiteDobradicas;
-window.obterAlturasDobradicas = obterAlturasDobradicas;
+window.renderizarPortas = renderizarPortas;
