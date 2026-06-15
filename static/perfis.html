@@ -20,9 +20,10 @@ h1 { color: #1079ba; margin-bottom: 10px; }
 .preco-preview { display: flex; align-items: center; justify-content: center; background: #eef4fb; border-radius: 8px; padding: 8px 12px; font-weight: 600; color: #0d5d8c; }
 .form-perfil button { padding: 6px 12px; font-size: 0.95rem; border-radius: 8px; border: none; background: #1079ba; color: #fff; cursor: pointer; transition: all 0.2s ease; }
 .form-perfil button:hover { background: #0d5d8c; transform: translateY(-1px); }
-.form-perfil .tipologias-container, .form-perfil .insumos-container { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-.tipologias { display: flex; flex-wrap: wrap; gap: 10px; }
-.tipologias label, .insumo-item { background: #f0f4fb; padding: 6px 10px; border-radius: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; }
+.form-perfil .tipologias-container, .form-perfil .insumos-container, .form-perfil .puxadores-container { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.tipologias, .puxadores-lista { display: flex; flex-wrap: wrap; gap: 10px; }
+.tipologias label, .insumo-item, .puxador-item { background: #f0f4fb; padding: 6px 10px; border-radius: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; }
+.puxador-item input { width: auto; }
 .insumo-item select { width: auto; }
 button, .form-perfil button { padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; background: #1079ba; color: #fff; font-weight: 600; transition: all 0.2s ease; }
 button:hover, .form-perfil button:hover { background: #0d5d8c; transform: translateY(-2px); }
@@ -33,7 +34,7 @@ th, td { padding: 12px; text-align: center; border: 1px solid #dcdde1; }
 th { background: #1079ba; color: #fff; }
 tr:nth-child(even) { background: #f7f9fc; }
 tr:hover { background: #e6f0fa; }
-@media(max-width: 768px) { .form-perfil { grid-template-columns: 1fr; } .menu { flex-direction: column; } .tipologias, .insumos-container { flex-direction: column; } }
+@media(max-width: 768px) { .form-perfil { grid-template-columns: 1fr; } .menu { flex-direction: column; } .tipologias, .insumos-container, .puxadores-lista { flex-direction: column; } }
 </style>
 </head>
 <body>
@@ -54,6 +55,7 @@ tr:hover { background: #e6f0fa; }
         <input id="margem" type="number" step="0.01" placeholder="Margem %">
         <input id="perda" type="number" step="0.01" placeholder="Perda %">
         <div class="preco-preview" id="precoPreview">Preço final: R$ 0,00</div>
+
         <div class="tipologias-container">
             <h4>Tipologias</h4>
             <div class="tipologias">
@@ -64,6 +66,7 @@ tr:hover { background: #e6f0fa; }
                 <label><input type="checkbox" value="estrutural"> Estrutural</label>
             </div>
         </div>
+
         <div class="insumos-container">
             <h4>Insumos</h4>
             <div id="insumos-container">
@@ -73,13 +76,18 @@ tr:hover { background: #e6f0fa; }
                 </div>
             </div>
         </div>
+
+        <div class="puxadores-container">
+            <h4>Puxadores compatíveis com este perfil</h4>
+            <div id="puxadores-container" class="puxadores-lista"></div>
+        </div>
     </section>
 
     <section>
         <table>
             <thead>
                 <tr>
-                    <th>Nome</th><th>Custo</th><th>Margem</th><th>Perda</th><th>Preço Final</th><th>Tipologias</th><th>Insumos</th><th>Ações</th>
+                    <th>Nome</th><th>Custo</th><th>Margem</th><th>Perda</th><th>Preço Final</th><th>Tipologias</th><th>Insumos</th><th>Puxadores</th><th>Ações</th>
                 </tr>
             </thead>
             <tbody id="tabela"></tbody>
@@ -91,25 +99,202 @@ const BASE_URL = "https://colorglass.onrender.com";
 const TIPO_ANTIGO = "correr";
 const TIPO_NOVO = "divisao_ambiente";
 const LABEL_NOVO = "Divisão de ambiente";
+
 function normalizarTipologia(valor){ return String(valor || "").trim() === TIPO_ANTIGO ? TIPO_NOVO : String(valor || "").trim(); }
 function normalizarTipologias(lista){ return (Array.isArray(lista) ? lista : []).map(normalizarTipologia).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i); }
 function formatarTipologia(valor){ const tipo = normalizarTipologia(valor); const mapa = {giro:"Giro",deslizante:"Deslizante",divisao_ambiente:LABEL_NOVO,pivotante:"Pivotante",estrutural:"Estrutural"}; return mapa[tipo] || tipo || "-"; }
 function formatarTipologias(lista){ return normalizarTipologias(lista).map(formatarTipologia).join(", "); }
+function normalizarListaTexto(lista){ return (Array.isArray(lista) ? lista : []).map(v => String(v || "").trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i); }
+
 let insumosLista = [];
-async function carregarInsumos() { const res = await fetch(`${BASE_URL}/api/materiais`); const data = await res.json(); insumosLista = data.map(m => m.nome); atualizarSelects(); }
-function atualizarSelects() { document.querySelectorAll(".insumo-select").forEach(select => { const valorAtual = select.value; select.innerHTML = "<option value=''>--Selecione--</option>"; insumosLista.forEach(insumo => { const opt = document.createElement("option"); opt.value = insumo; opt.textContent = insumo; select.appendChild(opt); }); select.value = valorAtual; }); }
-function adicionarInsumo(botao) { const container = document.getElementById("insumos-container"); const novoItem = document.createElement("div"); novoItem.className = "insumo-item"; novoItem.innerHTML = `<select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button><button type="button" onclick="removerInsumo(this)">-</button>`; container.appendChild(novoItem); atualizarSelects(); }
+let puxadoresLista = [];
+
+async function carregarInsumos() {
+    const res = await fetch(`${BASE_URL}/api/materiais`);
+    const data = await res.json();
+    insumosLista = data.map(m => m.nome);
+    atualizarSelects();
+}
+
+async function carregarPuxadores() {
+    const res = await fetch(`${BASE_URL}/api/puxadores`);
+    const data = await res.json();
+    puxadoresLista = Array.isArray(data) ? data : [];
+    atualizarPuxadoresCheckboxes();
+}
+
+function atualizarSelects() {
+    document.querySelectorAll(".insumo-select").forEach(select => {
+        const valorAtual = select.value;
+        select.innerHTML = "<option value=''>--Selecione--</option>";
+        insumosLista.forEach(insumo => {
+            const opt = document.createElement("option");
+            opt.value = insumo;
+            opt.textContent = insumo;
+            select.appendChild(opt);
+        });
+        select.value = valorAtual;
+    });
+}
+
+function atualizarPuxadoresCheckboxes(selecionados = []) {
+    const container = document.getElementById("puxadores-container");
+    if (!container) return;
+
+    const selecionadosSet = new Set(normalizarListaTexto(selecionados));
+    container.innerHTML = "";
+
+    if (!puxadoresLista.length) {
+        container.innerHTML = "<span>Nenhum puxador cadastrado.</span>";
+        return;
+    }
+
+    puxadoresLista.forEach(puxador => {
+        const id = String(puxador.id);
+        const label = document.createElement("label");
+        label.className = "puxador-item";
+        label.innerHTML = `<input type="checkbox" value="${id}"> ${puxador.nome}`;
+        const checkbox = label.querySelector("input");
+        checkbox.checked = selecionadosSet.has(id) || selecionadosSet.has(String(puxador.nome || ""));
+        container.appendChild(label);
+    });
+}
+
+function adicionarInsumo(botao) {
+    const container = document.getElementById("insumos-container");
+    const novoItem = document.createElement("div");
+    novoItem.className = "insumo-item";
+    novoItem.innerHTML = `<select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button><button type="button" onclick="removerInsumo(this)">-</button>`;
+    container.appendChild(novoItem);
+    atualizarSelects();
+}
+
 function removerInsumo(botao) { botao.parentElement.remove(); }
 function getInsumosSelecionados() { return Array.from(document.querySelectorAll(".insumo-select")).map(s => s.value).filter(v => v); }
+function getPuxadoresSelecionados() { return Array.from(document.querySelectorAll("#puxadores-container input:checked")).map(c => c.value).filter(Boolean); }
 function getTipologiasSelecionadas() { return normalizarTipologias(Array.from(document.querySelectorAll(".tipologias input:checked")).map(c => c.value)); }
-async function carregar() { const res = await fetch(`${BASE_URL}/api/perfis`); const data = await res.json(); const tbody = document.getElementById("tabela"); tbody.innerHTML = ""; data.forEach(p => { p.tipologias = normalizarTipologias(p.tipologias); const tr = document.createElement("tr"); tr.innerHTML = `<td>${p.nome}</td><td>R$ ${Number(p.custo).toFixed(2)}</td><td>${p.margem}%</td><td>${p.perda}%</td><td><b>R$ ${Number(p.preco).toFixed(2)}</b></td><td>${formatarTipologias(p.tipologias)}</td><td>${(p.insumos || []).join(", ")}</td><td><button onclick='editar(${JSON.stringify(p)})'>Editar</button> <button onclick="excluir('${p.id}')">Excluir</button></td>`; tbody.appendChild(tr); }); }
-const nomeInput = document.getElementById("nome"); const custoInput = document.getElementById("custo"); const margemInput = document.getElementById("margem"); const perdaInput = document.getElementById("perda"); const perfil_id = document.getElementById("perfil_id"); const precoPreview = document.getElementById("precoPreview");
-function atualizarPrecoPreview() { const custo = parseFloat(custoInput.value) || 0; const margem = parseFloat(margemInput.value) || 0; const perda = parseFloat(perdaInput.value) || 0; const preco = custo * (1 + perda / 100) * (1 + margem / 100); precoPreview.textContent = `Preço final: R$ ${preco.toFixed(2)}`; }
-async function salvar() { const id = perfil_id.value; const nome = nomeInput.value; const custo = parseFloat(custoInput.value); const margem = parseFloat(margemInput.value); const perda = parseFloat(perdaInput.value); const tipologias = getTipologiasSelecionadas(); const insumos = getInsumosSelecionados(); if (!nome || isNaN(custo) || isNaN(margem) || isNaN(perda) || tipologias.length === 0) { alert("Preencha todos os campos e selecione ao menos uma tipologia"); return; } const payload = { nome, custo, margem, perda, tipologias, insumos }; const url = id ? `${BASE_URL}/api/perfis/${id}` : `${BASE_URL}/api/perfis`; const method = id ? "PUT" : "POST"; await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); cancelar(); carregar(); }
-function editar(p) { p.tipologias = normalizarTipologias(p.tipologias); perfil_id.value = p.id; nomeInput.value = p.nome; custoInput.value = p.custo; margemInput.value = p.margem; perdaInput.value = p.perda; atualizarPrecoPreview(); document.querySelectorAll(".tipologias input").forEach(c => c.checked = p.tipologias?.includes(normalizarTipologia(c.value))); const container = document.getElementById("insumos-container"); container.innerHTML = ""; (p.insumos?.length ? p.insumos : [""]).forEach(insumo => { const div = document.createElement("div"); div.className = "insumo-item"; div.innerHTML = `<select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button><button type="button" onclick="removerInsumo(this)">-</button>`; container.appendChild(div); }); atualizarSelects(); document.querySelectorAll(".insumo-select").forEach((s, i) => s.value = p.insumos?.[i] || ""); }
-async function excluir(id) { if (!confirm("Excluir este perfil?")) return; await fetch(`${BASE_URL}/api/perfis/${id}`, { method: "DELETE" }); carregar(); }
-function cancelar() { perfil_id.value = ""; nomeInput.value = ""; custoInput.value = ""; margemInput.value = ""; perdaInput.value = ""; atualizarPrecoPreview(); document.querySelectorAll(".tipologias input").forEach(c => c.checked = false); document.getElementById("insumos-container").innerHTML = `<div class="insumo-item"><select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button></div>`; atualizarSelects(); }
-window.addEventListener("DOMContentLoaded", () => { ["input", "change"].forEach((eventType) => { custoInput.addEventListener(eventType, atualizarPrecoPreview); margemInput.addEventListener(eventType, atualizarPrecoPreview); perdaInput.addEventListener(eventType, atualizarPrecoPreview); }); atualizarPrecoPreview(); carregarInsumos(); carregar(); });
+
+function formatarPuxadores(lista) {
+    const ids = normalizarListaTexto(lista);
+    if (!ids.length) return "-";
+
+    return ids.map(id => {
+        const puxador = puxadoresLista.find(p => String(p.id) === String(id) || String(p.nome) === String(id));
+        return puxador?.nome || id;
+    }).join(", ");
+}
+
+async function carregar() {
+    const res = await fetch(`${BASE_URL}/api/perfis`);
+    const data = await res.json();
+    const tbody = document.getElementById("tabela");
+    tbody.innerHTML = "";
+
+    data.forEach(p => {
+        p.tipologias = normalizarTipologias(p.tipologias);
+        p.puxadores = normalizarListaTexto(p.puxadores);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${p.nome}</td><td>R$ ${Number(p.custo).toFixed(2)}</td><td>${p.margem}%</td><td>${p.perda}%</td><td><b>R$ ${Number(p.preco).toFixed(2)}</b></td><td>${formatarTipologias(p.tipologias)}</td><td>${(p.insumos || []).join(", ")}</td><td>${formatarPuxadores(p.puxadores)}</td><td><button onclick='editar(${JSON.stringify(p)})'>Editar</button> <button onclick="excluir('${p.id}')">Excluir</button></td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+const nomeInput = document.getElementById("nome");
+const custoInput = document.getElementById("custo");
+const margemInput = document.getElementById("margem");
+const perdaInput = document.getElementById("perda");
+const perfil_id = document.getElementById("perfil_id");
+const precoPreview = document.getElementById("precoPreview");
+
+function atualizarPrecoPreview() {
+    const custo = parseFloat(custoInput.value) || 0;
+    const margem = parseFloat(margemInput.value) || 0;
+    const perda = parseFloat(perdaInput.value) || 0;
+    const preco = custo * (1 + perda / 100) * (1 + margem / 100);
+    precoPreview.textContent = `Preço final: R$ ${preco.toFixed(2)}`;
+}
+
+async function salvar() {
+    const id = perfil_id.value;
+    const nome = nomeInput.value;
+    const custo = parseFloat(custoInput.value);
+    const margem = parseFloat(margemInput.value);
+    const perda = parseFloat(perdaInput.value);
+    const tipologias = getTipologiasSelecionadas();
+    const insumos = getInsumosSelecionados();
+    const puxadores = getPuxadoresSelecionados();
+
+    if (!nome || isNaN(custo) || isNaN(margem) || isNaN(perda) || tipologias.length === 0) {
+        alert("Preencha todos os campos e selecione ao menos uma tipologia");
+        return;
+    }
+
+    const payload = { nome, custo, margem, perda, tipologias, insumos, puxadores };
+    const url = id ? `${BASE_URL}/api/perfis/${id}` : `${BASE_URL}/api/perfis`;
+    const method = id ? "PUT" : "POST";
+    await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    cancelar();
+    carregar();
+}
+
+function editar(p) {
+    p.tipologias = normalizarTipologias(p.tipologias);
+    p.puxadores = normalizarListaTexto(p.puxadores);
+
+    perfil_id.value = p.id;
+    nomeInput.value = p.nome;
+    custoInput.value = p.custo;
+    margemInput.value = p.margem;
+    perdaInput.value = p.perda;
+    atualizarPrecoPreview();
+
+    document.querySelectorAll(".tipologias input").forEach(c => c.checked = p.tipologias?.includes(normalizarTipologia(c.value)));
+
+    const container = document.getElementById("insumos-container");
+    container.innerHTML = "";
+    (p.insumos?.length ? p.insumos : [""]).forEach(insumo => {
+        const div = document.createElement("div");
+        div.className = "insumo-item";
+        div.innerHTML = `<select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button><button type="button" onclick="removerInsumo(this)">-</button>`;
+        container.appendChild(div);
+    });
+
+    atualizarSelects();
+    document.querySelectorAll(".insumo-select").forEach((s, i) => s.value = p.insumos?.[i] || "");
+    atualizarPuxadoresCheckboxes(p.puxadores);
+}
+
+async function excluir(id) {
+    if (!confirm("Excluir este perfil?")) return;
+    await fetch(`${BASE_URL}/api/perfis/${id}`, { method: "DELETE" });
+    carregar();
+}
+
+function cancelar() {
+    perfil_id.value = "";
+    nomeInput.value = "";
+    custoInput.value = "";
+    margemInput.value = "";
+    perdaInput.value = "";
+    atualizarPrecoPreview();
+    document.querySelectorAll(".tipologias input").forEach(c => c.checked = false);
+    document.getElementById("insumos-container").innerHTML = `<div class="insumo-item"><select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button></div>`;
+    atualizarSelects();
+    atualizarPuxadoresCheckboxes();
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+    ["input", "change"].forEach((eventType) => {
+        custoInput.addEventListener(eventType, atualizarPrecoPreview);
+        margemInput.addEventListener(eventType, atualizarPrecoPreview);
+        perdaInput.addEventListener(eventType, atualizarPrecoPreview);
+    });
+
+    atualizarPrecoPreview();
+    await Promise.all([carregarInsumos(), carregarPuxadores()]);
+    await carregar();
+});
 </script>
 </body>
 </html>
