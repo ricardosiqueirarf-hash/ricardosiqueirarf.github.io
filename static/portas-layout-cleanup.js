@@ -43,10 +43,18 @@ function organizarRodapeFormulario() {
     if (salvar.parentElement !== footer) footer.appendChild(salvar);
 }
 
+function removerCardEstruturas3DSalvas() {
+    const estruturasBox = document.getElementById('estruturas3DSalvas');
+    if (!estruturasBox) return;
+    const card = estruturasBox.closest('.section-card');
+    if (card) card.remove();
+}
+
 function aplicarLayoutPortas() {
     adicionarEstilosLayoutPortas();
     removerPivotanteDireto();
     organizarRodapeFormulario();
+    removerCardEstruturas3DSalvas();
 }
 
 function instalarLayoutPortas() {
@@ -54,6 +62,7 @@ function instalarLayoutPortas() {
     document.addEventListener('change', () => setTimeout(aplicarLayoutPortas, 0), true);
     setTimeout(aplicarLayoutPortas, 200);
     setTimeout(aplicarLayoutPortas, 800);
+    setTimeout(aplicarLayoutPortas, 1600);
 }
 
 window.instalarLayoutPortas = instalarLayoutPortas;
