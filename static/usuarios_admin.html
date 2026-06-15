@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usuários | Admin ColorGlass</title>
+<meta name="description" content="Gerenciamento administrativo de usuários ColorGlass.">
+<link rel="icon" href="/favicon.ico?v=4" sizes="any">
+<link rel="shortcut icon" href="/favicon.ico?v=4">
+<meta name="theme-color" content="#1079ba">
+<style>
+:root{--cg-blue:#1079ba;--cg-blue-dark:#0d5d8c;--cg-blue-soft:#e7f3fb;--cg-gold:#f0c24c;--cg-white:#fff;--cg-text:#1f2933;--cg-muted:#6b7280;--cg-border:rgba(16,121,186,.12);--cg-shadow:0 12px 30px rgba(15,44,62,.12);--cg-shadow-soft:0 10px 24px rgba(15,44,62,.10);--danger:#c23616;--ok:#0c7c3c}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{min-height:100vh;display:flex;background:radial-gradient(circle at top,rgba(16,121,186,.16),transparent 55%),linear-gradient(135deg,#f5fbff 0%,#eef4f9 45%,#f8fbff 100%);color:var(--cg-text)}
+.app{display:flex;width:100%;gap:18px;padding:18px;animation:fadeIn .7s ease}.sidebar{width:250px;background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));color:#fff;display:flex;flex-direction:column;padding:22px 18px;gap:10px;border-radius:18px;box-shadow:var(--cg-shadow);position:sticky;top:18px;height:calc(100vh - 36px);overflow:auto}.sidebar h3{font-size:1.25rem;margin-bottom:4px;letter-spacing:.8px}.sidebar .group-title{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;opacity:.78;margin-top:10px;margin-bottom:2px}.sidebar button{background:rgba(255,255,255,.14);padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);cursor:pointer;text-align:left;font-weight:700;transition:.2s ease;color:#fff}.sidebar button:hover{background:rgba(255,255,255,.22);transform:translateX(4px);box-shadow:0 10px 18px rgba(0,0,0,.14)}
+.content{flex:1;padding:20px;overflow-y:auto;border-radius:18px;background:rgba(255,255,255,.55);border:1px solid rgba(16,121,186,.10);box-shadow:var(--cg-shadow-soft);backdrop-filter:blur(10px)}.header-card,.panel{background:var(--cg-white);border:1px solid var(--cg-border);border-radius:18px;box-shadow:var(--cg-shadow-soft)}.header-card{padding:20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.header-card h1{font-size:1.6rem;color:var(--cg-blue-dark);margin-bottom:4px}.header-card p{color:var(--cg-muted);font-size:.94rem}.panel{padding:16px;margin-bottom:16px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.toolbar input,.toolbar select,input,select,textarea{padding:11px 13px;border-radius:12px;border:1px solid #d4d9df;background:#fff;font-size:.92rem}.toolbar input{flex:1;min-width:220px}input:focus,select:focus,textarea:focus{border-color:var(--cg-blue);box-shadow:0 0 0 3px rgba(16,121,186,.15);outline:none}.btn{padding:10px 13px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));color:#fff;font-weight:800;box-shadow:0 10px 18px rgba(16,121,186,.22)}.btn.secondary{background:#fff;color:var(--cg-blue-dark);border:1px solid var(--cg-border);box-shadow:none}.btn.danger{background:linear-gradient(135deg,#e84118,#c23616)}table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}th,td{padding:11px 12px;border-bottom:1px solid #edf2f7;text-align:left;font-size:.9rem;vertical-align:top}th{background:#eef7fc;color:var(--cg-blue-dark);font-size:.82rem;text-transform:uppercase;letter-spacing:.03em}.pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-size:.78rem;font-weight:800}.pill.ok{background:#e9f8ee;color:var(--ok)}.pill.warn{background:#fff7df;color:#8a6200}.pill.admin{background:var(--cg-blue-soft);color:var(--cg-blue-dark)}.edit-grid{display:grid;grid-template-columns:repeat(2,minmax(200px,1fr));gap:12px}.edit-grid label{display:flex;flex-direction:column;gap:6px;font-size:.88rem;color:#374151;font-weight:700}.edit-grid textarea{grid-column:1/-1;min-height:120px;resize:vertical;font-family:Consolas,monospace}.status{font-size:.9rem;color:var(--cg-muted);min-height:22px}.status.erro{color:var(--danger);font-weight:800}.status.ok{color:var(--ok);font-weight:800}.muted{color:var(--cg-muted);font-size:.82rem}.hidden{display:none!important}@media(max-width:1100px){.app{flex-direction:column}.sidebar{position:relative;top:0;width:100%;height:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.sidebar h3,.sidebar .group-title{grid-column:1/-1}.edit-grid{grid-template-columns:1fr}}@media(max-width:640px){.content{padding:14px}.app{padding:12px}.header-card{padding:16px}table{display:block;overflow-x:auto;white-space:nowrap}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h3>COLOR GLASS</h3>
+    <div class="group-title">Principal</div>
+    <button onclick="go('index_admin.html')">Painel Admin</button>
+    <button onclick="go('index_loja.html')">Orçamentos</button>
+    <button onclick="go('controle_loja.html')">Acompanhamento</button>
+    <button onclick="go('pagamentos.html')">Pagamentos</button>
+    <button onclick="go('gestao-carteira.html')">Carteira</button>
+
+    <div class="group-title">Cadastros técnicos</div>
+    <button onclick="go('perfis.html')">Perfis</button>
+    <button onclick="go('vidros.html')">Vidros</button>
+    <button onclick="go('insumos.html')">Insumos</button>
+    <button onclick="go('puxadores.html')">Puxadores</button>
+    <button onclick="go('sistemas.html')">Sistemas</button>
+    <button onclick="go('trilhos.html')">Trilhos</button>
+    <button onclick="go('fornecedores.html')">Fornecedores</button>
+
+    <div class="group-title">Operação</div>
+    <button onclick="go('estoquecontagens.html')">Contagem Estoque</button>
+    <button onclick="go('estoquedashboard.html')">Dashboard Estoque</button>
+    <button onclick="go('tarefas.html')">Tarefas</button>
+    <button onclick="go('promob_export.html')">Exportar Promob</button>
+
+    <div class="group-title">Administração</div>
+    <button onclick="go('usuarios_admin.html')">Usuários</button>
+    <button onclick="logout()">Sair</button>
+  </aside>
+
+  <main class="content">
+    <section class="header-card">
+      <div>
+        <h1>Usuários</h1>
+        <p>Gerenciamento de acesso das lojas/parceiros e equipe interna. Acesso exclusivo para admin nível 3.</p>
+      </div>
+      <button class="btn secondary" onclick="carregarUsuarios()">Atualizar</button>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <input id="busca" type="text" placeholder="Buscar por usuário, nome, loja/storeid ou e-mail" oninput="renderTabela()">
+        <select id="filtroNivel" onchange="renderTabela()">
+          <option value="">Todos os níveis</option>
+          <option value="1">Level 1 - Loja</option>
+          <option value="2">Level 2 - Gerência</option>
+          <option value="3">Level 3 - Admin</option>
+        </select>
+        <select id="filtroAprovado" onchange="renderTabela()">
+          <option value="">Todos</option>
+          <option value="sim">Aprovados</option>
+          <option value="nao">Pendentes</option>
+        </select>
+      </div>
+      <div id="statusLista" class="status">Carregando...</div>
+      <div id="tabelaUsuarios"></div>
+    </section>
+
+    <section id="editor" class="panel hidden">
+      <h2 style="color:var(--cg-blue);margin-bottom:12px;">Editar usuário</h2>
+      <div class="edit-grid">
+        <label>Usuário<input id="editUser" type="text"></label>
+        <label>Nome<input id="editNome" type="text"></label>
+        <label>StoreID / LojaID<input id="editStoreid" type="text"></label>
+        <label>Nível
+          <select id="editLevel">
+            <option value="1">1 - Loja</option>
+            <option value="2">2 - Gerência</option>
+            <option value="3">3 - Admin</option>
+          </select>
+        </label>
+        <label>Acesso
+          <select id="editAprovado">
+            <option value="true">Aprovado</option>
+            <option value="false">Pendente / bloqueado</option>
+          </select>
+        </label>
+        <label>Dados cadastrais em JSON<textarea id="editDados"></textarea></label>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn" onclick="salvarUsuario()">Salvar alterações</button>
+        <button class="btn secondary" onclick="fecharEditor()">Cancelar</button>
+      </div>
+      <div id="statusEditor" class="status" style="margin-top:10px;"></div>
+      <p class="muted" style="margin-top:8px;">Esta tela não edita senha. Para segurança, a próxima etapa deve migrar senhas para hash.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+const API_BASE = "https://colorglass.onrender.com";
+let usuarios = [];
+let usuarioEditando = null;
+
+function getToken(){
+  const params = new URLSearchParams(window.location.search);
+  const tokenUrl = params.get("token");
+  if (tokenUrl) {
+    localStorage.setItem("USER_TOKEN", tokenUrl);
+    localStorage.setItem("ADMIN_TOKEN", tokenUrl);
+    params.delete("token");
+    const clean = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+    window.history.replaceState({}, document.title, clean);
+    return tokenUrl;
+  }
+  return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+}
+function authHeaders(){const token=getToken();return token?{"Authorization":`Bearer ${token}`}:{}}
+function go(url){window.location.href=url}
+function logout(){localStorage.removeItem("USER_TOKEN");localStorage.removeItem("ADMIN_TOKEN");window.location.href="login.html"}
+function escapeHtml(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function textoUsuario(u){return [u.user,u.nome,u.storeid,u.dados?.email,u.dados?.whatsapp,u.dados?.cpf_cnpj].filter(Boolean).join(" ").toLowerCase()}
+function levelLabel(level){const n=Number(level||0);if(n===3)return "Admin";if(n===2)return "Gerência";if(n===1)return "Loja";return "Sem nível"}
+
+async function validarAdmin(){
+  const token=getToken();
+  if(!token){window.location.href="login.html";return false}
+  const res=await fetch(`${API_BASE}/api/auth/validar`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}});
+  const data=await res.json();
+  if(!res.ok||!data.success){window.location.href="login.html";return false}
+  if(Number(data.level)!==3){
+    document.querySelector(".content").innerHTML=`<section class="header-card"><div><h1>Acesso negado</h1><p>Esta tela é exclusiva para administrador nível 3.</p></div><button class="btn" onclick="go('index_loja.html')">Voltar</button></section>`;
+    return false;
+  }
+  return true;
+}
+
+async function carregarUsuarios(){
+  const status=document.getElementById("statusLista");
+  status.textContent="Carregando usuários...";
+  status.className="status";
+  try{
+    const res=await fetch(`${API_BASE}/api/admin/usuarios`,{headers:authHeaders()});
+    const data=await res.json();
+    if(!res.ok||!data.success)throw new Error(data.error||`HTTP ${res.status}`);
+    usuarios=Array.isArray(data.usuarios)?data.usuarios:[];
+    status.textContent=`${usuarios.length} usuário(s) carregado(s).`;
+    renderTabela();
+  }catch(err){
+    console.error(err);
+    status.textContent="Erro ao carregar usuários.";
+    status.className="status erro";
+  }
+}
+
+function usuariosFiltrados(){
+  const busca=(document.getElementById("busca").value||"").trim().toLowerCase();
+  const nivel=document.getElementById("filtroNivel").value;
+  const aprovado=document.getElementById("filtroAprovado").value;
+  return usuarios.filter(u=>{
+    if(busca&&!textoUsuario(u).includes(busca))return false;
+    if(nivel&&String(u.level||"")!==nivel)return false;
+    if(aprovado==="sim"&&!u.aprovado)return false;
+    if(aprovado==="nao"&&u.aprovado)return false;
+    return true;
+  });
+}
+
+function renderTabela(){
+  const el=document.getElementById("tabelaUsuarios");
+  const lista=usuariosFiltrados();
+  if(!lista.length){el.innerHTML="<em>Nenhum usuário encontrado.</em>";return}
+  el.innerHTML=`
+    <table>
+      <thead><tr><th>Usuário</th><th>Nome</th><th>StoreID</th><th>Nível</th><th>Acesso</th><th>Contato</th><th>Ação</th></tr></thead>
+      <tbody>
+        ${lista.map(u=>`
+          <tr>
+            <td><strong>${escapeHtml(u.user||"-")}</strong><div class="muted">${escapeHtml(u.userid||"")}</div></td>
+            <td>${escapeHtml(u.nome||u.dados?.nome||"-")}</td>
+            <td>${escapeHtml(u.storeid||"-")}</td>
+            <td><span class="pill ${Number(u.level)===3?"admin":""}">${escapeHtml(levelLabel(u.level))}</span></td>
+            <td><span class="pill ${u.aprovado?"ok":"warn"}">${u.aprovado?"Aprovado":"Pendente"}</span></td>
+            <td>${escapeHtml(u.dados?.whatsapp||"-")}<div class="muted">${escapeHtml(u.dados?.email||"")}</div></td>
+            <td><button class="btn secondary" onclick="abrirEditor('${encodeURIComponent(u.userid)}')">Editar</button></td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+function abrirEditor(useridEncoded){
+  const userid=decodeURIComponent(useridEncoded);
+  const u=usuarios.find(item=>String(item.userid)===String(userid));
+  if(!u)return;
+  usuarioEditando=u;
+  document.getElementById("editUser").value=u.user||"";
+  document.getElementById("editNome").value=u.nome||u.dados?.nome||"";
+  document.getElementById("editStoreid").value=u.storeid||"";
+  document.getElementById("editLevel").value=String(u.level||1);
+  document.getElementById("editAprovado").value=u.aprovado?"true":"false";
+  document.getElementById("editDados").value=JSON.stringify(u.dados||{},null,2);
+  document.getElementById("statusEditor").textContent="";
+  document.getElementById("editor").classList.remove("hidden");
+  document.getElementById("editor").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function fecharEditor(){
+  usuarioEditando=null;
+  document.getElementById("editor").classList.add("hidden");
+}
+
+async function salvarUsuario(){
+  if(!usuarioEditando)return;
+  const status=document.getElementById("statusEditor");
+  let dados={};
+  try{
+    const raw=document.getElementById("editDados").value.trim();
+    dados=raw?JSON.parse(raw):{};
+  }catch(err){
+    status.textContent="JSON dos dados cadastrais inválido.";
+    status.className="status erro";
+    return;
+  }
+  const payload={
+    user:document.getElementById("editUser").value.trim(),
+    nome:document.getElementById("editNome").value.trim(),
+    storeid:document.getElementById("editStoreid").value.trim(),
+    level:Number(document.getElementById("editLevel").value),
+    aprovado:document.getElementById("editAprovado").value==="true",
+    dados
+  };
+  status.textContent="Salvando...";
+  status.className="status";
+  try{
+    const res=await fetch(`${API_BASE}/api/admin/usuarios/${encodeURIComponent(usuarioEditando.userid)}`,{
+      method:"PATCH",
+      headers:{"Content-Type":"application/json",...authHeaders()},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(!res.ok||!data.success)throw new Error(data.error||`HTTP ${res.status}`);
+    status.textContent="Usuário atualizado com sucesso.";
+    status.className="status ok";
+    await carregarUsuarios();
+    const atualizado=data.usuario;
+    if(atualizado)abrirEditor(encodeURIComponent(atualizado.userid));
+  }catch(err){
+    console.error(err);
+    status.textContent=err.message||"Erro ao salvar usuário.";
+    status.className="status erro";
+  }
+}
+
+validarAdmin().then(ok=>{if(ok)carregarUsuarios()});
+</script>
+</body>
+</html>
