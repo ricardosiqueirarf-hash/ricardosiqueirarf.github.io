@@ -32,8 +32,7 @@ function atualizarPuxadoresSelect() {
     puxadorSelect.innerHTML += "<option value='sem_puxador'>Sem puxador</option>";
 
     todosPuxadores.forEach(p => {
-        const unidade = unidadePuxadorLabel(p);
-        puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco || 0).toFixed(2)}/${unidade}</option>`;
+        puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
     });
 
     if (valorAtual) puxadorSelect.value = valorAtual;
@@ -219,80 +218,46 @@ function calcularComponentesPortaAtual() {
 
     if (valorAdicional > 0) {
         componentes.linhas.push({
-            categoria: "adicional",
-            item: null,
+            categoria: "valor_adicional",
+            item: { nome: "Valor adicional" },
             nome: "Valor adicional",
             quantidade: 1,
             unidade: "un",
             unitario: valorAdicional,
             total: valorAdicional,
-            formula: "valor manual"
+            formula: "informado manualmente"
         });
     }
 
+    componentes.total = componentes.linhas.reduce((acc, linha) => acc + (Number(linha.total) || 0), 0);
     return componentes;
 }
 
-function calcularPrecoPorta() {
-    const quantidadePortas = +document.getElementById("quantidade")?.value || 1;
+function recalcularPrecoPortaDetalhado() {
     const componentes = calcularComponentesPortaAtual();
-    const totalPorPorta = componentes.linhas.reduce((acc, linha) => acc + (Number(linha.total) || 0), 0);
-    return totalPorPorta * quantidadePortas;
+    return {
+        total: componentes.total,
+        componentes
+    };
 }
 
-function atualizarPrecoPortaPuxadorPerfilFix() {
-    const preco = calcularPrecoPorta();
-    const precoEl = document.getElementById("precoPorta");
-    if (precoEl) precoEl.textContent = `Preço estimado: R$ ${preco.toFixed(2)}`;
-    if (typeof atualizarDetalhesCusto === "function") atualizarDetalhesCusto();
-    if (typeof renderizarConferenciaCalculoPorta === "function") renderizarConferenciaCalculoPorta();
-    if (typeof renderizarPorta3D === "function") renderizarPorta3D();
-}
-
-function atualizarPuxadorTipo() {
-    const puxador = obterPuxadorSelecionado();
-    const medidaInput = document.getElementById("medida_puxador");
-    if (!medidaInput) return;
-
-    if (!puxador || document.getElementById("puxador")?.value === "sem_puxador") {
-        medidaInput.disabled = true;
-        medidaInput.value = "0";
-        return;
-    }
-
-    if (puxadorEhPerfil(puxador)) {
-        medidaInput.disabled = true;
-        medidaInput.value = "0";
-        atualizarPrecoPortaPuxadorPerfilFix();
-        return;
-    }
-
-    if (puxador.tipo_medida === "metro_linear") {
-        medidaInput.disabled = false;
-    } else {
-        medidaInput.disabled = true;
-        medidaInput.value = "0";
+function atualizarPrecoPorta() {
+    const el = document.getElementById("precoPorta");
+    if (!el) return;
+    const calculo = recalcularPrecoPortaDetalhado();
+    el.textContent = `Preço estimado: ${formatarMoeda(calculo.total || 0)}`;
+    window.ULTIMO_CALCULO_PORTA = calculo.componentes;
+    if (typeof renderizarConferenciaCalculoPorta === "function") {
+        renderizarConferenciaCalculoPorta();
     }
 }
 
 window.normalizarTipoMedidaPuxador = normalizarTipoMedidaPuxador;
 window.puxadorEhPerfil = puxadorEhPerfil;
+window.unidadePuxadorLabel = unidadePuxadorLabel;
 window.atualizarPuxadoresSelect = atualizarPuxadoresSelect;
 window.obterPuxadorSelecionado = obterPuxadorSelecionado;
 window.obterDadosPuxador = obterDadosPuxador;
 window.calcularComponentesPortaAtual = calcularComponentesPortaAtual;
-window.calcularPrecoPorta = calcularPrecoPorta;
-window.atualizarPrecoPorta = atualizarPrecoPortaPuxadorPerfilFix;
-window.atualizarPuxadorTipo = atualizarPuxadorTipo;
-
-document.addEventListener("change", (ev) => {
-    if (["puxador", "puxador_posicao", "perfil", "largura", "altura"].includes(ev.target?.id)) {
-        atualizarPrecoPortaPuxadorPerfilFix();
-    }
-}, true);
-
-document.addEventListener("input", (ev) => {
-    if (["largura", "altura"].includes(ev.target?.id)) {
-        atualizarPrecoPortaPuxadorPerfilFix();
-    }
-}, true);
+window.recalcularPrecoPortaDetalhado = recalcularPrecoPortaDetalhado;
+window.atualizarPrecoPorta = atualizarPrecoPorta;
