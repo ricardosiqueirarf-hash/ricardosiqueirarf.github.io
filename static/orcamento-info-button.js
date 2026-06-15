@@ -1,4 +1,5 @@
-// Adiciona botões laterais em portas.html: Aprovação e Informações do orçamento.
+// Adiciona somente o botão "Informações do orçamento" em portas.html.
+// Não cria botão de Aprovação para evitar duplicidade com approval-navigation-fix.js.
 
 (function () {
   function getUuid() {
@@ -12,46 +13,58 @@
     return token ? `&token=${encodeURIComponent(token)}` : '';
   }
 
-  function criarBotao(id, texto, destino) {
-    let botao = document.getElementById(id);
+  function criarBotaoInfo() {
+    let botao = document.getElementById('btnSidebarInfoOrcamento');
     if (botao) return botao;
 
     botao = document.createElement('button');
-    botao.id = id;
+    botao.id = 'btnSidebarInfoOrcamento';
     botao.type = 'button';
-    botao.textContent = texto;
+    botao.textContent = 'Informações do orçamento';
     botao.addEventListener('click', () => {
       const uuid = getUuid();
       if (!uuid) {
         alert('Orçamento não encontrado.');
         return;
       }
-      window.location.href = `${destino}?orcamento_uuid=${encodeURIComponent(uuid)}${tokenParam()}`;
+      window.location.href = `vizualizacao.html?orcamento_uuid=${encodeURIComponent(uuid)}${tokenParam()}`;
     });
     return botao;
   }
 
-  function instalarBotoesOrcamento() {
+  function removerAprovacaoDuplicada() {
+    const duplicado = document.getElementById('btnSidebarAprovacao');
+    if (duplicado) duplicado.remove();
+  }
+
+  function instalarBotaoInfoOrcamento() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
+
+    removerAprovacaoDuplicada();
+
+    const botaoInfo = criarBotaoInfo();
+    const botaoAprovacaoExistente = document.getElementById('btnIrAprovacao')
+      || Array.from(sidebar.querySelectorAll('button')).find(btn => String(btn.textContent || '').trim().toLowerCase() === 'aprovação');
+
+    if (botaoAprovacaoExistente) {
+      botaoAprovacaoExistente.insertAdjacentElement('afterend', botaoInfo);
+      return;
+    }
 
     const botaoVoltar = Array.from(sidebar.querySelectorAll('button'))
       .find(btn => String(btn.textContent || '').trim().toLowerCase() === 'voltar');
 
-    const botaoAprovacao = criarBotao('btnSidebarAprovacao', 'Aprovação', 'aprovacao.html');
-    const botaoInfo = criarBotao('btnSidebarInfoOrcamento', 'Informações do orçamento', 'vizualizacao.html');
-
     if (botaoVoltar) {
-      botaoVoltar.insertAdjacentElement('afterend', botaoAprovacao);
-      botaoAprovacao.insertAdjacentElement('afterend', botaoInfo);
+      botaoVoltar.insertAdjacentElement('afterend', botaoInfo);
       return;
     }
 
-    sidebar.appendChild(botaoAprovacao);
     sidebar.appendChild(botaoInfo);
   }
 
-  document.addEventListener('DOMContentLoaded', instalarBotoesOrcamento);
-  setTimeout(instalarBotoesOrcamento, 500);
-  setTimeout(instalarBotoesOrcamento, 1200);
+  document.addEventListener('DOMContentLoaded', instalarBotaoInfoOrcamento);
+  setTimeout(instalarBotaoInfoOrcamento, 500);
+  setTimeout(instalarBotaoInfoOrcamento, 1200);
+  setTimeout(instalarBotaoInfoOrcamento, 2200);
 })();
