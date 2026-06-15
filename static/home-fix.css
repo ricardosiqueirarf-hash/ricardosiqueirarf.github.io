@@ -1,3 +1,21 @@
+body#top header .brand {
+  width: auto;
+  min-height: auto;
+  gap: 0;
+}
+
+body#top header .logo-symbol {
+  display: none !important;
+}
+
+body#top header .logo-wordmark {
+  display: inline-flex;
+  gap: 10px;
+  font-size: 1.05rem;
+  letter-spacing: 0.34em;
+  white-space: nowrap;
+}
+
 body#top .hero-media {
   display: flex;
   align-items: center;
