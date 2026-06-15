@@ -52,8 +52,6 @@ var todosInsumos = [];
 var todosPuxadores = [];
 var todasTags = [];
 
-var estruturas3D = [];
-
 // =====================
 // SCRIPTS COMPLEMENTARES
 // =====================
@@ -140,7 +138,6 @@ async function initMain() {
     carregarPuxadores();
     carregarTags();
     carregarPortas();
-    carregarEstruturas3D();
     carregarOrcamentoInfo();
 }
 
