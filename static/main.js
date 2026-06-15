@@ -88,7 +88,6 @@ async function carregarPreview3DPortas() {
 
 async function carregarComplementosPortas() {
     const scripts = [
-        "portas-crud-restorer.js",
         "pricing-deslizante-rail-fix.js",
         "puxador-perfil-fix.js",
         "puxador-perfil-ui-fix.js",
