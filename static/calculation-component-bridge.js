@@ -16,14 +16,15 @@ function formatarMoedaBridge(valor) {
 }
 
 function obterFormulaBridge(linha, medidas) {
+    if (linha.formula) return linha.formula;
     if (linha.categoria === "perfil") {
         return `2 × (${formatarNumeroBridge(medidas.larguraM, 3)} + ${formatarNumeroBridge(medidas.alturaM, 3)})`;
     }
     if (linha.categoria === "vidro") {
         return `${formatarNumeroBridge(medidas.larguraM, 3)} × ${formatarNumeroBridge(medidas.alturaM, 3)}`;
     }
-    if (linha.categoria === "trilho") {
-        return linha.unidade === "m" ? "largura da porta" : "1 unidade por porta";
+    if (String(linha.categoria || "").startsWith("trilho")) {
+        return linha.unidade === "m" ? "largura + vão correspondente" : "1 unidade por porta";
     }
     if (linha.categoria === "sistema") return "1 sistema por porta";
     if (linha.categoria === "insumo_perfil") return linha.unidade === "m" ? "perímetro da porta" : "1 unidade por porta";
