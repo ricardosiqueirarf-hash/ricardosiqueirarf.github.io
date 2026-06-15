@@ -1,11 +1,9 @@
 const pages = [
   "login.html",
-  "index_admin.html",
   "index_loja.html",
   "portas.html",
   "classes.html",
-  "cadastro.html",
-  "usuarios_admin.html"
+  "cadastro.html"
 ];
 
 pages.forEach(p => {
