@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastros Técnicos | ColorGlass</title>
+<meta name="description" content="Central de cadastros técnicos da ColorGlass.">
+<link rel="icon" href="/favicon.ico?v=4" sizes="any">
+<meta name="theme-color" content="#1079ba">
+<script src="global.js"></script>
+<style>
+:root{--cg-blue:#1079ba;--cg-blue-dark:#0d5d8c;--cg-soft:#e7f3fb;--text:#1f2933;--muted:#6b7280;--border:rgba(16,121,186,.12);--shadow:0 12px 30px rgba(15,44,62,.12)}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{min-height:100vh;background:radial-gradient(circle at top,rgba(16,121,186,.16),transparent 55%),linear-gradient(135deg,#f5fbff,#eef4f9 45%,#f8fbff);color:var(--text)}
+.app{display:flex;gap:18px;padding:18px;min-height:100vh}.sidebar{width:250px;background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));color:#fff;border-radius:18px;box-shadow:var(--shadow);padding:22px 18px;display:flex;flex-direction:column;gap:10px;position:sticky;top:18px;height:calc(100vh - 36px);overflow:auto}.sidebar h3{font-size:1.25rem;margin-bottom:4px}.group-title{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;opacity:.78;margin-top:10px}.sidebar button{background:rgba(255,255,255,.14);padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);cursor:pointer;text-align:left;font-weight:700;color:#fff}.sidebar button:hover{background:rgba(255,255,255,.22);transform:translateX(4px)}.content{flex:1;background:rgba(255,255,255,.58);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:20px}.header{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 10px 24px rgba(15,44,62,.10);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}.header h1{color:var(--cg-blue-dark);font-size:1.6rem;margin-bottom:4px}.header p{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 10px 24px rgba(15,44,62,.10);display:flex;flex-direction:column;gap:10px}.card h2{color:var(--cg-blue-dark);font-size:1.15rem}.card p{color:var(--muted);font-size:.9rem;line-height:1.4}.btn{padding:11px 14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark));color:#fff;font-weight:800;cursor:pointer;margin-top:auto}.btn.secondary{background:#fff;color:var(--cg-blue-dark);border:1px solid var(--border)}.badge{display:inline-flex;width:max-content;background:var(--cg-soft);color:var(--cg-blue-dark);border-radius:999px;padding:5px 9px;font-weight:800;font-size:.78rem}@media(max-width:900px){.app{flex-direction:column}.sidebar{width:100%;height:auto;position:relative;top:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.sidebar h3,.group-title{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h3>COLOR GLASS</h3>
+    <div class="group-title">Principal</div>
+    <button onclick="go('index_admin.html')">Painel Admin</button>
+    <button onclick="go('index_loja.html')">Orçamentos</button>
+    <button onclick="go('controle_loja.html')">Acompanhamento</button>
+    <button onclick="go('pagamentos.html')">Pagamentos</button>
+    <div class="group-title">Cadastros</div>
+    <button onclick="go('cadastros.html')">Central de cadastros</button>
+    <button onclick="go('perfis.html')">Perfis</button>
+    <button onclick="go('vidros.html')">Vidros</button>
+    <button onclick="go('insumos.html')">Insumos</button>
+    <button onclick="go('puxadores.html')">Puxadores</button>
+    <button onclick="go('sistemas.html')">Sistemas</button>
+    <button onclick="go('trilhos.html')">Trilhos</button>
+    <button onclick="go('fornecedores.html')">Fornecedores</button>
+    <div class="group-title">Administração</div>
+    <button onclick="go('usuarios_admin.html')">Usuários</button>
+    <button onclick="logout()">Sair</button>
+  </aside>
+
+  <main class="content">
+    <section class="header">
+      <div>
+        <h1>Cadastros Técnicos</h1>
+        <p>Central rápida para manter bases de preço, materiais e fornecedores atualizadas.</p>
+      </div>
+      <span class="badge" id="badgeAdmin">Validando acesso</span>
+    </section>
+
+    <section class="grid">
+      <div class="card"><span class="badge">Alumínio</span><h2>Perfis</h2><p>Cadastro de perfis, custo, margem, perda, preço e tags por tipologia.</p><button class="btn" onclick="go('perfis.html')">Abrir perfis</button></div>
+      <div class="card"><span class="badge">Vidro</span><h2>Vidros</h2><p>Cadastro de vidros, espessura, custo, margem, perda, preço e tags.</p><button class="btn" onclick="go('vidros.html')">Abrir vidros</button></div>
+      <div class="card"><span class="badge">Materiais</span><h2>Insumos</h2><p>Cadastro de materiais de consumo, unidade, custo e preço de venda.</p><button class="btn" onclick="go('insumos.html')">Abrir insumos</button></div>
+      <div class="card"><span class="badge">Acessórios</span><h2>Puxadores</h2><p>Cadastro de puxadores e acessórios relacionados ao orçamento.</p><button class="btn" onclick="go('puxadores.html')">Abrir puxadores</button></div>
+      <div class="card"><span class="badge">Sistemas</span><h2>Sistemas</h2><p>Cadastro dos sistemas usados nas portas, como correr, giro e deslizante.</p><button class="btn" onclick="go('sistemas.html')">Abrir sistemas</button></div>
+      <div class="card"><span class="badge">Trilhos</span><h2>Trilhos</h2><p>Cadastro de trilhos superiores/inferiores e custos associados.</p><button class="btn" onclick="go('trilhos.html')">Abrir trilhos</button></div>
+      <div class="card"><span class="badge">Compras</span><h2>Fornecedores</h2><p>Base de fornecedores e produtos/preços vinculados.</p><button class="btn" onclick="go('fornecedores.html')">Abrir fornecedores</button></div>
+      <div class="card"><span class="badge">Estoque</span><h2>Estoque</h2><p>Contagem e painel de estoque para acompanhar quantidade e valor parado.</p><button class="btn" onclick="go('estoquedashboard.html')">Abrir estoque</button></div>
+    </section>
+  </main>
+</div>
+<script>
+const API_BASE="https://colorglass.onrender.com";
+function getToken(){return localStorage.getItem("USER_TOKEN")||localStorage.getItem("ADMIN_TOKEN")||""}
+function go(url){window.location.href=url}
+function logout(){localStorage.removeItem("USER_TOKEN");localStorage.removeItem("ADMIN_TOKEN");window.location.href="login.html"}
+async function validarAdmin(){
+  const token=getToken();
+  if(!token){window.location.href="login.html";return}
+  try{
+    const res=await fetch(`${API_BASE}/api/auth/validar`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}});
+    const data=await res.json();
+    if(!res.ok||!data.success||Number(data.level)!==3){document.querySelector(".content").innerHTML='<section class="header"><div><h1>Acesso negado</h1><p>Esta área é exclusiva para administrador.</p></div></section>';return}
+    document.getElementById("badgeAdmin").textContent="Admin nível 3";
+  }catch(e){document.getElementById("badgeAdmin").textContent="Erro ao validar"}
+}
+validarAdmin();
+</script>
+</body>
+</html>
