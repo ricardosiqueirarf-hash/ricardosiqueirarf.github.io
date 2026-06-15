@@ -87,6 +87,7 @@ async function carregarPreview3DPortas() {
 
 async function carregarAcoesPortas() {
     try {
+        await carregarScriptPortas("portas-crud-restorer.js");
         await carregarScriptPortas("portas-actions.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
@@ -108,8 +109,8 @@ async function carregarConferenciaCalculoPortas() {
     }
 }
 
-function initMain() {
-    carregarAcoesPortas();
+async function initMain() {
+    await carregarAcoesPortas();
     carregarPreview3DPortas();
     carregarConferenciaCalculoPortas();
     carregarPerfis();
