@@ -143,6 +143,16 @@ function numeroCampoPorta3D(id) {
     return Number.isFinite(numero) ? numero : 0;
 }
 
+function limitarNumeroPorta3D(valor, minimo, maximo) {
+    return Math.max(minimo, Math.min(maximo, valor));
+}
+
+function obterVaoTrilhoPorta3D(id, alturaM) {
+    const valorMm = numeroCampoPorta3D(id);
+    if (valorMm <= 0) return 0.055;
+    return limitarNumeroPorta3D(valorMm / 1000, 0.015, Math.max(0.08, alturaM * 0.28));
+}
+
 function obterTipoPorta3D() {
     return document.getElementById("tipologia")?.value || "giro";
 }
@@ -172,6 +182,13 @@ function criarMaterialPorta3D() {
             color: 0xf0c24c,
             metalness: 0.55,
             roughness: 0.20
+        }),
+        vao: new THREE.MeshStandardMaterial({
+            color: 0xf0c24c,
+            transparent: true,
+            opacity: 0.26,
+            metalness: 0.0,
+            roughness: 0.45
         }),
         sombra: new THREE.MeshStandardMaterial({
             color: 0xdbeafe,
@@ -259,14 +276,26 @@ function adicionarDobradicasPorta3D(group, materiais, larguraM, alturaM) {
     });
 }
 
-function adicionarTrilhosPorta3D(group, materiais, larguraM, alturaM) {
+function adicionarTrilhosPorta3D(group, materiais, larguraM, alturaM, vaoSuperiorM, vaoInferiorM) {
     const tipo = obterTipoPorta3D();
     if (tipo !== "correr" && tipo !== "deslizante") return;
 
-    const trilhoAltura = 0.035;
-    const trilhoProf = 0.12;
-    group.add(criarBoxPorta3D(larguraM * 1.06, trilhoAltura, trilhoProf, 0, alturaM / 2 + 0.065, 0, materiais.perfilEscuro));
-    group.add(criarBoxPorta3D(larguraM * 1.06, trilhoAltura, trilhoProf, 0, -alturaM / 2 - 0.065, 0, materiais.perfilEscuro));
+    const trilhoAltura = 0.038;
+    const trilhoProf = 0.14;
+    const trilhoLargura = larguraM * 1.1;
+    const yTrilhoSuperior = alturaM / 2 + vaoSuperiorM + trilhoAltura / 2;
+    const yTrilhoInferior = -alturaM / 2 - vaoInferiorM - trilhoAltura / 2;
+
+    group.add(criarBoxPorta3D(trilhoLargura, trilhoAltura, trilhoProf, 0, yTrilhoSuperior, 0, materiais.perfilEscuro));
+    group.add(criarBoxPorta3D(trilhoLargura, trilhoAltura, trilhoProf, 0, yTrilhoInferior, 0, materiais.perfilEscuro));
+
+    if (vaoSuperiorM > 0.005) {
+        group.add(criarBoxPorta3D(larguraM * 1.04, vaoSuperiorM, 0.012, 0, alturaM / 2 + vaoSuperiorM / 2, -0.085, materiais.vao));
+    }
+
+    if (vaoInferiorM > 0.005) {
+        group.add(criarBoxPorta3D(larguraM * 1.04, vaoInferiorM, 0.012, 0, -alturaM / 2 - vaoInferiorM / 2, -0.085, materiais.vao));
+    }
 }
 
 function limparCenaPorta3D() {
@@ -407,21 +436,26 @@ function renderizarPorta3D() {
     const tipo = obterTipoPorta3D();
     const larguraM = Math.max(0.2, larguraMm / 1000);
     const alturaM = Math.max(0.2, alturaMm / 1000);
+    let alturaCenaM = alturaM;
+    let centroCenaY = 0;
 
     if (tipo === "correr" || tipo === "deslizante") {
-        const painelLargura = larguraM * 0.54;
-        adicionarPainelPorta3D(Porta3DState.group, materiais, painelLargura, alturaM, -0.035, -larguraM * 0.13);
-        adicionarPainelPorta3D(Porta3DState.group, materiais, painelLargura, alturaM, 0.035, larguraM * 0.13);
-        adicionarTrilhosPorta3D(Porta3DState.group, materiais, larguraM, alturaM);
+        const vaoSuperiorM = obterVaoTrilhoPorta3D("vao_trilhos_superior", alturaM);
+        const vaoInferiorM = obterVaoTrilhoPorta3D("vao_trilhos_inferior", alturaM);
+        adicionarPainelPorta3D(Porta3DState.group, materiais, larguraM, alturaM, 0, 0);
+        adicionarPuxadorPorta3D(Porta3DState.group, materiais, larguraM, alturaM);
+        adicionarTrilhosPorta3D(Porta3DState.group, materiais, larguraM, alturaM, vaoSuperiorM, vaoInferiorM);
+        alturaCenaM = alturaM + vaoSuperiorM + vaoInferiorM + 0.09;
+        centroCenaY = (vaoSuperiorM - vaoInferiorM) / 2;
     } else {
         adicionarPainelPorta3D(Porta3DState.group, materiais, larguraM, alturaM, 0, 0);
         adicionarPuxadorPorta3D(Porta3DState.group, materiais, larguraM, alturaM);
         adicionarDobradicasPorta3D(Porta3DState.group, materiais, larguraM, alturaM);
     }
 
-    const maiorMedida = Math.max(larguraM, alturaM);
-    Porta3DState.camera.position.set(maiorMedida * 0.55, alturaM * 0.12, maiorMedida * 2.3);
-    Porta3DState.camera.lookAt(0, 0, 0);
+    const maiorMedida = Math.max(larguraM, alturaCenaM);
+    Porta3DState.camera.position.set(maiorMedida * 0.55, centroCenaY + alturaCenaM * 0.12, maiorMedida * 2.35);
+    Porta3DState.camera.lookAt(0, centroCenaY, 0);
     Porta3DState.group.rotation.y = Porta3DState.rotationY;
     redimensionarPorta3D();
 }
