@@ -1,6 +1,6 @@
 // =====================
-// CONFERÊNCIA DO CÁLCULO DA PORTA
-// Mostra o espelho técnico do cálculo: ML, m², unitários e totais.
+// FERRAMENTA ÚNICA: VERIFICAÇÃO + CONFERÊNCIA DO CÁLCULO
+// Mostra checklist do orçamento e espelho técnico do cálculo no mesmo card.
 // =====================
 
 function adicionarEstilosConferenciaCalculo() {
@@ -10,7 +10,7 @@ function adicionarEstilosConferenciaCalculo() {
     style.id = "calculationCheckStyles";
     style.textContent = `
         .calculo-check-card {
-            margin-top: 10px;
+            margin-top: 12px;
             padding: 12px;
             border-radius: 14px;
             border: 1px solid rgba(16,121,186,0.16);
@@ -121,6 +121,14 @@ function adicionarEstilosConferenciaCalculo() {
             font-weight: 800;
         }
 
+        .orcamento-auditoria-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 10px;
+        }
+
         @media (max-width: 700px) {
             .calculo-check-summary {
                 grid-template-columns: 1fr;
@@ -173,8 +181,12 @@ function obterConferenciaCalculoPortaAtual() {
 
     const medidas = calcularMedidasPorta();
     const quantidadePortas = Number(document.getElementById("quantidade")?.value || 1) || 1;
-    const perfil = todosPerfis.find((p) => String(p.id) === String(document.getElementById("perfil")?.value));
-    const vidro = todosVidros.find((v) => String(v.id) === String(document.getElementById("vidro")?.value));
+    const perfil = Array.isArray(todosPerfis)
+        ? todosPerfis.find((p) => String(p.id) === String(document.getElementById("perfil")?.value))
+        : null;
+    const vidro = Array.isArray(todosVidros)
+        ? todosVidros.find((v) => String(v.id) === String(document.getElementById("vidro")?.value))
+        : null;
     const valorAdicional = Number(document.getElementById("valor_adicional")?.value || 0) || 0;
     const linhas = [];
     const avisos = [];
@@ -210,7 +222,7 @@ function obterConferenciaCalculoPortaAtual() {
     }
 
     const insumos = (perfil?.insumos || [])
-        .map((nome) => todosInsumos.find((insumo) => insumo.nome === nome))
+        .map((nome) => Array.isArray(todosInsumos) ? todosInsumos.find((insumo) => insumo.nome === nome) : null)
         .filter(Boolean);
 
     insumos.forEach((insumo) => {
@@ -245,7 +257,9 @@ function obterConferenciaCalculoPortaAtual() {
 
     const puxadorId = document.getElementById("puxador")?.value;
     if (puxadorId && puxadorId !== "sem_puxador") {
-        const puxador = todosPuxadores.find((p) => String(p.id) === String(puxadorId));
+        const puxador = Array.isArray(todosPuxadores)
+            ? todosPuxadores.find((p) => String(p.id) === String(puxadorId))
+            : null;
         if (puxador) {
             const tipoMedida = puxador.tipo_medida;
             const medidaPuxadorMm = Number(document.getElementById("medida_puxador")?.value || 0) || 0;
@@ -305,7 +319,7 @@ function obterConferenciaCalculoPortaAtual() {
 
     if (Math.abs(diferenca) > 0.01) {
         avisos.push(`Diferença entre preço do sistema e espelho técnico: ${formatarMoedaCalculo(diferenca)}.`);
-        const puxador = puxadorId && puxadorId !== "sem_puxador"
+        const puxador = puxadorId && puxadorId !== "sem_puxador" && Array.isArray(todosPuxadores)
             ? todosPuxadores.find((p) => String(p.id) === String(puxadorId))
             : null;
         if (puxador?.tipo_medida === "unidade" && quantidadePortas > 1) {
@@ -360,8 +374,8 @@ function renderizarConferenciaCalculoPorta() {
 
     container.innerHTML = `
         <div class="calculo-check-header">
-            <strong>Conferência do cálculo</strong>
-            <button type="button" class="calculo-check-mini-btn" onclick="renderizarConferenciaCalculoPorta()">Atualizar</button>
+            <strong>Conferência do cálculo da porta atual</strong>
+            <button type="button" class="calculo-check-mini-btn" onclick="verificarFerramentaOrcamentoAtual()">Atualizar tudo</button>
         </div>
 
         <div class="calculo-check-summary">
@@ -400,28 +414,77 @@ function renderizarConferenciaCalculoPorta() {
     `;
 }
 
-function injetarPainelConferenciaCalculo() {
+function prepararCardUnificadoOrcamento() {
     adicionarEstilosConferenciaCalculo();
 
-    if (document.getElementById("calculoConferenciaCard")) return;
-
+    const cardAuditoria = document.getElementById("orcamentoAuditoriaCard");
     const precoEl = document.getElementById("precoPorta");
-    if (!precoEl || !precoEl.parentNode) return;
 
-    const card = document.createElement("div");
-    card.id = "calculoConferenciaCard";
-    card.className = "calculo-check-card";
-    precoEl.insertAdjacentElement("afterend", card);
+    let container = document.getElementById("calculoConferenciaCard");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "calculoConferenciaCard";
+        container.className = "calculo-check-card";
+    }
+
+    if (cardAuditoria) {
+        const titulo = cardAuditoria.querySelector("h2");
+        if (titulo) titulo.textContent = "Verificação e Conferência do Orçamento";
+
+        const checklist = document.getElementById("orcamentoChecklist");
+        if (checklist && container.parentNode !== cardAuditoria) {
+            checklist.insertAdjacentElement("afterend", container);
+        } else if (!checklist && container.parentNode !== cardAuditoria) {
+            cardAuditoria.appendChild(container);
+        }
+
+        const botao = cardAuditoria.querySelector("button");
+        if (botao) {
+            botao.textContent = "Verificar orçamento e cálculo";
+            botao.onclick = verificarFerramentaOrcamentoAtual;
+        }
+    } else if (precoEl && container.parentNode !== precoEl.parentNode) {
+        precoEl.insertAdjacentElement("afterend", container);
+    }
+
     renderizarConferenciaCalculoPorta();
 }
 
+function verificarFerramentaOrcamentoAtual() {
+    let resultado = null;
+    if (typeof window.__verificarOrcamentoOriginal === "function") {
+        resultado = window.__verificarOrcamentoOriginal();
+    } else if (typeof window.verificarOrcamentoAtual === "function") {
+        resultado = window.verificarOrcamentoAtual();
+    }
+
+    prepararCardUnificadoOrcamento();
+    renderizarConferenciaCalculoPorta();
+    return resultado;
+}
+
+function integrarVerificacaoECalculo() {
+    if (typeof window.verificarOrcamentoAtual === "function" && !window.verificarOrcamentoAtual.__unificadoComCalculo) {
+        window.__verificarOrcamentoOriginal = window.verificarOrcamentoAtual;
+        const wrapped = function (...args) {
+            const resultado = window.__verificarOrcamentoOriginal.apply(this, args);
+            prepararCardUnificadoOrcamento();
+            renderizarConferenciaCalculoPorta();
+            return resultado;
+        };
+        wrapped.__unificadoComCalculo = true;
+        window.verificarOrcamentoAtual = wrapped;
+    }
+}
+
 function inicializarConferenciaCalculoPorta() {
-    injetarPainelConferenciaCalculo();
+    prepararCardUnificadoOrcamento();
+    integrarVerificacaoECalculo();
 
     const atualizar = () => {
         clearTimeout(window.__calculoCheckTimer);
         window.__calculoCheckTimer = setTimeout(() => {
-            injetarPainelConferenciaCalculo();
+            prepararCardUnificadoOrcamento();
             renderizarConferenciaCalculoPorta();
         }, 60);
     };
@@ -444,7 +507,7 @@ function inicializarConferenciaCalculoPorta() {
         const originalRenderCampos = window.renderCampos;
         const wrappedRenderCampos = function (...args) {
             const retorno = originalRenderCampos.apply(this, args);
-            injetarPainelConferenciaCalculo();
+            prepararCardUnificadoOrcamento();
             atualizar();
             return retorno;
         };
@@ -457,6 +520,8 @@ function inicializarConferenciaCalculoPorta() {
 
 window.obterConferenciaCalculoPortaAtual = obterConferenciaCalculoPortaAtual;
 window.renderizarConferenciaCalculoPorta = renderizarConferenciaCalculoPorta;
+window.prepararCardUnificadoOrcamento = prepararCardUnificadoOrcamento;
+window.verificarFerramentaOrcamentoAtual = verificarFerramentaOrcamentoAtual;
 window.inicializarConferenciaCalculoPorta = inicializarConferenciaCalculoPorta;
 
 document.addEventListener("DOMContentLoaded", inicializarConferenciaCalculoPorta);
