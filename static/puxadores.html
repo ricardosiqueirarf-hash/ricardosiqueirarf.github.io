@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puxadores</title></title>
+    <title>Puxadores</title>
 
     <style>
         /* RESET BÁSICO */
@@ -104,6 +104,16 @@
         tr:nth-child(even) { background: #f7f9fc; }
         tr:hover { background: #e6f0fa; }
 
+        .hint {
+            grid-column: 1 / -1;
+            font-size: 0.86rem;
+            color: #555;
+            background: #eef4fb;
+            border-left: 4px solid #1079ba;
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+
         /* RESPONSIVO */
         @media(max-width: 768px) {
             .form-perfil { grid-template-columns: 1fr; }
@@ -132,12 +142,16 @@
             <option value="">Tipo de medida</option>
             <option value="unidade">Unidade</option>
             <option value="metro_linear">Metro Linear</option>
+            <option value="metro_linear_perfil">Metro Linear / Perfil</option>
             <option value="metro_quadrado">Metro Quadrado</option>
         </select>
 
         <input id="margem" type="number" step="0.01" placeholder="Margem %">
         <input id="perda" type="number" step="0.01" placeholder="Perda %">
         <div id="precoFinal" class="preco-preview">Preço final: R$ 0,00</div>
+        <div class="hint">
+            <strong>Metro Linear / Perfil:</strong> use para perfis-puxadores, como 3136P, que substituem uma lateral do perfil da porta no cálculo.
+        </div>
     </section>
 
     <section>
@@ -177,6 +191,20 @@
         document.getElementById(id).addEventListener("input", atualizarPrecoFinal);
     });
 
+    function formatarTipoMedida(tipo) {
+        const labels = {
+            unidade: "Unidade",
+            metro_linear: "Metro Linear",
+            metro_linear_perfil: "Metro Linear / Perfil",
+            metro_quadrado: "Metro Quadrado"
+        };
+        return labels[tipo] || String(tipo || "-").replaceAll("_", " ");
+    }
+
+    function escaparJS(valor) {
+        return String(valor ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
     // =====================
     // CARREGAR PUXADORES
     // =====================
@@ -194,12 +222,12 @@
             tr.innerHTML = `
                 <td>${m.nome}</td>
                 <td>R$ ${Number(m.custo).toFixed(2)}</td>
-                <td>${m.tipo_medida.replace("_", " ")}</td>
+                <td>${formatarTipoMedida(m.tipo_medida)}</td>
                 <td>${m.margem}%</td>
                 <td>R$ ${Number(m.preco).toFixed(2)}</td>
                 <td>${m.perda}%</td>
                 <td>
-                    <button onclick="editar('${m.id}','${m.nome}',${m.custo},'${m.tipo_medida}',${m.margem},${m.perda})">Editar</button>
+                    <button onclick="editar('${m.id}','${escaparJS(m.nome)}',${m.custo},'${m.tipo_medida}',${m.margem},${m.perda})">Editar</button>
                     <button onclick="excluir('${m.id}')">Excluir</button>
                 </td>
             `;
@@ -296,4 +324,3 @@
 
 </body>
 </html>
-
