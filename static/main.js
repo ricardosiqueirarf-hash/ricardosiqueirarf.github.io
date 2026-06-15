@@ -92,7 +92,6 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("pricing-deslizante-rail-fix.js");
         await carregarScriptPortas("puxador-perfil-fix.js");
         await carregarScriptPortas("puxador-perfil-ui-fix.js");
-        await carregarScriptPortas("dobradicas-auto-fix.js");
         await carregarScriptPortas("required-fields-panel.js");
         await carregarScriptPortas("side-conflict-fix.js");
         await carregarScriptPortas("portas-layout-cleanup.js");
@@ -103,6 +102,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("deslizante-edit-fix.js");
         await carregarScriptPortas("edit-mode-visual-fix.js");
         await carregarScriptPortas("portas-actions.js");
+        await carregarScriptPortas("dobradicas-auto-fix.js");
         await carregarScriptPortas("closet-evidence-fix.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
