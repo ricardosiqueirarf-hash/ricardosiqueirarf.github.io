@@ -958,7 +958,7 @@ async function carregarOrcamentos() {
 
 // ✏️ EDITAR ORÇAMENTO
 function editarOrcamento(uuid){
-  const baseUrl = `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
+  const baseUrl = `/classes.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
   window.location.href = buildUrlComToken(baseUrl);
 }
 
