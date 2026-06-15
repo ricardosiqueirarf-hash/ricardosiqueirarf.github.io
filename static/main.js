@@ -104,6 +104,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("portas-actions.js");
         await carregarScriptPortas("dobradicas-auto-fix.js");
         await carregarScriptPortas("closet-evidence-fix.js");
+        await carregarScriptPortas("closet-evidence-upgrade.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
     }
