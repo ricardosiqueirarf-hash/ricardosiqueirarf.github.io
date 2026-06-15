@@ -61,7 +61,9 @@ function normalizarPortasResposta(data) {
 
 async function carregarPortas() {
     try {
-        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`);
+        const res = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
+            headers: authHeader()
+        });
         let data = null;
         try {
             data = await res.json();
@@ -88,7 +90,9 @@ async function carregarPortas() {
 
 async function carregarOrcamentoInfo() {
     try {
-        const res = await fetch(`${API_BASE}/api/orcamentos`);
+        const res = await fetch(`${API_BASE}/api/orcamentos`, {
+            headers: authHeader()
+        });
         const data = await res.json();
         if (data.success && Array.isArray(data.orcamentos)) {
             const encontrado = data.orcamentos.find((orcamento) => orcamento.id == ORCAMENTO_UUID);
@@ -108,7 +112,7 @@ async function carregarOrcamentoInfo() {
 async function salvarPortasBackend(portasComUUID) {
     const resPortas = await fetch(`${API_BASE}/api/orcamento/${ORCAMENTO_UUID}/portas`, {
         method: "POST",
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ portas: portasComUUID })
     });
     const dataPortas = await resPortas.json();
