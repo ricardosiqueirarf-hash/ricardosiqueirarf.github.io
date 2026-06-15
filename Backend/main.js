@@ -1,5 +1,6 @@
 if (localStorage.getItem("darkmode") === "true") {
-    document.getElementById("tema-css").href = "/static/css/indexdark.css";
+    const temaCss = document.getElementById("tema-css");
+    if (temaCss) temaCss.href = "/static/css/indexdark.css";
 }
 
 function go(p) {
@@ -7,16 +8,39 @@ function go(p) {
 }
 
 // =====================
-// BACKEND
+// BACKEND / AUTH
 // =====================
 const API_BASE = "https://colorglass.onrender.com";
 
-function authHeader() {
-    if (window.ColorGlassAuth && typeof window.ColorGlassAuth.authHeaders === "function") {
-        return window.ColorGlassAuth.authHeaders();
+function getAuthToken() {
+    const params = new URLSearchParams(window.location.search);
+    const tokenUrl = params.get("token");
+
+    if (tokenUrl) {
+        localStorage.setItem("USER_TOKEN", tokenUrl);
+        localStorage.setItem("ADMIN_TOKEN", tokenUrl);
+        params.delete("token");
+        const clean = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+        window.history.replaceState({}, document.title, clean);
+        return tokenUrl;
     }
-    const token = localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
-    return token ? { "Authorization": "Bearer " + token } : {};
+
+    if (window.ColorGlassAuth && typeof window.ColorGlassAuth.getToken === "function") {
+        return window.ColorGlassAuth.getToken();
+    }
+
+    return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+}
+
+function authHeader(extraHeaders = {}) {
+    if (window.ColorGlassAuth && typeof window.ColorGlassAuth.authHeaders === "function") {
+        return window.ColorGlassAuth.authHeaders(extraHeaders);
+    }
+
+    const token = getAuthToken();
+    return token
+        ? { ...(extraHeaders || {}), "Authorization": "Bearer " + token }
+        : { ...(extraHeaders || {}) };
 }
 
 function formatarMoeda(valor) {
@@ -70,6 +94,7 @@ document.addEventListener("DOMContentLoaded", initMain);
 window.API_BASE = API_BASE;
 window.ORCAMENTO_UUID = ORCAMENTO_UUID;
 window.go = go;
+window.getAuthToken = getAuthToken;
 window.authHeader = authHeader;
 window.formatarMoeda = formatarMoeda;
 window.initMain = initMain;
