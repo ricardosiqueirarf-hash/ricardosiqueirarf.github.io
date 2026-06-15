@@ -90,6 +90,7 @@ async function carregarAcoesPortas() {
     try {
         await carregarScriptPortas("portas-crud-restorer.js");
         await carregarScriptPortas("pricing-deslizante-rail-fix.js");
+        await carregarScriptPortas("puxador-perfil-fix.js");
         await carregarScriptPortas("portas-actions.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
