@@ -3,11 +3,11 @@ import requests
 from flask import Blueprint, request, jsonify 
 
 # =====================
-# CONFIG SUPABASE (AQUI MESMO)
+# CONFIG SUPABASE
 # =====================
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não configurados")
