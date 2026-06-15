@@ -133,6 +133,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("editing-state-fix.js");
         await carregarScriptPortas("tipologia-divisao-ambiente-fix.js?v=1");
         await carregarScriptPortas("portas-nan-svg-fix.js?v=2");
+        await carregarScriptPortas("portas-divisao-ambiente-display-fix.js?v=1");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
     }
