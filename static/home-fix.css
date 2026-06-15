@@ -1,0 +1,26 @@
+body#top .hero-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #030303;
+}
+
+body#top .hero-media img {
+  position: relative !important;
+  inset: auto !important;
+  width: 88% !important;
+  height: 88% !important;
+  max-width: 760px;
+  max-height: 560px;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: none !important;
+}
+
+@media (max-width: 980px) {
+  body#top .hero-media img {
+    width: 84% !important;
+    height: 84% !important;
+    max-height: 380px;
+  }
+}
