@@ -79,6 +79,58 @@ def api_preflight(unused_path):
     return make_response("", 204)
 
 
+# =====================
+# GUARDA CENTRAL DE APIs SENSÍVEIS
+# =====================
+# Fase 3 conservadora: exige login nas APIs que expõem ou alteram pedidos,
+# pagamentos e financeiro. Mantém login/cadastro/validar livres.
+AUTH_REQUIRED_PREFIXES = (
+    "/api/orcamentos",
+    "/api/orcamento",
+    "/api/financeiro",
+    "/api/pagamentos",
+)
+
+ADMIN_REQUIRED_EXACT_PATHS = {
+    "/api/usuarios",
+}
+
+
+@app.before_request
+def proteger_apis_sensiveis():
+    if request.method == "OPTIONS":
+        return None
+
+    path = request.path or ""
+    precisa_auth = any(path.startswith(prefix) for prefix in AUTH_REQUIRED_PREFIXES)
+    precisa_admin = path in ADMIN_REQUIRED_EXACT_PATHS
+
+    if not precisa_auth and not precisa_admin:
+        return None
+
+    try:
+        from auth_utils import buscar_usuario_por_token, extrair_token
+        token = extrair_token(request)
+        usuario = buscar_usuario_por_token(token) if token else None
+    except Exception as exc:
+        print(f"[AUTH] erro_middleware path={path} erro={exc}")
+        return jsonify({"success": False, "error": "Falha ao validar sessão."}), 401
+
+    if not usuario:
+        return jsonify({"success": False, "error": "Sessão inválida ou expirada. Faça login novamente."}), 401
+
+    try:
+        level = int((usuario or {}).get("level") or 0)
+    except (TypeError, ValueError):
+        level = 0
+
+    if precisa_admin and level != 3:
+        return jsonify({"success": False, "error": "Acesso negado. Requer administrador."}), 403
+
+    request.usuario_auth = usuario
+    return None
+
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 STATIC_DIR = os.path.join(ROOT_DIR, "static")
