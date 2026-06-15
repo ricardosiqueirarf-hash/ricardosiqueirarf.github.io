@@ -1,9 +1,24 @@
 (function setupColorGlassAuth() {
+  function getUrlToken() {
+    try {
+      return new URLSearchParams(window.location.search).get("token") || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
   function getToken() {
-    return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+    return getUrlToken() || localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
   }
 
   function syncLegacyTokens() {
+    const urlToken = getUrlToken();
+    if (urlToken) {
+      localStorage.setItem("USER_TOKEN", urlToken);
+      localStorage.setItem("ADMIN_TOKEN", urlToken);
+      return;
+    }
+
     const userToken = localStorage.getItem("USER_TOKEN");
     const adminToken = localStorage.getItem("ADMIN_TOKEN");
 
@@ -157,39 +172,4 @@ pages.forEach(p => {
   link.rel = "stylesheet";
   link.href = "home-fix.css?v=2";
   document.head.appendChild(link);
-})();
-
-(function enforceThermalLabelSize() {
-  function aplicar() {
-    if (document.getElementById("thermal-label-size-4x6")) return;
-    const style = document.createElement("style");
-    style.id = "thermal-label-size-4x6";
-    style.textContent = `
-      @page etiquetaTermica { size: 4in 6in; margin: 0; }
-      .thermal-label {
-        page: etiquetaTermica !important;
-        width: 4in !important;
-        height: 6in !important;
-        padding: .24in !important;
-        box-sizing: border-box !important;
-      }
-      @media print {
-        .thermal-label {
-          page: etiquetaTermica !important;
-          width: 4in !important;
-          height: 6in !important;
-          margin: 0 !important;
-          break-after: page;
-          page-break-after: always;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", aplicar);
-  } else {
-    setTimeout(aplicar, 0);
-  }
 })();
