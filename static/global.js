@@ -1,3 +1,46 @@
+(function setupColorGlassAuth() {
+  function getToken() {
+    return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
+  }
+
+  function syncLegacyTokens() {
+    const userToken = localStorage.getItem("USER_TOKEN");
+    const adminToken = localStorage.getItem("ADMIN_TOKEN");
+
+    if (userToken && !adminToken) {
+      localStorage.setItem("ADMIN_TOKEN", userToken);
+    }
+
+    if (adminToken && !userToken) {
+      localStorage.setItem("USER_TOKEN", adminToken);
+    }
+  }
+
+  function authHeaders(extraHeaders) {
+    const token = getToken();
+    return token
+      ? { ...(extraHeaders || {}), "Authorization": `Bearer ${token}` }
+      : { ...(extraHeaders || {}) };
+  }
+
+  function logout(destino) {
+    localStorage.removeItem("USER_TOKEN");
+    localStorage.removeItem("ADMIN_TOKEN");
+    localStorage.removeItem("USER_LEVEL");
+    localStorage.removeItem("USER_STOREID");
+    window.location.href = destino || "login.html";
+  }
+
+  syncLegacyTokens();
+
+  window.ColorGlassAuth = {
+    getToken,
+    authHeaders,
+    syncLegacyTokens,
+    logout
+  };
+})();
+
 const pages = [
   "login.html",
   "index_loja.html",
