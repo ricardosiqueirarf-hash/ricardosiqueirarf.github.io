@@ -182,6 +182,36 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(16,121,186,0.15);
 }
 
+.password-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrap input {
+    width: 100%;
+    padding-right: 92px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: var(--cg-blue-soft);
+    color: var(--cg-blue-dark);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.toggle-password:hover {
+    background: rgba(16,121,186,0.18);
+}
+
 .btn {
     background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
     color: #fff;
@@ -294,7 +324,10 @@ input:focus {
                 <input type="text" id="loginUser" placeholder="Digite seu usuário" autocomplete="username">
             </label>
             <label>Senha
-                <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password">
+                <div class="password-wrap">
+                    <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password">
+                    <button class="toggle-password" type="button" id="togglePassBtn" onclick="toggleSenha()" aria-label="Mostrar senha">Mostrar</button>
+                </div>
             </label>
             <button class="btn" type="button" id="loginBtn" onclick="logar()">Entrar</button>
             <div id="loginStatus" class="status" aria-live="polite"></div>
@@ -320,6 +353,17 @@ function setLoginLoading(loading) {
     if (!btn) return;
     btn.disabled = loading;
     btn.textContent = loading ? "Verificando..." : "Entrar";
+}
+
+function toggleSenha() {
+    const input = document.getElementById("loginPass");
+    const btn = document.getElementById("togglePassBtn");
+    if (!input || !btn) return;
+
+    const senhaVisivel = input.type === "text";
+    input.type = senhaVisivel ? "password" : "text";
+    btn.textContent = senhaVisivel ? "Mostrar" : "Ocultar";
+    btn.setAttribute("aria-label", senhaVisivel ? "Mostrar senha" : "Ocultar senha");
 }
 
 async function lerJsonSeguro(res) {
@@ -417,6 +461,7 @@ async function logar() {
 }
 
 window.logar = logar;
+window.toggleSenha = toggleSenha;
 
 document.addEventListener("DOMContentLoaded", () => {
     const userInput = document.getElementById("loginUser");
