@@ -1,6 +1,7 @@
 // =====================
 // CORREÇÃO DO 3D DAS PORTAS DESLIZANTES/CORRER
-// O vão superior/inferior aumenta o COMPRIMENTO do trilho, não afasta o trilho da porta.
+// Para deslizante, o vão superior/inferior é o COMPRIMENTO do trilho.
+// Se o vão for 0, o trilho não aparece.
 // =====================
 
 function obterVaoTrilho3DComprimento(id) {
@@ -17,22 +18,22 @@ function adicionarTrilhosPorta3D(group, materiais, larguraM, alturaM, vaoSuperio
     const trilhoProf = 0.14;
     const folgaVisual = 0.012;
 
-    const trilhoSuperiorLargura = Math.max(larguraM, larguraM + Math.max(0, vaoSuperiorM));
-    const trilhoInferiorLargura = Math.max(larguraM, larguraM + Math.max(0, vaoInferiorM));
+    const trilhoSuperiorLargura = tipo === "deslizante"
+        ? Math.max(0, vaoSuperiorM)
+        : Math.max(larguraM, larguraM + Math.max(0, vaoSuperiorM));
+    const trilhoInferiorLargura = tipo === "deslizante"
+        ? Math.max(0, vaoInferiorM)
+        : Math.max(larguraM, larguraM + Math.max(0, vaoInferiorM));
 
     const yTrilhoSuperior = alturaM / 2 + trilhoAltura / 2 + folgaVisual;
     const yTrilhoInferior = -alturaM / 2 - trilhoAltura / 2 - folgaVisual;
 
-    group.add(criarBoxPorta3D(trilhoSuperiorLargura, trilhoAltura, trilhoProf, 0, yTrilhoSuperior, 0, materiais.perfilEscuro));
-    group.add(criarBoxPorta3D(trilhoInferiorLargura, trilhoAltura, trilhoProf, 0, yTrilhoInferior, 0, materiais.perfilEscuro));
-
-    // Marcadores sutis nas sobras laterais para deixar claro que o trilho é maior que a porta.
-    if (vaoSuperiorM > 0.005) {
-        group.add(criarBoxPorta3D(vaoSuperiorM, trilhoAltura * 0.55, trilhoProf * 1.04, trilhoSuperiorLargura / 2 - vaoSuperiorM / 2, yTrilhoSuperior, 0.004, materiais.vao));
+    if (trilhoSuperiorLargura > 0.005) {
+        group.add(criarBoxPorta3D(trilhoSuperiorLargura, trilhoAltura, trilhoProf, 0, yTrilhoSuperior, 0, materiais.perfilEscuro));
     }
 
-    if (vaoInferiorM > 0.005) {
-        group.add(criarBoxPorta3D(vaoInferiorM, trilhoAltura * 0.55, trilhoProf * 1.04, trilhoInferiorLargura / 2 - vaoInferiorM / 2, yTrilhoInferior, 0.004, materiais.vao));
+    if (trilhoInferiorLargura > 0.005) {
+        group.add(criarBoxPorta3D(trilhoInferiorLargura, trilhoAltura, trilhoProf, 0, yTrilhoInferior, 0, materiais.perfilEscuro));
     }
 }
 
@@ -64,7 +65,9 @@ function renderizarPorta3D() {
     if (tipo === "correr" || tipo === "deslizante") {
         const vaoSuperiorM = obterVaoTrilho3DComprimento("vao_trilhos_superior");
         const vaoInferiorM = obterVaoTrilho3DComprimento("vao_trilhos_inferior");
-        const maiorTrilhoM = Math.max(larguraM + vaoSuperiorM, larguraM + vaoInferiorM, larguraM);
+        const trilhoSuperiorLargura = tipo === "deslizante" ? vaoSuperiorM : larguraM + vaoSuperiorM;
+        const trilhoInferiorLargura = tipo === "deslizante" ? vaoInferiorM : larguraM + vaoInferiorM;
+        const maiorTrilhoM = Math.max(trilhoSuperiorLargura, trilhoInferiorLargura, larguraM);
 
         adicionarPainelPorta3D(Porta3DState.group, materiais, larguraM, alturaM, 0, 0);
         adicionarPuxadorPorta3D(Porta3DState.group, materiais, larguraM, alturaM);
