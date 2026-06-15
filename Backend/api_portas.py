@@ -4,79 +4,6 @@ import requests
 portas_bp = Blueprint("portas_bp", __name__)
 
 # =====================
-# UTILITÁRIOS PORTAS / CÁLCULO
-# =====================
-
-
-def _dados_array_para_dict(dados_array):
-    dados = {}
-    if isinstance(dados_array, dict):
-        return dados_array
-    if isinstance(dados_array, list):
-        for item in dados_array:
-            if not isinstance(item, str) or ":" not in item:
-                continue
-            key, value = item.split(":", 1)
-            if key == "dobradicas_alturas":
-                dados[key] = [v.strip() for v in value.split(",") if v.strip()]
-            else:
-                dados[key] = value
-    return dados
-
-
-def _buscar_tabela_supabase(tabela, order=None):
-    from app import SUPABASE_URL, HEADERS
-
-    params = {"select": "*"}
-    if order:
-        params["order"] = order
-
-    r = requests.get(
-        f"{SUPABASE_URL}/rest/v1/{tabela}",
-        headers=HEADERS,
-        params=params,
-        timeout=20,
-    )
-    r.raise_for_status()
-    return r.json()
-
-
-def _buscar_contexto_precificacao(contexto_extra=None):
-    contexto_extra = contexto_extra if isinstance(contexto_extra, dict) else {}
-
-    # Carrega dados oficiais do banco. Se a chamada enviar contexto manual,
-    # ele pode sobrescrever listas específicas para simulação/teste controlado.
-    perfis = contexto_extra.get("perfis") or contexto_extra.get("todosPerfis") or _buscar_tabela_supabase("perfis", "nome.asc")
-    vidros = contexto_extra.get("vidros") or contexto_extra.get("todosVidros") or _buscar_tabela_supabase("vidros", "tipo.asc")
-    puxadores = contexto_extra.get("puxadores") or contexto_extra.get("todosPuxadores") or _buscar_tabela_supabase("puxadores", "nome.asc")
-    sistemas = contexto_extra.get("sistemas") or contexto_extra.get("sistemasLista") or _buscar_tabela_supabase("sistemas", "nome.asc")
-    materiais = contexto_extra.get("materiais") or contexto_extra.get("insumos") or contexto_extra.get("todosInsumos") or _buscar_tabela_supabase("materiais", "nome.asc")
-    trilhos = contexto_extra.get("trilhos") or contexto_extra.get("todosTrilhos") or _buscar_tabela_supabase("trilhos", "nome.asc")
-    tags = contexto_extra.get("tags") or contexto_extra.get("todasTags") or _buscar_tabela_supabase("tags")
-
-    # A tabela trilhos não tem tipo_medida. Para cálculo, trilho é sempre metro linear.
-    if isinstance(trilhos, list):
-        for trilho in trilhos:
-            if isinstance(trilho, dict) and not trilho.get("tipo_medida"):
-                trilho["tipo_medida"] = "metro_linear"
-
-    # O engine procura trilhos dentro de "insumos" para reaproveitar a mesma
-    # regra de referência/material. Por isso combinamos materiais + trilhos.
-    materiais_para_busca = list(materiais or []) + list(trilhos or [])
-
-    return {
-        "perfis": perfis,
-        "vidros": vidros,
-        "puxadores": puxadores,
-        "sistemas": sistemas,
-        "insumos": materiais_para_busca,
-        "materiais": materiais,
-        "trilhos": trilhos,
-        "tags": tags,
-    }
-
-
-# =====================
 # ROTAS PORTAS
 # =====================
 
@@ -93,41 +20,23 @@ def listar_portas(orcamento_uuid):
         portas = r.json()
         # converte text[] de volta para dict
         for p in portas:
-            p["dados"] = _dados_array_para_dict(p.get("dados", []))
+            dados_array = p.get("dados", [])
+            dados = {}
+            if isinstance(dados_array, list):
+                for item in dados_array:
+                    if ":" not in item:
+                        continue
+                    key, value = item.split(":", 1)
+                    if key == "dobradicas_alturas":
+                        valores = [v.strip() for v in value.split(",") if v.strip()]
+                        dados[key] = valores
+                    else:
+                        dados[key] = value
+            p["dados"] = dados
             p["quantidade"] = int(p.get("quantidade", 1))
         return jsonify({"success": True, "portas": portas})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-# POST cálculo oficial de uma porta no backend
-@portas_bp.route("/api/orcamento/<orcamento_uuid>/portas/calcular", methods=["POST"])
-def calcular_porta_backend(orcamento_uuid):
-    try:
-        from pricing_engine import calculate_door
-
-        data = request.json or {}
-        porta = data.get("porta") or data.get("door") or data
-        if not isinstance(porta, dict):
-            return jsonify({"success": False, "error": "Formato inválido para porta."}), 400
-
-        porta.setdefault("orcamento_uuid", orcamento_uuid)
-        if isinstance(porta.get("dados"), list):
-            porta["dados"] = _dados_array_para_dict(porta.get("dados"))
-
-        contexto = _buscar_contexto_precificacao(data.get("contexto"))
-        resultado = calculate_door(porta, contexto)
-        resultado["orcamento_uuid"] = orcamento_uuid
-        return jsonify(resultado)
-    except requests.HTTPError as http_err:
-        response = http_err.response
-        return jsonify({
-            "success": False,
-            "error": f"{response.status_code} {response.text}"
-        }), response.status_code
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
 
 # POST para substituir as portas de um orçamento
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/portas", methods=["POST"])
