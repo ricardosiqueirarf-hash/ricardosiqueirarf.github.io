@@ -36,6 +36,8 @@ HEADERS = {
 
 ALLOWED_CORS_ORIGINS = {
     "https://colorglass.onrender.com",
+    "https://www.colorglassfortaleza.com.br",
+    "https://colorglassfortaleza.com.br",
     "https://ricardosiqueirarf-hash.github.io",
     "https://ricardosiqueirarf.github.io",
     "http://localhost:3000",
@@ -53,7 +55,8 @@ CORS(
         r"/api/*": {
             "origins": list(ALLOWED_CORS_ORIGINS),
             "allow_headers": ["Content-Type", "Authorization", "X-Auth-Token"],
-            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            "supports_credentials": True,
         }
     }
 )
@@ -64,6 +67,7 @@ def add_cors_headers(response):
     origin = request.headers.get("Origin")
     if origin in ALLOWED_CORS_ORIGINS:
         response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Vary"] = "Origin"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Auth-Token"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
