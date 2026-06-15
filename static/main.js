@@ -59,7 +59,7 @@ var todasTags = [];
 // =====================
 function carregarScriptPortas(src) {
     return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
+        if (document.querySelector(`script[src="${src}"]`) || document.querySelector(`script[src="/static/${src}"]`)) {
             resolve();
             return;
         }
@@ -68,7 +68,18 @@ function carregarScriptPortas(src) {
         script.src = src;
         script.defer = true;
         script.onload = resolve;
-        script.onerror = () => reject(new Error(`Erro ao carregar script: ${src}`));
+        script.onerror = () => {
+            if (!src.startsWith("/static/") && !src.startsWith("http")) {
+                const fallback = document.createElement("script");
+                fallback.src = `/static/${src}`;
+                fallback.defer = true;
+                fallback.onload = resolve;
+                fallback.onerror = () => reject(new Error(`Erro ao carregar script: ${src}`));
+                document.head.appendChild(fallback);
+                return;
+            }
+            reject(new Error(`Erro ao carregar script: ${src}`));
+        };
         document.head.appendChild(script);
     });
 }
@@ -81,55 +92,72 @@ async function carregarPreview3DPortas() {
         if (typeof renderizarPorta3D === "function") {
             renderizarPorta3D();
         }
-    } catch (erro) {
-        console.warn("Preview 3D indisponível:", erro);
+    } catch (err) {
+        console.error("Erro ao inicializar preview 3D:", err);
     }
 }
 
-async function carregarComplementosPortas() {
-    const scripts = [
-        "pricing-deslizante-rail-fix.js",
-        "puxador-perfil-fix.js",
-        "puxador-perfil-ui-fix.js",
-        "required-fields-panel.js",
-        "side-conflict-fix.js",
-        "portas-layout-cleanup.js",
-        "portas-field-groups.js",
-        "portas-saved-table.js",
-        "portas-verification-collapse.js",
-        "approval-navigation-fix.js",
-        "orcamento-info-button.js",
-        "deslizante-edit-fix.js",
-        "edit-mode-visual-fix.js",
-        "portas-actions.js",
-        "dobradicas-auto-fix.js",
-        "dobradicas-fields-final-fix.js",
-        "editing-state-fix.js"
-    ];
-
-    for (const src of scripts) {
-        await carregarScriptPortas(src);
-    }
-}
-
-// =====================
-// INICIALIZAÇÃO
-// =====================
-window.addEventListener("DOMContentLoaded", async () => {
+async function carregarAcoesPortas() {
     try {
-        if (typeof carregarOrcamentoInfo === "function") await carregarOrcamentoInfo();
-        await Promise.all([
-            typeof carregarPerfis === "function" ? carregarPerfis() : Promise.resolve(),
-            typeof carregarVidros === "function" ? carregarVidros() : Promise.resolve(),
-            typeof carregarInsumos === "function" ? carregarInsumos() : Promise.resolve(),
-            typeof carregarPuxadores === "function" ? carregarPuxadores() : Promise.resolve(),
-            typeof carregarTags === "function" ? carregarTags() : Promise.resolve()
-        ]);
-        await carregarComplementosPortas();
-        if (typeof carregarPortas === "function") await carregarPortas();
-        if (typeof renderCampos === "function") renderCampos();
-        await carregarPreview3DPortas();
-    } catch (erro) {
-        console.error("Erro ao inicializar portas:", erro);
+        await carregarScriptPortas("portas-crud-restorer.js");
+        await carregarScriptPortas("pricing-deslizante-rail-fix.js");
+        await carregarScriptPortas("puxador-perfil-fix.js");
+        await carregarScriptPortas("puxador-perfil-ui-fix.js");
+        await carregarScriptPortas("required-fields-panel.js");
+        await carregarScriptPortas("side-conflict-fix.js");
+        await carregarScriptPortas("portas-layout-cleanup.js");
+        await carregarScriptPortas("portas-field-groups.js");
+        await carregarScriptPortas("portas-saved-table.js");
+        await carregarScriptPortas("portas-verification-collapse.js");
+        await carregarScriptPortas("approval-navigation-fix.js");
+        await carregarScriptPortas("orcamento-info-button.js");
+        await carregarScriptPortas("deslizante-edit-fix.js");
+        await carregarScriptPortas("edit-mode-visual-fix.js");
+        await carregarScriptPortas("portas-actions.js");
+        await carregarScriptPortas("dobradicas-auto-fix.js");
+        await carregarScriptPortas("dobradicas-fields-final-fix.js");
+        await carregarScriptPortas("editing-state-fix.js");
+    } catch (err) {
+        console.error("Erro ao carregar ações seguras de portas:", err);
     }
-});
+}
+
+async function carregarConferenciaCalculoPortas() {
+    try {
+        await carregarScriptPortas("calculation-check.js");
+        await carregarScriptPortas("calculation-component-bridge.js");
+        await carregarScriptPortas("calculation-data-normalizer.js");
+        if (typeof inicializarConferenciaCalculoPorta === "function") {
+            inicializarConferenciaCalculoPorta();
+        }
+        if (typeof instalarNormalizadorInsumosCalculo === "function") {
+            instalarNormalizadorInsumosCalculo();
+        }
+        if (typeof renderizarConferenciaCalculoPorta === "function") {
+            renderizarConferenciaCalculoPorta();
+        }
+    } catch (err) {
+        console.error("Erro ao carregar conferência do cálculo:", err);
+    }
+}
+
+async function initMain() {
+    await carregarAcoesPortas();
+    carregarPreview3DPortas();
+    carregarConferenciaCalculoPortas();
+    carregarPerfis();
+    carregarVidros();
+    carregarInsumos();
+    carregarPuxadores();
+    carregarTags();
+    carregarPortas();
+}
+
+document.addEventListener("DOMContentLoaded", initMain);
+
+window.API_BASE = API_BASE;
+window.ORCAMENTO_UUID = ORCAMENTO_UUID;
+window.go = go;
+window.authHeader = authHeader;
+window.formatarMoeda = formatarMoeda;
+window.initMain = initMain;
