@@ -349,8 +349,12 @@ async function logar() {
             return;
         }
 
+        const destino = Number(dataAuth.level) === 3
+            ? "index_admin.html"
+            : (dataAuth.redirect || "index_loja.html");
+
         setTimeout(() => {
-            window.location.href = dataAuth.redirect || "index_loja.html"; // DECIDE SE MANDA PRO INDEX OU INDEX_LOJA
+            window.location.href = destino; // LEVEL 3 VAI PARA INDEX_ADMIN, LOJA/GERÊNCIA PARA O FLUXO NORMAL
         }, 400); // TEMPO DE ESPERA PARA O REDIRECIONAMENTO EM MILISEGUNDOS
     } catch (err) {
         console.error(err);
@@ -360,8 +364,6 @@ async function logar() {
 </script>
 </body>
 </html>
-
-
 
 
 
