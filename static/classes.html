@@ -46,8 +46,9 @@ body{
 .header p{color:var(--cg-muted);font-weight:700;line-height:1.4;}
 .badge{
   background:var(--cg-blue-soft);color:var(--cg-blue-dark);border:1px solid rgba(16,121,186,.18);
-  border-radius:999px;padding:8px 12px;font-weight:900;white-space:nowrap;
+  border-radius:18px;padding:9px 13px;font-weight:900;min-width:220px;text-align:right;
 }
+.badge small{display:block;margin-top:2px;color:var(--cg-muted);font-size:.78rem;font-weight:800;}
 .class-section{margin-top:20px;}
 .class-title{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .class-title h2{font-size:1.18rem;color:var(--cg-blue);}
@@ -76,7 +77,7 @@ body{
   min-height:210px;width:100%;border:1px dashed rgba(16,121,186,.22);border-radius:16px;display:grid;place-items:center;
   color:var(--cg-muted);font-weight:900;text-align:center;padding:20px;background:rgba(248,251,255,.8);
 }
-@media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{height:auto;position:relative;top:0}.cards{grid-template-columns:1fr}.sidebar{flex-direction:row;flex-wrap:wrap}.sidebar button{text-align:center;flex:1}}
+@media(max-width:980px){.app{grid-template-columns:1fr}.sidebar{height:auto;position:relative;top:0}.cards{grid-template-columns:1fr}.sidebar{flex-direction:row;flex-wrap:wrap}.sidebar button{text-align:center;flex:1}.badge{text-align:left;width:100%;}}
 </style>
 </head>
 <body>
@@ -91,25 +92,25 @@ body{
     <div class="header">
       <div>
         <h1>Escolha a classe do orçamento</h1>
-        <p>Selecione a classe e a tipologia. Para portas, o sistema abre direto em portas.html com a tipologia escolhida.</p>
+        <p>Selecione a classe. Para portas, o sistema abre em portas.html mantendo o orçamento atual.</p>
       </div>
-      <div class="badge" id="pedidoBadge">Orçamento</div>
+      <div class="badge" id="pedidoBadge">Carregando orçamento...</div>
     </div>
 
     <section class="class-section">
       <div class="class-title"><span></span><h2>Portas</h2></div>
       <div class="cards">
-        <article class="card" onclick="abrirPorta('giro')">
+        <article class="card" onclick="abrirPorta()">
           <div class="card-head"><h3>Giro</h3><p>Porta 2000 × 800 mm</p></div>
           <div class="card-body">
             <div class="door3d">
               <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
             </div>
           </div>
-          <div class="card-foot">Abrir orçamento com tipologia Giro</div>
+          <div class="card-foot">Abrir orçamento de portas</div>
         </article>
 
-        <article class="card" onclick="abrirPorta('deslizante')">
+        <article class="card" onclick="abrirPorta()">
           <div class="card-head"><h3>Deslizante</h3><p>Porta 2000 × 800 mm com trilhos</p></div>
           <div class="card-body">
             <div class="door3d sliding">
@@ -117,10 +118,10 @@ body{
               <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
             </div>
           </div>
-          <div class="card-foot">Abrir orçamento com tipologia Deslizante</div>
+          <div class="card-foot">Abrir orçamento de portas</div>
         </article>
 
-        <article class="card" onclick="abrirPorta('correr')">
+        <article class="card" onclick="abrirPorta()">
           <div class="card-head"><h3>Correr</h3><p>Porta 2000 × 800 mm com trilhos</p></div>
           <div class="card-body">
             <div class="door3d running">
@@ -128,7 +129,7 @@ body{
               <div class="door-top"></div><div class="door-side"></div><div class="door-panel"></div>
             </div>
           </div>
-          <div class="card-foot">Abrir orçamento com tipologia Correr</div>
+          <div class="card-foot">Abrir orçamento de portas</div>
         </article>
       </div>
     </section>
@@ -158,26 +159,68 @@ body{
 </div>
 
 <script>
+const BACKEND_URL = "https://colorglass.onrender.com";
 const params = new URLSearchParams(window.location.search);
 const ORCAMENTO_UUID = params.get('orcamento_uuid');
 
+function tokenAtual() {
+  return localStorage.getItem('USER_TOKEN') || params.get('token') || '';
+}
+
 function tokenParam() {
-  const token = localStorage.getItem('USER_TOKEN') || params.get('token');
+  const token = tokenAtual();
   return token ? `&token=${encodeURIComponent(token)}` : '';
 }
 
-function atualizarBadge() {
+function setBadgeTexto(principal, detalhe = '') {
   const badge = document.getElementById('pedidoBadge');
   if (!badge) return;
-  badge.textContent = ORCAMENTO_UUID ? `Orçamento ${ORCAMENTO_UUID}` : 'Orçamento não informado';
+  badge.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = principal;
+  badge.appendChild(span);
+  if (detalhe) {
+    const small = document.createElement('small');
+    small.textContent = detalhe;
+    badge.appendChild(small);
+  }
 }
 
-function abrirPorta(tipologia) {
+async function carregarDadosOrcamento() {
+  if (!ORCAMENTO_UUID) {
+    setBadgeTexto('Orçamento não informado');
+    return;
+  }
+
+  const token = tokenAtual();
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orcamentos`, {
+      headers: token ? { "Authorization": `Bearer ${token}` } : {}
+    });
+    const data = await res.json();
+    const lista = Array.isArray(data?.orcamentos) ? data.orcamentos : [];
+    const pedido = lista.find(item => String(item.id) === String(ORCAMENTO_UUID));
+
+    if (!pedido) {
+      setBadgeTexto('Orçamento', `ID: ${ORCAMENTO_UUID}`);
+      return;
+    }
+
+    const nome = pedido.cliente_nome || pedido.nome_cliente || pedido.cliente || 'Cliente sem nome';
+    const numero = pedido.numero_pedido || pedido.numero || pedido.pedido || '';
+    setBadgeTexto(nome, numero ? `Pedido #${numero}` : 'Pedido sem número');
+  } catch (err) {
+    console.error('Erro ao carregar dados do orçamento:', err);
+    setBadgeTexto('Orçamento', `ID: ${ORCAMENTO_UUID}`);
+  }
+}
+
+function abrirPorta() {
   if (!ORCAMENTO_UUID) {
     alert('Orçamento não encontrado. Volte e selecione um orçamento.');
     return;
   }
-  window.location.href = `portas.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}&tipologia=${encodeURIComponent(tipologia)}${tokenParam()}`;
+  window.location.href = `portas.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}${tokenParam()}`;
 }
 
 function voltar() {
@@ -189,7 +232,7 @@ function irAprovacao() {
   window.location.href = `aprovacao.html?orcamento_uuid=${encodeURIComponent(ORCAMENTO_UUID)}${tokenParam()}`;
 }
 
-atualizarBadge();
+carregarDadosOrcamento();
 </script>
 </body>
 </html>
