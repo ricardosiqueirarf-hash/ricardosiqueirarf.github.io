@@ -7,20 +7,7 @@
 
   <style>
     * { box-sizing: border-box; }
-
-    :root {
-      --bg: #f4f7fb;
-      --card: #ffffff;
-      --text: #172033;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --primary: #0f766e;
-      --primary-dark: #115e59;
-      --success: #15803d;
-      --danger: #b91c1c;
-      --shadow: 0 16px 38px rgba(15, 23, 42, 0.09);
-    }
-
+    :root { --bg: #f4f7fb; --card: #ffffff; --text: #172033; --muted: #64748b; --line: #e2e8f0; --primary: #0f766e; --primary-dark: #115e59; --success: #15803d; --danger: #b91c1c; --shadow: 0 16px 38px rgba(15, 23, 42, 0.09); }
     body { margin: 0; min-height: 100vh; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
     header { padding: 34px 20px; background: linear-gradient(135deg, #0f766e, #14b8a6); color: #ffffff; }
     .header-inner, main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
@@ -52,99 +39,19 @@
     tbody tr:last-child td { border-bottom: 0; }
     .money { font-weight: 800; color: var(--primary-dark); }
     .empty { padding: 24px; color: var(--muted); text-align: center; font-weight: 800; }
-
-    @media (max-width: 820px) {
-      .header-inner, main { width: min(100% - 22px, 1080px); }
-      header { padding: 28px 0; }
-      form { grid-template-columns: 1fr; padding: 20px; }
-      .card-header { padding: 20px; }
-      button { width: 100%; }
-      .actions { align-items: stretch; }
-    }
+    @media (max-width: 820px) { .header-inner, main { width: min(100% - 22px, 1080px); } header { padding: 28px 0; } form { grid-template-columns: 1fr; padding: 20px; } .card-header { padding: 20px; } button { width: 100%; } .actions { align-items: stretch; } }
   </style>
 </head>
-
 <body>
-  <header>
-    <div class="header-inner">
-      <h1>Pagamentos</h1>
-      <p class="subtitle">Cadastre pagamentos por número do pedido. O sistema localiza o UUID real do orçamento antes de salvar.</p>
-    </div>
-  </header>
-
+  <header><div class="header-inner"><h1>Pagamentos</h1><p class="subtitle">Cadastre pagamentos por número do pedido. O sistema localiza o UUID real do orçamento antes de salvar.</p></div></header>
   <main>
-    <section class="card" aria-labelledby="form-title">
-      <div class="card-header">
-        <h2 id="form-title">Novo pagamento</h2>
-      </div>
-
-      <form id="pagamentoForm">
-        <label>
-          Número do pedido
-          <input id="numeroPedido" name="numeroPedido" type="number" min="1" step="1" placeholder="Ex: 1523" required />
-          <span class="hint">Digite o número visual do pedido/orçamento. O UUID será localizado automaticamente.</span>
-        </label>
-
-        <label>
-          Valor pago
-          <input id="valor" name="valor" type="text" inputmode="decimal" placeholder="Ex: 500,00" required />
-          <span class="hint">Use vírgula ou ponto para centavos.</span>
-        </label>
-
-        <label>
-          Forma de pagamento
-          <select id="formaPagamento" name="formaPagamento" required>
-            <option value="">Selecione...</option>
-            <option value="pix">Pix</option>
-            <option value="cartao_credito">Cartão de crédito</option>
-            <option value="cartao_debito">Cartão de débito</option>
-            <option value="dinheiro">Dinheiro</option>
-            <option value="boleto">Boleto</option>
-            <option value="transferencia">Transferência</option>
-          </select>
-          <span class="hint">Campo obrigatório.</span>
-        </label>
-
-        <div class="actions">
-          <button id="salvarBtn" type="submit">Salvar pagamento</button>
-          <span id="mensagem" class="message" role="status" aria-live="polite"></span>
-        </div>
-      </form>
-    </section>
-
-    <section class="card" aria-labelledby="lista-title">
-      <div class="card-header">
-        <h2 id="lista-title">Últimos pagamentos</h2>
-        <button id="atualizarBtn" class="secondary" type="button">Atualizar lista</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID pagamento</th>
-              <th>Data criação</th>
-              <th>Número pedido</th>
-              <th>Valor</th>
-              <th>Forma pagamento</th>
-            </tr>
-          </thead>
-          <tbody id="pagamentosBody">
-            <tr>
-              <td colspan="5" class="empty">Carregando pagamentos...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <section class="card" aria-labelledby="form-title"><div class="card-header"><h2 id="form-title">Novo pagamento</h2></div><form id="pagamentoForm"><label>Número do pedido<input id="numeroPedido" name="numeroPedido" type="number" min="1" step="1" placeholder="Ex: 1523" required /><span class="hint">Digite o número visual do pedido/orçamento. O UUID será localizado automaticamente.</span></label><label>Valor pago<input id="valor" name="valor" type="text" inputmode="decimal" placeholder="Ex: 500,00" required /><span class="hint">Use vírgula ou ponto para centavos.</span></label><label>Forma de pagamento<select id="formaPagamento" name="formaPagamento" required><option value="">Selecione...</option><option value="pix">Pix</option><option value="cartao_credito">Cartão de crédito</option><option value="cartao_debito">Cartão de débito</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferência</option></select><span class="hint">Campo obrigatório.</span></label><div class="actions"><button id="salvarBtn" type="submit">Salvar pagamento</button><span id="mensagem" class="message" role="status" aria-live="polite"></span></div></form></section>
+    <section class="card" aria-labelledby="lista-title"><div class="card-header"><h2 id="lista-title">Últimos pagamentos</h2><button id="atualizarBtn" class="secondary" type="button">Atualizar lista</button></div><div class="table-wrap"><table><thead><tr><th>ID pagamento</th><th>Data criação</th><th>Número pedido</th><th>Valor</th><th>Forma pagamento</th></tr></thead><tbody id="pagamentosBody"><tr><td colspan="5" class="empty">Carregando pagamentos...</td></tr></tbody></table></div></section>
   </main>
-
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
     const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_0j-jqB63odD2yvugj7olMA_s18OwuPl";
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const form = document.getElementById("pagamentoForm");
     const numeroPedidoInput = document.getElementById("numeroPedido");
@@ -154,241 +61,19 @@
     const atualizarBtn = document.getElementById("atualizarBtn");
     const mensagem = document.getElementById("mensagem");
     const pagamentosBody = document.getElementById("pagamentosBody");
-
-    function mostrarMensagem(texto, tipo = "") {
-      mensagem.textContent = texto;
-      mensagem.className = `message ${tipo}`.trim();
-    }
-
-    function parseValor(valor) {
-      const texto = String(valor || "")
-        .replace(/\s/g, "")
-        .replace(/R\$/gi, "");
-
-      if (texto.includes(",")) {
-        return Number(texto.replace(/\./g, "").replace(",", "."));
-      }
-
-      return Number(texto);
-    }
-
-    function formatarMoeda(valor) {
-      const numero = Number(valor);
-      return (Number.isFinite(numero) ? numero : 0).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      });
-    }
-
-    function formatarData(valor) {
-      if (!valor) return "—";
-      return new Date(valor).toLocaleString("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short"
-      });
-    }
-
-    function formatarFormaPagamento(valor) {
-      const mapa = {
-        pix: "Pix",
-        cartao_credito: "Cartão de crédito",
-        cartao_debito: "Cartão de débito",
-        dinheiro: "Dinheiro",
-        boleto: "Boleto",
-        transferencia: "Transferência"
-      };
-
-      return mapa[valor] || valor || "—";
-    }
-
-    function criarCelula(texto, classe = "") {
-      const td = document.createElement("td");
-      td.textContent = texto;
-      if (classe) td.className = classe;
-      return td;
-    }
-
-    function renderizarLinhaMensagem(texto) {
-      pagamentosBody.innerHTML = "";
-      const tr = document.createElement("tr");
-      const td = criarCelula(texto, "empty");
-      td.colSpan = 5;
-      tr.appendChild(td);
-      pagamentosBody.appendChild(tr);
-    }
-
-    function normalizarValorPagoArray(valorPagoAtual) {
-      if (Array.isArray(valorPagoAtual)) {
-        return valorPagoAtual
-          .map((item) => Number(item))
-          .filter((item) => Number.isFinite(item));
-      }
-
-      return [];
-    }
-
-    async function buscarPedidoPorNumero(numeroPedido) {
-      const { data, error } = await supabase
-        .from("orcamentos")
-        .select("id, numero_pedido")
-        .eq("numero_pedido", numeroPedido)
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    }
-
-    async function buscarNumerosPedidosPorUuid(orcamentoIds) {
-      const ids = [...new Set(orcamentoIds.filter(Boolean))];
-      if (!ids.length) return new Map();
-
-      const { data, error } = await supabase
-        .from("orcamentos")
-        .select("id, numero_pedido")
-        .in("id", ids);
-
-      if (error) throw error;
-
-      return new Map((data || []).map((orcamento) => [orcamento.id, orcamento.numero_pedido]));
-    }
-
-    function renderizarPagamentos(pagamentos, pedidosPorUuid) {
-      pagamentosBody.innerHTML = "";
-
-      if (!pagamentos.length) {
-        renderizarLinhaMensagem("Nenhum pagamento cadastrado ainda.");
-        return;
-      }
-
-      pagamentos.forEach((pagamento) => {
-        const tr = document.createElement("tr");
-        const numeroPedido = pedidosPorUuid.get(pagamento.orcamentoid) || "—";
-
-        tr.appendChild(criarCelula(pagamento.id ?? "—"));
-        tr.appendChild(criarCelula(formatarData(pagamento.created_at)));
-        tr.appendChild(criarCelula(numeroPedido));
-        tr.appendChild(criarCelula(formatarMoeda(pagamento.valor), "money"));
-        tr.appendChild(criarCelula(formatarFormaPagamento(pagamento.forma_pagamento)));
-        pagamentosBody.appendChild(tr);
-      });
-    }
-
-    async function carregarPagamentos() {
-      atualizarBtn.disabled = true;
-      mostrarMensagem("Carregando pagamentos...");
-      renderizarLinhaMensagem("Carregando pagamentos...");
-
-      const { data, error } = await supabase
-        .from("pagamentos")
-        .select("id, created_at, orcamentoid, valor, forma_pagamento")
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      if (error) {
-        atualizarBtn.disabled = false;
-        renderizarLinhaMensagem(`Erro ao carregar pagamentos: ${error.message}`);
-        return;
-      }
-
-      try {
-        const pedidosPorUuid = await buscarNumerosPedidosPorUuid((data || []).map((pagamento) => pagamento.orcamentoid));
-        renderizarPagamentos(data || [], pedidosPorUuid);
-        mostrarMensagem("Lista de pagamentos atualizada.", "success");
-      } catch (errorBuscaPedidos) {
-        renderizarPagamentos(data || [], new Map());
-        mostrarMensagem(`Pagamentos carregados, mas não foi possível localizar os números dos pedidos: ${errorBuscaPedidos.message}`, "error");
-      } finally {
-        atualizarBtn.disabled = false;
-      }
-    }
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      mostrarMensagem("Salvando pagamento...", "");
-      salvarBtn.disabled = true;
-
-      const numeroPedido = Number(numeroPedidoInput.value);
-      const valor = parseValor(valorInput.value);
-      const formaPagamento = formaPagamentoInput.value;
-
-      if (!Number.isInteger(numeroPedido) || numeroPedido <= 0) {
-        mostrarMensagem("Informe um número de pedido válido.", "error");
-        salvarBtn.disabled = false;
-        return;
-      }
-
-      if (!Number.isFinite(valor) || valor <= 0) {
-        mostrarMensagem("Informe um valor pago maior que zero.", "error");
-        salvarBtn.disabled = false;
-        return;
-      }
-
-      if (!formaPagamento) {
-        mostrarMensagem("Informe a forma de pagamento.", "error");
-        salvarBtn.disabled = false;
-        return;
-      }
-
-      try {
-        const pedido = await buscarPedidoPorNumero(numeroPedido);
-
-        if (!pedido) {
-          mostrarMensagem(`Pedido ${numeroPedido} não encontrado. Cadastro bloqueado.`, "error");
-          salvarBtn.disabled = false;
-          return;
-        }
-
-        // INSERIR PAGAMENTO
-        const { error } = await supabase
-          .from("pagamentos")
-          .insert([{
-            orcamentoid: pedido.id,
-            valor: Number(valor),
-            forma_pagamento: formaPagamento
-          }]);
-
-        if (error) throw error;
-
-        try {
-          // BUSCAR ARRAY ATUAL DE VALOR_PAGO
-          const { data: orcamentoAtual, error: valorPagoError } = await supabase
-            .from("orcamentos")
-            .select("valor_pago")
-            .eq("id", pedido.id)
-            .maybeSingle();
-
-          if (valorPagoError) throw valorPagoError;
-
-          const valoresPagos = normalizarValorPagoArray(orcamentoAtual?.valor_pago);
-
-          // ADICIONAR NOVO VALOR AO JSONB
-          const novoArray = [...valoresPagos, Number(valor)];
-
-          // ATUALIZAR ORÇAMENTO
-          const { error: atualizarOrcamentoError } = await supabase
-            .from("orcamentos")
-            .update({ valor_pago: novoArray })
-            .eq("id", pedido.id);
-
-          if (atualizarOrcamentoError) throw atualizarOrcamentoError;
-        } catch (atualizarOrcamentoError) {
-          form.reset();
-          await carregarPagamentos();
-          mostrarMensagem("Pagamento salvo, mas valor_pago do orçamento não foi atualizado.", "error");
-          return;
-        }
-
-        form.reset();
-        await carregarPagamentos();
-        mostrarMensagem("Pagamento salvo com sucesso!", "success");
-      } catch (error) {
-        mostrarMensagem(`Erro ao salvar pagamento: ${error.message}`, "error");
-      } finally {
-        salvarBtn.disabled = false;
-      }
-    });
-
+    function mostrarMensagem(texto, tipo = "") { mensagem.textContent = texto; mensagem.className = `message ${tipo}`.trim(); }
+    function parseValor(valor) { const texto = String(valor || "").replace(/\s/g, "").replace(/R\$/gi, ""); if (texto.includes(",")) return Number(texto.replace(/\./g, "").replace(",", ".")); return Number(texto); }
+    function formatarMoeda(valor) { const numero = Number(valor); return (Number.isFinite(numero) ? numero : 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+    function formatarData(valor) { if (!valor) return "—"; return new Date(valor).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }); }
+    function formatarFormaPagamento(valor) { const mapa = { pix: "Pix", cartao_credito: "Cartão de crédito", cartao_debito: "Cartão de débito", dinheiro: "Dinheiro", boleto: "Boleto", transferencia: "Transferência" }; return mapa[valor] || valor || "—"; }
+    function criarCelula(texto, classe = "") { const td = document.createElement("td"); td.textContent = texto; if (classe) td.className = classe; return td; }
+    function renderizarLinhaMensagem(texto) { pagamentosBody.innerHTML = ""; const tr = document.createElement("tr"); const td = criarCelula(texto, "empty"); td.colSpan = 5; tr.appendChild(td); pagamentosBody.appendChild(tr); }
+    function normalizarValorPagoArray(valorPagoAtual) { if (Array.isArray(valorPagoAtual)) return valorPagoAtual.map((item) => Number(item)).filter((item) => Number.isFinite(item)); return []; }
+    async function buscarPedidoPorNumero(numeroPedido) { const { data, error } = await supabase.from("orcamentos").select("id, numero_pedido").eq("numero_pedido", numeroPedido).limit(1).maybeSingle(); if (error) throw error; return data; }
+    async function buscarNumerosPedidosPorUuid(orcamentoIds) { const ids = [...new Set(orcamentoIds.filter(Boolean))]; if (!ids.length) return new Map(); const { data, error } = await supabase.from("orcamentos").select("id, numero_pedido").in("id", ids); if (error) throw error; return new Map((data || []).map((orcamento) => [orcamento.id, orcamento.numero_pedido])); }
+    function renderizarPagamentos(pagamentos, pedidosPorUuid) { pagamentosBody.innerHTML = ""; if (!pagamentos.length) { renderizarLinhaMensagem("Nenhum pagamento cadastrado ainda."); return; } pagamentos.forEach((pagamento) => { const tr = document.createElement("tr"); const numeroPedido = pedidosPorUuid.get(pagamento.orcamentoid) || "—"; tr.appendChild(criarCelula(pagamento.id ?? "—")); tr.appendChild(criarCelula(formatarData(pagamento.created_at))); tr.appendChild(criarCelula(numeroPedido)); tr.appendChild(criarCelula(formatarMoeda(pagamento.valor), "money")); tr.appendChild(criarCelula(formatarFormaPagamento(pagamento.forma_pagamento))); pagamentosBody.appendChild(tr); }); }
+    async function carregarPagamentos() { atualizarBtn.disabled = true; mostrarMensagem("Carregando pagamentos..."); renderizarLinhaMensagem("Carregando pagamentos..."); const { data, error } = await supabase.from("pagamentos").select("id, created_at, orcamentoid, valor, forma_pagamento").order("created_at", { ascending: false }).limit(50); if (error) { atualizarBtn.disabled = false; renderizarLinhaMensagem(`Erro ao carregar pagamentos: ${error.message}`); return; } try { const pedidosPorUuid = await buscarNumerosPedidosPorUuid((data || []).map((pagamento) => pagamento.orcamentoid)); renderizarPagamentos(data || [], pedidosPorUuid); mostrarMensagem("Lista de pagamentos atualizada.", "success"); } catch (errorBuscaPedidos) { renderizarPagamentos(data || [], new Map()); mostrarMensagem(`Pagamentos carregados, mas não foi possível localizar os números dos pedidos: ${errorBuscaPedidos.message}`, "error"); } finally { atualizarBtn.disabled = false; } }
+    form.addEventListener("submit", async (event) => { event.preventDefault(); mostrarMensagem("Salvando pagamento...", ""); salvarBtn.disabled = true; const numeroPedido = Number(numeroPedidoInput.value); const valor = parseValor(valorInput.value); const formaPagamento = formaPagamentoInput.value; if (!Number.isInteger(numeroPedido) || numeroPedido <= 0) { mostrarMensagem("Informe um número de pedido válido.", "error"); salvarBtn.disabled = false; return; } if (!Number.isFinite(valor) || valor <= 0) { mostrarMensagem("Informe um valor pago maior que zero.", "error"); salvarBtn.disabled = false; return; } if (!formaPagamento) { mostrarMensagem("Informe a forma de pagamento.", "error"); salvarBtn.disabled = false; return; } try { const pedido = await buscarPedidoPorNumero(numeroPedido); if (!pedido) { mostrarMensagem(`Pedido ${numeroPedido} não encontrado. Cadastro bloqueado.`, "error"); salvarBtn.disabled = false; return; } const { error } = await supabase.from("pagamentos").insert([{ orcamentoid: pedido.id, valor: Number(valor), forma_pagamento: formaPagamento }]); if (error) throw error; try { const { data: orcamentoAtual, error: valorPagoError } = await supabase.from("orcamentos").select("valor_pago").eq("id", pedido.id).maybeSingle(); if (valorPagoError) throw valorPagoError; const valoresPagos = normalizarValorPagoArray(orcamentoAtual?.valor_pago); const novoArray = [...valoresPagos, Number(valor)]; const { error: atualizarOrcamentoError } = await supabase.from("orcamentos").update({ valor_pago: novoArray }).eq("id", pedido.id); if (atualizarOrcamentoError) throw atualizarOrcamentoError; } catch (atualizarOrcamentoError) { form.reset(); await carregarPagamentos(); mostrarMensagem("Pagamento salvo, mas valor_pago do orçamento não foi atualizado.", "error"); return; } form.reset(); await carregarPagamentos(); mostrarMensagem("Pagamento salvo com sucesso!", "success"); } catch (error) { mostrarMensagem(`Erro ao salvar pagamento: ${error.message}`, "error"); } finally { salvarBtn.disabled = false; } });
     atualizarBtn.addEventListener("click", carregarPagamentos);
     carregarPagamentos();
   </script>
