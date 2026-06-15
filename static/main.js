@@ -94,6 +94,7 @@ async function carregarAcoesPortas() {
         await carregarScriptPortas("puxador-perfil-ui-fix.js");
         await carregarScriptPortas("dobradicas-auto-fix.js");
         await carregarScriptPortas("required-fields-panel.js");
+        await carregarScriptPortas("side-conflict-fix.js");
         await carregarScriptPortas("portas-actions.js");
     } catch (err) {
         console.error("Erro ao carregar ações seguras de portas:", err);
