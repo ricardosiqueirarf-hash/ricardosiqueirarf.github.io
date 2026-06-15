@@ -189,7 +189,7 @@ input:focus {
 
 .password-wrap input {
     width: 100%;
-    padding-right: 92px;
+    padding-right: 52px;
 }
 
 .toggle-password {
@@ -197,15 +197,18 @@ input:focus {
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
+    width: 36px;
+    height: 32px;
     border: none;
     background: var(--cg-blue-soft);
     color: var(--cg-blue-dark);
     border-radius: 8px;
-    padding: 7px 10px;
-    font-size: 0.78rem;
-    font-weight: 800;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    line-height: 1;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.2s ease;
+    transition: background 0.2s ease;
 }
 
 .toggle-password:hover {
@@ -326,7 +329,7 @@ input:focus {
             <label>Senha
                 <div class="password-wrap">
                     <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password">
-                    <button class="toggle-password" type="button" id="togglePassBtn" onclick="toggleSenha()" aria-label="Mostrar senha">Mostrar</button>
+                    <button class="toggle-password" type="button" id="togglePassBtn" onclick="toggleSenha()" aria-label="Mostrar senha">👁</button>
                 </div>
             </label>
             <button class="btn" type="button" id="loginBtn" onclick="logar()">Entrar</button>
@@ -355,6 +358,16 @@ function setLoginLoading(loading) {
     btn.textContent = loading ? "Verificando..." : "Entrar";
 }
 
+function ocultarSenhaPadrao() {
+    const input = document.getElementById("loginPass");
+    const btn = document.getElementById("togglePassBtn");
+    if (input) input.type = "password";
+    if (btn) {
+        btn.textContent = "👁";
+        btn.setAttribute("aria-label", "Mostrar senha");
+    }
+}
+
 function toggleSenha() {
     const input = document.getElementById("loginPass");
     const btn = document.getElementById("togglePassBtn");
@@ -362,7 +375,7 @@ function toggleSenha() {
 
     const senhaVisivel = input.type === "text";
     input.type = senhaVisivel ? "password" : "text";
-    btn.textContent = senhaVisivel ? "Mostrar" : "Ocultar";
+    btn.textContent = "👁";
     btn.setAttribute("aria-label", senhaVisivel ? "Mostrar senha" : "Ocultar senha");
 }
 
@@ -466,6 +479,7 @@ window.toggleSenha = toggleSenha;
 document.addEventListener("DOMContentLoaded", () => {
     const userInput = document.getElementById("loginUser");
     const passInput = document.getElementById("loginPass");
+    ocultarSenhaPadrao();
     if (userInput) userInput.focus();
 
     [userInput, passInput].forEach((input) => {
