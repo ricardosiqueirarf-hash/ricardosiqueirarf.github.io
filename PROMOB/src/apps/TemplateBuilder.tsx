@@ -1,4 +1,5 @@
 import React from 'react';
+import './templateBuilder.css';
 
 export type TemplateDraft = {
   nome: string;
@@ -91,6 +92,8 @@ function StepButton({ active, onClick, title, subtitle }: { active: boolean; onC
   return <button className={active ? 'active' : ''} onClick={onClick}><b>{title}</b><span>{subtitle}</span></button>;
 }
 
+type PropsWithoutPublish = Omit<Props, 'onPublish'>;
+
 function ProdutoStep({ draft, setDraft }: PropsWithoutPublish) {
   return <><h2>Produto</h2><label>Nome do template<input value={draft.nome} onChange={(e) => setDraft({ ...draft, nome: e.target.value })} /></label><label>Tipo<select value={draft.categoria} onChange={(e) => setDraft({ ...draft, categoria: e.target.value })}><option value="cristaleira">Cristaleira</option><option value="closet">Closet</option><option value="adega">Adega</option><option value="bancada">Bancada</option><option value="porta">Porta</option><option value="modulo_mdf">Modulo MDF</option></select></label><label>Descricao<input value={draft.descricao} onChange={(e) => setDraft({ ...draft, descricao: e.target.value })} /></label></>;
 }
@@ -107,8 +110,6 @@ function RegrasStep({ draft, setDraft }: PropsWithoutPublish) {
   const update = (key: keyof TemplateDraft['lojaEdita'], value: boolean) => setDraft({ ...draft, lojaEdita: { ...draft.lojaEdita, [key]: value } });
   return <><h2>Regras da loja</h2><p className="builderHint">Custo, perda e margem minima ficam travados na fabrica. Marque apenas o que a loja pode alterar.</p><Toggle label="Editar largura" checked={draft.lojaEdita.largura} onChange={(v) => update('largura', v)} /><Toggle label="Editar altura" checked={draft.lojaEdita.altura} onChange={(v) => update('altura', v)} /><Toggle label="Editar profundidade" checked={draft.lojaEdita.profundidade} onChange={(v) => update('profundidade', v)} /><Toggle label="Editar vidro" checked={draft.lojaEdita.vidro} onChange={(v) => update('vidro', v)} /><Toggle label="Editar acabamento" checked={draft.lojaEdita.acabamento} onChange={(v) => update('acabamento', v)} /><Toggle label="Editar portas" checked={draft.lojaEdita.portas} onChange={(v) => update('portas', v)} /><Toggle label="Editar prateleiras" checked={draft.lojaEdita.prateleiras} onChange={(v) => update('prateleiras', v)} /></>;
 }
-
-type PropsWithoutPublish = Omit<Props, 'onPublish'>;
 
 function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return <label>{label}<input type="number" value={value} onChange={(e) => onChange(Number(e.target.value))} /></label>;
