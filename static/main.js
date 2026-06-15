@@ -97,12 +97,16 @@ async function carregarAcoesPortas() {
 async function carregarConferenciaCalculoPortas() {
     try {
         await carregarScriptPortas("calculation-check.js");
+        await carregarScriptPortas("calculation-component-bridge.js");
         await carregarScriptPortas("calculation-data-normalizer.js");
         if (typeof inicializarConferenciaCalculoPorta === "function") {
             inicializarConferenciaCalculoPorta();
         }
         if (typeof instalarNormalizadorInsumosCalculo === "function") {
             instalarNormalizadorInsumosCalculo();
+        }
+        if (typeof renderizarConferenciaCalculoPorta === "function") {
+            renderizarConferenciaCalculoPorta();
         }
     } catch (err) {
         console.error("Erro ao carregar conferência do cálculo:", err);
