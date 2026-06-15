@@ -14,11 +14,21 @@ function atualizarPerfisSelect() {
     const tipo = document.getElementById("tipologia").value;
     const perfilSelect = document.getElementById("perfil");
     if (!perfilSelect) return;
+
+    const valorAtual = perfilSelect.value;
     perfilSelect.innerHTML = "<option value=''>Selecione</option>";
-    todosPerfis.filter(p => p.tipologias.includes(tipo))
+
+    todosPerfis
+        .filter(p => Array.isArray(p.tipologias) && p.tipologias.includes(tipo))
         .forEach(p => {
             perfilSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
         });
+
+    if (valorAtual && Array.from(perfilSelect.options).some(opt => opt.value === valorAtual)) {
+        perfilSelect.value = valorAtual;
+    }
+
+    atualizarPuxadoresSelect();
 }
 
 function atualizarVidrosSelect() {
@@ -134,14 +144,109 @@ function atualizarResumoTrilhos() {
     atualizarPrecoPorta();
 }
 
+function normalizarTextoCompatibilidade(valor) {
+    return String(valor ?? "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
+function normalizarArrayCompatibilidade(valor) {
+    if (Array.isArray(valor)) {
+        return valor.map(item => String(item ?? "").trim()).filter(Boolean);
+    }
+
+    if (valor === null || valor === undefined || valor === "") {
+        return [];
+    }
+
+    if (typeof valor === "string") {
+        const texto = valor.trim();
+        if (!texto) return [];
+
+        try {
+            const parsed = JSON.parse(texto);
+            if (Array.isArray(parsed)) {
+                return parsed.map(item => String(item ?? "").trim()).filter(Boolean);
+            }
+        } catch (_) {
+            // Mantém compatibilidade com cadastro em texto separado por vírgula/ponto e vírgula.
+        }
+
+        return texto.split(/[;,|]/).map(item => item.trim()).filter(Boolean);
+    }
+
+    return [String(valor).trim()].filter(Boolean);
+}
+
+function obterPerfilSelecionado() {
+    const perfilId = document.getElementById("perfil")?.value;
+    if (!perfilId) return null;
+    return todosPerfis.find(perfil => String(perfil.id) === String(perfilId)) || null;
+}
+
+function obterPuxadoresDoPerfil(perfil) {
+    return normalizarArrayCompatibilidade(
+        perfil?.puxadores ??
+        perfil?.puxadores_compativeis ??
+        perfil?.puxadoresCompativeis
+    );
+}
+
+function filtrarPuxadoresCompativeis(perfil) {
+    const referencias = obterPuxadoresDoPerfil(perfil);
+    if (!referencias.length) return [];
+
+    const refsExatas = new Set(referencias.map(item => String(item).trim()).filter(Boolean));
+    const refsNormalizadas = new Set(referencias.map(normalizarTextoCompatibilidade).filter(Boolean));
+
+    return todosPuxadores.filter(puxador => {
+        const id = String(puxador.id ?? "").trim();
+        const nome = String(puxador.nome ?? "").trim();
+
+        return (
+            refsExatas.has(id) ||
+            refsExatas.has(nome) ||
+            refsNormalizadas.has(normalizarTextoCompatibilidade(id)) ||
+            refsNormalizadas.has(normalizarTextoCompatibilidade(nome))
+        );
+    });
+}
+
 function atualizarPuxadoresSelect() {
     const puxadorSelect = document.getElementById("puxador");
     if (!puxadorSelect) return;
+
+    const valorAtual = puxadorSelect.value;
+    const perfil = obterPerfilSelecionado();
+
+    puxadorSelect.innerHTML = "";
+
+    if (!perfil) {
+        puxadorSelect.innerHTML = "<option value=''>Selecione o perfil primeiro</option>";
+        puxadorSelect.disabled = true;
+        return;
+    }
+
+    puxadorSelect.disabled = false;
     puxadorSelect.innerHTML = "<option value=''>Selecione</option>";
     puxadorSelect.innerHTML += "<option value='sem_puxador'>Sem puxador</option>";
-    todosPuxadores.forEach(p => {
-        puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
-    });
+
+    const puxadoresCompativeis = filtrarPuxadoresCompativeis(perfil);
+
+    if (!puxadoresCompativeis.length) {
+        puxadorSelect.innerHTML += "<option value='' disabled>Nenhum puxador atrelado a este perfil</option>";
+    } else {
+        puxadoresCompativeis.forEach(p => {
+            puxadorSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+        });
+    }
+
+    const valoresPermitidos = new Set(["", "sem_puxador", ...puxadoresCompativeis.map(p => String(p.id))]);
+    puxadorSelect.value = valoresPermitidos.has(String(valorAtual)) ? valorAtual : "";
+
+    atualizarPuxadorTipo();
 }
 
 function renderCampos() {
@@ -154,7 +259,7 @@ function renderCampos() {
         const map = {
             largura: `Largura (mm)<input id="largura" type="number" value="800" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
             altura: `Altura (mm)<input id="altura" type="number" value="2000" data-required="true" oninput="desenharPorta(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
-            perfil: `Perfil<select id="perfil" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
+            perfil: `Perfil<select id="perfil" data-required="true" onchange="atualizarPuxadoresSelect(); atualizarPuxadorTipo(); atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
             vidro: `Vidro<select id="vidro" data-required="true" onchange="atualizarPrecoPorta(); atualizarCamposObrigatorios()"></select>`,
             dobradicas: `Quantidade de dobradiças<input id="dobradicas" type="number" value="0" min="0" oninput="atualizarDobradicasInputs(); atualizarPrecoPorta(); atualizarCamposObrigatorios()">`,
             dobradicas_posicao: `Lado das dobradiças<select id="dobradicas_posicao" data-required="true" onchange="desenharPorta(); atualizarCamposObrigatorios()">
