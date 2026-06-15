@@ -48,6 +48,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 STATIC_DIR = os.path.join(ROOT_DIR, "static")
 
+
+def send_html(filename):
+    static_path = os.path.join(STATIC_DIR, filename)
+    if os.path.exists(static_path):
+        return send_from_directory(STATIC_DIR, filename)
+    return send_from_directory(BASE_DIR, filename)
+
 # =====================
 # HEALTH CHECK
 # =====================
@@ -62,39 +69,39 @@ def health():
 
 @app.route("/")
 def home_page():
-    return send_from_directory(BASE_DIR, "inicio.html")
+    return send_html("inicio.html")
 
 @app.route("/inicio.html")
 def inicio_html_page():
-    return send_from_directory(BASE_DIR, "inicio.html")
+    return send_html("inicio.html")
 
 @app.route("/login.html")
 def login_html_page():
-    return send_from_directory(BASE_DIR, "login.html")
+    return send_html("login.html")
 
 @app.route("/login")
 def login_page():
-    return send_from_directory(BASE_DIR, "login.html")
+    return send_html("login.html")
 
 @app.route("/logincadastro.html")
 def login_cadastro_html_page():
-    return send_from_directory(BASE_DIR, "login.html")
+    return send_html("login.html")
 
 @app.route("/cadastro.html")
 def cadastro_html_page():
-    return send_from_directory(BASE_DIR, "cadastro.html")
+    return send_html("cadastro.html")
 
 @app.route("/cadastro")
 def cadastro_page():
-    return send_from_directory(BASE_DIR, "cadastro.html")
+    return send_html("cadastro.html")
 
 @app.route("/taskmenager.html")
 def taskmenager_html_page():
-    return send_from_directory(BASE_DIR, "taskmenager.html")
+    return send_html("taskmenager.html")
 
 @app.route("/taskmenager")
 def taskmenager_page():
-    return send_from_directory(BASE_DIR, "taskmenager.html")
+    return send_html("taskmenager.html")
 
 # =====================
 # ROTAS
@@ -102,179 +109,183 @@ def taskmenager_page():
 
 @app.route("/loja")
 def index_loja_page():
-    return send_from_directory(BASE_DIR, "index_loja.html")
+    return send_html("index_loja.html")
 
 @app.route("/index_loja.html")
 def index_loja_html_page():
-    return send_from_directory(BASE_DIR, "index_loja.html")
+    return send_html("index_loja.html")
 
 @app.route("/index.html")
 def index_admin_page():
-    return send_from_directory(BASE_DIR, "index.html")
+    return send_html("index.html")
 
 @app.route("/admin")
 def admin_dashboard_page():
-    return send_from_directory(STATIC_DIR, "index_admin.html")
+    return send_html("index_admin.html")
 
 @app.route("/index_admin.html")
 def index_admin_html_page():
-    return send_from_directory(STATIC_DIR, "index_admin.html")
+    return send_html("index_admin.html")
 
 @app.route("/usuarios_admin")
 def usuarios_admin_page():
-    return send_from_directory(STATIC_DIR, "usuarios_admin.html")
+    return send_html("usuarios_admin.html")
 
 @app.route("/usuarios_admin.html")
 def usuarios_admin_html_page():
-    return send_from_directory(STATIC_DIR, "usuarios_admin.html")
+    return send_html("usuarios_admin.html")
 
 @app.route("/portas")
 def portas_page():
-    return send_from_directory(BASE_DIR, "portas.html")
+    return send_html("portas.html")
 
 @app.route("/portas.html")
 def portas_html_page():
-    return send_from_directory(BASE_DIR, "portas.html")
+    return send_html("portas.html")
 
 @app.route("/catalogo3d")
 def catalogo3d_page():
-    return send_from_directory(BASE_DIR, "catalogo3d.html")
+    return send_html("catalogo3d.html")
 
 @app.route("/catalogo3d.html")
 def catalogo3d_html_page():
-    return send_from_directory(BASE_DIR, "catalogo3d.html")
+    return send_html("catalogo3d.html")
 
 @app.route("/aprovacao")
 def aprovacao_page():
-    return send_from_directory(BASE_DIR, "aprovacao.html")
+    return send_html("aprovacao.html")
 
 @app.route("/aprovacao.html")
 def aprovacao_html_page():
-    return send_from_directory(BASE_DIR, "aprovacao.html")
+    return send_html("aprovacao.html")
 
 @app.route("/controle")
 def controle_page():
-    return send_from_directory(STATIC_DIR, "gerenciar_aprovados.html")
+    return send_html("gerenciar_aprovados.html")
 
 @app.route("/controle.html")
 def controle_html_page():
-    return send_from_directory(STATIC_DIR, "gerenciar_aprovados.html")
+    return send_html("gerenciar_aprovados.html")
 
 @app.route("/controle_loja")
 def controle_loja_page():
-    return send_from_directory(STATIC_DIR, "controle_loja.html")
+    return send_html("controle_loja.html")
 
 @app.route("/controle_loja.html")
 def controle_loja_html_page():
-    return send_from_directory(STATIC_DIR, "controle_loja.html")
+    return send_html("controle_loja.html")
 
 @app.route("/tags")
 def tags_page():
-    return send_from_directory(BASE_DIR, "tags.html")
+    return send_html("tags.html")
 
 @app.route("/tags.html")
 def tags_html_page():
-    return send_from_directory(BASE_DIR, "tags.html")
+    return send_html("tags.html")
 
 @app.route("/financeiro")
 def financeiro_page():
-    return send_from_directory(BASE_DIR, "financeiro.html")
+    return send_html("financeiro.html")
 
 @app.route("/financeiro.html")
 def financeiro_html_page():
-    return send_from_directory(BASE_DIR, "financeiro.html")
+    return send_html("financeiro.html")
 
 @app.route("/comprovantes")
 def comprovantes_page():
-    return send_from_directory(BASE_DIR, "comprovantes.html")
+    return send_html("comprovantes.html")
 
 @app.route("/comprovantes.html")
 def comprovantes_html_page():
-    return send_from_directory(BASE_DIR, "comprovantes.html")
+    return send_html("comprovantes.html")
 
 @app.route("/estruturastemp")
 def estruturastemp_page():
-    return send_from_directory(BASE_DIR, "estruturastemp.html")
+    return send_html("estruturastemp.html")
 
 @app.route("/estruturastemp.html")
 def estruturastemp_html_page():
-    return send_from_directory(BASE_DIR, "estruturastemp.html")
+    return send_html("estruturastemp.html")
 
 @app.route("/callback")
 def callback_page():
-    return send_from_directory(BASE_DIR, "callback.html")
+    return send_html("callback.html")
 
 @app.route("/callback.html")
 def callback_html_page():
-    return send_from_directory(BASE_DIR, "callback.html")
+    return send_html("callback.html")
 
 @app.route("/imagefinder")
 def imagefinder_page():
-    return send_from_directory(BASE_DIR, "imagefinder.html")
+    return send_html("imagefinder.html")
 
 @app.route("/imagefinder.html")
 def imagefinder_html_page():
-    return send_from_directory(BASE_DIR, "imagefinder.html")
+    return send_html("imagefinder.html")
 
 @app.route("/perfis")
 def perfis_page():
-    return send_from_directory(BASE_DIR, "perfis.html")
+    return send_html("perfis.html")
 
 @app.route("/perfis.html")
 def perfis_html_page():
-    return send_from_directory(BASE_DIR, "perfis.html")
+    return send_html("perfis.html")
 
 @app.route("/vidros")
 def vidros_page():
-    return send_from_directory(BASE_DIR, "vidros.html")
+    return send_html("vidros.html")
 
 @app.route("/vidros.html")
 def vidros_html_page():
-    return send_from_directory(BASE_DIR, "vidros.html")
+    return send_html("vidros.html")
 
 @app.route("/insumos")
 def insumos_page():
-    return send_from_directory(BASE_DIR, "insumos.html")
+    return send_html("insumos.html")
 
 @app.route("/insumos.html")
 def insumos_html_page():
-    return send_from_directory(BASE_DIR, "insumos.html")
+    return send_html("insumos.html")
 
 @app.route("/Dashboard")
 def Dashboard_page():
-    return send_from_directory(BASE_DIR, "Dashboard.html")
+    return send_html("Dashboard.html")
 
 @app.route("/Dashboard.html")
 def Dashboard_html_page():
-    return send_from_directory(BASE_DIR, "Dashboard.html")
+    return send_html("Dashboard.html")
 
 @app.route("/vizualizacao")
 def vizualizacao_page():
-    return send_from_directory(BASE_DIR, "vizualizacao.html")
+    return send_html("vizualizacao.html")
 
 @app.route("/vizualizacao.html")
 def vizualizacao_html_page():
-    return send_from_directory(BASE_DIR, "vizualizacao.html")
+    return send_html("vizualizacao.html")
 
 @app.route("/tarefas")
 def task_page():
-    return send_from_directory(BASE_DIR, "task.html")
+    return send_html("task.html")
 
 @app.route("/tarefas.html")
 def task_html_page():
-    return send_from_directory(BASE_DIR, "task.html")
+    return send_html("task.html")
 
 @app.route("/clientes")
 def clientes_page():
+    if os.path.exists(os.path.join(STATIC_DIR, "clientes.html")):
+        return send_from_directory(STATIC_DIR, "clientes.html")
     return send_from_directory(ROOT_DIR, "clientes.html")
 
 @app.route("/clientes.html")
 def clientes_html_page():
+    if os.path.exists(os.path.join(STATIC_DIR, "clientes.html")):
+        return send_from_directory(STATIC_DIR, "clientes.html")
     return send_from_directory(ROOT_DIR, "clientes.html")
 
 @app.route("/promob_export")
 def promob_export_page():
-    return send_from_directory(BASE_DIR, "promob_export.html")
+    return send_html("promob_export.html")
 
 def _crm_directory():
     static_crm_dir = os.path.join(STATIC_DIR, "crm")
@@ -295,54 +306,58 @@ def crm_index_html_page():
 
 @app.route("/promob_export.html")
 def promob_export_html_page():
-    return send_from_directory(BASE_DIR, "promob_export.html")
+    return send_html("promob_export.html")
 
 @app.route("/gestao-carteira")
 def gestao_carteira_page():
-    return send_from_directory(STATIC_DIR, "gestao-carteira.html")
+    return send_html("gestao-carteira.html")
 
 @app.route("/gestao-carteira.html")
 def gestao_carteira_html_page():
-    return send_from_directory(STATIC_DIR, "gestao-carteira.html")
+    return send_html("gestao-carteira.html")
 
 @app.route("/pagamentos")
 def pagamentos_page():
-    return send_from_directory(STATIC_DIR, "pagamentos.html")
+    return send_html("pagamentos.html")
 
 @app.route("/pagamentos.html")
 def pagamentos_html_page():
-    return send_from_directory(STATIC_DIR, "pagamentos.html")
+    return send_html("pagamentos.html")
 
 @app.route("/fornecedores")
 def fornecedores_page():
-    return send_from_directory(STATIC_DIR, "fornecedores.html")
+    return send_html("fornecedores.html")
 
 @app.route("/fornecedores.html")
 def fornecedores_html_page():
-    return send_from_directory(STATIC_DIR, "fornecedores.html")
+    return send_html("fornecedores.html")
 
 @app.route("/estoquecontagens")
 def estoquecontagens_page():
-    return send_from_directory(STATIC_DIR, "estoquecontagens.html")
+    return send_html("estoquecontagens.html")
 
 @app.route("/estoquecontagens.html")
 def estoquecontagens_html_page():
-    return send_from_directory(STATIC_DIR, "estoquecontagens.html")
+    return send_html("estoquecontagens.html")
 
 @app.route("/estoquedashboard")
 def estoquedashboard_page():
-    return send_from_directory(STATIC_DIR, "estoquedashboard.html")
+    return send_html("estoquedashboard.html")
 
 @app.route("/estoquedashboard.html")
 def estoquedashboard_html_page():
-    return send_from_directory(STATIC_DIR, "estoquedashboard.html")
+    return send_html("estoquedashboard.html")
 
 @app.route("/3dteste")
 def d3teste_page():
+    if os.path.exists(os.path.join(STATIC_DIR, "3dteste.html")):
+        return send_from_directory(STATIC_DIR, "3dteste.html")
     return send_from_directory(ROOT_DIR, "3dteste.html")
 
 @app.route("/3dteste.html")
 def d3teste_html_page():
+    if os.path.exists(os.path.join(STATIC_DIR, "3dteste.html")):
+        return send_from_directory(STATIC_DIR, "3dteste.html")
     return send_from_directory(ROOT_DIR, "3dteste.html")
 
 # =====================
