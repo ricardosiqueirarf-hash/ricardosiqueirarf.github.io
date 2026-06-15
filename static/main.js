@@ -77,6 +77,7 @@ async function carregarPreview3DPortas() {
     try {
         await carregarScriptPortas("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js");
         await carregarScriptPortas("door3d.js");
+        await carregarScriptPortas("door3d-deslizante-fix.js");
         if (typeof renderizarPorta3D === "function") {
             renderizarPorta3D();
         }
