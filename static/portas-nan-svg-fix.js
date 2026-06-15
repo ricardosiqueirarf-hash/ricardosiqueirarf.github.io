@@ -4,7 +4,7 @@
 // Alguns orçamentos antigos podem ter salvo p.svg contendo atributos NaN.
 // Quando a tela renderiza esses SVGs, o navegador gera erros contínuos como:
 // <circle> cy NaN, <line> y1/y2 NaN, <text> y NaN.
-// Este patch evita renderizar/salvar SVG inválido e deixa a OP gerar SVG limpo a partir dos dados.
+// Este patch evita renderizar/salvar SVG inválido sem alterar a estética da lista de portas salvas.
 
 (function instalarPortasNanSvgFix() {
     const SVG_INVALIDO_REGEX = /\b(?:NaN|Infinity|-Infinity|undefined|null)\b/i;
@@ -16,11 +16,6 @@
         if (!texto) return fallback;
         const numero = Number(texto);
         return Number.isFinite(numero) ? numero : fallback;
-    }
-
-    function textoSeguro(valor, fallback = "-") {
-        const texto = String(valor ?? "").trim();
-        return texto || fallback;
     }
 
     function svgPortaSeguro(svg) {
@@ -39,24 +34,38 @@
         return limpa;
     }
 
-    function obterPerfilNome(porta) {
-        const lista = Array.isArray(window.todosPerfis) ? window.todosPerfis : (typeof todosPerfis !== "undefined" ? todosPerfis : []);
-        return lista.find((perfil) => String(perfil.id) === String(porta?.dados?.perfil))?.nome || "Perfil não definido";
+    function obterPortasAtuais() {
+        if (Array.isArray(window.portas)) return window.portas;
+        if (typeof portas !== "undefined" && Array.isArray(portas)) return portas;
+        return [];
     }
 
-    function obterVidroNome(porta) {
-        const lista = Array.isArray(window.todosVidros) ? window.todosVidros : (typeof todosVidros !== "undefined" ? todosVidros : []);
-        return lista.find((vidro) => String(vidro.id) === String(porta?.dados?.vidro))?.tipo || "Vidro não definido";
+    function obterPerfis() {
+        if (Array.isArray(window.todosPerfis)) return window.todosPerfis;
+        if (typeof todosPerfis !== "undefined" && Array.isArray(todosPerfis)) return todosPerfis;
+        return [];
     }
 
-    function obterSistemaNome(porta) {
-        const lista = typeof sistemasLista !== "undefined" && Array.isArray(sistemasLista) ? sistemasLista : [];
-        return lista.find((sistema) => String(sistema.id) === String(porta?.dados?.sistemas))?.nome || "";
+    function obterVidros() {
+        if (Array.isArray(window.todosVidros)) return window.todosVidros;
+        if (typeof todosVidros !== "undefined" && Array.isArray(todosVidros)) return todosVidros;
+        return [];
     }
 
-    function moeda(valor) {
-        if (typeof window.formatarMoeda === "function") return window.formatarMoeda(valor || 0);
-        return `R$ ${(Number(valor) || 0).toFixed(2)}`;
+    function obterPuxadores() {
+        if (Array.isArray(window.todosPuxadores)) return window.todosPuxadores;
+        if (typeof todosPuxadores !== "undefined" && Array.isArray(todosPuxadores)) return todosPuxadores;
+        return [];
+    }
+
+    function obterSistemas() {
+        if (Array.isArray(window.sistemasLista)) return window.sistemasLista;
+        if (typeof sistemasLista !== "undefined" && Array.isArray(sistemasLista)) return sistemasLista;
+        return [];
+    }
+
+    function formatarPrecoAnterior(valor) {
+        return Number(valor || 0).toFixed(2);
     }
 
     function renderPortasSeguro() {
@@ -64,33 +73,39 @@
         renderizandoPortasSeguro = true;
 
         try {
-            const container = document.getElementById("portasSalvas");
-            if (!container) return;
+            const c = document.getElementById("portasSalvas");
+            if (!c) return;
 
-            const listaPortas = Array.isArray(window.portas) ? window.portas : (typeof portas !== "undefined" ? portas : []);
-            container.innerHTML = "";
-
-            listaPortas.forEach((porta, idx) => {
+            c.innerHTML = "";
+            obterPortasAtuais().forEach((porta, idx) => {
                 const p = limparPortaParaSalvar(porta);
                 const dados = p.dados || {};
-                const valorAdicional = numeroSeguro(dados.valor_adicional, 0);
-                const svg = svgPortaSeguro(p.svg);
-                const div = document.createElement("div");
-                div.innerHTML = `
-                    <strong>${idx + 1}. ${textoSeguro(p.tipo, "Porta")}</strong><br>
-                    Quantidade: ${textoSeguro(p.quantidade, "1")}<br>
-                    Perfil: ${obterPerfilNome(p)}<br>
-                    Vidro: ${obterVidroNome(p)}<br>
-                    ${obterSistemaNome(p) ? `Sistema: ${obterSistemaNome(p)}<br>` : ""}
-                    Medida: ${textoSeguro(dados.largura)} x ${textoSeguro(dados.altura)} mm<br>
-                    Valor adicional: ${valorAdicional ? moeda(valorAdicional) : "-"}<br>
-                    Preço: ${moeda(p.preco || 0)}<br>
-                    ${svg}<br>
-                    <button class="btn" onclick="copiarPorta(${Number(p.id)})">Copiar</button>
-                    <button class="btn" onclick="editarPorta(${Number(p.id)})">Editar</button>
-                    <button class="btn btn-danger" onclick="apagarPorta(${Number(p.id)})">Apagar</button>
+                const perfilNome = obterPerfis().find(perfil => perfil.id == dados.perfil)?.nome || "Perfil não definido";
+                const vidroNome = obterVidros().find(vidro => vidro.id == dados.vidro)?.tipo || "Vidro não definido";
+                const sistemaNome = obterSistemas().find(sistema => String(sistema.id) === String(dados.sistemas))?.nome || "";
+                const puxadorNome = dados.puxador === "sem_puxador"
+                    ? "Sem puxador"
+                    : (obterPuxadores().find(pux => pux.id == dados.puxador)?.nome || "-");
+                const valorAdicional = Number(dados.valor_adicional || 0);
+                const svgSeguro = svgPortaSeguro(p.svg);
+
+                // Mantém a estética/estrutura anterior das portas salvas.
+                c.innerHTML += `
+                    <div>
+                        <strong>${idx + 1}. ${p.tipo}</strong><br>
+                        Quantidade: ${p.quantidade}<br>
+                        Perfil: ${perfilNome}<br>
+                        Vidro: ${vidroNome}<br>
+                        ${sistemaNome ? `Sistema: ${sistemaNome}<br>` : ""}
+                        Puxador: ${puxadorNome}<br>
+                        Valor adicional: ${valorAdicional ? formatarMoeda(valorAdicional) : "-"}<br>
+                        Preço: R$ ${formatarPrecoAnterior(p.preco)}<br>
+                        ${svgSeguro || ""}<br>
+                        <button class="btn" onclick="copiarPorta(${p.id})">Copiar</button>
+                        <button class="btn" onclick="editarPorta(${p.id})">Editar</button>
+                        <button class="btn btn-danger" onclick="apagarPorta(${p.id})">Apagar</button>
+                    </div>
                 `;
-                container.appendChild(div);
             });
 
             if (typeof window.atualizarResumoImpressao === "function") window.atualizarResumoImpressao();
