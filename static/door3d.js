@@ -37,19 +37,25 @@ function adicionarEstilosPorta3D() {
             cursor: grabbing;
         }
 
+        #porta3D canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
         .porta3d-empty {
-            width: 100%;
-            height: 400px;
+            position: absolute;
+            inset: 0;
+            z-index: 4;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(16,121,186,0.18);
-            background: rgba(255,255,255,0.95);
-            border-radius: 14px;
+            background: rgba(255,255,255,0.88);
             color: #6b7280;
-            font-weight: 700;
+            font-weight: 800;
             text-align: center;
             padding: 16px;
+            pointer-events: none;
         }
 
         .porta3d-label {
@@ -99,6 +105,36 @@ function prepararContainerPorta3D() {
     wrapper.appendChild(svgAntigo);
 
     return container;
+}
+
+function mostrarMensagemPorta3D(texto) {
+    const container = prepararContainerPorta3D();
+    if (!container) return;
+
+    let mensagem = document.getElementById("porta3DEmptyMessage");
+    if (!mensagem) {
+        mensagem = document.createElement("div");
+        mensagem.id = "porta3DEmptyMessage";
+        mensagem.className = "porta3d-empty";
+        container.appendChild(mensagem);
+    }
+
+    mensagem.textContent = texto;
+    mensagem.style.display = "flex";
+}
+
+function ocultarMensagemPorta3D() {
+    const mensagem = document.getElementById("porta3DEmptyMessage");
+    if (mensagem) mensagem.style.display = "none";
+}
+
+function garantirCanvasPorta3D() {
+    const { container, renderer } = Porta3DState;
+    if (!container || !renderer || !renderer.domElement) return;
+
+    if (renderer.domElement.parentNode !== container) {
+        container.insertBefore(renderer.domElement, container.firstChild);
+    }
 }
 
 function numeroCampoPorta3D(id) {
@@ -251,7 +287,11 @@ function limparCenaPorta3D() {
 }
 
 function inicializarCenaPorta3D() {
-    if (Porta3DState.initialized) return true;
+    if (Porta3DState.initialized) {
+        garantirCanvasPorta3D();
+        return true;
+    }
+
     if (typeof THREE === "undefined") {
         console.error("Three.js não carregado.");
         return false;
@@ -353,12 +393,14 @@ function renderizarPorta3D() {
     const alturaMm = numeroCampoPorta3D("altura");
 
     if (larguraMm <= 0 || alturaMm <= 0) {
-        container.innerHTML = `<div class="porta3d-empty">Informe largura e altura para visualizar a porta em 3D.</div>`;
+        mostrarMensagemPorta3D("Informe largura e altura para visualizar a porta em 3D.");
         return;
     }
 
     if (!inicializarCenaPorta3D()) return;
 
+    garantirCanvasPorta3D();
+    ocultarMensagemPorta3D();
     limparCenaPorta3D();
 
     const materiais = criarMaterialPorta3D();
