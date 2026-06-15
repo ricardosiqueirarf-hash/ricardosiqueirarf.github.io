@@ -54,6 +54,12 @@ def _buscar_contexto_precificacao(contexto_extra=None):
     trilhos = contexto_extra.get("trilhos") or contexto_extra.get("todosTrilhos") or _buscar_tabela_supabase("trilhos", "nome.asc")
     tags = contexto_extra.get("tags") or contexto_extra.get("todasTags") or _buscar_tabela_supabase("tags")
 
+    # A tabela trilhos não tem tipo_medida. Para cálculo, trilho é sempre metro linear.
+    if isinstance(trilhos, list):
+        for trilho in trilhos:
+            if isinstance(trilho, dict) and not trilho.get("tipo_medida"):
+                trilho["tipo_medida"] = "metro_linear"
+
     # O engine procura trilhos dentro de "insumos" para reaproveitar a mesma
     # regra de referência/material. Por isso combinamos materiais + trilhos.
     materiais_para_busca = list(materiais or []) + list(trilhos or [])
