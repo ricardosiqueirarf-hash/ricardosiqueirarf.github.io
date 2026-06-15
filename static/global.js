@@ -13,6 +13,40 @@ pages.forEach(p => {
 });
 
 /* =========================================================
+   Página inicial: mostrar apenas o nome da marca no header
+   ========================================================= */
+(function setupHomeBrandNameOnly() {
+  const currentPage = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+  const isHome = currentPage === "" || currentPage === "index.html";
+
+  if (!isHome) return;
+
+  const style = document.createElement("style");
+  style.id = "cgHomeBrandNameOnly";
+  style.textContent = `
+    body#top header .brand {
+      width: auto;
+      min-height: auto;
+      gap: 0;
+    }
+
+    body#top header .logo-symbol {
+      display: none !important;
+    }
+
+    body#top header .logo-wordmark {
+      display: inline-flex;
+      gap: 10px;
+      font-size: 1.05rem;
+      letter-spacing: 0.34em;
+      white-space: nowrap;
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
+
+/* =========================================================
    Filtros avançados para index_loja.html
    - Só roda na tela index_loja
    - Não mexe na lógica original da tabela
