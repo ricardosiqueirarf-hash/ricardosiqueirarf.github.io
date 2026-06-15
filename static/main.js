@@ -55,7 +55,7 @@ var todasTags = [];
 var estruturas3D = [];
 
 // =====================
-// PREVIEW 3D
+// SCRIPTS COMPLEMENTARES
 // =====================
 function carregarScriptPortas(src) {
     return new Promise((resolve, reject) => {
@@ -85,7 +85,16 @@ async function carregarPreview3DPortas() {
     }
 }
 
+async function carregarAcoesPortas() {
+    try {
+        await carregarScriptPortas("portas-actions.js");
+    } catch (err) {
+        console.error("Erro ao carregar ações seguras de portas:", err);
+    }
+}
+
 function initMain() {
+    carregarAcoesPortas();
     carregarPreview3DPortas();
     carregarPerfis();
     carregarVidros();
@@ -106,3 +115,4 @@ window.authHeader = authHeader;
 window.formatarMoeda = formatarMoeda;
 window.initMain = initMain;
 window.carregarPreview3DPortas = carregarPreview3DPortas;
+window.carregarAcoesPortas = carregarAcoesPortas;
