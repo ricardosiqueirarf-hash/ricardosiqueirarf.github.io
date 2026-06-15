@@ -9,10 +9,16 @@ const MOBIL_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'sb_publis
 const supabase = createClient(MOBIL_URL, MOBIL_KEY);
 
 type Factory = { id: string; name: string; slug: string; status: string };
+type Loja = { id: string; name: string; slug: string; status: string };
 type Modelo = { id: string; nome: string; categoria: string; objetos: any[]; parametros_padrao: any };
 
+function slugify(value: string) {
+  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `loja-${Date.now()}`;
+}
+
 function LojaApp() {
-  const [lojaName, setLojaName] = React.useState('Minha loja');
+  const [lojaName, setLojaName] = React.useState(localStorage.getItem('mobil-loja-name') || 'Minha loja');
+  const [lojaId, setLojaId] = React.useState(localStorage.getItem('mobil-loja-id') || '');
   const [factories, setFactories] = React.useState<Factory[]>([]);
   const [factoryId, setFactoryId] = React.useState(localStorage.getItem('mobil-active-factory') || '');
   const [modelos, setModelos] = React.useState<Modelo[]>([]);
@@ -49,11 +55,40 @@ function LojaApp() {
     });
   }, [factoryId]);
 
-  function importFactory(nextFactoryId: string) {
+  async function ensureLoja() {
+    if (lojaId) return lojaId;
+    const slug = slugify(lojaName);
+    const { data: existing } = await supabase.from('mobil_lojas').select('id,name,slug,status').eq('slug', slug).maybeSingle();
+    if (existing) {
+      const loja = existing as Loja;
+      localStorage.setItem('mobil-loja-id', loja.id);
+      localStorage.setItem('mobil-loja-name', loja.name);
+      setLojaId(loja.id);
+      setLojaName(loja.name);
+      return loja.id;
+    }
+    const { data, error } = await supabase.from('mobil_lojas').insert({ name: lojaName, slug, status: 'active' }).select('id,name').single();
+    if (error) throw error;
+    localStorage.setItem('mobil-loja-id', data.id);
+    localStorage.setItem('mobil-loja-name', data.name);
+    setLojaId(data.id);
+    return data.id as string;
+  }
+
+  async function importFactory(nextFactoryId: string) {
     setFactoryId(nextFactoryId);
     localStorage.setItem('mobil-active-factory', nextFactoryId);
     const factory = factories.find((item) => item.id === nextFactoryId);
     setMsg(factory ? `Loja trabalhando com biblioteca da fábrica ${factory.name}.` : 'Fábrica importada.');
+
+    try {
+      const currentLojaId = await ensureLoja();
+      const { error } = await supabase.from('mobil_imports_loja').insert({ loja_id: currentLojaId, factory_id: nextFactoryId, active: true });
+      if (error) throw error;
+      setMsg(factory ? `Importação registrada: ${factory.name}.` : 'Importação registrada.');
+    } catch (error: any) {
+      setMsg(`Biblioteca ativa localmente. Registro no banco não foi aceito agora: ${error?.message || 'erro'}`);
+    }
   }
 
   const activeFactory = factories.find((item) => item.id === factoryId) || null;
@@ -67,12 +102,12 @@ function LojaApp() {
     <main className="splitApp storeMode">
       <aside className="splitSide">
         <div className="splitBrand"><span>MOBIL Loja</span><h1>Configurador 3D da loja</h1><p>Escolha uma fábrica, importe a biblioteca dela e adapte o projeto para o cliente.</p></div>
-        <div className="splitBlock"><h2>Loja</h2><label>Nome da loja<input value={lojaName} onChange={(e) => setLojaName(e.target.value)} /></label></div>
+        <div className="splitBlock"><h2>Loja</h2><label>Nome da loja<input value={lojaName} onChange={(e) => setLojaName(e.target.value)} /></label><button className="splitButton" onClick={ensureLoja}>Ativar loja</button></div>
         <div className="splitBlock"><h2>Escolher fábrica</h2><label>Fábrica parceira<select value={factoryId} onChange={(e) => importFactory(e.target.value)}><option value="">Selecione</option>{factories.map((factory) => <option value={factory.id} key={factory.id}>{factory.name}</option>)}</select></label><p>{activeFactory ? `Biblioteca ativa: ${activeFactory.name}` : 'Nenhuma fábrica escolhida.'}</p></div>
         <div className="splitBlock"><h2>Modelo importado</h2><label>Modelo<select value={modeloId} onChange={(e) => setModeloId(e.target.value)}><option value="">Selecione</option>{modelos.map((modelo) => <option value={modelo.id} key={modelo.id}>{modelo.nome}</option>)}</select></label><label>Largura<input type="number" value={custom.w} onChange={(e) => setCustom({ ...custom, w: Number(e.target.value) })} /></label><label>Altura<input type="number" value={custom.h} onChange={(e) => setCustom({ ...custom, h: Number(e.target.value) })} /></label><label>Profundidade<input type="number" value={custom.d} onChange={(e) => setCustom({ ...custom, d: Number(e.target.value) })} /></label><label>Margem da loja %<input type="number" value={custom.margemLoja} onChange={(e) => setCustom({ ...custom, margemLoja: Number(e.target.value) })} /></label></div>
       </aside>
       <section className="splitMain"><div className="splitTop"><div><span>Modo loja</span><b>Projeto em cima da biblioteca da fábrica</b><small>A loja adapta medidas e preço comercial; a regra técnica vem da fábrica.</small></div><a className="splitGhost" href="/fabrica.html">Abrir MOBIL Fábrica</a></div><ConfiguratorScene title={activeModel?.nome || 'Modelo da fábrica'} module={{ w: custom.w, h: custom.h, d: custom.d }} color="#805b38" /></section>
-      <aside className="splitResult"><div className="splitBrand"><span>Resumo comercial</span><h1>{activeModel?.nome || 'Sem modelo'}</h1><p>{msg}</p></div><div className="metric"><span>Fábrica</span><b>{activeFactory?.name || '—'}</b></div><div className="metric"><span>Preço base fábrica</span><b>{factoryBasePrice ? `R$ ${factoryBasePrice.toFixed(2)}` : '—'}</b></div><div className="metric"><span>Preço loja sugerido</span><b>{storePrice ? `R$ ${storePrice.toFixed(2)}` : '—'}</b></div><div className="splitBlock"><h2>Modelos importados</h2>{modelos.length === 0 ? <p>Nenhum modelo importado ainda.</p> : modelos.map((item) => <div className="listItem" key={item.id}><b>{item.nome}</b><small>{item.categoria}</small></div>)}</div></aside>
+      <aside className="splitResult"><div className="splitBrand"><span>Resumo comercial</span><h1>{activeModel?.nome || 'Sem modelo'}</h1><p>{msg}</p></div><div className="metric"><span>Loja</span><b>{lojaName}</b></div><div className="metric"><span>Fábrica</span><b>{activeFactory?.name || '—'}</b></div><div className="metric"><span>Preço base fábrica</span><b>{factoryBasePrice ? `R$ ${factoryBasePrice.toFixed(2)}` : '—'}</b></div><div className="metric"><span>Preço loja sugerido</span><b>{storePrice ? `R$ ${storePrice.toFixed(2)}` : '—'}</b></div><div className="splitBlock"><h2>Modelos importados</h2>{modelos.length === 0 ? <p>Nenhum modelo importado ainda.</p> : modelos.map((item) => <div className="listItem" key={item.id}><b>{item.nome}</b><small>{item.categoria}</small></div>)}</div></aside>
     </main>
   );
 }
