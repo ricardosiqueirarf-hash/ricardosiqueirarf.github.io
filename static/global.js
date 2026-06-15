@@ -3,6 +3,7 @@ const pages = [
   "index_admin.html",
   "index_loja.html",
   "portas.html",
+  "classes.html",
   "cadastro.html",
   "usuarios_admin.html"
 ];
@@ -23,55 +24,6 @@ pages.forEach(p => {
   link.rel = "stylesheet";
   link.href = "home-fix.css?v=2";
   document.head.appendChild(link);
-})();
-
-(function forceBudgetEditToPortasPage() {
-  const currentPage = (window.location.pathname.split("/").pop() || "").toLowerCase();
-  const isBudgetList = currentPage === "index_loja.html" || currentPage === "index_admin.html" || window.location.pathname.toLowerCase().includes("index_loja");
-  if (!isBudgetList) return;
-
-  function buildPortasUrl(uuid) {
-    return `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
-  }
-
-  function irParaPortas(uuid) {
-    if (!uuid) return;
-    window.location.href = buildPortasUrl(uuid);
-  }
-
-  function editarOrcamentoPortas(uuid) {
-    irParaPortas(uuid);
-  }
-
-  function extrairUuidDoOnclick(valor) {
-    const texto = String(valor || "");
-    const match = texto.match(/editarOrcamento\(['"]([^'"]+)['"]\)/);
-    return match ? decodeURIComponent(match[1]) : "";
-  }
-
-  document.addEventListener("click", function interceptarCliqueEditarOrcamento(event) {
-    const botao = event.target?.closest?.("button[onclick*='editarOrcamento']");
-    if (!botao) return;
-
-    const uuid = extrairUuidDoOnclick(botao.getAttribute("onclick"));
-    if (!uuid) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    irParaPortas(uuid);
-  }, true);
-
-  function aplicarOverride() {
-    window.editarOrcamento = editarOrcamentoPortas;
-  }
-
-  window.editarOrcamentoPortas = editarOrcamentoPortas;
-  aplicarOverride();
-  document.addEventListener("DOMContentLoaded", aplicarOverride);
-  setTimeout(aplicarOverride, 0);
-  setTimeout(aplicarOverride, 300);
-  setTimeout(aplicarOverride, 900);
 })();
 
 (function enforceThermalLabelSize() {
