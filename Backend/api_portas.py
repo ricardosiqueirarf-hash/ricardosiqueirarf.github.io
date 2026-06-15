@@ -38,40 +38,43 @@ def listar_portas(orcamento_uuid):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# POST para criar portas
+# POST para substituir as portas de um orçamento
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/portas", methods=["POST"])
 def criar_portas(orcamento_uuid):
     from app import SUPABASE_URL, HEADERS
-    data = request.json
+    data = request.json or {}
     portas = data.get("portas", [])
-    if not portas or not isinstance(portas, list):
-        return jsonify({"success": False, "error": "Nenhuma porta enviada"}), 400
+    if not isinstance(portas, list):
+        return jsonify({"success": False, "error": "Formato inválido para portas"}), 400
     try:
         r_delete = requests.delete(
             f"{SUPABASE_URL}/rest/v1/portas?orcamento_uuid=eq.{orcamento_uuid}",
             headers=HEADERS
         )
         r_delete.raise_for_status()
-        payload = []
-        for p in portas:
-            dados_obj = p.get("dados", {})
-            # converte dict para array de texto
-            dados_array = [f"{k}:{v}" for k,v in dados_obj.items()]
-            payload.append({
-                "orcamento_uuid": p.get("orcamento_uuid", orcamento_uuid),
-                "tipo": p.get("tipo"),
-                "dados": dados_array,
-                "quantidade": p.get("quantidade", 1),
-                "preco": p.get("preco"),
-                "svg": p.get("svg")
-            })
-        r_post = requests.post(
-            f"{SUPABASE_URL}/rest/v1/portas",
-            headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
-            json=payload
-        )
-        r_post.raise_for_status()
-        portas_salvas = r_post.json()
+
+        portas_salvas = []
+        if portas:
+            payload = []
+            for p in portas:
+                dados_obj = p.get("dados", {})
+                # converte dict para array de texto
+                dados_array = [f"{k}:{v}" for k, v in dados_obj.items()]
+                payload.append({
+                    "orcamento_uuid": p.get("orcamento_uuid", orcamento_uuid),
+                    "tipo": p.get("tipo"),
+                    "dados": dados_array,
+                    "quantidade": p.get("quantidade", 1),
+                    "preco": p.get("preco"),
+                    "svg": p.get("svg")
+                })
+            r_post = requests.post(
+                f"{SUPABASE_URL}/rest/v1/portas",
+                headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
+                json=payload
+            )
+            r_post.raise_for_status()
+            portas_salvas = r_post.json()
 
         quantidade_total = 0
         valor_total = 0.0
@@ -128,8 +131,5 @@ def finalizar_orcamento(orcamento_uuid):
         return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-
 
 
