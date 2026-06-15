@@ -1,9 +1,10 @@
 const pages = [
   "login.html",
+  "index_admin.html",
   "index_loja.html",
-  "classes.html",
   "portas.html",
-  "cadastro.html"
+  "cadastro.html",
+  "usuarios_admin.html"
 ];
 
 pages.forEach(p => {
@@ -24,39 +25,27 @@ pages.forEach(p => {
   document.head.appendChild(link);
 })();
 
-(function forceBudgetEditToClassesPage() {
+(function forceBudgetEditToPortasPage() {
   const currentPage = (window.location.pathname.split("/").pop() || "").toLowerCase();
-  const isIndexLoja = currentPage === "index_loja.html" || window.location.pathname.toLowerCase().includes("index_loja");
-  if (!isIndexLoja) return;
+  const isBudgetList = currentPage === "index_loja.html" || currentPage === "index_admin.html" || window.location.pathname.toLowerCase().includes("index_loja");
+  if (!isBudgetList) return;
 
-  function getToken() {
-    try {
-      if (typeof window.getUserToken === "function") return window.getUserToken();
-      return localStorage.getItem("USER_TOKEN") || "";
-    } catch (_) {
-      return localStorage.getItem("USER_TOKEN") || "";
-    }
+  function buildPortasUrl(uuid) {
+    return `/portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
   }
 
-  function buildClassesUrl(uuid) {
-    let url = `/classes.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
-    const token = getToken();
-    if (token) url += `&token=${encodeURIComponent(token)}`;
-    return url;
-  }
-
-  function irParaClasses(uuid) {
+  function irParaPortas(uuid) {
     if (!uuid) return;
-    window.location.href = buildClassesUrl(uuid);
+    window.location.href = buildPortasUrl(uuid);
   }
 
-  function editarOrcamentoClasses(uuid) {
-    irParaClasses(uuid);
+  function editarOrcamentoPortas(uuid) {
+    irParaPortas(uuid);
   }
 
   function extrairUuidDoOnclick(valor) {
     const texto = String(valor || "");
-    const match = texto.match(/editarOrcamento\(['\"]([^'\"]+)['\"]\)/);
+    const match = texto.match(/editarOrcamento\(['"]([^'"]+)['"]\)/);
     return match ? decodeURIComponent(match[1]) : "";
   }
 
@@ -70,19 +59,17 @@ pages.forEach(p => {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    irParaClasses(uuid);
+    irParaPortas(uuid);
   }, true);
 
   function aplicarOverride() {
-    window.editarOrcamento = editarOrcamentoClasses;
+    window.editarOrcamento = editarOrcamentoPortas;
   }
 
-  window.editarOrcamentoClasses = editarOrcamentoClasses;
+  window.editarOrcamentoPortas = editarOrcamentoPortas;
   aplicarOverride();
   document.addEventListener("DOMContentLoaded", aplicarOverride);
   setTimeout(aplicarOverride, 0);
   setTimeout(aplicarOverride, 300);
   setTimeout(aplicarOverride, 900);
-  setTimeout(aplicarOverride, 1800);
-  setTimeout(aplicarOverride, 3500);
 })();
