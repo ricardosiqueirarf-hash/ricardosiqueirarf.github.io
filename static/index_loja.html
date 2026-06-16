@@ -350,7 +350,6 @@ body{
 }
 
 .icon-btn:active{ transform: translateY(0); }
-
 .icon-btn.edit{ color: var(--cg-blue-dark); }
 .icon-btn.pay{ color: #0c7c3c; }
 
@@ -976,7 +975,7 @@ function visualizarOrcamento(uuid){
 
 async function alterarNomeCliente(uuid, nomeAtualEncoded, lojaAtualEncoded) {
   const USER_TOKEN = getUserToken();
-  const nomeAtual = decodeURIComponent(nomeAtualEncoded || "");
+  const nomeAtual = decodeURIComponent(nomeAtualEncoded || "").trim();
   const lojaAtual = decodeURIComponent(lojaAtualEncoded || "");
   const novoNome = prompt("Digite o novo nome do cliente:", nomeAtual || "");
   if (novoNome === null) return;
@@ -1076,6 +1075,31 @@ async function alterarLojaPedidoSelect(uuid, nomeAtualEncoded, select) {
 // =====================
 let cliente = { nome: "", id: null };
 
+async function registrarLogFichaCriada(USER_TOKEN, data, lojaID) {
+  try {
+    await fetch(`${BACKEND_URL}/api/financeiro/controle-log`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${USER_TOKEN}`
+      },
+      body: JSON.stringify({
+        tipo: "alteracao",
+        uuid: data.id || data.uuid || "-",
+        numero_pedido: data.numero_pedido || "-",
+        cliente_nome: data.cliente_nome || cliente.nome || "-",
+        loja: lojaID || "-",
+        lojaid: lojaID || "-",
+        valor_total: 0,
+        origem: "index_loja_criar_ficha",
+        detalhe: "Ficha de orçamento criada no index_loja."
+      })
+    });
+  } catch (err) {
+    console.warn("Falha ao registrar log da ficha criada:", err);
+  }
+}
+
 async function criarFichaCliente(){
   const USER_TOKEN = getUserToken();
   const nome = document.getElementById("clienteNome")?.value.trim();
@@ -1088,6 +1112,10 @@ async function criarFichaCliente(){
   cliente.nome = nome;
 
   try {
+    const lojaID = usuarioPodeSelecionarLoja()
+      ? (storeSelecionada || userSession.storeid || undefined)
+      : (userSession.storeid || undefined);
+
     const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
       method: "POST",
       headers: {
@@ -1096,9 +1124,7 @@ async function criarFichaCliente(){
       },
       body: JSON.stringify({
         cliente_nome: cliente.nome,
-        storeID: usuarioPodeSelecionarLoja()
-          ? (storeSelecionada || userSession.storeid || undefined)
-          : (userSession.storeid || undefined)
+        storeID: lojaID
       })
     });
 
@@ -1111,6 +1137,7 @@ async function criarFichaCliente(){
 
     if (data.success) {
       cliente.id = data.id;
+      await registrarLogFichaCriada(USER_TOKEN, data, lojaID);
       alert("Ficha criada com sucesso! ID: " + data.id);
 
       const form = document.getElementById("formCliente");
@@ -1237,17 +1264,3 @@ validarSessao().then(async (ok) => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
