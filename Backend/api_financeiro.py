@@ -51,6 +51,48 @@ def _nome_usuario(usuario):
     return str(dados.get("nome") or usuario.get("nome") or usuario.get("user") or usuario.get("userid") or "-").strip()
 
 
+def _buscar_nome_usuario(usuario):
+    """Busca o nome real do usuário no Supabase para logs operacionais.
+
+    O JWT geralmente carrega apenas userid/level/storeid. Por isso, para o log do
+    Telegram ficar legível, enriquecemos com usuarios.nome, usuarios.user ou dados.nome.
+    """
+    usuario = usuario or {}
+    userid = str(usuario.get("userid") or "").strip()
+    fallback = _nome_usuario(usuario)
+    if not userid:
+        return fallback
+
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/usuarios",
+            headers=HEADERS,
+            params={
+                "select": "userid,user,nome,dados",
+                "userid": f"eq.{userid}",
+                "limit": "1",
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+        linhas = r.json() or []
+        if not linhas:
+            return fallback
+
+        row = linhas[0] or {}
+        dados = row.get("dados") if isinstance(row.get("dados"), dict) else {}
+        nome = (
+            dados.get("nome")
+            or row.get("nome")
+            or row.get("user")
+            or fallback
+        )
+        return str(nome or fallback or "-").strip()
+    except Exception as exc:
+        print(f"[CONTROLE_LOG] Falha ao buscar nome do usuário {userid}: {exc}")
+        return fallback
+
+
 def _money_br(valor):
     try:
         numero = float(valor or 0)
@@ -188,7 +230,7 @@ def controle_log():
     cliente_nome = data.get("cliente_nome") or "-"
     loja = data.get("loja") or data.get("lojaid") or "-"
     valor_total = data.get("valor_total")
-    usuario_nome = _nome_usuario(usuario)
+    usuario_nome = _buscar_nome_usuario(usuario)
 
     if tipo == "status":
         anterior = data.get("status_anterior")
