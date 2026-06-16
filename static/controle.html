@@ -40,7 +40,7 @@
       <div class="brand">
         <div>
           <h1>Controle de pedidos</h1>
-          <p>Ao salvar o status, o sistema registra a alteração e envia um log para o bot do Telegram.</p>
+          <p>Ao salvar o status, o backend registra a alteração e envia o log para o bot do Telegram.</p>
         </div>
         <div class="toolbar">
           <button class="btn-outline" onclick="history.back()">Voltar</button>
@@ -92,19 +92,6 @@ async function postJson(path, body){
   return parsed.json || {};
 }
 
-async function enviarLogStatus(pedido, statusAnterior, statusNovo){
-  return postJson("/api/financeiro/controle-log", {
-    tipo:"status",
-    uuid: pedido?.id,
-    numero_pedido: pedido?.numero_pedido,
-    cliente_nome: pedido?.cliente_nome,
-    lojaid: getLoja(pedido),
-    valor_total: pedido?.valor_total,
-    status_anterior: statusAnterior,
-    status_novo: statusNovo
-  });
-}
-
 function renderTabela(pedidos){
   const tbody=document.getElementById("tbodyPedidos");
   pedidosPorId.clear();
@@ -150,14 +137,7 @@ async function atualizarStatus(uuid,selectId,btnId){
   btn.disabled=true; setStatus(`Atualizando pedido ${pedido?.numero_pedido || uuid} para status ${novoStatus}...`);
   try{
     await postJson(`/api/orcamento/${encodeURIComponent(uuid)}/status`,{status:novoStatus});
-    setStatus(`Pedido ${pedido?.numero_pedido || uuid} atualizado. Enviando log para o Telegram...`,"ok");
-    try {
-      await enviarLogStatus(pedido, statusAnterior, novoStatus);
-      setStatus(`Pedido ${pedido?.numero_pedido || uuid} atualizado e log enviado ao Telegram.`,"ok");
-    } catch (logErr) {
-      console.error("Falha ao enviar log Telegram", logErr);
-      setStatus(`Pedido atualizado, mas o log do Telegram falhou: ${logErr.message}`,"erro");
-    }
+    setStatus(`Pedido ${pedido?.numero_pedido || uuid} atualizado. Log registrado pelo backend e enviado ao Telegram.`,"ok");
     if(pedido) pedido.status=novoStatus;
     await carregarPedidos();
   }catch(err){ console.error(err); setStatus(err.message || "Erro ao atualizar status.","erro"); }
