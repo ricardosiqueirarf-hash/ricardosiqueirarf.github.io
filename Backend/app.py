@@ -447,6 +447,14 @@ def d3teste_html_page():
         return send_from_directory(STATIC_DIR, "3dteste.html")
     return send_from_directory(ROOT_DIR, "3dteste.html")
 
+@app.route("/index_logistica")
+def index_logistica_page():
+    return send_html("index_logistica.html")
+
+@app.route("/index_logistica.html")
+def index_logistica_html_page():
+    return send_html("index_logistica.html")
+
 # =====================
 # BLUEPRINTS
 # =====================
