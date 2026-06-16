@@ -19,169 +19,38 @@
       --err: #c23616;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
 
     body {
       min-height: 100vh;
-      background:
-        radial-gradient(circle at top, rgba(16,121,186,0.14), transparent 52%),
-        linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
+      background: radial-gradient(circle at top, rgba(16,121,186,0.14), transparent 52%), linear-gradient(135deg, #f5fbff 0%, #eef4f9 45%, #f8fbff 100%);
       color: var(--cg-text);
       padding: 28px 16px;
     }
 
-    .page {
-      width: min(1180px, 100%);
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .card {
-      background: var(--cg-white);
-      border: 1px solid var(--cg-border);
-      border-radius: 16px;
-      box-shadow: 0 12px 28px rgba(15, 44, 62, 0.12);
-      padding: 20px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .brand h1 {
-      color: var(--cg-blue-dark);
-      font-size: 1.45rem;
-      margin-bottom: 4px;
-    }
-
-    .brand p {
-      color: #4b5563;
-      font-size: 0.95rem;
-      line-height: 1.4;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: var(--cg-blue-soft);
-      color: var(--cg-blue-dark);
-      font-size: 0.84rem;
-      margin-bottom: 10px;
-    }
-
-    .pill::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #f0c24c;
-    }
-
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark));
-      color: #fff;
-      box-shadow: 0 8px 16px rgba(16, 121, 186, 0.22);
-    }
-
-    .btn-outline {
-      background: #fff;
-      color: var(--cg-blue-dark);
-      border: 1px solid rgba(16,121,186,0.25);
-    }
-
+    .page { width: min(1180px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+    .card { background: var(--cg-white); border: 1px solid var(--cg-border); border-radius: 16px; box-shadow: 0 12px 28px rgba(15, 44, 62, 0.12); padding: 20px; }
+    .brand { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .brand h1 { color: var(--cg-blue-dark); font-size: 1.45rem; margin-bottom: 4px; }
+    .brand p { color: #4b5563; font-size: 0.95rem; line-height: 1.4; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; border-radius: 999px; background: var(--cg-blue-soft); color: var(--cg-blue-dark); font-size: 0.84rem; margin-bottom: 10px; }
+    .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #f0c24c; }
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    button { border: none; border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer; transition: 0.2s ease; }
+    .btn-primary { background: linear-gradient(135deg, var(--cg-blue), var(--cg-blue-dark)); color: #fff; box-shadow: 0 8px 16px rgba(16, 121, 186, 0.22); }
+    .btn-outline { background: #fff; color: var(--cg-blue-dark); border: 1px solid rgba(16,121,186,0.25); }
     button:hover { transform: translateY(-1px); }
     button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-    .status {
-      margin-top: 12px;
-      font-size: 0.93rem;
-      min-height: 20px;
-      color: #4b5563;
-    }
+    .status { margin-top: 12px; font-size: 0.93rem; min-height: 20px; color: #4b5563; }
     .status.ok { color: var(--ok); }
     .status.erro { color: var(--err); }
-
-    .table-wrap {
-      overflow-x: auto;
-      margin-top: 16px;
-      border: 1px solid rgba(16,121,186,0.14);
-      border-radius: 12px;
-    }
-
-    table {
-      width: 100%;
-      min-width: 880px;
-      border-collapse: collapse;
-      font-size: 0.93rem;
-      background: #fff;
-    }
-
-    th, td {
-      padding: 11px 10px;
-      border-bottom: 1px solid rgba(16,121,186,0.08);
-      text-align: left;
-      vertical-align: middle;
-    }
-
-    th {
-      color: var(--cg-blue-dark);
-      background: rgba(231, 243, 251, 0.55);
-      font-size: 0.84rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
+    .table-wrap { overflow-x: auto; margin-top: 16px; border: 1px solid rgba(16,121,186,0.14); border-radius: 12px; }
+    table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 0.93rem; background: #fff; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid rgba(16,121,186,0.08); text-align: left; vertical-align: middle; }
+    th { color: var(--cg-blue-dark); background: rgba(231, 243, 251, 0.55); font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.04em; }
     .muted { color: var(--cg-muted); }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      background: rgba(16,121,186,0.12);
-      color: var(--cg-blue-dark);
-      white-space: nowrap;
-    }
-
-    .empty {
-      padding: 20px;
-      text-align: center;
-      color: var(--cg-muted);
-      font-size: 0.95rem;
-    }
+    .tag { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; background: rgba(16,121,186,0.12); color: var(--cg-blue-dark); white-space: nowrap; }
+    .empty { padding: 20px; text-align: center; color: var(--cg-muted); font-size: 0.95rem; }
   </style>
 </head>
 <body>
@@ -220,9 +89,7 @@
             </tr>
           </thead>
           <tbody id="tbodyPedidos">
-            <tr>
-              <td colspan="7" class="empty">Carregando pedidos...</td>
-            </tr>
+            <tr><td colspan="7" class="empty">Carregando pedidos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -234,19 +101,11 @@
     const STATUS_VISIVEIS_INICIALMENTE = [1, 2, 3, 4];
     const STATUS_ENTREGUE = 5;
     const STATUS_BUSCA = [1, 2, 3, 4, 5];
-    const STATUS_LABELS = {
-      0: "Cancelado",
-      1: "Orçamento",
-      2: "Aprovado",
-      3: "Em Produção",
-      4: "Separado",
-      5: "Entregue"
-    };
+    const STATUS_LABELS = { 0: "Cancelado", 1: "Orçamento", 2: "Aprovado", 3: "Em Produção", 4: "Separado", 5: "Entregue" };
 
     let mostrarEntregues = false;
     let pedidosVisiveisOrdenados = [];
     let pedidosEntreguesOrdenados = [];
-    let lojasPorStoreIDAtual = new Map();
 
     function getToken() {
       return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || "";
@@ -278,51 +137,28 @@
       const bruto = String(valor).trim();
       if (!bruto) return 0;
       let normalizado = bruto.replace(/[^0-9,.-]/g, "");
-      if (normalizado.includes(",")) {
-        normalizado = normalizado.replace(/\./g, "").replace(",", ".");
-      } else {
-        normalizado = normalizado.replace(/,/g, "");
-      }
+      if (normalizado.includes(",")) normalizado = normalizado.replace(/\./g, "").replace(",", ".");
+      else normalizado = normalizado.replace(/,/g, "");
       const parsed = Number(normalizado);
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
     function somarValorPago(valorPago) {
-      if (Array.isArray(valorPago)) {
-        return valorPago.reduce((total, item) => {
-          const numero = parseValorTotal(item);
-          return total + numero;
-        }, 0);
-      }
-
-      if (valorPago === null || valorPago === undefined || valorPago === "") {
-        return 0;
-      }
-
+      if (Array.isArray(valorPago)) return valorPago.reduce((total, item) => total + parseValorTotal(item?.valor ?? item?.value ?? item), 0);
+      if (valorPago === null || valorPago === undefined || valorPago === "") return 0;
+      if (typeof valorPago === "object") return Object.values(valorPago).reduce((total, item) => total + parseValorTotal(item?.valor ?? item?.value ?? item), 0);
       if (typeof valorPago === "string") {
         const texto = valorPago.trim();
-
         if (texto.startsWith("[") && texto.endsWith("]")) {
-          try {
-            const valorPagoJson = JSON.parse(texto);
-            if (Array.isArray(valorPagoJson)) {
-              return somarValorPago(valorPagoJson);
-            }
-          } catch (error) {
-            console.warn("valor_pago não pôde ser interpretado como JSON array.", error);
-          }
+          try { return somarValorPago(JSON.parse(texto)); } catch (error) { console.warn("valor_pago não pôde ser interpretado.", error); }
         }
       }
-
       return parseValorTotal(valorPago);
     }
 
     function getStatusLabel(status) {
       const statusNumero = Number(status);
-      if (Number.isFinite(statusNumero) && STATUS_LABELS[statusNumero]) {
-        return STATUS_LABELS[statusNumero];
-      }
-      return "Desconhecido";
+      return Number.isFinite(statusNumero) && STATUS_LABELS[statusNumero] ? STATUS_LABELS[statusNumero] : "Desconhecido";
     }
 
     function formatarStatus(pedido) {
@@ -338,17 +174,9 @@
     function formatarDataAprovacao(pedido) {
       const valor = getDataAprovacao(pedido);
       if (!valor) return "-";
-
       const data = new Date(valor);
       if (Number.isNaN(data.getTime())) return String(valor);
-
-      return data.toLocaleString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
+      return data.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
     }
 
     function parseNumeroPedido(numeroPedido) {
@@ -369,100 +197,21 @@
         const dataB = parseDataAprovacaoPedido(b);
         const aTemData = dataA !== null;
         const bTemData = dataB !== null;
-
         if (aTemData && !bTemData) return -1;
         if (!aTemData && bTemData) return 1;
-
         if (aTemData && bTemData) {
           const diferencaData = dataB - dataA;
           if (diferencaData !== 0) return diferencaData;
-          return parseNumeroPedido(b?.numero_pedido) - parseNumeroPedido(a?.numero_pedido);
         }
-
         return parseNumeroPedido(b?.numero_pedido) - parseNumeroPedido(a?.numero_pedido);
       });
     }
 
-    function getUsuarioStoreID(usuario) {
-      return String(
-        usuario?.storeID
-        ?? usuario?.storeid
-        ?? usuario?.StoreID
-        ?? usuario?.store_id
-        ?? usuario?.lojaid
-        ?? usuario?.lojaID
-        ?? ""
-      ).trim();
-    }
-
-    function getUsuarioNome(usuario) {
-      return String(
-        usuario?.NOME
-        ?? usuario?.nome
-        ?? usuario?.name
-        ?? usuario?.dados?.nome
-        ?? ""
-      ).trim();
-    }
-
     function getPedidoLojaID(pedido) {
-      return String(
-        pedido?.lojaid
-        ?? pedido?.lojaID
-        ?? pedido?.storeID
-        ?? pedido?.storeid
-        ?? ""
-      ).trim();
+      return String(pedido?.lojaid ?? pedido?.lojaID ?? pedido?.storeID ?? pedido?.storeid ?? "").trim();
     }
 
-    function getPedidoUUID(pedido) {
-      return String(
-        pedido?.id
-        ?? pedido?.uuid
-        ?? pedido?.orcamento_uuid
-        ?? ""
-      ).trim();
-    }
-
-    function aplicarValorPago(pedido, valorPago) {
-      if (valorPago === null || valorPago === undefined || valorPago === "") {
-        return pedido;
-      }
-
-      return {
-        ...pedido,
-        valor_pago: valorPago
-      };
-    }
-    
-    function criarMapaLojas(usuarios) {
-      const mapa = new Map();
-      usuarios.forEach((usuario) => {
-        const storeID = getUsuarioStoreID(usuario);
-        const nome = getUsuarioNome(usuario);
-        if (storeID && nome && !mapa.has(storeID)) {
-          mapa.set(storeID, nome);
-        }
-      });
-      return mapa;
-    }
-
-    function formatarLoja(pedido, lojasPorStoreID) {
-      const lojaID = getPedidoLojaID(pedido);
-      if (!lojaID) return "-";
-
-      const nomeLoja = lojasPorStoreID.get(lojaID);
-      if (!nomeLoja) {
-        return `<span class="muted">${escapeHtml(lojaID)}</span>`;
-      }
-
-      return `
-        <strong>${escapeHtml(nomeLoja)}</strong>
-        <div class="muted" style="font-size:0.78rem; margin-top:2px;">LojaID: ${escapeHtml(lojaID)}</div>
-      `;
-    }
-
-    function renderTabela(pedidos, lojasPorStoreID = new Map()) {
+    function renderTabela(pedidos) {
       const tbody = document.getElementById("tbodyPedidos");
       if (!pedidos.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum pedido encontrado.</td></tr>';
@@ -472,12 +221,13 @@
       tbody.innerHTML = pedidos.map((p) => {
         const valor = parseValorTotal(p.valor_total ?? p.total ?? p.preco_total);
         const valorPago = somarValorPago(p.valor_pago);
+        const lojaID = getPedidoLojaID(p) || "-";
         return `
           <tr>
             <td><b>#${escapeHtml(p.numero_pedido ?? "-")}</b></td>
             <td>${escapeHtml(formatarDataAprovacao(p))}</td>
             <td>${escapeHtml(p.cliente_nome || "-")}</td>
-            <td>${formatarLoja(p, lojasPorStoreID)}</td>
+            <td><span class="muted">${escapeHtml(lojaID)}</span></td>
             <td>${moneyBR(valor)}</td>
             <td>${moneyBR(valorPago)}</td>
             <td><span class="tag">${escapeHtml(formatarStatus(p))}</span></td>
@@ -489,24 +239,17 @@
     function atualizarBotaoEntregues() {
       const btn = document.getElementById("btnVerEntregues");
       if (!btn) return;
-
       if (!pedidosEntreguesOrdenados.length) {
         btn.style.display = "none";
         return;
       }
-
       btn.style.display = "inline-block";
-      btn.textContent = mostrarEntregues
-        ? `Ocultar entregues (${pedidosEntreguesOrdenados.length})`
-        : `Ver mais entregues (${pedidosEntreguesOrdenados.length})`;
+      btn.textContent = mostrarEntregues ? `Ocultar entregues (${pedidosEntreguesOrdenados.length})` : `Ver mais entregues (${pedidosEntreguesOrdenados.length})`;
     }
 
     function renderizarPedidosComFiltro() {
-      const pedidosParaRenderizar = mostrarEntregues
-        ? [...pedidosVisiveisOrdenados, ...pedidosEntreguesOrdenados]
-        : pedidosVisiveisOrdenados;
-
-      renderTabela(pedidosParaRenderizar, lojasPorStoreIDAtual);
+      const pedidosParaRenderizar = mostrarEntregues ? [...pedidosVisiveisOrdenados, ...pedidosEntreguesOrdenados] : pedidosVisiveisOrdenados;
+      renderTabela(pedidosParaRenderizar);
       atualizarBotaoEntregues();
     }
 
@@ -519,49 +262,6 @@
           : `Mostrando ${pedidosVisiveisOrdenados.length} pedido(s) em andamento. Entregues ocultos: ${pedidosEntreguesOrdenados.length}.`,
         "ok"
       );
-    }
-
-    async function carregarMapaLojas(token) {
-      const res = await fetch(`${API_BASE}/api/usuarios`, {
-        headers: token ? { "Authorization": `Bearer ${token}` } : {}
-      });
-
-      const data = await res.json();
-      if (!res.ok || !Array.isArray(data?.usuarios)) {
-        throw new Error(data?.error || "Falha ao carregar lojas.");
-      }
-
-      return criarMapaLojas(data.usuarios);
-    }
-
-    async function carregarValorPagoPedido(uuid, token) {
-      if (!uuid) return null;
-
-      const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(uuid)}/valor-pago`, {
-        headers: token ? { "Authorization": `Bearer ${token}` } : {}
-      });
-
-      const data = await res.json();
-      if (!res.ok || data?.success === false) {
-        throw new Error(data?.error || `Falha ao carregar valor pago do pedido ${uuid}.`);
-      }
-
-      return data?.valor_pago ?? null;
-    }
-
-    async function carregarValoresPagosPedidos(pedidos, token) {
-      return Promise.all(pedidos.map(async (pedido) => {
-        const uuid = getPedidoUUID(pedido);
-        if (!uuid) return pedido;
-
-        try {
-          const valorPago = await carregarValorPagoPedido(uuid, token);
-          return aplicarValorPago(pedido, valorPago);
-        } catch (err) {
-          console.warn(err);
-          return pedido;
-        }
-      }));
     }
 
     async function carregarPedidosProducao() {
@@ -579,27 +279,19 @@
       setStatusGlobal("Buscando status da produção...");
 
       try {
-        const [res, lojasPorStoreID] = await Promise.all([
-          fetch(`${API_BASE}/api/financeiro?status=1,2,3,4,5&limit=2000`, {
-            headers: { "Authorization": `Bearer ${token}` }
-          }),
-          carregarMapaLojas(token)
-        ]);
+        const res = await fetch(`${API_BASE}/api/financeiro?status=1,2,3,4,5&limit=2000`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
 
         const data = await res.json();
-        if (!res.ok || !Array.isArray(data)) {
-          throw new Error(data?.error || "Falha ao carregar pedidos.");
-        }
+        if (!res.ok || !Array.isArray(data)) throw new Error(data?.error || "Falha ao carregar pedidos.");
 
         const pedidosStatusBusca = data.filter(o => STATUS_BUSCA.includes(Number(o.status)));
-        const pedidosComValorPago = await carregarValoresPagosPedidos(pedidosStatusBusca, token);
-
-        const pedidosVisiveis = pedidosComValorPago.filter(o => STATUS_VISIVEIS_INICIALMENTE.includes(Number(o.status)));
-        const pedidosEntregues = pedidosComValorPago.filter(o => Number(o.status) === STATUS_ENTREGUE);
+        const pedidosVisiveis = pedidosStatusBusca.filter(o => STATUS_VISIVEIS_INICIALMENTE.includes(Number(o.status)));
+        const pedidosEntregues = pedidosStatusBusca.filter(o => Number(o.status) === STATUS_ENTREGUE);
 
         pedidosVisiveisOrdenados = ordenarPedidosProducao(pedidosVisiveis);
         pedidosEntreguesOrdenados = ordenarPedidosProducao(pedidosEntregues);
-        lojasPorStoreIDAtual = lojasPorStoreID;
         mostrarEntregues = false;
 
         renderizarPedidosComFiltro();
@@ -613,10 +305,7 @@
       }
     }
 
-    function voltar() {
-      history.back();
-    }
-
+    function voltar() { history.back(); }
     carregarPedidosProducao();
   </script>
 </body>
