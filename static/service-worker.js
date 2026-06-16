@@ -1,4 +1,4 @@
-const CACHE_NAME = "colorglass-pwa-v2";
+const CACHE_NAME = "colorglass-pwa-v3";
 const APP_SHELL = [
   "/app",
   "/app.html",
@@ -36,26 +36,48 @@ function getControleChange(url) {
   return { uuid: decodeURIComponent(match[1]), action: match[2] };
 }
 
+function getAuthHeaders(request) {
+  const headers = { "Content-Type": "application/json" };
+  const auth = request.headers.get("Authorization");
+  if (auth) headers.Authorization = auth;
+  return headers;
+}
+
+async function buscarPedidoControle(request, uuid) {
+  try {
+    const auth = request.headers.get("Authorization");
+    const headers = auth ? { Authorization: auth } : {};
+    const res = await fetch("/api/financeiro?status=2,3,4,5&limit=2000", { headers });
+    const data = await res.json();
+    if (!res.ok || !Array.isArray(data)) return null;
+    return data.find((item) => String(item.id) === String(uuid)) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
 async function sendControleLog(request, change, requestBody, responseBody) {
   try {
     if (!responseBody || responseBody.success === false) return;
 
-    const headers = {};
-    const auth = request.headers.get("Authorization");
-    if (auth) headers.Authorization = auth;
-    headers["Content-Type"] = "application/json";
+    const pedido = await buscarPedidoControle(request, change.uuid);
+    const orcamento = responseBody.orcamento || pedido || {};
 
     const payload = {
       tipo: change.action === "status" ? "status" : "valor_pago",
       uuid: change.uuid,
-      status_novo: change.action === "status" ? requestBody.status : undefined,
-      valor_novo: change.action === "valor-pago" ? requestBody.valor_pago : undefined,
+      numero_pedido: orcamento.numero_pedido || pedido?.numero_pedido,
+      cliente_nome: orcamento.cliente_nome || pedido?.cliente_nome,
+      lojaid: orcamento.lojaid || pedido?.lojaid,
+      valor_total: orcamento.valor_total || pedido?.valor_total,
+      status_novo: change.action === "status" ? (responseBody.status ?? requestBody.status) : undefined,
+      valor_novo: change.action === "valor-pago" ? (responseBody.valor_pago ?? requestBody.valor_pago) : undefined,
       origem: "controle.html"
     };
 
     await fetch("/api/financeiro/controle-log", {
       method: "POST",
-      headers,
+      headers: getAuthHeaders(request),
       body: JSON.stringify(payload)
     });
   } catch (error) {
