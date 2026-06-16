@@ -27,16 +27,51 @@ def _int_or_default(value, default):
         return default
 
 
+def _nivel_usuario(usuario):
+    try:
+        return int((usuario or {}).get("level") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _storeid_usuario(usuario):
+    usuario = usuario or {}
+    return str(
+        usuario.get("storeid")
+        or usuario.get("storeID")
+        or usuario.get("lojaid")
+        or usuario.get("lojaID")
+        or ""
+    ).strip()
+
+
 @api_financeiro_bp.route("/api/financeiro", methods=["GET"])
 def api_financeiro():
     """
-    Retorna orçamentos com status aprovados (default: 2,3,4,5).
+    Retorna orçamentos com status aprovados.
 
-    Query params opcionais:
-      - status=2,3,4,5
-      - limit=500 (max 2000)
-      - order=numero_pedido.asc
+    Regra de segurança:
+      - nível 3: vê todos os orçamentos;
+      - qualquer outro nível: vê somente orçamentos do próprio storeid/lojaid.
     """
+    token = extrair_token(request)
+    if not token:
+        return make_response(jsonify({"error": "Token não informado."}), 401)
+
+    try:
+        usuario = buscar_usuario_por_token(token)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+    if not usuario:
+        return make_response(jsonify({"error": "Token inválido."}), 401)
+
+    level = _nivel_usuario(usuario)
+    storeid = _storeid_usuario(usuario)
+
+    if level != 3 and not storeid:
+        return make_response(jsonify({"error": "Loja não vinculada ao usuário."}), 403)
+
     status_raw = (request.args.get("status") or "2,3,4,5").strip()
     status_list = [s.strip() for s in status_raw.split(",") if s.strip().isdigit()]
     if not status_list:
@@ -60,46 +95,23 @@ def api_financeiro():
         "quantidade_total"
     ])
 
-    status_in = ",".join(status_list)
+    params = {
+        "select": select_campos,
+        "status": f"in.({','.join(status_list)})",
+        "order": order,
+        "limit": str(limit),
+    }
 
-    token = extrair_token(request)
-    usuario = None
-    if token:
-        try:
-            usuario = buscar_usuario_por_token(token)
-        except Exception as e:
-            return make_response(jsonify({"error": str(e)}), 500)
-
-    try:
-        level = int((usuario or {}).get("level") or 0)
-    except (TypeError, ValueError):
-        level = 0
-
-    storeid = (
-        (usuario or {}).get("storeid")
-        or (usuario or {}).get("storeID")
-        or (usuario or {}).get("lojaid")
-        or (usuario or {}).get("lojaID")
-    )
-
-    if level == 1 and not storeid:
-        return make_response(jsonify({"error": "Loja não vinculada ao usuário."}), 403)
-
-    filtro_loja = ""
-    if level == 1:
-        filtro_loja = f"&lojaid=eq.{storeid}"
-
-    supa_url = (
-        f"{SUPABASE_URL}/rest/v1/orcamentos"
-        f"?select={select_campos}"
-        f"&status=in.({status_in})"
-        f"&order={order}"
-        f"&limit={limit}"
-        f"{filtro_loja}"
-    )
+    if level != 3:
+        params["lojaid"] = f"eq.{storeid}"
 
     try:
-        r = requests.get(supa_url, headers=HEADERS, timeout=15)
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/orcamentos",
+            headers=HEADERS,
+            params=params,
+            timeout=15
+        )
     except Exception as e:
         return make_response(jsonify({
             "error": "Falha de rede ao consultar Supabase",
