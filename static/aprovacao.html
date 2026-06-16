@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aprovar Pedido | ColorGlass</title>
-<meta name="description" content="Aprovação de pedido ColorGlass com diagnóstico de erro." />
+<meta name="description" content="Aprovação de pedido ColorGlass via Telegram." />
 <meta name="robots" content="noindex, nofollow" />
 <style>
 :root {
@@ -116,6 +116,11 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
   cursor: pointer;
   width: 100%;
   box-shadow: 0 8px 16px rgba(16, 121, 186, 0.25);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .btn-outline { background: transparent; color: var(--cg-blue-dark); border: 1px solid rgba(16,121,186,0.25); box-shadow: none; }
@@ -134,21 +139,17 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
   color: var(--cg-blue-dark);
   margin-top: 12px;
 }
-.debug-box {
-  display: none;
-  margin-top: 14px;
-  padding: 14px;
-  border-radius: 12px;
-  background: #111827;
-  color: #e5e7eb;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  overflow-x: auto;
+.boletos-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.boleto-card {
+  border: 1px solid rgba(16,121,186,0.14);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(231,243,251,0.35);
 }
-.debug-box.show { display: block; }
-.debug-actions { display: none; gap: 10px; margin-top: 10px; }
-.debug-actions.show { display: flex; }
+.boleto-card strong { color: var(--cg-blue-dark); }
+.boleto-card small { display: block; color: var(--cg-muted); margin-top: 4px; }
+.actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+@media (max-width: 520px) { .actions-row { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -157,14 +158,16 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
     <div class="logo-mark"><img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo.jpg" alt="Logo ColorGlass"></div>
     <div>
       <h1>ColorGlass <span>Aprovação</span></h1>
-      <p>Aprovação de pedido via Telegram com diagnóstico detalhado de erro.</p>
+      <p>Solicitação de aprovação de pedido via Telegram.</p>
     </div>
   </header>
+
   <div class="container">
     <section class="card">
       <div class="pill"><span></span>Solicitar aprovação</div>
       <h2>Detalhes</h2>
-      <p class="sub">Os dados abaixo serão preenchidos automaticamente pelo UUID do orçamento.</p>
+      <p class="sub">Os dados abaixo são carregados automaticamente pelo UUID do orçamento.</p>
+
       <div class="grid-2">
         <label>Nº do pedido<input id="numero_pedido" type="text" placeholder="Carregando..." readonly></label>
         <label>Orçamento UUID<input id="orcamento_uuid" type="text" placeholder="uuid do orçamento" readonly></label>
@@ -173,18 +176,19 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
         <label>Cliente<input id="cliente_nome" type="text" placeholder="Carregando..." readonly></label>
         <label>Valor (R$)<input id="valor_total" type="number" step="0.01" min="0" placeholder="Carregando..." readonly></label>
       </div>
+
       <div class="badge-secure">
         <div style="font-size: 1.2rem;">📲</div>
-        <div><b>Aprovação via Telegram</b><br><span style="color:#4b5563;">Ao solicitar, a equipe recebe uma mensagem no Telegram e somente os botões do Telegram aprovam ou negam o pedido.</span></div>
+        <div><b>Aprovação via Telegram</b><br><span style="color:#4b5563;">Ao solicitar, a equipe recebe uma mensagem no Telegram. A aprovação ou negativa acontece pelos botões do Telegram.</span></div>
       </div>
+
       <hr>
       <button class="btn" id="btnAprovar" onclick="solicitarAprovacaoTelegram()">📲 Solicitar aprovação</button>
       <button class="btn btn-outline" style="margin-top:10px;" onclick="voltar()">Voltar</button>
       <div id="status" class="status"></div>
-      <div id="debug" class="debug-box"></div>
-      <div id="debugActions" class="debug-actions"><button class="btn btn-outline" onclick="copiarDiagnostico()">📋 Copiar diagnóstico</button></div>
-      <p class="hint">Esta página agora exibe no HTML e no console o status HTTP, URL chamada, resposta bruta e detalhes retornados pelo backend.</p>
+      <p class="hint">Após a aprovação no Telegram, os boletos do Asaas são enviados para o financeiro do site.</p>
     </section>
+
     <aside class="card">
       <div class="pill"><span></span>Resumo</div>
       <h2>Pedido</h2>
@@ -192,21 +196,27 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
       <div class="summary-row"><span>Pedido</span><strong id="s_pedido">--</strong></div>
       <div class="summary-row"><span>Cliente</span><strong id="s_cliente">--</strong></div>
       <div class="summary-row"><span>UUID</span><strong id="s_uuid" style="font-size:0.88rem; word-break:break-all;">--</strong></div>
-      <div class="summary-row"><span>Forma</span><strong>Boleto</strong></div>
+      <div class="summary-row"><span>Cobrança</span><strong>Asaas / Financeiro</strong></div>
       <div class="total"><span>Total</span><span class="big" id="s_total">R$ 0,00</span></div>
-      <p class="hint"><b>Importante:</b> se aparecer <b>Unauthorized</b>, primeiro copie o diagnóstico mostrado na tela.</p>
+
       <hr>
-      <div class="pill"><span></span>Link do boleto</div>
-      <label>URL do boleto<input id="boleto_url" type="text" placeholder="Ainda não gerado" readonly></label>
-      <button class="btn btn-outline" onclick="copiarBoleto()">📋 Copiar link</button>
-      <button class="btn btn-outline" style="margin-top:10px;" onclick="abrirBoleto()">🔗 Abrir boleto</button>
+      <div class="pill"><span></span>Boletos no financeiro</div>
+      <p class="sub">Os boletos gerados ficam integrados ao módulo financeiro do site.</p>
+      <div id="boletosList" class="boletos-list">
+        <div class="boleto-card"><strong>Nenhum boleto carregado.</strong><small>Após a aprovação, clique em Atualizar boletos.</small></div>
+      </div>
+      <div class="actions-row">
+        <button class="btn btn-outline" onclick="carregarBoletos()">Atualizar boletos</button>
+        <a class="btn btn-outline" href="/a_receber.html">Abrir A Receber</a>
+      </div>
     </aside>
   </div>
 </div>
+
 <script>
 const API_BASE = "https://colorglass.onrender.com";
-let ultimoDiagnostico = "";
 function qs(name) { return new URLSearchParams(window.location.search).get(name); }
+function getToken() { return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || ""; }
 function moneyBR(v) { const n = Number(v || 0); return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
 function parseValorTotal(valor) {
   if (valor === null || valor === undefined) return 0;
@@ -224,27 +234,6 @@ function setStatus(msg, tipo="") {
   el.textContent = msg;
   el.className = "status " + tipo;
 }
-function setDebug(info) {
-  const debug = document.getElementById("debug");
-  const actions = document.getElementById("debugActions");
-  ultimoDiagnostico = typeof info === "string" ? info : JSON.stringify(info, null, 2);
-  debug.textContent = ultimoDiagnostico;
-  debug.classList.add("show");
-  actions.classList.add("show");
-  console.group("Diagnóstico aprovação Telegram");
-  console.log(info);
-  console.groupEnd();
-}
-async function copiarDiagnostico() {
-  try {
-    await navigator.clipboard.writeText(ultimoDiagnostico || "");
-    setStatus("Diagnóstico copiado.", "ok");
-  } catch (err) {
-    console.error("Erro ao copiar diagnóstico", err);
-    setStatus("Não foi possível copiar. Selecione o texto do diagnóstico manualmente.", "erro");
-  }
-}
-function getToken() { return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || ""; }
 function updateResumoFromInputs() {
   const pedido = document.getElementById("numero_pedido").value.trim() || "--";
   const cliente = document.getElementById("cliente_nome").value.trim() || "--";
@@ -257,33 +246,30 @@ function updateResumoFromInputs() {
 }
 async function parseResponse(res) {
   const raw = await res.text();
-  let json = null;
-  try { json = raw ? JSON.parse(raw) : null; } catch (err) { json = null; }
-  return { raw, json };
+  try { return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+}
+function authHeaders(extra = {}) {
+  const token = getToken();
+  return { ...extra, ...(token ? { "Authorization": `Bearer ${token}` } : {}) };
 }
 async function carregarDadosDoOrcamento(uuid) {
-  const token = getToken();
   const url = `${API_BASE}/api/orcamentos`;
-  if (!uuid) { setStatus("UUID não informado na URL. Use: ?orcamento_uuid=...", "erro"); return; }
+  if (!uuid) { setStatus("UUID não informado na URL.", "erro"); return; }
   document.getElementById("numero_pedido").value = "Carregando...";
   document.getElementById("cliente_nome").value = "Carregando...";
   document.getElementById("valor_total").value = "Carregando...";
   updateResumoFromInputs();
   try {
     setStatus("Buscando dados do orçamento...");
-    console.log("Buscando orçamento", { url, uuid, temTokenSessao: Boolean(token) });
-    const res = await fetch(url, { headers: token ? { "Authorization": `Bearer ${token}` } : {} });
-    const parsed = await parseResponse(res);
-    const data = parsed.json || {};
+    const res = await fetch(url, { headers: authHeaders() });
+    const data = await parseResponse(res);
     if (!res.ok || !data.success || !Array.isArray(data.orcamentos)) {
-      setDebug({ etapa: "carregarDadosDoOrcamento", url, httpStatus: res.status, httpStatusText: res.statusText, respostaJson: parsed.json, respostaBruta: parsed.raw, uuid, temTokenSessao: Boolean(token) });
-      setStatus(data.error || `Erro ao carregar orçamento. HTTP ${res.status} ${res.statusText}`, "erro");
+      setStatus(data.error || "Não foi possível carregar o orçamento.", "erro");
       return;
     }
     const orc = data.orcamentos.find(o => String(o.id) === String(uuid));
     if (!orc) {
-      setDebug({ etapa: "carregarDadosDoOrcamento", erro: "Orçamento não encontrado para este UUID", uuid, quantidadeOrcamentosRecebidos: data.orcamentos.length });
-      setStatus("Orçamento não encontrado para este UUID.", "erro");
+      setStatus("Orçamento não encontrado.", "erro");
       return;
     }
     document.getElementById("numero_pedido").value = (orc.numero_pedido ?? "");
@@ -292,9 +278,9 @@ async function carregarDadosDoOrcamento(uuid) {
     document.getElementById("valor_total").value = valorTotal ? valorTotal.toFixed(2) : "";
     updateResumoFromInputs();
     setStatus("Dados carregados. Solicite a aprovação via Telegram.", "ok");
+    await carregarBoletos(false);
   } catch (err) {
-    setDebug({ etapa: "carregarDadosDoOrcamento", url, erroNome: err?.name, erroMensagem: err?.message, stack: err?.stack, uuid, temTokenSessao: Boolean(token) });
-    setStatus("Erro de rede/JavaScript ao buscar dados do orçamento. Veja o diagnóstico abaixo.", "erro");
+    setStatus("Não foi possível carregar os dados do orçamento. Tente novamente.", "erro");
   }
 }
 async function solicitarAprovacaoTelegram() {
@@ -302,40 +288,60 @@ async function solicitarAprovacaoTelegram() {
   const token = getToken();
   const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
   const url = `${API_BASE}/api/orcamento/${encodeURIComponent(orcamento_uuid)}/solicitar-aprovacao`;
-  if (!token) {
-    setDebug({ etapa: "solicitarAprovacaoTelegram", erro: "Token de sessão ausente no localStorage", localStorageKeys: Object.keys(localStorage) });
-    setStatus("Sessão não encontrada. Faça login novamente.", "erro");
-    return;
-  }
-  if (!orcamento_uuid) {
-    setDebug({ etapa: "solicitarAprovacaoTelegram", erro: "UUID do orçamento ausente" });
-    setStatus("UUID do orçamento ausente.", "erro");
-    return;
-  }
+  if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
+  if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
   try {
     btn.disabled = true;
     setStatus("Enviando solicitação...");
-    const requestInfo = { etapa: "solicitarAprovacaoTelegram", url, metodo: "POST", uuid: orcamento_uuid, temTokenSessao: Boolean(token), tokenSessaoTamanho: token.length };
-    console.log("Enviando solicitação de aprovação", requestInfo);
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` } });
-    const parsed = await parseResponse(res);
-    const data = parsed.json || {};
+    const res = await fetch(url, { method: "POST", headers: authHeaders({ "Content-Type": "application/json" }) });
+    const data = await parseResponse(res);
     if (!res.ok || !data.success) {
-      setDebug({ ...requestInfo, httpStatus: res.status, httpStatusText: res.statusText, respostaJson: parsed.json, respostaBruta: parsed.raw, erroBackend: data.error || null, observacao: "Se aparecer Unauthorized aqui, veja se o backend está usando TELEGRAM_TOKEN antigo ou se o token do BotFather está inválido." });
-      setStatus(data.error || `Não foi possível enviar para o Telegram. HTTP ${res.status} ${res.statusText}`, "erro");
+      setStatus(data.error || "Não foi possível enviar a solicitação para o Telegram.", "erro");
       return;
     }
-    setDebug({ ...requestInfo, httpStatus: res.status, respostaJson: data, resultado: "Solicitação enviada com sucesso" });
-    setStatus("Solicitação enviada para o Telegram. Aguarde aprovação.", "ok");
+    setStatus("Solicitação enviada para o Telegram. Após a aprovação, os boletos aparecerão no financeiro.", "ok");
+    await carregarBoletos(false);
   } catch (err) {
-    setDebug({ etapa: "solicitarAprovacaoTelegram", url, uuid: orcamento_uuid, temTokenSessao: Boolean(token), erroNome: err?.name, erroMensagem: err?.message, stack: err?.stack });
-    setStatus("Erro de rede/JavaScript ao enviar solicitação. Veja o diagnóstico abaixo.", "erro");
+    setStatus("Erro ao enviar solicitação. Tente novamente.", "erro");
   } finally {
     btn.disabled = false;
   }
 }
-async function copiarBoleto() { setStatus("O boleto ainda não foi gerado nesta página.", "erro"); }
-function abrirBoleto() { setStatus("O boleto ainda não foi gerado nesta página.", "erro"); }
+function renderBoletos(boletos) {
+  const list = document.getElementById("boletosList");
+  if (!Array.isArray(boletos) || boletos.length === 0) {
+    list.innerHTML = '<div class="boleto-card"><strong>Nenhum boleto gerado ainda.</strong><small>Depois da aprovação no Telegram, clique em Atualizar boletos.</small></div>';
+    return;
+  }
+  list.innerHTML = boletos.map((b) => {
+    const link = b.invoice_url || b.bank_slip_url || "";
+    const parcela = b.parcela ? `Parcela ${b.parcela}` : "Boleto";
+    const status = b.status || "PENDING";
+    const venc = b.vencimento || "-";
+    const valor = moneyBR(b.valor);
+    const abrir = link ? `<a class="btn btn-outline" style="margin-top:10px;" target="_blank" rel="noopener noreferrer" href="${link}">Abrir boleto</a>` : "";
+    return `<div class="boleto-card"><strong>${parcela} - ${valor}</strong><small>Status: ${status} | Vencimento: ${venc}</small>${abrir}</div>`;
+  }).join("");
+}
+async function carregarBoletos(mostrarStatus = true) {
+  const uuid = document.getElementById("orcamento_uuid").value.trim();
+  if (!uuid) return;
+  try {
+    if (mostrarStatus) setStatus("Atualizando boletos...");
+    const res = await fetch(`${API_BASE}/api/orcamento/${encodeURIComponent(uuid)}/boletos`, { headers: authHeaders() });
+    const data = await parseResponse(res);
+    if (!res.ok || !data.success) {
+      renderBoletos([]);
+      if (mostrarStatus) setStatus("Boletos ainda não disponíveis para este pedido.", "erro");
+      return;
+    }
+    renderBoletos(data.boletos || []);
+    if (mostrarStatus) setStatus("Boletos atualizados.", "ok");
+  } catch (err) {
+    renderBoletos([]);
+    if (mostrarStatus) setStatus("Não foi possível atualizar os boletos.", "erro");
+  }
+}
 function voltar() { history.back(); }
 (function init() {
   const uuid = qs("orcamento_uuid") || "";
