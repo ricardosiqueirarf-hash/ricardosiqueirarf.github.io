@@ -100,13 +100,6 @@ def _telegram_send(texto):
 
 @api_financeiro_bp.route("/api/financeiro", methods=["GET"])
 def api_financeiro():
-    """
-    Retorna orçamentos com status aprovados.
-
-    Regra de segurança:
-      - nível 3: vê todos os orçamentos;
-      - qualquer outro nível: vê somente orçamentos do próprio storeid/lojaid.
-    """
     token = extrair_token(request)
     if not token:
         return make_response(jsonify({"error": "Token não informado."}), 401)
@@ -121,8 +114,9 @@ def api_financeiro():
 
     level = _nivel_usuario(usuario)
     storeid = _storeid_usuario(usuario)
+    acesso_global = level in (3, 4)
 
-    if level != 3 and not storeid:
+    if not acesso_global and not storeid:
         return make_response(jsonify({"error": "Loja não vinculada ao usuário."}), 403)
 
     status_raw = (request.args.get("status") or "2,3,4,5").strip()
@@ -155,7 +149,7 @@ def api_financeiro():
         "limit": str(limit),
     }
 
-    if level != 3:
+    if not acesso_global:
         params["lojaid"] = f"eq.{storeid}"
 
     try:
