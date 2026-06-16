@@ -2,8 +2,10 @@ from flask import Blueprint, request, jsonify, make_response
 import requests
 import uuid
 import time
+from datetime import datetime, timedelta
 
 from auth_utils import buscar_usuario_por_token, construir_permissoes, extrair_token, gerar_token_usuario, pagina_por_nivel
+from logger_sistema import log_login_autorizado
 
 cadastro_login_bp = Blueprint("cadastro_login_bp", __name__)
 
@@ -20,6 +22,10 @@ LOGIN_MAX_BY_IP = 30
 
 def _agora():
     return time.time()
+
+
+def _agora_fortaleza():
+    return datetime.utcnow() - timedelta(hours=3)
 
 
 def _request_is_https():
@@ -197,6 +203,14 @@ def login_usuario():
         _limpar_falhas_login(login)
         token_sessao = gerar_token_usuario(usuario)
 
+        agora = _agora_fortaleza()
+        log_login_autorizado(
+            usuario,
+            data_acesso=agora.strftime("%d/%m/%Y"),
+            hora_acesso=agora.strftime("%H:%M:%S"),
+            enviar_telegram_alerta=True,
+        )
+
         response = make_response(jsonify({
             "success": True,
             "userid": usuario.get("userid"),
@@ -281,21 +295,20 @@ def validar_token():
 
     try:
         usuario = buscar_usuario_por_token(token)
-        if not usuario:
-            return jsonify({"success": False, "error": "Token inválido."}), 401
-
-        try:
-            level = int(usuario.get("level") or 0)
-        except (TypeError, ValueError):
-            level = 0
-
-        permissions = construir_permissoes(level)
-        return jsonify({
-            "success": True,
-            "level": level,
-            "storeid": _storeid_usuario(usuario),
-            "permissions": permissions,
-            "redirect": pagina_por_nivel(level)
-        })
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
+
+    if not usuario:
+        return jsonify({"success": False, "error": "Token inválido."}), 401
+
+    level = usuario.get("level")
+    redirect = pagina_por_nivel(level)
+    return jsonify({
+        "success": True,
+        "userid": usuario.get("userid"),
+        "user": usuario.get("user"),
+        "level": level,
+        "storeid": _storeid_usuario(usuario),
+        "redirect": redirect,
+        "permissoes": construir_permissoes(usuario),
+    })
