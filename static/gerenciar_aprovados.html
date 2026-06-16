@@ -1,15 +1,170 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Controle | ColorGlass</title>
-  <meta http-equiv="refresh" content="0; url=controle_loja.html">
-  <script>
-    window.location.replace('controle_loja.html');
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Pedidos | ColorGlass</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    :root { --cg-blue:#1079ba; --cg-blue-dark:#0d5d8c; --cg-soft:#e7f3fb; --border:rgba(16,121,186,.14); --text:#1f2933; --muted:#6b7280; --ok:#0c7c3c; --err:#c23616; }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif; }
+    body { min-height:100vh; background:radial-gradient(circle at top,rgba(16,121,186,.14),transparent 52%),linear-gradient(135deg,#f5fbff 0%,#eef4f9 45%,#f8fbff 100%); color:var(--text); padding:28px 16px; }
+    .page { width:min(1180px,100%); margin:0 auto; display:flex; flex-direction:column; gap:18px; }
+    .card { background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:0 12px 28px rgba(15,44,62,.12); padding:20px; }
+    .brand { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+    .brand h1 { color:var(--cg-blue-dark); font-size:1.45rem; margin-bottom:4px; }
+    .brand p { color:#4b5563; font-size:.95rem; line-height:1.4; }
+    .pill { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:999px; background:var(--cg-soft); color:var(--cg-blue-dark); font-size:.84rem; margin-bottom:10px; }
+    .pill::before { content:""; width:8px; height:8px; border-radius:50%; background:#f0c24c; }
+    .toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    button { border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; transition:.2s ease; }
+    button:hover { transform:translateY(-1px); } button:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .btn-primary { background:linear-gradient(135deg,var(--cg-blue),var(--cg-blue-dark)); color:#fff; box-shadow:0 8px 16px rgba(16,121,186,.22); }
+    .btn-outline,.btn-row { background:#fff; color:var(--cg-blue-dark); border:1px solid rgba(16,121,186,.25); }
+    .btn-row { padding:8px 10px; font-size:.88rem; }
+    .status { margin-top:12px; font-size:.93rem; min-height:20px; color:#4b5563; } .status.ok { color:var(--ok); } .status.erro { color:var(--err); }
+    .table-wrap { overflow-x:auto; margin-top:16px; border:1px solid var(--border); border-radius:12px; }
+    table { width:100%; min-width:920px; border-collapse:collapse; font-size:.93rem; background:#fff; }
+    th,td { padding:11px 10px; border-bottom:1px solid rgba(16,121,186,.08); text-align:left; vertical-align:middle; }
+    th { color:var(--cg-blue-dark); background:rgba(231,243,251,.55); font-size:.84rem; text-transform:uppercase; letter-spacing:.04em; }
+    .muted { color:var(--muted); } .empty { padding:20px; text-align:center; color:var(--muted); font-size:.95rem; }
+    .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; font-size:.78rem; font-weight:800; background:rgba(16,121,186,.12); color:var(--cg-blue-dark); white-space:nowrap; }
+    input,select { border:1px solid #d4d9df; border-radius:9px; padding:8px 9px; background:#fff; font-size:.9rem; }
+    input { width:125px; } select { min-width:170px; width:100%; }
+  </style>
 </head>
 <body>
-  <p>Redirecionando para o acompanhamento...</p>
+  <main class="page">
+    <section class="card">
+      <div class="pill">Gestão de status</div>
+      <div class="brand">
+        <div>
+          <h1>Controle de pedidos</h1>
+          <p>Ao salvar o status, o sistema registra a alteração e envia um log para o bot do Telegram.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn-outline" onclick="history.back()">Voltar</button>
+          <button class="btn-primary" id="btnRecarregar" onclick="carregarPedidos()">Recarregar</button>
+        </div>
+      </div>
+      <div id="statusGlobal" class="status"></div>
+    </section>
+
+    <section class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Pedido</th><th>Cliente</th><th>LojaID</th><th>Total</th><th>Status atual</th><th>Novo status</th><th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPedidos"><tr><td colspan="7" class="empty">Carregando pedidos...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+<script>
+const API_BASE = "https://colorglass.onrender.com";
+const STATUS_LABELS = {0:"Cancelado",1:"Orçamento",2:"Aprovado",3:"Em Produção",4:"Separado",5:"Entregue"};
+const STATUS_CONTROLE = [2,3,4];
+const STATUS_SELECT = [{value:2,label:"2 - Aprovado"},{value:3,label:"3 - Em Produção"},{value:4,label:"4 - Separado"},{value:5,label:"5 - Entregue"}];
+const pedidosPorId = new Map();
+
+function getToken(){ return localStorage.getItem("USER_TOKEN") || localStorage.getItem("ADMIN_TOKEN") || ""; }
+function authHeaders(extra={}){ const t=getToken(); return {...extra, ...(t ? {"Authorization":`Bearer ${t}`} : {})}; }
+function setStatus(msg,tipo=""){ const el=document.getElementById("statusGlobal"); el.textContent=msg; el.className="status "+tipo; }
+function escapeHtml(v){ return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+function moneyBR(v){ return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}); }
+function parseValor(v){ if(v===null||v===undefined||v==="") return 0; if(typeof v==="number") return v; const s=String(v).replace(/[^0-9,.-]/g,""); const n=Number(s.includes(",") ? s.replace(/\./g,"").replace(",",".") : s.replace(/,/g,"")); return Number.isFinite(n)?n:0; }
+function parseNumero(n){ const v=Number(String(n??"").replace(/[^0-9.-]/g,"")); return Number.isFinite(v)?v:0; }
+function parseData(d){ if(!d) return null; const t=new Date(d).getTime(); return Number.isFinite(t)?t:null; }
+function statusLabel(s){ const n=Number(s); return Number.isFinite(n)&&STATUS_LABELS[n] ? STATUS_LABELS[n] : "Desconhecido"; }
+function formatarStatus(p){ return `${p?.status ?? "-"} - ${p?.status_label || statusLabel(p?.status)}`; }
+function getLoja(p){ return String(p?.lojaid ?? p?.lojaID ?? p?.storeID ?? p?.storeid ?? "").trim(); }
+function ordenar(pedidos){ return [...pedidos].sort((a,b)=>{ const da=parseData(a?.data_aprovacao), db=parseData(b?.data_aprovacao); if(da&& !db) return -1; if(!da&&db) return 1; if(da&&db && db-da!==0) return db-da; return parseNumero(b?.numero_pedido)-parseNumero(a?.numero_pedido); }); }
+
+async function parseResponse(res){ const raw=await res.text(); let json=null; try{ json=raw?JSON.parse(raw):null; }catch{} return {raw,json}; }
+async function postJson(path, body){
+  const res=await fetch(`${API_BASE}${path}`,{method:"POST",headers:authHeaders({"Content-Type":"application/json"}),body:JSON.stringify(body)});
+  const parsed=await parseResponse(res);
+  if(!res.ok || parsed.json?.success===false) throw new Error(parsed.json?.error || `HTTP ${res.status}`);
+  return parsed.json || {};
+}
+
+async function enviarLogStatus(pedido, statusAnterior, statusNovo){
+  return postJson("/api/financeiro/controle-log", {
+    tipo:"status",
+    uuid: pedido?.id,
+    numero_pedido: pedido?.numero_pedido,
+    cliente_nome: pedido?.cliente_nome,
+    lojaid: getLoja(pedido),
+    valor_total: pedido?.valor_total,
+    status_anterior: statusAnterior,
+    status_novo: statusNovo
+  });
+}
+
+function renderTabela(pedidos){
+  const tbody=document.getElementById("tbodyPedidos");
+  pedidosPorId.clear();
+  if(!pedidos.length){ tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhum pedido nos status 2, 3 ou 4 encontrado.</td></tr>'; return; }
+  tbody.innerHTML=pedidos.map((p,idx)=>{
+    pedidosPorId.set(String(p.id), p);
+    const total=parseValor(p.valor_total);
+    const selectId=`novo_status_${idx}`;
+    const btnStatusId=`btn_status_${idx}`;
+    return `<tr>
+      <td><b>#${escapeHtml(p.numero_pedido ?? "-")}</b></td>
+      <td>${escapeHtml(p.cliente_nome || "-")}</td>
+      <td><span class="muted">${escapeHtml(getLoja(p) || "-")}</span></td>
+      <td>${moneyBR(total)}</td>
+      <td><span class="tag">${escapeHtml(formatarStatus(p))}</span></td>
+      <td><select id="${selectId}">${STATUS_SELECT.map(s=>`<option value="${s.value}" ${Number(p.status)===s.value?"selected":""}>${s.label}</option>`).join("")}</select></td>
+      <td><button class="btn-row" id="${btnStatusId}" onclick="atualizarStatus('${p.id}','${selectId}','${btnStatusId}')">Salvar status</button></td>
+    </tr>`;
+  }).join("");
+}
+
+async function carregarPedidos(){
+  const token=getToken(); const btn=document.getElementById("btnRecarregar"); const tbody=document.getElementById("tbodyPedidos");
+  if(!token){ setStatus("Sessão não encontrada. Faça login novamente.","erro"); tbody.innerHTML='<tr><td colspan="7" class="empty">Token ausente.</td></tr>'; return; }
+  btn.disabled=true; setStatus("Buscando pedidos em controle...");
+  try{
+    const res=await fetch(`${API_BASE}/api/financeiro?status=2,3,4&limit=2000`,{headers:authHeaders()});
+    const data=await res.json();
+    if(!res.ok || !Array.isArray(data)) throw new Error(data?.error || "Falha ao carregar pedidos.");
+    const pedidos=ordenar(data.filter(o=>STATUS_CONTROLE.includes(Number(o.status))));
+    renderTabela(pedidos);
+    setStatus(`Foram encontrados ${pedidos.length} pedido(s) em controle.`,"ok");
+  }catch(err){ console.error(err); setStatus(err.message || "Erro ao buscar pedidos.","erro"); tbody.innerHTML='<tr><td colspan="7" class="empty">Não foi possível carregar os pedidos.</td></tr>'; }
+  finally{ btn.disabled=false; }
+}
+
+async function atualizarStatus(uuid,selectId,btnId){
+  const select=document.getElementById(selectId), btn=document.getElementById(btnId), pedido=pedidosPorId.get(String(uuid));
+  const statusAnterior=Number(pedido?.status);
+  const novoStatus=Number(select.value);
+  if(!STATUS_SELECT.some(s=>s.value===novoStatus)){ setStatus("Status inválido.","erro"); return; }
+  if(Number(statusAnterior)===Number(novoStatus)){ setStatus("Status não foi alterado.","erro"); return; }
+  btn.disabled=true; setStatus(`Atualizando pedido ${pedido?.numero_pedido || uuid} para status ${novoStatus}...`);
+  try{
+    const data=await postJson(`/api/orcamento/${encodeURIComponent(uuid)}/status`,{status:novoStatus});
+    setStatus(`Pedido ${pedido?.numero_pedido || uuid} atualizado. Enviando log para o Telegram...`,"ok");
+    try {
+      await enviarLogStatus(pedido, statusAnterior, novoStatus);
+      setStatus(`Pedido ${pedido?.numero_pedido || uuid} atualizado e log enviado ao Telegram.`,"ok");
+    } catch (logErr) {
+      console.error("Falha ao enviar log Telegram", logErr);
+      setStatus(`Pedido atualizado, mas o log do Telegram falhou: ${logErr.message}`,"erro");
+    }
+    if(pedido) pedido.status=novoStatus;
+    await carregarPedidos();
+  }catch(err){ console.error(err); setStatus(err.message || "Erro ao atualizar status.","erro"); }
+  finally{ btn.disabled=false; }
+}
+
+carregarPedidos();
+</script>
 </body>
 </html>
