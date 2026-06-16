@@ -111,6 +111,15 @@ def _status_label(valor):
     return labels.get(v, str(v))
 
 
+def _level_label(valor):
+    labels = {1: "Loja", 2: "Gerência", 3: "Admin", 4: "Logística"}
+    try:
+        v = int(valor)
+    except (TypeError, ValueError):
+        return str(valor or "-")
+    return labels.get(v, str(v))
+
+
 def _usuario_atual():
     token = extrair_token(request)
     if not token:
@@ -232,30 +241,64 @@ def controle_log():
     valor_total = data.get("valor_total")
     usuario_nome = _buscar_nome_usuario(usuario)
 
-    if tipo == "status":
+    if tipo == "login":
+        titulo = "LOG LOGIN - ACESSO AUTORIZADO"
+        level = data.get("level") or usuario.get("level") or "-"
+        data_acesso = data.get("data_acesso") or "-"
+        hora_acesso = data.get("hora_acesso") or "-"
+        ip = data.get("ip") or "-"
+        texto = (
+            f"{titulo}\n\n"
+            f"Nome: {usuario_nome}\n"
+            f"Nivel: {level} - {_level_label(level)}\n"
+            f"Loja/StoreID: {_storeid_usuario(usuario) or '-'}\n"
+            f"Data: {data_acesso}\n"
+            f"Horario: {hora_acesso}\n"
+            f"IP: {ip}"
+        )
+    elif tipo == "status":
         anterior = data.get("status_anterior")
         novo = data.get("status_novo")
         titulo = "LOG CONTROLE - STATUS ALTERADO"
         detalhe = f"Status: {_status_label(anterior)} ({anterior}) -> {_status_label(novo)} ({novo})"
+        texto = (
+            f"{titulo}\n\n"
+            f"Pedido: {numero_pedido}\n"
+            f"Cliente: {cliente_nome}\n"
+            f"Loja: {loja}\n"
+            f"Valor total: {_money_br(valor_total)}\n"
+            f"{detalhe}\n\n"
+            f"Usuario: {usuario_nome}\n"
+            f"UUID: {uuid}"
+        )
     elif tipo == "valor_pago":
         anterior = data.get("valor_anterior")
         novo = data.get("valor_novo")
         titulo = "LOG CONTROLE - VALOR PAGO ALTERADO"
         detalhe = f"Valor pago: {_money_br(anterior)} -> {_money_br(novo)}"
+        texto = (
+            f"{titulo}\n\n"
+            f"Pedido: {numero_pedido}\n"
+            f"Cliente: {cliente_nome}\n"
+            f"Loja: {loja}\n"
+            f"Valor total: {_money_br(valor_total)}\n"
+            f"{detalhe}\n\n"
+            f"Usuario: {usuario_nome}\n"
+            f"UUID: {uuid}"
+        )
     else:
         titulo = "LOG CONTROLE - ALTERACAO"
         detalhe = "Alteracao registrada no controle."
-
-    texto = (
-        f"{titulo}\n\n"
-        f"Pedido: {numero_pedido}\n"
-        f"Cliente: {cliente_nome}\n"
-        f"Loja: {loja}\n"
-        f"Valor total: {_money_br(valor_total)}\n"
-        f"{detalhe}\n\n"
-        f"Usuario: {usuario_nome}\n"
-        f"UUID: {uuid}"
-    )
+        texto = (
+            f"{titulo}\n\n"
+            f"Pedido: {numero_pedido}\n"
+            f"Cliente: {cliente_nome}\n"
+            f"Loja: {loja}\n"
+            f"Valor total: {_money_br(valor_total)}\n"
+            f"{detalhe}\n\n"
+            f"Usuario: {usuario_nome}\n"
+            f"UUID: {uuid}"
+        )
 
     try:
         _telegram_send(texto)
