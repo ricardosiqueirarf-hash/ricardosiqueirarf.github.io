@@ -1,5 +1,5 @@
 """
-Fallback para garantir que a integração Asaas seja carregada se o backend iniciar a partir da raiz do repositório.
+Fallback para garantir que integrações sejam carregadas se o backend iniciar a partir da raiz do repositório.
 """
 
 import importlib.abc
@@ -14,7 +14,7 @@ if os.path.isdir(BACKEND_DIR) and BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
 
-class _AsaasPatchLoader(importlib.abc.Loader):
+class _OrcamentosPatchLoader(importlib.abc.Loader):
     def __init__(self, wrapped_loader):
         self.wrapped_loader = wrapped_loader
 
@@ -31,8 +31,14 @@ class _AsaasPatchLoader(importlib.abc.Loader):
         except Exception as exc:
             print(f"[ASAAS] Falha ao instalar integração: {exc}")
 
+        try:
+            import controle_log_patch
+            controle_log_patch.install(module)
+        except Exception as exc:
+            print(f"[CONTROLE_LOG] Falha ao instalar integração: {exc}")
 
-class _AsaasPatchFinder(importlib.abc.MetaPathFinder):
+
+class _OrcamentosPatchFinder(importlib.abc.MetaPathFinder):
     TARGET = "api_orcamentos"
 
     def find_spec(self, fullname, path=None, target=None):
@@ -41,9 +47,9 @@ class _AsaasPatchFinder(importlib.abc.MetaPathFinder):
         spec = importlib.machinery.PathFinder.find_spec(fullname, path)
         if not spec or not spec.loader:
             return None
-        spec.loader = _AsaasPatchLoader(spec.loader)
+        spec.loader = _OrcamentosPatchLoader(spec.loader)
         return spec
 
 
-if not any(isinstance(finder, _AsaasPatchFinder) for finder in sys.meta_path):
-    sys.meta_path.insert(0, _AsaasPatchFinder())
+if not any(isinstance(finder, _OrcamentosPatchFinder) for finder in sys.meta_path):
+    sys.meta_path.insert(0, _OrcamentosPatchFinder())
