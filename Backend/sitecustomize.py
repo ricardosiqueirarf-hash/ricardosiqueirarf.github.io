@@ -1,17 +1,10 @@
 """
-Carrega integrações sem alterar diretamente os arquivos principais do sistema.
-
-Quando o módulo api_orcamentos for importado pelo app.py, este hook instala:
-- emissão automática de 2 boletos 50/50 após aprovação pelo Telegram;
-- endpoints auxiliares do Asaas;
-- log automático das alterações feitas no controle.html;
-- log automático de criação e alteração de orçamentos.
+Carrega integracoes sem alterar diretamente os arquivos principais do sistema.
 """
 
 import importlib.abc
 import importlib.machinery
 import sys
-
 
 class _OrcamentosPatchLoader(importlib.abc.Loader):
     def __init__(self, wrapped_loader):
@@ -29,20 +22,19 @@ class _OrcamentosPatchLoader(importlib.abc.Loader):
             import asaas_orcamentos_patch
             asaas_orcamentos_patch.install(module)
         except Exception as exc:
-            print(f"[ASAAS] Falha ao instalar integração: {exc}")
+            print(f"[ASAAS] Falha ao instalar integracao: {exc}")
 
         try:
             import controle_log_patch
             controle_log_patch.install(module)
         except Exception as exc:
-            print(f"[CONTROLE_LOG] Falha ao instalar integração: {exc}")
+            print(f"[CONTROLE_LOG] Falha ao instalar integracao: {exc}")
 
         try:
-            import orcamento_crud_log_patch
-            orcamento_crud_log_patch.install(module)
+            import orcamentos_logger_patch
+            orcamentos_logger_patch.install(module)
         except Exception as exc:
-            print(f"[ORCAMENTO_LOG] Falha ao instalar integração: {exc}")
-
+            print(f"[ORCAMENTOS_LOGGER] Falha ao instalar integracao: {exc}")
 
 class _OrcamentosPatchFinder(importlib.abc.MetaPathFinder):
     TARGET = "api_orcamentos"
@@ -57,7 +49,6 @@ class _OrcamentosPatchFinder(importlib.abc.MetaPathFinder):
 
         spec.loader = _OrcamentosPatchLoader(spec.loader)
         return spec
-
 
 if not any(isinstance(finder, _OrcamentosPatchFinder) for finder in sys.meta_path):
     sys.meta_path.insert(0, _OrcamentosPatchFinder())
