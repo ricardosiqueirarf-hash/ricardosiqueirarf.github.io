@@ -4,7 +4,8 @@ Carrega integrações sem alterar diretamente os arquivos principais do sistema.
 Quando o módulo api_orcamentos for importado pelo app.py, este hook instala:
 - emissão automática de 2 boletos 50/50 após aprovação pelo Telegram;
 - endpoints auxiliares do Asaas;
-- log automático das alterações feitas no controle.html.
+- log automático das alterações feitas no controle.html;
+- log automático de criação e alteração de orçamentos.
 """
 
 import importlib.abc
@@ -35,6 +36,12 @@ class _OrcamentosPatchLoader(importlib.abc.Loader):
             controle_log_patch.install(module)
         except Exception as exc:
             print(f"[CONTROLE_LOG] Falha ao instalar integração: {exc}")
+
+        try:
+            import orcamento_crud_log_patch
+            orcamento_crud_log_patch.install(module)
+        except Exception as exc:
+            print(f"[ORCAMENTO_LOG] Falha ao instalar integração: {exc}")
 
 
 class _OrcamentosPatchFinder(importlib.abc.MetaPathFinder):
