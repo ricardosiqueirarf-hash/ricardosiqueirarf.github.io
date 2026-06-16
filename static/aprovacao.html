@@ -148,8 +148,6 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
 }
 .boleto-card strong { color: var(--cg-blue-dark); }
 .boleto-card small { display: block; color: var(--cg-muted); margin-top: 4px; }
-.actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-@media (max-width: 520px) { .actions-row { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -186,7 +184,7 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
       <button class="btn" id="btnAprovar" onclick="solicitarAprovacaoTelegram()">📲 Solicitar aprovação</button>
       <button class="btn btn-outline" style="margin-top:10px;" onclick="voltar()">Voltar</button>
       <div id="status" class="status"></div>
-      <p class="hint">Após a aprovação no Telegram, os boletos do Asaas são enviados para o financeiro do site.</p>
+      <p class="hint">Após a aprovação no Telegram, os boletos do Asaas são vinculados ao financeiro do pedido.</p>
     </section>
 
     <aside class="card">
@@ -200,15 +198,12 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
       <div class="total"><span>Total</span><span class="big" id="s_total">R$ 0,00</span></div>
 
       <hr>
-      <div class="pill"><span></span>Boletos no financeiro</div>
-      <p class="sub">Os boletos gerados ficam integrados ao módulo financeiro do site.</p>
+      <div class="pill"><span></span>Boletos</div>
+      <p class="sub">Os boletos gerados para este pedido aparecem abaixo.</p>
       <div id="boletosList" class="boletos-list">
         <div class="boleto-card"><strong>Nenhum boleto carregado.</strong><small>Após a aprovação, clique em Atualizar boletos.</small></div>
       </div>
-      <div class="actions-row">
-        <button class="btn btn-outline" onclick="carregarBoletos()">Atualizar boletos</button>
-        <a class="btn btn-outline" href="/a_receber.html">Abrir A Receber</a>
-      </div>
+      <button class="btn btn-outline" style="margin-top:10px;" onclick="carregarBoletos()">Atualizar boletos</button>
     </aside>
   </div>
 </div>
@@ -299,7 +294,7 @@ async function solicitarAprovacaoTelegram() {
       setStatus(data.error || "Não foi possível enviar a solicitação para o Telegram.", "erro");
       return;
     }
-    setStatus("Solicitação enviada para o Telegram. Após a aprovação, os boletos aparecerão no financeiro.", "ok");
+    setStatus("Solicitação enviada para o Telegram. Após a aprovação, os boletos aparecerão nesta tela.", "ok");
     await carregarBoletos(false);
   } catch (err) {
     setStatus("Erro ao enviar solicitação. Tente novamente.", "erro");
