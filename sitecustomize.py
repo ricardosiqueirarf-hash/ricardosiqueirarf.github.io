@@ -37,6 +37,12 @@ class _OrcamentosPatchLoader(importlib.abc.Loader):
         except Exception as exc:
             print(f"[CONTROLE_LOG] Falha ao instalar integração: {exc}")
 
+        try:
+            import orcamento_crud_log_patch
+            orcamento_crud_log_patch.install(module)
+        except Exception as exc:
+            print(f"[ORCAMENTO_LOG] Falha ao instalar integração: {exc}")
+
 
 class _OrcamentosPatchFinder(importlib.abc.MetaPathFinder):
     TARGET = "api_orcamentos"
