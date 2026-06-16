@@ -56,66 +56,6 @@
   };
 })();
 
-(function installLoginAuditLog() {
-  if (window.__COLORGLASS_LOGIN_AUDIT_INSTALLED__) return;
-  window.__COLORGLASS_LOGIN_AUDIT_INSTALLED__ = true;
-
-  const originalFetch = window.fetch;
-  if (typeof originalFetch !== "function") return;
-
-  function isLoginRequest(input, init) {
-    try {
-      const url = typeof input === "string" ? input : (input && input.url) || "";
-      const method = String((init && init.method) || (input && input.method) || "GET").toUpperCase();
-      return method === "POST" && url.includes("/api/usuarios/login");
-    } catch (_) {
-      return false;
-    }
-  }
-
-  function dataHoraFortaleza() {
-    const agora = new Date();
-    return {
-      data_acesso: agora.toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" }),
-      hora_acesso: agora.toLocaleTimeString("pt-BR", { timeZone: "America/Fortaleza" })
-    };
-  }
-
-  async function enviarLogLogin(data) {
-    try {
-      if (!data || !data.success || !data.token) return;
-      const dh = dataHoraFortaleza();
-      await originalFetch("https://colorglass.onrender.com/api/financeiro/controle-log", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${data.token}`
-        },
-        body: JSON.stringify({
-          tipo: "login",
-          level: data.level,
-          data_acesso: dh.data_acesso,
-          hora_acesso: dh.hora_acesso,
-          ip: "browser"
-        })
-      });
-    } catch (err) {
-      console.warn("Falha ao enviar log de login.", err);
-    }
-  }
-
-  window.fetch = async function colorGlassFetch(input, init) {
-    const response = await originalFetch.apply(this, arguments);
-    if (isLoginRequest(input, init)) {
-      try {
-        const clone = response.clone();
-        clone.json().then(enviarLogLogin).catch(() => {});
-      } catch (_) {}
-    }
-    return response;
-  };
-})();
-
 const pages = [
   "login.html",
   "index_loja.html",
