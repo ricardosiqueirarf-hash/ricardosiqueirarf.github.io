@@ -164,16 +164,15 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
     <section class="card">
       <div class="pill"><span></span>Solicitar aprovação</div>
       <h2>Detalhes</h2>
-      <p class="sub">Os dados abaixo são carregados automaticamente pelo UUID do orçamento.</p>
+      <p class="sub">Os dados abaixo são carregados automaticamente pelo pedido selecionado.</p>
+
+      <input id="orcamento_uuid" type="hidden">
 
       <div class="grid-2">
         <label>Nº do pedido<input id="numero_pedido" type="text" placeholder="Carregando..." readonly></label>
-        <label>Orçamento UUID<input id="orcamento_uuid" type="text" placeholder="uuid do orçamento" readonly></label>
-      </div>
-      <div class="grid-2">
         <label>Cliente<input id="cliente_nome" type="text" placeholder="Carregando..." readonly></label>
-        <label>Valor (R$)<input id="valor_total" type="number" step="0.01" min="0" placeholder="Carregando..." readonly></label>
       </div>
+      <label>Valor (R$)<input id="valor_total" type="number" step="0.01" min="0" placeholder="Carregando..." readonly></label>
 
       <div class="badge-secure">
         <div style="font-size: 1.2rem;">📲</div>
@@ -193,7 +192,6 @@ hr { border: none; border-top: 1px solid rgba(16,121,186,0.12); margin: 14px 0; 
       <p class="sub">Confira os dados carregados do orçamento.</p>
       <div class="summary-row"><span>Pedido</span><strong id="s_pedido">--</strong></div>
       <div class="summary-row"><span>Cliente</span><strong id="s_cliente">--</strong></div>
-      <div class="summary-row"><span>UUID</span><strong id="s_uuid" style="font-size:0.88rem; word-break:break-all;">--</strong></div>
       <div class="summary-row"><span>Cobrança</span><strong>Asaas / Financeiro</strong></div>
       <div class="total"><span>Total</span><span class="big" id="s_total">R$ 0,00</span></div>
 
@@ -232,11 +230,9 @@ function setStatus(msg, tipo="") {
 function updateResumoFromInputs() {
   const pedido = document.getElementById("numero_pedido").value.trim() || "--";
   const cliente = document.getElementById("cliente_nome").value.trim() || "--";
-  const uuid = document.getElementById("orcamento_uuid").value.trim() || "--";
   const valor = document.getElementById("valor_total").value.trim() || "--";
   document.getElementById("s_pedido").textContent = pedido;
   document.getElementById("s_cliente").textContent = cliente;
-  document.getElementById("s_uuid").textContent = uuid;
   document.getElementById("s_total").textContent = moneyBR(valor);
 }
 async function parseResponse(res) {
@@ -249,7 +245,7 @@ function authHeaders(extra = {}) {
 }
 async function carregarDadosDoOrcamento(uuid) {
   const url = `${API_BASE}/api/orcamentos`;
-  if (!uuid) { setStatus("UUID não informado na URL.", "erro"); return; }
+  if (!uuid) { setStatus("Pedido não informado na URL.", "erro"); return; }
   document.getElementById("numero_pedido").value = "Carregando...";
   document.getElementById("cliente_nome").value = "Carregando...";
   document.getElementById("valor_total").value = "Carregando...";
@@ -284,7 +280,7 @@ async function solicitarAprovacaoTelegram() {
   const orcamento_uuid = document.getElementById("orcamento_uuid").value.trim();
   const url = `${API_BASE}/api/orcamento/${encodeURIComponent(orcamento_uuid)}/solicitar-aprovacao`;
   if (!token) { setStatus("Sessão não encontrada. Faça login novamente.", "erro"); return; }
-  if (!orcamento_uuid) { setStatus("UUID do orçamento ausente.", "erro"); return; }
+  if (!orcamento_uuid) { setStatus("Pedido não carregado.", "erro"); return; }
   try {
     btn.disabled = true;
     setStatus("Enviando solicitação...");
