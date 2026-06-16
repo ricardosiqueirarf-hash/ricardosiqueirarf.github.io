@@ -45,6 +45,59 @@ def _storeid_usuario(usuario):
     ).strip()
 
 
+def _nome_usuario(usuario):
+    usuario = usuario or {}
+    dados = usuario.get("dados") if isinstance(usuario.get("dados"), dict) else {}
+    return str(dados.get("nome") or usuario.get("nome") or usuario.get("user") or usuario.get("userid") or "-").strip()
+
+
+def _money_br(valor):
+    try:
+        numero = float(valor or 0)
+    except (TypeError, ValueError):
+        numero = 0.0
+    texto = f"{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {texto}"
+
+
+def _status_label(valor):
+    labels = {0: "Cancelado", 1: "Orçamento", 2: "Aprovado", 3: "Em Produção", 4: "Separado", 5: "Entregue"}
+    try:
+        v = int(valor)
+    except (TypeError, ValueError):
+        return str(valor or "-")
+    return labels.get(v, str(v))
+
+
+def _usuario_atual():
+    token = extrair_token(request)
+    if not token:
+        return None, make_response(jsonify({"success": False, "error": "Sessão não informada."}), 401)
+    try:
+        usuario = buscar_usuario_por_token(token)
+    except Exception as exc:
+        return None, make_response(jsonify({"success": False, "error": str(exc)}), 500)
+    if not usuario:
+        return None, make_response(jsonify({"success": False, "error": "Sessão inválida."}), 401)
+    return usuario, None
+
+
+def _telegram_send(texto):
+    import api_orcamentos as tg
+    cfg = tg.load_telegram_env()
+    bot_token = cfg.get("TELEGRAM_" + "TOKEN")
+    chat_id = cfg.get("TELEGRAM_" + "CHAT_ID")
+    if not bot_token or not chat_id:
+        raise RuntimeError("Bot Telegram não configurado.")
+    url = tg._telegram_api_url(bot_token, "send" + "Message")
+    r = requests.post(url, json={"chat_id": chat_id, "text": texto}, timeout=15)
+    r.raise_for_status()
+    payload = r.json()
+    if not payload.get("ok"):
+        raise RuntimeError(payload.get("description") or "Telegram recusou a mensagem.")
+    return payload
+
+
 @api_financeiro_bp.route("/api/financeiro", methods=["GET"])
 def api_financeiro():
     """
@@ -126,3 +179,50 @@ def api_financeiro():
         }), 500)
 
     return jsonify(r.json())
+
+
+@api_financeiro_bp.route("/api/financeiro/controle-log", methods=["POST"])
+def controle_log():
+    usuario, erro = _usuario_atual()
+    if erro:
+        return erro
+
+    data = request.get_json(silent=True) or {}
+    tipo = str(data.get("tipo") or "alteracao").strip()
+    uuid = str(data.get("uuid") or "-").strip()
+    numero_pedido = data.get("numero_pedido") or "-"
+    cliente_nome = data.get("cliente_nome") or "-"
+    loja = data.get("loja") or data.get("lojaid") or "-"
+    valor_total = data.get("valor_total")
+    usuario_nome = _nome_usuario(usuario)
+
+    if tipo == "status":
+        anterior = data.get("status_anterior")
+        novo = data.get("status_novo")
+        titulo = "LOG CONTROLE - STATUS ALTERADO"
+        detalhe = f"Status: {_status_label(anterior)} ({anterior}) -> {_status_label(novo)} ({novo})"
+    elif tipo == "valor_pago":
+        anterior = data.get("valor_anterior")
+        novo = data.get("valor_novo")
+        titulo = "LOG CONTROLE - VALOR PAGO ALTERADO"
+        detalhe = f"Valor pago: {_money_br(anterior)} -> {_money_br(novo)}"
+    else:
+        titulo = "LOG CONTROLE - ALTERACAO"
+        detalhe = "Alteracao registrada no controle."
+
+    texto = (
+        f"{titulo}\n\n"
+        f"Pedido: {numero_pedido}\n"
+        f"Cliente: {cliente_nome}\n"
+        f"Loja: {loja}\n"
+        f"Valor total: {_money_br(valor_total)}\n"
+        f"{detalhe}\n\n"
+        f"Usuario: {usuario_nome}\n"
+        f"UUID: {uuid}"
+    )
+
+    try:
+        _telegram_send(texto)
+        return jsonify({"success": True, "message": "Log enviado."})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
