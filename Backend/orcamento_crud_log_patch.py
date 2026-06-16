@@ -43,12 +43,38 @@ def _usuario_request(module):
 def _nome_usuario(usuario):
     usuario = usuario or {}
     dados = usuario.get("dados") if isinstance(usuario.get("dados"), dict) else {}
-    return dados.get("nome") or usuario.get("nome") or usuario.get("user") or usuario.get("userid")
+    return dados.get("nome") or usuario.get("nome") or usuario.get("user") or usuario.get("userid") or "-"
 
 
 def _storeid(usuario):
     usuario = usuario or {}
     return usuario.get("storeid") or usuario.get("lojaid") or usuario.get("storeID") or usuario.get("lojaID")
+
+
+def _money_br(valor):
+    try:
+        numero = float(valor or 0)
+    except (TypeError, ValueError):
+        numero = 0.0
+    texto = f"{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {texto}"
+
+
+def _telegram_send(module, texto):
+    try:
+        cfg = module.load_telegram_env()
+        bot_token = cfg.get("TELEGRAM_" + "TOKEN")
+        chat_id = cfg.get("TELEGRAM_" + "CHAT_ID")
+        if not bot_token or not chat_id:
+            raise RuntimeError("Bot Telegram não configurado.")
+        url = module._telegram_api_url(bot_token, "send" + "Message")
+        r = requests.post(url, json={"chat_id": chat_id, "text": texto}, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+        if not data.get("ok"):
+            raise RuntimeError(data.get("description") or "Telegram recusou a mensagem.")
+    except Exception as exc:
+        print(f"[ORCAMENTO_LOG] Falha ao enviar Telegram: {exc}")
 
 
 def _buscar_orcamento(uuid):
@@ -139,6 +165,7 @@ def install(module):
             usuario = getattr(g, "orcamento_log_usuario", {}) or _usuario_request(module)
             body = request.get_json(silent=True) or {}
             resp = response.get_json(silent=True) or {}
+            usuario_nome = _nome_usuario(usuario)
 
             if method == "POST" and path == "/api/orcamento" and resp.get("success"):
                 entidade_id = resp.get("id") or resp.get("uuid")
@@ -150,17 +177,26 @@ def install(module):
                     "status_label": resp.get("status_label"),
                     "numero_pedido": numero,
                 }
+                resumo = f"Orçamento {numero} criado para {cliente}"
                 _registrar(
                     usuario,
                     "orcamento",
                     "orcamento_criado",
-                    f"Orçamento {numero} criado para {cliente}",
+                    resumo,
                     entidade_id=entidade_id,
                     numero_pedido=numero,
                     anterior={},
                     novo=novo,
                     metadata={"origem": "api_orcamento_create"},
                 )
+                _telegram_send(module, (
+                    "LOG ORÇAMENTO - NOVA FICHA CRIADA\n\n"
+                    f"Pedido: {numero}\n"
+                    f"Cliente: {cliente}\n"
+                    f"Status: {resp.get('status_label') or resp.get('status')}\n"
+                    f"Usuário: {usuario_nome}\n"
+                    f"UUID: {entidade_id}"
+                ))
                 return response
 
             if method == "PATCH" and path.endswith("/cliente") and "/api/orcamento/" in path and resp.get("success"):
@@ -172,11 +208,12 @@ def install(module):
                     "lojaid": resp.get("lojaid"),
                     "status": resp.get("status"),
                 }
+                resumo = f"Orçamento {numero or entidade_id} teve cliente/loja alterado"
                 _registrar(
                     usuario,
                     "orcamento",
                     "orcamento_alterado",
-                    f"Orçamento {numero or entidade_id} teve cliente/loja alterado",
+                    resumo,
                     entidade_id=entidade_id,
                     numero_pedido=numero,
                     anterior={
@@ -187,6 +224,16 @@ def install(module):
                     novo=depois,
                     metadata={"origem": "api_orcamento_cliente"},
                 )
+                _telegram_send(module, (
+                    "LOG ORÇAMENTO - FICHA ALTERADA\n\n"
+                    f"Pedido: {numero or '-'}\n"
+                    f"Cliente anterior: {antes.get('cliente_nome') or '-'}\n"
+                    f"Cliente novo: {resp.get('cliente_nome') or '-'}\n"
+                    f"Loja anterior: {antes.get('lojaid') or '-'}\n"
+                    f"Loja nova: {resp.get('lojaid') or '-'}\n"
+                    f"Usuário: {usuario_nome}\n"
+                    f"UUID: {entidade_id}"
+                ))
                 return response
 
             if method == "POST" and path.endswith("/finalizar") and "/api/orcamento/" in path and resp.get("success"):
@@ -198,11 +245,12 @@ def install(module):
                     "quantidade_total": resp.get("quantidade_total"),
                     "valor_total": resp.get("valor_total"),
                 }
+                resumo = f"Orçamento {numero or entidade_id} teve totais alterados"
                 _registrar(
                     usuario,
                     "orcamento",
                     "orcamento_alterado",
-                    f"Orçamento {numero or entidade_id} teve totais alterados",
+                    resumo,
                     entidade_id=entidade_id,
                     numero_pedido=numero,
                     anterior={
@@ -212,6 +260,16 @@ def install(module):
                     novo=novo,
                     metadata={"origem": "api_orcamento_finalizar", "portas_qtd": len(body.get("portas") or [])},
                 )
+                _telegram_send(module, (
+                    "LOG ORÇAMENTO - TOTAIS ALTERADOS\n\n"
+                    f"Pedido: {numero or '-'}\n"
+                    f"Valor anterior: {_money_br(antes.get('valor_total'))}\n"
+                    f"Valor novo: {_money_br(resp.get('valor_total'))}\n"
+                    f"Qtd anterior: {antes.get('quantidade_total') or 0}\n"
+                    f"Qtd nova: {resp.get('quantidade_total') or 0}\n"
+                    f"Usuário: {usuario_nome}\n"
+                    f"UUID: {entidade_id}"
+                ))
                 return response
 
         except Exception as exc:
