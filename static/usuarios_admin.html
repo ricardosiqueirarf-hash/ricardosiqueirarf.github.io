@@ -64,6 +64,7 @@ body{min-height:100vh;display:flex;background:radial-gradient(circle at top,rgba
           <option value="1">Level 1 - Loja</option>
           <option value="2">Level 2 - Gerência</option>
           <option value="3">Level 3 - Admin</option>
+          <option value="4">Level 4 - Logística</option>
         </select>
         <select id="filtroAprovado" onchange="renderTabela()">
           <option value="">Todos</option>
@@ -86,6 +87,7 @@ body{min-height:100vh;display:flex;background:radial-gradient(circle at top,rgba
             <option value="1">1 - Loja</option>
             <option value="2">2 - Gerência</option>
             <option value="3">3 - Admin</option>
+            <option value="4">4 - Logística</option>
           </select>
         </label>
         <label>Acesso
@@ -129,7 +131,7 @@ function go(url){window.location.href=url}
 function logout(){localStorage.removeItem("USER_TOKEN");localStorage.removeItem("ADMIN_TOKEN");window.location.href="login.html"}
 function escapeHtml(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function textoUsuario(u){return [u.user,u.nome,u.storeid,u.dados?.email,u.dados?.whatsapp,u.dados?.cpf_cnpj].filter(Boolean).join(" ").toLowerCase()}
-function levelLabel(level){const n=Number(level||0);if(n===3)return "Admin";if(n===2)return "Gerência";if(n===1)return "Loja";return "Sem nível"}
+function levelLabel(level){const n=Number(level||0);if(n===4)return "Logística";if(n===3)return "Admin";if(n===2)return "Gerência";if(n===1)return "Loja";return "Sem nível"}
 
 async function validarAdmin(){
   const token=getToken();
