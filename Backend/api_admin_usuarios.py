@@ -115,8 +115,8 @@ def admin_atualizar_usuario(userid):
                 level = int(data.get("level"))
             except (TypeError, ValueError):
                 return jsonify({"success": False, "error": "Level inválido."}), 400
-            if level not in (1, 2, 3):
-                return jsonify({"success": False, "error": "Level deve ser 1, 2 ou 3."}), 400
+            if level not in (1, 2, 3, 4):
+                return jsonify({"success": False, "error": "Level deve ser 1, 2, 3 ou 4."}), 400
             payload["level"] = level
 
         if "dados" in data:
