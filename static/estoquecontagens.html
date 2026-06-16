@@ -6,214 +6,37 @@
   <title>Contagens de Estoque</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f3f6fb;
-      color: #1f2937;
-    }
-
-    header {
-      padding: 32px 20px;
-      text-align: center;
-      background: linear-gradient(135deg, #0f766e, #14b8a6);
-      color: #ffffff;
-    }
-
-    header h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-    }
-
-    header p {
-      margin: 0;
-      opacity: 0.9;
-    }
-
-    main {
-      width: min(1100px, calc(100% - 32px));
-      margin: 32px auto;
-      display: grid;
-      gap: 24px;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-      padding: 24px;
-    }
-
-    .card h2 {
-      margin: 0 0 18px;
-      color: #0f766e;
-      font-size: 1.35rem;
-    }
-
-    form {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      font-weight: 700;
-      font-size: 0.95rem;
-    }
-
-    input,
-    select {
-      width: 100%;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 1rem;
-      color: #111827;
-      background: #ffffff;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    select:disabled,
-    input:read-only {
-      background: #f8fafc;
-      color: #64748b;
-    }
-
-    input:focus,
-    select:focus {
-      outline: none;
-      border-color: #14b8a6;
-      box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.16);
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
-    }
-
-    .actions {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      border: 0;
-      border-radius: 999px;
-      padding: 12px 20px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      color: #ffffff;
-      background: #0f766e;
-      transition: transform 0.2s, background 0.2s;
-    }
-
-    button:hover:not(:disabled) {
-      background: #115e59;
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.65;
-    }
-
-    .secondary {
-      background: #334155;
-    }
-
-    .secondary:hover:not(:disabled) {
-      background: #1e293b;
-    }
-
-    .message {
-      min-height: 24px;
-      font-weight: 700;
-    }
-
-    .message.success {
-      color: #15803d;
-    }
-
-    .message.error {
-      color: #b91c1c;
-    }
-
-    .list-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .list-header h2 {
-      margin: 0;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 780px;
-    }
-
-    th,
-    td {
-      padding: 13px 14px;
-      text-align: left;
-      border-bottom: 1px solid #e2e8f0;
-      vertical-align: top;
-    }
-
-    th {
-      background: #f8fafc;
-      color: #475569;
-      font-size: 0.84rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    tbody tr:last-child td {
-      border-bottom: 0;
-    }
-
-    .empty {
-      padding: 18px;
-      text-align: center;
-      color: #64748b;
-    }
-
-    @media (max-width: 720px) {
-      main {
-        width: min(100% - 20px, 1100px);
-        margin: 20px auto;
-      }
-
-      .card {
-        padding: 18px;
-      }
-
-      form {
-        grid-template-columns: 1fr;
-      }
-    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: Arial, Helvetica, sans-serif; background: #f3f6fb; color: #1f2937; }
+    header { padding: 32px 20px; text-align: center; background: linear-gradient(135deg, #0f766e, #14b8a6); color: #ffffff; }
+    header h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 4vw, 2.5rem); }
+    header p { margin: 0; opacity: 0.9; }
+    main { width: min(1100px, calc(100% - 32px)); margin: 32px auto; display: grid; gap: 24px; }
+    .card { background: #ffffff; border-radius: 16px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); padding: 24px; }
+    .card h2 { margin: 0 0 18px; color: #0f766e; font-size: 1.35rem; }
+    form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    label { display: flex; flex-direction: column; gap: 7px; font-weight: 700; font-size: 0.95rem; }
+    input, select { width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px 14px; font-size: 1rem; color: #111827; background: #ffffff; transition: border-color 0.2s, box-shadow 0.2s; }
+    select:disabled, input:read-only { background: #f8fafc; color: #64748b; }
+    input:focus, select:focus { outline: none; border-color: #14b8a6; box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.16); }
+    .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    button { border: 0; border-radius: 999px; padding: 12px 20px; font-size: 1rem; font-weight: 700; cursor: pointer; color: #ffffff; background: #0f766e; transition: transform 0.2s, background 0.2s; }
+    button:hover:not(:disabled) { background: #115e59; transform: translateY(-1px); }
+    button:disabled { cursor: not-allowed; opacity: 0.65; }
+    .secondary { background: #334155; }
+    .secondary:hover:not(:disabled) { background: #1e293b; }
+    .message { min-height: 24px; font-weight: 700; }
+    .message.success { color: #15803d; }
+    .message.error { color: #b91c1c; }
+    .list-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .list-header h2 { margin: 0; }
+    .table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; min-width: 780px; }
+    th, td { padding: 13px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+    th { background: #f8fafc; color: #475569; font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .empty { padding: 18px; text-align: center; color: #64748b; }
+    @media (max-width: 720px) { main { width: min(100% - 20px, 1100px); margin: 20px auto; } .card { padding: 18px; } form { grid-template-columns: 1fr; } }
   </style>
 </head>
 
@@ -287,9 +110,7 @@
             </tr>
           </thead>
           <tbody id="contagensBody">
-            <tr>
-              <td colspan="7" class="empty">Carregando contagens...</td>
-            </tr>
+            <tr><td colspan="7" class="empty">Carregando contagens...</td></tr>
           </tbody>
         </table>
       </div>
@@ -311,13 +132,15 @@
     const salvarBtn = document.getElementById("salvarBtn");
     const recarregarBtn = document.getElementById("recarregarBtn");
     const contagensBody = document.getElementById("contagensBody");
+
     const tabelasProdutos = [
-      { tabela: "perfis", categoria: "perfis", campoNome: "nome", select: "id, nome, custo" },
-      { tabela: "vidros", categoria: "vidros", campoNome: "tipo", select: "id, tipo, espessura, custo" },
-      { tabela: "puxadores", categoria: "puxadores", campoNome: "nome", select: "id, nome, custo" },
-      { tabela: "sistemas", categoria: "sistemas", campoNome: "nome", select: "id, nome, custo" },
-      { tabela: "trilhos", categoria: "trilhos", campoNome: "nome", select: "id, nome, custo" }
+      { tabela: "perfis", categoria: "perfis", campoNome: "nome", select: "id, nome, custo, preco" },
+      { tabela: "vidros", categoria: "vidros", campoNome: "tipo", select: "id, tipo, espessura, custo, preco" },
+      { tabela: "puxadores", categoria: "puxadores", campoNome: "nome", select: "id, nome, custo, preco" },
+      { tabela: "sistemas", categoria: "sistemas", campoNome: "nome", select: "id, nome, custo, preco" },
+      { tabela: "trilhos", categoria: "trilhos", campoNome: "nome", select: "id, nome, custo, preco" }
     ];
+
     const produtosPorChave = new Map();
 
     function mostrarMensagem(texto, tipo) {
@@ -328,6 +151,10 @@
     function valorDecimal(campo) {
       const valor = form.elements[campo].value;
       return valor === "" ? null : Number(valor);
+    }
+
+    function primeiroValorValido(...valores) {
+      return valores.find((valor) => valor !== null && valor !== undefined && valor !== "") ?? "";
     }
 
     function textoProduto(item, config) {
@@ -361,7 +188,7 @@
       produtosPorChave.set(chave, {
         nome,
         categoria: config.categoria,
-        custo: item.custo
+        custo: primeiroValorValido(item.custo, item.preco)
       });
 
       return option;
@@ -401,10 +228,7 @@
         }
 
         const { config, data } = resultado.value;
-        const opcoes = data
-          .map((item) => criarOpcaoProduto(item, config))
-          .filter(Boolean);
-
+        const opcoes = data.map((item) => criarOpcaoProduto(item, config)).filter(Boolean);
         if (!opcoes.length) return;
 
         const grupo = document.createElement("optgroup");
@@ -416,46 +240,29 @@
       produtoSelect.disabled = produtosPorChave.size === 0;
       salvarBtn.disabled = produtosPorChave.size === 0;
 
-      if (produtosPorChave.size === 0) {
-        limparSelectProdutos("Nenhum produto cadastrado encontrado");
-      }
-
-      if (erros.length) {
-        mostrarMensagem(`Algumas categorias não carregaram: ${erros.join(" | ")}`, "error");
-      }
+      if (produtosPorChave.size === 0) limparSelectProdutos("Nenhum produto cadastrado encontrado");
+      if (erros.length) mostrarMensagem(`Algumas categorias não carregaram: ${erros.join(" | ")}`, "error");
     }
 
     function atualizarProdutoSelecionado() {
       const produto = produtosPorChave.get(produtoSelect.value);
       categoriaInput.value = produto?.categoria || "";
-
-      if (produto?.custo !== null && produto?.custo !== undefined && produto.custo !== "") {
-        custoInput.value = produto.custo;
-      }
+      custoInput.value = produto?.custo ?? "";
     }
 
     function formatarNumero(valor) {
       if (valor === null || valor === undefined || valor === "") return "—";
-      return Number(valor).toLocaleString("pt-BR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
-      });
+      return Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
 
     function formatarMoeda(valor) {
       if (valor === null || valor === undefined || valor === "") return "—";
-      return Number(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-      });
+      return Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     }
 
     function formatarData(valor) {
       if (!valor) return "—";
-      return new Date(valor).toLocaleString("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short"
-      });
+      return new Date(valor).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
     }
 
     function criarCelula(texto) {
@@ -476,7 +283,6 @@
 
     function renderizarContagens(contagens) {
       contagensBody.innerHTML = "";
-
       if (!contagens.length) {
         renderizarLinhaMensagem("Nenhuma contagem cadastrada ainda.");
         return;
@@ -536,14 +342,9 @@
         return;
       }
 
-      if (dataContagem) {
-        novaContagem.data_contagem = new Date(dataContagem).toISOString();
-      }
+      if (dataContagem) novaContagem.data_contagem = new Date(dataContagem).toISOString();
 
-      const { error } = await supabase
-        .from("estoque")
-        .insert([novaContagem]);
-
+      const { error } = await supabase.from("estoque").insert([novaContagem]);
       salvarBtn.disabled = false;
 
       if (error) {
