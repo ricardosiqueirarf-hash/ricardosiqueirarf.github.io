@@ -89,6 +89,19 @@ def _storeid_usuario(usuario):
     )
 
 
+def _nome_usuario(usuario):
+    usuario = usuario or {}
+    dados = usuario.get("dados") if isinstance(usuario.get("dados"), dict) else {}
+    return (
+        usuario.get("nome")
+        or usuario.get("NOME")
+        or dados.get("nome")
+        or dados.get("NOME")
+        or usuario.get("user")
+        or ""
+    )
+
+
 def _buscar_usuario_por_login(login):
     from app import SUPABASE_URL, HEADERS
     response = requests.get(
@@ -229,6 +242,37 @@ def listar_usuarios():
         return jsonify({"success": False, "error": str(exc)}), 500
 
 
+@cadastro_login_bp.route("/api/lojas", methods=["GET", "OPTIONS"])
+def listar_lojas_publicas():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    from app import SUPABASE_URL, HEADERS
+    try:
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/usuarios",
+            headers=HEADERS,
+            params={
+                "select": "storeid,nome,dados,user",
+                "order": "nome.asc"
+            },
+            timeout=20
+        )
+        response.raise_for_status()
+        lojas = []
+        vistos = set()
+        for usuario in response.json() or []:
+            storeid = str(_storeid_usuario(usuario) or "").strip()
+            nome = str(_nome_usuario(usuario) or "").strip()
+            if not storeid or not nome or storeid in vistos:
+                continue
+            vistos.add(storeid)
+            lojas.append({"storeid": storeid, "nome": nome})
+        return jsonify({"success": True, "lojas": lojas})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @cadastro_login_bp.route("/api/auth/validar", methods=["POST"])
 def validar_token():
     token = extrair_token(request)
@@ -255,4 +299,3 @@ def validar_token():
         })
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
-
