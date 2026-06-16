@@ -1,7 +1,25 @@
 import requests
 from flask import g, request
 
-from logger_sistema import log_orcamento_criado, log_orcamento_alterado
+from logger_sistema import log_orcamento_criado, log_orcamento_alterado, registrar_log, nome_usuario
+
+
+STATUS_LABELS = {
+    0: "Cancelado",
+    1: "Orçamento",
+    2: "Aprovado",
+    3: "Em Produção",
+    4: "Separado",
+    5: "Entregue",
+}
+
+
+def _status_label(valor):
+    try:
+        v = int(valor)
+    except (TypeError, ValueError):
+        return str(valor or "-")
+    return STATUS_LABELS.get(v, str(v))
 
 
 def _usuario_request(module):
@@ -31,6 +49,19 @@ def _buscar_orcamento(uuid):
     r.raise_for_status()
     rows = r.json() or []
     return rows[0] if rows else None
+
+
+def _telegram_status(usuario, antes, depois):
+    return (
+        "LOG CONTROLE - STATUS ALTERADO\n\n"
+        f"Pedido: {depois.get('numero_pedido') or antes.get('numero_pedido') or '-'}\n"
+        f"Cliente: {depois.get('cliente_nome') or antes.get('cliente_nome') or '-'}\n"
+        f"Loja: {depois.get('lojaid') or antes.get('lojaid') or '-'}\n"
+        f"Valor total: {depois.get('valor_total') or antes.get('valor_total') or 0}\n"
+        f"Status: {_status_label(antes.get('status'))} ({antes.get('status')}) -> {_status_label(depois.get('status'))} ({depois.get('status')})\n\n"
+        f"Usuário: {nome_usuario(usuario)}\n"
+        f"UUID: {depois.get('id') or antes.get('id') or '-'}"
+    )
 
 
 def install(module):
@@ -104,6 +135,39 @@ def install(module):
                     acao="cliente_loja_alterado",
                     resumo=f"Orçamento {antes.get('numero_pedido') or antes.get('id')} teve cliente/loja alterado",
                     enviar_telegram_alerta=True,
+                )
+                return response
+
+            if method == "POST" and path.endswith("/status") and "/api/orcamento/" in path and resp.get("success"):
+                antes = getattr(g, "logger_orcamento_antes", None) or {}
+                partes = path.strip("/").split("/")
+                entidade_id = partes[2] if len(partes) >= 3 else antes.get("id")
+                depois = _buscar_orcamento(entidade_id) or {
+                    "id": entidade_id,
+                    "numero_pedido": antes.get("numero_pedido"),
+                    "cliente_nome": antes.get("cliente_nome"),
+                    "lojaid": antes.get("lojaid"),
+                    "valor_total": antes.get("valor_total"),
+                    "status": resp.get("status"),
+                }
+                registrar_log(
+                    categoria="orcamento",
+                    acao="status_alterado",
+                    usuario=usuario,
+                    severidade="info",
+                    origem="api_orcamento_status",
+                    entidade_tipo="orcamento",
+                    entidade_id=entidade_id,
+                    numero_pedido=depois.get("numero_pedido") or antes.get("numero_pedido"),
+                    valor_anterior={"status": antes.get("status"), "label": _status_label(antes.get("status"))},
+                    valor_novo={"status": depois.get("status"), "label": _status_label(depois.get("status"))},
+                    resumo=f"Pedido {depois.get('numero_pedido') or antes.get('numero_pedido') or entidade_id} alterado de {_status_label(antes.get('status'))} para {_status_label(depois.get('status'))}",
+                    metadata={
+                        "cliente_nome": depois.get("cliente_nome") or antes.get("cliente_nome"),
+                        "lojaid": depois.get("lojaid") or antes.get("lojaid"),
+                        "valor_total": depois.get("valor_total") or antes.get("valor_total"),
+                    },
+                    enviar_telegram_msg=_telegram_status(usuario, antes, depois),
                 )
                 return response
 
