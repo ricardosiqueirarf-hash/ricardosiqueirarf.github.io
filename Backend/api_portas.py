@@ -1,18 +1,10 @@
 from flask import Blueprint, request, jsonify
-import os
 import requests
 
 from auth_utils import buscar_usuario_por_token, extrair_token
+from logger_sistema import log_portas_alteradas, log_orcamento_alterado
 
 portas_bp = Blueprint("portas_bp", __name__)
-LOGS_TABLE = os.getenv("SUPABASE_TABLE_LOGS_SISTEMA", "logs_sistema")
-
-
-def _client_ip():
-    forwarded = request.headers.get("X-Forwarded-For") or ""
-    if forwarded:
-        return forwarded.split(",")[0].strip() or "unknown"
-    return request.remote_addr or "unknown"
 
 
 def _usuario_request():
@@ -25,31 +17,11 @@ def _usuario_request():
         return {}
 
 
-def _nome_usuario(usuario):
-    usuario = usuario or {}
-    dados = usuario.get("dados") if isinstance(usuario.get("dados"), dict) else {}
-    return dados.get("nome") or usuario.get("nome") or usuario.get("user") or usuario.get("userid") or "-"
-
-
-def _storeid(usuario):
-    usuario = usuario or {}
-    return usuario.get("storeid") or usuario.get("lojaid") or usuario.get("storeID") or usuario.get("lojaID")
-
-
 def _int_or_none(valor):
     try:
         return int(valor)
     except Exception:
         return None
-
-
-def _money_br(valor):
-    try:
-        numero = float(valor or 0)
-    except (TypeError, ValueError):
-        numero = 0.0
-    texto = f"{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return f"R$ {texto}"
 
 
 def _buscar_orcamento(orcamento_uuid):
@@ -90,75 +62,10 @@ def _contar_portas_existentes(orcamento_uuid):
     }
 
 
-def _registrar_log(usuario, orcamento_uuid, orcamento, anterior, novo):
-    from app import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-    usuario = usuario or {}
-    headers = {
-        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Prefer": "return=minimal",
-    }
-    payload = {
-        "usuario_id": usuario.get("userid"),
-        "usuario_nome": _nome_usuario(usuario),
-        "usuario_user": usuario.get("user"),
-        "usuario_level": _int_or_none(usuario.get("level")),
-        "storeid": _storeid(usuario),
-        "categoria": "orcamento",
-        "acao": "portas_alteradas",
-        "severidade": "info",
-        "origem": "api_portas",
-        "ip": _client_ip(),
-        "user_agent": request.headers.get("User-Agent") or "",
-        "entidade_tipo": "orcamento",
-        "entidade_id": orcamento_uuid,
-        "numero_pedido": _int_or_none(orcamento.get("numero_pedido")),
-        "valor_anterior": anterior if isinstance(anterior, dict) else {},
-        "valor_novo": novo if isinstance(novo, dict) else {},
-        "resumo": f"Portas do orçamento {orcamento.get('numero_pedido') or orcamento_uuid} foram alteradas",
-        "metadata": {
-            "cliente_nome": orcamento.get("cliente_nome"),
-            "lojaid": orcamento.get("lojaid"),
-            "status": orcamento.get("status"),
-        },
-    }
-    try:
-        r = requests.post(
-            f"{SUPABASE_URL}/rest/v1/{LOGS_TABLE}",
-            headers=headers,
-            json=payload,
-            timeout=10,
-        )
-        r.raise_for_status()
-    except Exception as exc:
-        print(f"[PORTAS_LOG] Falha ao registrar log: {exc}")
-
-
-def _telegram_send(texto):
-    try:
-        import api_orcamentos as tg
-        cfg = tg.load_telegram_env()
-        bot_token = cfg.get("TELEGRAM_" + "TOKEN")
-        chat_id = cfg.get("TELEGRAM_" + "CHAT_ID")
-        if not bot_token or not chat_id:
-            raise RuntimeError("Bot Telegram não configurado.")
-        url = tg._telegram_api_url(bot_token, "send" + "Message")
-        r = requests.post(url, json={"chat_id": chat_id, "text": texto}, timeout=15)
-        r.raise_for_status()
-        data = r.json()
-        if not data.get("ok"):
-            raise RuntimeError(data.get("description") or "Telegram recusou a mensagem.")
-    except Exception as exc:
-        print(f"[PORTAS_LOG] Falha ao enviar Telegram: {exc}")
-
-
 # =====================
 # ROTAS PORTAS
 # =====================
 
-# GET todas as portas de um orçamento
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/portas", methods=["GET"])
 def listar_portas(orcamento_uuid):
     from app import SUPABASE_URL, HEADERS
@@ -169,7 +76,6 @@ def listar_portas(orcamento_uuid):
         )
         r.raise_for_status()
         portas = r.json()
-        # converte text[] de volta para dict
         for p in portas:
             dados_array = p.get("dados", [])
             dados = {}
@@ -189,7 +95,7 @@ def listar_portas(orcamento_uuid):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# POST para substituir as portas de um orçamento
+
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/portas", methods=["POST"])
 def criar_portas(orcamento_uuid):
     from app import SUPABASE_URL, HEADERS
@@ -199,7 +105,6 @@ def criar_portas(orcamento_uuid):
         return jsonify({"success": False, "error": "Formato inválido para portas"}), 400
     try:
         usuario = _usuario_request()
-        orcamento_antes = _buscar_orcamento(orcamento_uuid)
         portas_antes = _contar_portas_existentes(orcamento_uuid)
 
         r_delete = requests.delete(
@@ -213,7 +118,6 @@ def criar_portas(orcamento_uuid):
             payload = []
             for p in portas:
                 dados_obj = p.get("dados", {})
-                # converte dict para array de texto
                 dados_array = [f"{k}:{v}" for k, v in dados_obj.items()]
                 payload.append({
                     "orcamento_uuid": p.get("orcamento_uuid", orcamento_uuid),
@@ -237,8 +141,6 @@ def criar_portas(orcamento_uuid):
             qtd = int(p.get("quantidade", 1) or 1)
             preco = float(p.get("preco", 0) or 0)
             quantidade_total += qtd
-            # O preço da porta já vem calculado com a quantidade no frontend.
-            # Não multiplica novamente para evitar inflar o valor_total exibido na loja.
             valor_total += preco
 
         payload_orcamento = {
@@ -252,27 +154,14 @@ def criar_portas(orcamento_uuid):
         )
         r_patch_orc.raise_for_status()
 
-        orcamento_depois = _buscar_orcamento(orcamento_uuid) or orcamento_antes
+        orcamento_depois = _buscar_orcamento(orcamento_uuid)
         novo = {
             "qtd_modelos": len(portas_salvas),
             "quantidade_total": quantidade_total,
             "valor_total": round(valor_total, 2),
             "tipos": [p.get("tipo") for p in portas if p.get("tipo")],
         }
-        _registrar_log(usuario, orcamento_uuid, orcamento_depois, portas_antes, novo)
-        _telegram_send(
-            "LOG PORTAS - PORTAS CRIADAS/ALTERADAS\n\n"
-            f"Pedido: {orcamento_depois.get('numero_pedido') or '-'}\n"
-            f"Cliente: {orcamento_depois.get('cliente_nome') or '-'}\n"
-            f"Modelos antes: {portas_antes.get('qtd_modelos') or 0}\n"
-            f"Modelos agora: {novo.get('qtd_modelos') or 0}\n"
-            f"Qtd antes: {portas_antes.get('quantidade_total') or 0}\n"
-            f"Qtd agora: {quantidade_total}\n"
-            f"Valor antes: {_money_br(portas_antes.get('valor_total'))}\n"
-            f"Valor agora: {_money_br(valor_total)}\n"
-            f"Usuário: {_nome_usuario(usuario)}\n"
-            f"UUID: {orcamento_uuid}"
-        )
+        log_portas_alteradas(usuario, orcamento_depois, portas_antes, novo, enviar_telegram_alerta=True)
 
         return jsonify({
             "success": True,
@@ -285,20 +174,16 @@ def criar_portas(orcamento_uuid):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# POST para finalizar orçamento (atualiza quantidade_total e valor_total)
+
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/finalizar", methods=["POST"])
 def finalizar_orcamento(orcamento_uuid):
     from app import SUPABASE_URL, HEADERS
-    data = request.json
+    data = request.json or {}
     quantidade_total = data.get("quantidade_total", 0)
     valor_total = data.get("valor_total", 0)
     try:
         usuario = _usuario_request()
         orcamento_antes = _buscar_orcamento(orcamento_uuid)
-        anterior = {
-            "quantidade_total": orcamento_antes.get("quantidade_total"),
-            "valor_total": orcamento_antes.get("valor_total"),
-        }
         payload = {
             "quantidade_total": quantidade_total,
             "valor_total": valor_total
@@ -310,21 +195,25 @@ def finalizar_orcamento(orcamento_uuid):
         )
         r_patch.raise_for_status()
         orcamento_depois = _buscar_orcamento(orcamento_uuid) or orcamento_antes
-        novo = {
-            "quantidade_total": quantidade_total,
-            "valor_total": valor_total,
-        }
-        _registrar_log(usuario, orcamento_uuid, orcamento_depois, anterior, novo)
-        _telegram_send(
-            "LOG PORTAS - TOTAIS FINALIZADOS\n\n"
-            f"Pedido: {orcamento_depois.get('numero_pedido') or '-'}\n"
-            f"Cliente: {orcamento_depois.get('cliente_nome') or '-'}\n"
-            f"Valor anterior: {_money_br(anterior.get('valor_total'))}\n"
-            f"Valor novo: {_money_br(valor_total)}\n"
-            f"Qtd anterior: {anterior.get('quantidade_total') or 0}\n"
-            f"Qtd nova: {quantidade_total}\n"
-            f"Usuário: {_nome_usuario(usuario)}\n"
-            f"UUID: {orcamento_uuid}"
+        log_orcamento_alterado(
+            usuario,
+            {
+                "id": orcamento_uuid,
+                "numero_pedido": orcamento_antes.get("numero_pedido"),
+                "cliente_nome": orcamento_antes.get("cliente_nome"),
+                "quantidade_total": orcamento_antes.get("quantidade_total"),
+                "valor_total": orcamento_antes.get("valor_total"),
+            },
+            {
+                "id": orcamento_uuid,
+                "numero_pedido": orcamento_depois.get("numero_pedido"),
+                "cliente_nome": orcamento_depois.get("cliente_nome"),
+                "quantidade_total": quantidade_total,
+                "valor_total": valor_total,
+            },
+            acao="totais_finalizados",
+            resumo=f"Totais do orçamento {orcamento_depois.get('numero_pedido') or orcamento_uuid} foram finalizados",
+            enviar_telegram_alerta=True,
         )
         return jsonify({"success": True})
     except requests.HTTPError as http_err:
