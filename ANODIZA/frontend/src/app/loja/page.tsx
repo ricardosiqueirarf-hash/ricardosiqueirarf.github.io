@@ -4,8 +4,18 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 
 type Usuario = { id: string; nome: string; email: string; perfil: string; ativo?: boolean };
+type Orcamento = {
+  id: string;
+  loja_nome: string;
+  numero_pedido: string;
+  cliente_nome: string;
+  cliente_telefone: string;
+  status: string;
+  valor_total: number;
+  created_at?: string;
+};
 type LojaIndex = { titulo: string; cards: { label: string; valor: number }[] };
-type Aba = "painel" | "usuarios";
+type Aba = "painel" | "orcamentos" | "usuarios";
 
 const fallbackIndex: LojaIndex = {
   titulo: "Painel da Loja",
@@ -16,21 +26,43 @@ const fallbackIndex: LojaIndex = {
   ],
 };
 
+function formatarValor(valor: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
+}
+
 export default function LojaPage() {
   const [abaAtiva, setAbaAtiva] = useState<Aba>("painel");
   const [data, setData] = useState<LojaIndex>(fallbackIndex);
   const [empresaSlug, setEmpresaSlug] = useState("");
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const [buscaOrcamento, setBuscaOrcamento] = useState("");
   const [mensagem, setMensagem] = useState("");
+  const [mensagemOrcamentos, setMensagemOrcamentos] = useState("");
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", email: "", perfil: "vendedor" });
 
   async function carregarUsuarios(slug: string) {
     if (!slug) return;
     try {
-      const lista = await apiGet<Usuario[]>(`/api/loja/usuarios?empresa_slug=${slug}`);
+      const lista = await apiGet<Usuario[]>(`/api/loja/usuarios?empresa_slug=${encodeURIComponent(slug)}`);
       setUsuarios(lista);
     } catch {
       setUsuarios([]);
+    }
+  }
+
+  async function carregarOrcamentos(slug: string, busca = buscaOrcamento) {
+    if (!slug) return;
+    setMensagemOrcamentos("Carregando orcamentos...");
+    try {
+      const params = new URLSearchParams({ empresa_slug: slug, busca });
+      const lista = await apiGet<Orcamento[]>(`/api/loja/orcamentos?${params.toString()}`);
+      setOrcamentos(lista);
+      setMensagemOrcamentos(lista.length ? "" : "Nenhum orcamento encontrado.");
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setOrcamentos([]);
+      setMensagemOrcamentos(`Nao foi possivel carregar os orcamentos. ${detalhe}`);
     }
   }
 
@@ -44,6 +76,16 @@ export default function LojaPage() {
   async function abrirAbaUsuarios() {
     setAbaAtiva("usuarios");
     await carregarUsuarios(empresaSlug);
+  }
+
+  async function abrirAbaOrcamentos() {
+    setAbaAtiva("orcamentos");
+    await carregarOrcamentos(empresaSlug);
+  }
+
+  async function handleBuscarOrcamentos(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await carregarOrcamentos(empresaSlug, buscaOrcamento);
   }
 
   async function handleCriarUsuario(event: React.FormEvent<HTMLFormElement>) {
@@ -80,6 +122,13 @@ export default function LojaPage() {
           </button>
           <button
             type="button"
+            onClick={abrirAbaOrcamentos}
+            style={{ background: abaAtiva === "orcamentos" ? "var(--primary)" : "#0f172a", color: abaAtiva === "orcamentos" ? "#111827" : "var(--text)", border: "1px solid var(--border)" }}
+          >
+            Orcamentos
+          </button>
+          <button
+            type="button"
             onClick={abrirAbaUsuarios}
             style={{ background: abaAtiva === "usuarios" ? "var(--primary)" : "#0f172a", color: abaAtiva === "usuarios" ? "#111827" : "var(--text)", border: "1px solid var(--border)" }}
           >
@@ -102,6 +151,34 @@ export default function LojaPage() {
               ))}
             </div>
           </>
+        )}
+
+        {abaAtiva === "orcamentos" && (
+          <section className="card" style={{ maxWidth: "none" }}>
+            <h1>Orcamentos</h1>
+            <p>Lista de orcamentos da empresa. Pesquise por loja, cliente, telefone ou numero do pedido.</p>
+            <form onSubmit={handleBuscarOrcamentos} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}>
+              <label>Pesquisar
+                <input
+                  value={buscaOrcamento}
+                  onChange={(event) => setBuscaOrcamento(event.target.value)}
+                  placeholder="Loja, cliente, telefone ou numero"
+                />
+              </label>
+              <button type="submit">Buscar</button>
+            </form>
+            {mensagemOrcamentos && <p style={{ marginTop: 16 }}>{mensagemOrcamentos}</p>}
+            <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
+              {orcamentos.map((orcamento) => (
+                <div className="metric" key={orcamento.id}>
+                  <strong style={{ fontSize: 18 }}>{orcamento.cliente_nome || "Cliente nao informado"}</strong>
+                  <p>Loja: {orcamento.loja_nome}</p>
+                  <p>Numero: {orcamento.numero_pedido || "sem numero"} • Telefone: {orcamento.cliente_telefone || "sem telefone"}</p>
+                  <p>Status: {orcamento.status} • Valor: {formatarValor(orcamento.valor_total)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {abaAtiva === "usuarios" && (
