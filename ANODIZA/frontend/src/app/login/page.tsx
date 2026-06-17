@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiPost } from "@/lib/api";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [empresaSlug, setEmpresaSlug] = useState("anodiza");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -15,9 +17,10 @@ export default function LoginPage() {
     setMensagem("Entrando...");
     try {
       await apiPost("/api/auth/login", { empresa_slug: empresaSlug, email, senha });
-      setMensagem("Login recebido pela API.");
+      setMensagem("Login realizado.");
+      router.push("/loja");
     } catch {
-      setMensagem("Nao foi possivel conectar com a API.");
+      setMensagem("Nao foi possivel entrar. Confira empresa, e-mail e senha.");
     }
   }
 
