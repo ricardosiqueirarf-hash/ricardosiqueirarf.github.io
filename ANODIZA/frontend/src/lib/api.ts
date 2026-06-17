@@ -24,10 +24,19 @@ async function readErrorMessage(response: Response): Promise<string> {
   }
 }
 
+function showDebugError(message: string) {
+  if (typeof window !== "undefined") {
+    console.error("ANODIZA API:", message);
+    alert(`Erro da API: ${message}`);
+  }
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, { cache: "no-store" });
   if (!response.ok) {
-    throw new Error(await readErrorMessage(response));
+    const message = await readErrorMessage(response);
+    showDebugError(message);
+    throw new Error(message);
   }
   return response.json();
 }
@@ -39,7 +48,9 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    throw new Error(await readErrorMessage(response));
+    const message = await readErrorMessage(response);
+    showDebugError(message);
+    throw new Error(message);
   }
   return response.json();
 }
