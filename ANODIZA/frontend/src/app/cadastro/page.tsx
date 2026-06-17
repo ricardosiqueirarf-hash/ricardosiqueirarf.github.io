@@ -1,12 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiPost } from "@/lib/api";
 
+type AuthResponse = {
+  access_token: string;
+  empresa_slug: string;
+  usuario: { nome: string; email: string };
+};
+
 export default function CadastroPage() {
+  const router = useRouter();
   const [mensagem, setMensagem] = useState("");
-  const [form, setForm] = useState({ empresa_nome: "", empresa_slug: "", loja_nome: "", nome: "", email: "", senha: "" });
+  const [form, setForm] = useState({ empresa_nome: "", loja_nome: "", nome: "", email: "", senha: "" });
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -16,10 +24,13 @@ export default function CadastroPage() {
     event.preventDefault();
     setMensagem("Criando cadastro...");
     try {
-      await apiPost("/api/auth/cadastro", form);
-      setMensagem("Cadastro recebido pela API.");
+      const data = await apiPost<AuthResponse>("/api/auth/cadastro", form);
+      localStorage.setItem("anodiza_token", data.access_token);
+      localStorage.setItem("anodiza_empresa_slug", data.empresa_slug);
+      setMensagem(`Cadastro criado. Empresa: ${data.empresa_slug}`);
+      router.push("/loja");
     } catch {
-      setMensagem("Nao foi possivel conectar com a API.");
+      setMensagem("Nao foi possivel criar o cadastro. Confira os dados e tente novamente.");
     }
   }
 
@@ -28,10 +39,9 @@ export default function CadastroPage() {
       <section className="card">
         <div className="brand"><div className="brand-mark">A</div><div><strong>ANODIZA</strong><p>Novo ambiente</p></div></div>
         <h1>Criar cadastro</h1>
-        <p>Crie a empresa, a primeira loja e o usuario principal.</p>
+        <p>Crie a empresa, a primeira loja e o usuario principal. O identificador da empresa sera gerado automaticamente.</p>
         <form onSubmit={handleSubmit}>
           <label>Nome da empresa<input value={form.empresa_nome} onChange={(event) => updateField("empresa_nome", event.target.value)} /></label>
-          <label>Slug da empresa<input value={form.empresa_slug} onChange={(event) => updateField("empresa_slug", event.target.value)} /></label>
           <label>Nome da loja<input value={form.loja_nome} onChange={(event) => updateField("loja_nome", event.target.value)} /></label>
           <label>Seu nome<input value={form.nome} onChange={(event) => updateField("nome", event.target.value)} /></label>
           <label>E-mail<input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} /></label>
