@@ -5,14 +5,21 @@ from app.core.config import get_settings
 from app.routes import auth, loja, tenants
 
 settings = get_settings()
-origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+origins = [origin.strip().rstrip("/") for origin in settings.cors_origins.split(",") if origin.strip()]
+origins.extend([
+    "https://anodiza-frontend.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+])
+origins = sorted(set(origins))
 
 app = FastAPI(title="ANODIZA API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_origin_regex=".*",
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -24,4 +31,4 @@ app.include_router(loja.router, prefix="/api/loja", tags=["loja"])
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "app": "ANODIZA"}
+    return {"status": "ok", "app": "ANODIZA", "cors_origins": origins}
