@@ -39,7 +39,9 @@ export default function LojaPage() {
   const [buscaOrcamento, setBuscaOrcamento] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [mensagemOrcamentos, setMensagemOrcamentos] = useState("");
+  const [mensagemNovoOrcamento, setMensagemNovoOrcamento] = useState("");
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", email: "", perfil: "vendedor" });
+  const [novoOrcamento, setNovoOrcamento] = useState({ cliente_nome: "", cliente_telefone: "", numero_pedido: "", valor_total: "" });
 
   async function carregarUsuarios(slug: string) {
     if (!slug) return;
@@ -86,6 +88,24 @@ export default function LojaPage() {
   async function handleBuscarOrcamentos(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await carregarOrcamentos(empresaSlug, buscaOrcamento);
+  }
+
+  async function handleCriarOrcamento(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!empresaSlug) {
+      setMensagemNovoOrcamento("Entre novamente para identificar a empresa.");
+      return;
+    }
+    setMensagemNovoOrcamento("Criando orcamento...");
+    try {
+      await apiPost("/api/loja/orcamentos", { empresa_slug: empresaSlug, ...novoOrcamento });
+      setNovoOrcamento({ cliente_nome: "", cliente_telefone: "", numero_pedido: "", valor_total: "" });
+      setMensagemNovoOrcamento("Orcamento criado.");
+      await carregarOrcamentos(empresaSlug, buscaOrcamento);
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setMensagemNovoOrcamento(`Nao foi possivel criar o orcamento. ${detalhe}`);
+    }
   }
 
   async function handleCriarUsuario(event: React.FormEvent<HTMLFormElement>) {
@@ -156,17 +176,42 @@ export default function LojaPage() {
         {abaAtiva === "orcamentos" && (
           <section className="card" style={{ maxWidth: "none" }}>
             <h1>Orcamentos</h1>
-            <p>Lista de orcamentos da empresa. Pesquise por loja, cliente, telefone ou numero do pedido.</p>
-            <form onSubmit={handleBuscarOrcamentos} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}>
-              <label>Pesquisar
-                <input
-                  value={buscaOrcamento}
-                  onChange={(event) => setBuscaOrcamento(event.target.value)}
-                  placeholder="Loja, cliente, telefone ou numero"
-                />
-              </label>
-              <button type="submit">Buscar</button>
-            </form>
+            <p>Crie e pesquise orcamentos da empresa ativa.</p>
+
+            <div className="metric" style={{ marginTop: 18 }}>
+              <strong style={{ fontSize: 18 }}>Criar orcamento</strong>
+              <form onSubmit={handleCriarOrcamento} style={{ marginTop: 14 }}>
+                <label>Nome do cliente
+                  <input value={novoOrcamento.cliente_nome} onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_nome: event.target.value }))} />
+                </label>
+                <label>Numero do cliente / telefone
+                  <input value={novoOrcamento.cliente_telefone} onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_telefone: event.target.value }))} />
+                </label>
+                <label>Numero do pedido
+                  <input value={novoOrcamento.numero_pedido} onChange={(event) => setNovoOrcamento((current) => ({ ...current, numero_pedido: event.target.value }))} placeholder="Opcional" />
+                </label>
+                <label>Valor inicial
+                  <input value={novoOrcamento.valor_total} onChange={(event) => setNovoOrcamento((current) => ({ ...current, valor_total: event.target.value }))} placeholder="0" />
+                </label>
+                <button type="submit">Criar orcamento</button>
+              </form>
+              {mensagemNovoOrcamento && <p style={{ marginTop: 12 }}>{mensagemNovoOrcamento}</p>}
+            </div>
+
+            <div style={{ marginTop: 24 }}>
+              <h2>Lista de orcamentos</h2>
+              <form onSubmit={handleBuscarOrcamentos} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}>
+                <label>Pesquisar
+                  <input
+                    value={buscaOrcamento}
+                    onChange={(event) => setBuscaOrcamento(event.target.value)}
+                    placeholder="Loja, cliente, telefone ou numero"
+                  />
+                </label>
+                <button type="submit">Buscar</button>
+              </form>
+            </div>
+
             {mensagemOrcamentos && <p style={{ marginTop: 16 }}>{mensagemOrcamentos}</p>}
             <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
               {orcamentos.map((orcamento) => (
