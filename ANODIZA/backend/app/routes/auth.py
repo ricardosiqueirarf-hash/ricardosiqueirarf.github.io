@@ -5,20 +5,24 @@ from app.db.supabase_client import get_supabase
 router = APIRouter()
 
 
+def run_rpc(name: str, payload: dict):
+    try:
+        result = get_supabase().rpc(name, payload).execute()
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Operacao nao realizada")
+    return result.data
+
+
 @router.post("/cadastro")
 def cadastro(payload: dict):
-    result = get_supabase().rpc("cadastro_empresa", payload).execute()
-    if not result.data:
-        raise HTTPException(status_code=400, detail="Cadastro nao realizado")
-    return result.data
+    return run_rpc("cadastro_empresa", payload)
 
 
 @router.post("/login")
 def login(payload: dict):
-    result = get_supabase().rpc("login_empresa", payload).execute()
-    if not result.data:
-        raise HTTPException(status_code=401, detail="Dados invalidos")
-    return result.data
+    return run_rpc("login_empresa", payload)
 
 
 @router.get("/me")
