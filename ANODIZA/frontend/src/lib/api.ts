@@ -1,6 +1,11 @@
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export const API_URL = rawApiUrl.replace(/\/+$/, "");
 
+type ApiErrorDetailItem = {
+  msg?: string;
+  [key: string]: unknown;
+};
+
 async function readErrorMessage(response: Response): Promise<string> {
   const text = await response.text();
   if (!text) {
@@ -8,12 +13,12 @@ async function readErrorMessage(response: Response): Promise<string> {
   }
 
   try {
-    const data = JSON.parse(text);
+    const data = JSON.parse(text) as { detail?: string | ApiErrorDetailItem[]; message?: string };
     if (typeof data.detail === "string") {
       return data.detail;
     }
     if (Array.isArray(data.detail)) {
-      return data.detail.map((item) => item.msg || JSON.stringify(item)).join(" | ");
+      return data.detail.map((item: ApiErrorDetailItem) => item.msg || JSON.stringify(item)).join(" | ");
     }
     if (typeof data.message === "string") {
       return data.message;
