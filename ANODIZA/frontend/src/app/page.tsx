@@ -12,11 +12,10 @@ export default function HomePage() {
           </div>
         </div>
         <h1>Bem-vindo</h1>
-        <p>Escolha uma rota inicial do MVP.</p>
+        <p>Acesse sua conta ou crie o primeiro cadastro.</p>
         <div style={{ display: "grid", gap: 12, marginTop: 24 }}>
           <Link href="/login"><button>Entrar</button></Link>
           <Link href="/cadastro"><button>Criar cadastro</button></Link>
-          <Link href="/loja"><button>Abrir loja</button></Link>
         </div>
       </section>
     </main>
