@@ -1,27 +1,22 @@
 from fastapi import APIRouter
 
+from app.db.supabase_client import get_supabase
+
 router = APIRouter()
 
 
 @router.post("/cadastro")
 def cadastro(payload: dict):
-    return {
-        "ok": True,
-        "message": "Rota de cadastro criada.",
-        "payload_recebido": {k: v for k, v in payload.items() if k != "senha"},
-    }
+    supabase = get_supabase()
+    empresa = supabase.table("empresas").insert({"nome": payload.get("empresa_nome"), "slug": "teste"}).execute().data[0]
+    return {"ok": True, "empresa": empresa}
 
 
 @router.post("/login")
 def login(payload: dict):
-    return {
-        "ok": True,
-        "message": "Rota de login criada.",
-        "empresa_slug": payload.get("empresa_slug"),
-        "email": payload.get("email"),
-    }
+    return {"ok": True}
 
 
 @router.get("/me")
 def me():
-    return {"ok": True, "message": "Sessao do usuario sera ligada aqui."}
+    return {"ok": True}
