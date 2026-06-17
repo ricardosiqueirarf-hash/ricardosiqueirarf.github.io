@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 
 try:
@@ -10,6 +11,8 @@ except Exception:
 
 
 LOGS_TABLE = os.getenv("SUPABASE_TABLE_LOGS_SISTEMA", "logs_sistema")
+_USUARIO_CACHE = {}
+_UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 
 def _supabase_config():
@@ -53,7 +56,9 @@ def _int_or_none(valor):
 
 def _uuid_or_none(valor):
     texto = str(valor or "").strip()
-    return texto or None
+    if not texto or not _UUID_RE.match(texto):
+        return None
+    return texto
 
 
 def _storeid(usuario):
@@ -66,18 +71,72 @@ def _storeid(usuario):
     )
 
 
-def nome_usuario(usuario):
+def _nome_direto(usuario):
     usuario = usuario or {}
     dados = usuario.get("dados") if isinstance(usuario.get("dados"), dict) else {}
-    return str(
-        dados.get("nome")
-        or dados.get("NOME")
-        or usuario.get("nome")
-        or usuario.get("NOME")
-        or usuario.get("user")
-        or usuario.get("userid")
-        or "-"
-    ).strip()
+    for valor in (
+        dados.get("nome"),
+        dados.get("NOME"),
+        dados.get("name"),
+        usuario.get("nome"),
+        usuario.get("NOME"),
+        usuario.get("name"),
+        usuario.get("usuario"),
+        usuario.get("user"),
+    ):
+        texto = str(valor or "").strip()
+        if texto:
+            return texto
+    return ""
+
+
+def _buscar_usuario_por_userid(userid):
+    userid = str(userid or "").strip()
+    if not userid:
+        return None
+    if userid in _USUARIO_CACHE:
+        return _USUARIO_CACHE[userid]
+
+    url, key = _supabase_config()
+    if not url or not key:
+        return None
+
+    try:
+        r = requests.get(
+            f"{url}/rest/v1/usuarios",
+            headers=_headers(prefer="return=representation"),
+            params={
+                "select": "userid,user,nome,NOME,dados,level,storeid,lojaid,storeID,lojaID",
+                "userid": f"eq.{userid}",
+                "limit": "1",
+            },
+            timeout=8,
+        )
+        r.raise_for_status()
+        rows = r.json() or []
+        usuario = rows[0] if rows else None
+        if usuario:
+            _USUARIO_CACHE[userid] = usuario
+        return usuario
+    except Exception as exc:
+        print(f"[LOGGER_SISTEMA] Falha ao resolver usuario {userid}: {exc}")
+        return None
+
+
+def nome_usuario(usuario):
+    usuario = usuario or {}
+    nome = _nome_direto(usuario)
+    userid = str(usuario.get("userid") or "").strip()
+
+    if nome and not _UUID_RE.match(nome):
+        return nome
+
+    usuario_db = _buscar_usuario_por_userid(userid)
+    nome_db = _nome_direto(usuario_db or {})
+    if nome_db and not _UUID_RE.match(nome_db):
+        return nome_db
+
+    return nome or userid or "-"
 
 
 def _json_obj(valor):
@@ -140,13 +199,16 @@ def registrar_log(
 
     usuario = usuario or {}
     metadata = metadata if isinstance(metadata, dict) else {}
+    userid = _uuid_or_none(usuario.get("userid"))
+    usuario_db = _buscar_usuario_por_userid(userid) if userid else None
+    usuario_ref = usuario_db or usuario
 
     payload = {
-        "usuario_id": _uuid_or_none(usuario.get("userid")),
-        "usuario_nome": nome_usuario(usuario),
-        "usuario_user": usuario.get("user"),
-        "usuario_level": _int_or_none(usuario.get("level")),
-        "storeid": _storeid(usuario),
+        "usuario_id": userid,
+        "usuario_nome": nome_usuario(usuario_ref),
+        "usuario_user": usuario_ref.get("user") or usuario.get("user"),
+        "usuario_level": _int_or_none(usuario_ref.get("level") if usuario_ref else usuario.get("level")),
+        "storeid": _storeid(usuario_ref) or _storeid(usuario),
         "categoria": str(categoria),
         "acao": str(acao),
         "severidade": str(severidade or "info"),
