@@ -1,4 +1,18 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+
+
+class CadastroRequest(BaseModel):
+    empresa_nome: str = Field(min_length=2)
+    loja_nome: str = Field(min_length=2)
+    nome: str = Field(min_length=2)
+    email: EmailStr
+    senha: str = Field(min_length=6)
+
+
+class LoginRequest(BaseModel):
+    empresa_slug: str = Field(min_length=2)
+    email: EmailStr
+    senha: str = Field(min_length=6)
 
 
 class UsuarioResponse(BaseModel):
@@ -8,6 +22,13 @@ class UsuarioResponse(BaseModel):
     nome: str
     email: EmailStr
     perfil: str
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    usuario: UsuarioResponse
+    empresa_slug: str
 
 
 class TenantResponse(BaseModel):
