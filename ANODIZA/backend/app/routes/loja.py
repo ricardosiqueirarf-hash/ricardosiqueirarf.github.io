@@ -26,6 +26,13 @@ def buscar_empresa_id(supabase, empresa_slug: str):
     return empresa_result.data[0]["id"]
 
 
+def buscar_loja_principal(supabase, empresa_id: str):
+    lojas_result = supabase.table("lojas").select("id,nome").eq("empresa_id", empresa_id).limit(1).execute()
+    if not lojas_result.data:
+        return None
+    return lojas_result.data[0]
+
+
 @router.get("/usuarios")
 def listar_usuarios(empresa_slug: str = Query(default="")):
     supabase = get_supabase()
@@ -81,6 +88,53 @@ def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(
         })
 
     return lista
+
+
+@router.post("/orcamentos")
+def criar_orcamento(payload: dict):
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    cliente_nome = str(payload.get("cliente_nome") or "").strip()
+    cliente_telefone = str(payload.get("cliente_telefone") or "").strip()
+    numero_pedido = str(payload.get("numero_pedido") or "").strip()
+    status = str(payload.get("status") or "rascunho").strip() or "rascunho"
+
+    try:
+        valor_total = float(payload.get("valor_total") or 0)
+    except (TypeError, ValueError):
+        valor_total = 0
+
+    if not cliente_nome:
+        raise HTTPException(status_code=400, detail="Informe o nome do cliente")
+
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+
+    loja = buscar_loja_principal(supabase, empresa_id)
+    if not loja:
+        raise HTTPException(status_code=400, detail="Loja nao identificada")
+
+    if not numero_pedido:
+        numero_pedido = f"ORC-{cliente_telefone[-4:] or '0000'}"
+
+    try:
+        result = supabase.table("orcamentos").insert({
+            "empresa_id": empresa_id,
+            "loja_id": loja["id"],
+            "numero_pedido": numero_pedido,
+            "cliente_nome": cliente_nome,
+            "cliente_telefone": cliente_telefone,
+            "status": status,
+            "valor_total": valor_total,
+            "dados": {},
+        }).execute()
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Orcamento nao criado")
+    return result.data[0]
 
 
 @router.post("/usuarios")
