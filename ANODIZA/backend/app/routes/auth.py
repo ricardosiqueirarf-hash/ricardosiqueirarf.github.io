@@ -7,7 +7,7 @@ router = APIRouter()
 
 def run_rpc(name: str, payload: dict):
     try:
-        result = get_supabase().rpc(name, payload).execute()
+        result = get_supabase().rpc(name, {"payload": payload}).execute()
     except Exception as error:
         raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
     if not result.data:
