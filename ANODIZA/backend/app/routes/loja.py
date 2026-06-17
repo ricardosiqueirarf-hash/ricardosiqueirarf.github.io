@@ -34,7 +34,10 @@ def listar_usuarios(empresa_slug: str = Query(default="")):
 
 @router.post("/usuarios")
 def criar_usuario(payload: dict):
-    result = get_supabase().rpc("criar_usuario_empresa", payload).execute()
+    try:
+        result = get_supabase().rpc("criar_usuario_empresa", {"payload": payload}).execute()
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
     if not result.data:
         raise HTTPException(status_code=400, detail="Usuario nao criado")
     return result.data
