@@ -150,6 +150,13 @@ pages.forEach(p => {
       aplicou = true;
     }
 
+    if (typeof window.registrarLogFichaCriada === "function") {
+      window.registrarLogFichaCriada = async function registrarLogFichaCriadaDesativado() {
+        return null;
+      };
+      aplicou = true;
+    }
+
     return aplicou;
   }
 
@@ -157,7 +164,7 @@ pages.forEach(p => {
   const timer = setInterval(() => {
     tentativas += 1;
     const ok = aplicarPatch();
-    if (ok || tentativas >= 40) {
+    if (ok || tentativas >= 80) {
       clearInterval(timer);
     }
   }, 25);
