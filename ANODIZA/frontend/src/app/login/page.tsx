@@ -6,7 +6,7 @@ import { useState } from "react";
 import { apiPost } from "@/lib/api";
 
 type LoginResponse = {
-  access_token?: string;
+  chave_acesso?: string;
   empresa_slug?: string;
   usuario?: { nome: string; email: string; perfil?: string; permissoes?: Record<string, boolean> };
 };
@@ -23,7 +23,7 @@ export default function LoginPage() {
     setMensagem("Entrando...");
     try {
       const data = await apiPost<LoginResponse>("/api/auth/login", { empresa_slug: empresaSlug, email, senha });
-      if (data.access_token) localStorage.setItem("anodiza_token", data.access_token);
+      if (data.chave_acesso) localStorage.setItem("anodiza_chave_acesso", data.chave_acesso);
       localStorage.setItem("anodiza_empresa_slug", data.empresa_slug || empresaSlug);
       if (data.usuario) localStorage.setItem("anodiza_usuario", JSON.stringify(data.usuario));
       setMensagem("Login realizado.");
