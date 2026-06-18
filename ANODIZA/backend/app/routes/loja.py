@@ -33,27 +33,20 @@ def buscar_loja_principal(supabase, empresa_id: str):
     return result.data[0]
 
 
-def buscar_ou_criar_cliente(supabase, empresa_id: str, cliente_nome: str):
-    existente = (
+def buscar_cliente(supabase, empresa_id: str, cliente_id: str):
+    if not cliente_id:
+        return None
+    result = (
         supabase.table("clientes")
-        .select("id,nome")
+        .select("id,nome,telefone,ativo")
         .eq("empresa_id", empresa_id)
-        .ilike("nome", cliente_nome)
+        .eq("id", cliente_id)
         .limit(1)
         .execute()
     )
-    if existente.data:
-        return existente.data[0]
-
-    loja = buscar_loja_principal(supabase, empresa_id)
-    dados = {"empresa_id": empresa_id, "nome": cliente_nome}
-    if loja:
-        dados["loja_id"] = loja["id"]
-
-    criado = supabase.table("clientes").insert(dados).execute()
-    if not criado.data:
+    if not result.data:
         return None
-    return criado.data[0]
+    return result.data[0]
 
 
 def proximo_numero_orcamento(supabase, cliente_id: str) -> int:
@@ -75,6 +68,45 @@ def listar_clientes(empresa_slug: str = Query(default="")):
 
     result = supabase.table("clientes").select("id,nome,telefone,ativo").eq("empresa_id", empresa_id).order("created_at", desc=False).execute()
     return result.data or []
+
+
+@router.post("/clientes")
+def criar_cliente(payload: dict):
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    nome = str(payload.get("nome") or "").strip()
+
+    if not nome:
+        raise HTTPException(status_code=400, detail="Informe o nome do cliente")
+
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+
+    existente = (
+        supabase.table("clientes")
+        .select("id,nome,telefone,ativo")
+        .eq("empresa_id", empresa_id)
+        .ilike("nome", nome)
+        .limit(1)
+        .execute()
+    )
+    if existente.data:
+        return existente.data[0]
+
+    loja = buscar_loja_principal(supabase, empresa_id)
+    dados = {"empresa_id": empresa_id, "nome": nome}
+    if loja:
+        dados["loja_id"] = loja["id"]
+
+    try:
+        result = supabase.table("clientes").insert(dados).execute()
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Cliente nao criado")
+    return result.data[0]
 
 
 @router.get("/usuarios")
@@ -135,29 +167,29 @@ def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(
 @router.post("/orcamentos")
 def criar_orcamento(payload: dict):
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
-    cliente_nome = str(payload.get("cliente_nome") or "").strip()
+    cliente_id = str(payload.get("cliente_id") or "").strip()
     nome_orcamento = str(payload.get("nome_orcamento") or "").strip()
 
-    if not cliente_nome:
-        raise HTTPException(status_code=400, detail="Informe o nome do cliente")
     if not nome_orcamento:
         raise HTTPException(status_code=400, detail="Informe o nome do orcamento")
+    if not cliente_id:
+        raise HTTPException(status_code=400, detail="Selecione o cliente")
 
     supabase = get_supabase()
     empresa_id = buscar_empresa_id(supabase, empresa_slug)
     if not empresa_id:
         raise HTTPException(status_code=400, detail="Empresa nao identificada")
 
-    cliente = buscar_ou_criar_cliente(supabase, empresa_id, cliente_nome)
+    cliente = buscar_cliente(supabase, empresa_id, cliente_id)
     if not cliente:
-        raise HTTPException(status_code=400, detail="Cliente nao criado")
+        raise HTTPException(status_code=400, detail="Cliente nao encontrado")
 
     loja = buscar_loja_principal(supabase, empresa_id)
-    numero_pedido = str(proximo_numero_orcamento(supabase, cliente["id"]))
+    numero_pedido = str(proximo_numero_orcamento(supabase, cliente_id))
 
     dados = {
         "empresa_id": empresa_id,
-        "cliente_id": cliente["id"],
+        "cliente_id": cliente_id,
         "numero_pedido": numero_pedido,
         "nome_orcamento": nome_orcamento,
         "cliente_nome": cliente["nome"],
