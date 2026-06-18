@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 
 from app.db.supabase_client import get_supabase
 
@@ -26,5 +26,7 @@ def login(payload: dict):
 
 
 @router.get("/me")
-def me():
-    return {"ok": True, "secure": False}
+def me(x_anodiza_key: str | None = Header(default=None)):
+    if not x_anodiza_key:
+        raise HTTPException(status_code=401, detail="Sessao obrigatoria")
+    return {"ok": True}
