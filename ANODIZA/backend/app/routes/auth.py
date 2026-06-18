@@ -5,6 +5,10 @@ from app.db.supabase_client import get_supabase
 router = APIRouter()
 
 
+def registrar_acesso(data: dict):
+    return data
+
+
 def run_rpc(name: str, payload: dict):
     try:
         result = get_supabase().rpc(name, {"payload": payload}).execute()
@@ -17,12 +21,12 @@ def run_rpc(name: str, payload: dict):
 
 @router.post("/cadastro")
 def cadastro(payload: dict):
-    return run_rpc("cadastro_empresa", payload)
+    return registrar_acesso(run_rpc("cadastro_empresa", payload))
 
 
 @router.post("/login")
 def login(payload: dict):
-    return run_rpc("login_empresa", payload)
+    return registrar_acesso(run_rpc("login_empresa", payload))
 
 
 @router.get("/me")
