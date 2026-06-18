@@ -17,8 +17,11 @@ type Orcamento = {
 };
 type ProdutoOrcamento = { id: string; nome: string; quantidade: number; valor_unitario: number; valor_total: number };
 type LojaIndex = { titulo: string; cards: { label: string; valor: number }[] };
-type Aba = "painel" | "orcamentos" | "clientes" | "usuarios";
+type Aba = "painel" | "orcamentos" | "clientes" | "usuarios" | "ajustes" | "materiais";
+type Tema = "dark" | "light";
 type ClienteForm = { id?: string; nome: string; documento: string; email: string; telefone: string };
+type CategoriaMaterial = "vidros" | "perfis" | "puxadores" | "sistemas" | "trilhos" | "insumos";
+type OpcaoSistema = "porta_giro" | "porta_deslizante" | "porta_basculante" | "produtos_orcamento" | "aprovacao_pedido";
 
 const fallbackIndex: LojaIndex = {
   titulo: "Painel da Loja",
@@ -32,16 +35,52 @@ const fallbackIndex: LojaIndex = {
 const clienteVazio: ClienteForm = { nome: "", documento: "", email: "", telefone: "" };
 const produtoVazio = { nome: "", quantidade: "1", valor_unitario: "" };
 
+const categoriasMateriais: { chave: CategoriaMaterial; titulo: string }[] = [
+  { chave: "vidros", titulo: "Vidros" },
+  { chave: "perfis", titulo: "Perfis" },
+  { chave: "puxadores", titulo: "Puxadores" },
+  { chave: "sistemas", titulo: "Sistemas" },
+  { chave: "trilhos", titulo: "Trilhos" },
+  { chave: "insumos", titulo: "Insumos" },
+];
+
+const opcoesPadrao: Record<OpcaoSistema, boolean> = {
+  porta_giro: true,
+  porta_deslizante: true,
+  porta_basculante: true,
+  produtos_orcamento: true,
+  aprovacao_pedido: true,
+};
+
+const listaOpcoesSistema: { chave: OpcaoSistema; titulo: string; descricao: string }[] = [
+  { chave: "porta_giro", titulo: "Calculo para portas de giro", descricao: "Habilita ou desabilita o modelo pre-pronto de calculo para portas de giro." },
+  { chave: "porta_deslizante", titulo: "Calculo para portas deslizantes", descricao: "Habilita ou desabilita o calculo de portas deslizantes, trilhos e sistemas." },
+  { chave: "porta_basculante", titulo: "Calculo para portas basculantes", descricao: "Habilita ou desabilita o calculo de portas basculantes." },
+  { chave: "produtos_orcamento", titulo: "Produtos no orcamento", descricao: "Controla se a loja pode cadastrar produtos dentro do orcamento." },
+  { chave: "aprovacao_pedido", titulo: "Aprovacao de pedido", descricao: "Controla se o botao de aprovacao aparece nos orcamentos." },
+];
+
 function formatarValor(valor: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
 }
 
 function botaoAba(ativa: boolean) {
-  return { background: ativa ? "var(--primary)" : "#0f172a", color: ativa ? "#111827" : "var(--text)", border: "1px solid var(--border)" };
+  return {
+    background: ativa ? "var(--primary)" : "var(--background)",
+    color: ativa ? "#111827" : "var(--text)",
+    border: "1px solid var(--border)",
+  };
+}
+
+function materialTitulo(chave: CategoriaMaterial) {
+  return categoriasMateriais.find((categoria) => categoria.chave === chave)?.titulo || "Materiais";
 }
 
 export default function LojaPage() {
   const [abaAtiva, setAbaAtiva] = useState<Aba>("painel");
+  const [tema, setTema] = useState<Tema>("dark");
+  const [categoriaMaterial, setCategoriaMaterial] = useState<CategoriaMaterial>("vidros");
+  const [opcoesSistema, setOpcoesSistema] = useState<Record<OpcaoSistema, boolean>>(opcoesPadrao);
   const [data, setData] = useState<LojaIndex>(fallbackIndex);
   const [empresaSlug, setEmpresaSlug] = useState("");
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -115,11 +154,34 @@ export default function LojaPage() {
 
   useEffect(() => {
     const slug = localStorage.getItem("anodiza_empresa_slug") || "";
+    const temaSalvo = localStorage.getItem("anodiza_tema") === "light" ? "light" : "dark";
+    const opcoesSalvas = localStorage.getItem("anodiza_opcoes_sistema");
+    setTema(temaSalvo);
+    if (opcoesSalvas) {
+      try {
+        setOpcoesSistema({ ...opcoesPadrao, ...(JSON.parse(opcoesSalvas) as Partial<Record<OpcaoSistema, boolean>>) });
+      } catch {
+        setOpcoesSistema(opcoesPadrao);
+      }
+    }
     setEmpresaSlug(slug);
     apiGet<LojaIndex>("/api/loja/index").then(setData).catch(() => setData(fallbackIndex));
     carregarClientes(slug);
     carregarUsuarios(slug);
   }, []);
+
+  function alterarTema(novoTema: Tema) {
+    setTema(novoTema);
+    localStorage.setItem("anodiza_tema", novoTema);
+  }
+
+  function alternarOpcao(chave: OpcaoSistema) {
+    setOpcoesSistema((current) => {
+      const next = { ...current, [chave]: !current[chave] };
+      localStorage.setItem("anodiza_opcoes_sistema", JSON.stringify(next));
+      return next;
+    });
+  }
 
   async function abrirAbaClientes() {
     setAbaAtiva("clientes");
@@ -135,6 +197,11 @@ export default function LojaPage() {
     setAbaAtiva("orcamentos");
     await carregarClientes(empresaSlug);
     await carregarOrcamentos(empresaSlug);
+  }
+
+  function abrirMateriais(chave: CategoriaMaterial = categoriaMaterial) {
+    setCategoriaMaterial(chave);
+    setAbaAtiva("materiais");
   }
 
   async function handleBuscarOrcamentos(event: React.FormEvent<HTMLFormElement>) {
@@ -303,7 +370,7 @@ export default function LojaPage() {
   }
 
   return (
-    <main className="dashboard">
+    <main className={`dashboard theme-${tema}`}>
       <aside className="sidebar">
         <div className="brand"><div className="brand-mark">A</div><div><strong>ANODIZA</strong><p>Loja</p></div></div>
         <p>Empresa ativa: {empresaSlug || "nao identificada"}</p>
@@ -313,6 +380,17 @@ export default function LojaPage() {
           <button type="button" onClick={abrirAbaOrcamentos} style={botaoAba(abaAtiva === "orcamentos")}>Orcamentos</button>
           <button type="button" onClick={abrirAbaClientes} style={botaoAba(abaAtiva === "clientes")}>Clientes</button>
           <button type="button" onClick={abrirAbaUsuarios} style={botaoAba(abaAtiva === "usuarios")}>Usuarios</button>
+          <button type="button" onClick={() => setAbaAtiva("ajustes")} style={botaoAba(abaAtiva === "ajustes")}>Ajustes</button>
+          <button type="button" onClick={() => abrirMateriais()} style={botaoAba(abaAtiva === "materiais")}>Cadastro de materiais</button>
+          {abaAtiva === "materiais" && (
+            <div style={{ display: "grid", gap: 8, paddingLeft: 12 }}>
+              {categoriasMateriais.map((categoria) => (
+                <button key={categoria.chave} type="button" onClick={() => abrirMateriais(categoria.chave)} style={botaoAba(categoriaMaterial === categoria.chave)}>
+                  {categoria.titulo}
+                </button>
+              ))}
+            </div>
+          )}
         </nav>
       </aside>
 
@@ -344,15 +422,9 @@ export default function LojaPage() {
                   <input value={novoOrcamento.nome_orcamento} onChange={(event) => setNovoOrcamento((current) => ({ ...current, nome_orcamento: event.target.value }))} />
                 </label>
                 <label>Cliente
-                  <select
-                    value={novoOrcamento.cliente_id}
-                    onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_id: event.target.value }))}
-                    style={{ borderRadius: 14, padding: 14, background: "#0f172a", color: "white", border: "1px solid var(--border)" }}
-                  >
+                  <select value={novoOrcamento.cliente_id} onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_id: event.target.value }))}>
                     <option value="">Selecione o cliente</option>
-                    {clientes.map((cliente) => (
-                      <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
-                    ))}
+                    {clientes.map((cliente) => <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>)}
                   </select>
                 </label>
                 <button type="submit">Criar orcamento</button>
@@ -369,15 +441,9 @@ export default function LojaPage() {
                     <input value={orcamentoEditando.nome_orcamento} onChange={(event) => setOrcamentoEditando((current) => current ? { ...current, nome_orcamento: event.target.value } : current)} />
                   </label>
                   <label>Cliente
-                    <select
-                      value={orcamentoEditando.cliente_id}
-                      onChange={(event) => setOrcamentoEditando((current) => current ? { ...current, cliente_id: event.target.value } : current)}
-                      style={{ borderRadius: 14, padding: 14, background: "#0f172a", color: "white", border: "1px solid var(--border)" }}
-                    >
+                    <select value={orcamentoEditando.cliente_id} onChange={(event) => setOrcamentoEditando((current) => current ? { ...current, cliente_id: event.target.value } : current)}>
                       <option value="">Selecione o cliente</option>
-                      {clientes.map((cliente) => (
-                        <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
-                      ))}
+                      {clientes.map((cliente) => <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>)}
                     </select>
                   </label>
                   <div style={{ display: "flex", gap: 10 }}>
@@ -392,15 +458,9 @@ export default function LojaPage() {
               <div className="metric" style={{ marginTop: 18 }}>
                 <strong style={{ fontSize: 18 }}>Produtos de {orcamentoProdutos.nome_orcamento}</strong>
                 <form onSubmit={handleCadastrarProduto} style={{ marginTop: 14 }}>
-                  <label>Produto
-                    <input value={produtoForm.nome} onChange={(event) => setProdutoForm((current) => ({ ...current, nome: event.target.value }))} />
-                  </label>
-                  <label>Quantidade
-                    <input value={produtoForm.quantidade} onChange={(event) => setProdutoForm((current) => ({ ...current, quantidade: event.target.value }))} />
-                  </label>
-                  <label>Valor unitario
-                    <input value={produtoForm.valor_unitario} onChange={(event) => setProdutoForm((current) => ({ ...current, valor_unitario: event.target.value }))} />
-                  </label>
+                  <label>Produto<input value={produtoForm.nome} onChange={(event) => setProdutoForm((current) => ({ ...current, nome: event.target.value }))} /></label>
+                  <label>Quantidade<input value={produtoForm.quantidade} onChange={(event) => setProdutoForm((current) => ({ ...current, quantidade: event.target.value }))} /></label>
+                  <label>Valor unitario<input value={produtoForm.valor_unitario} onChange={(event) => setProdutoForm((current) => ({ ...current, valor_unitario: event.target.value }))} /></label>
                   <button type="submit">Cadastrar produto</button>
                 </form>
                 {mensagemProduto && <p style={{ marginTop: 12 }}>{mensagemProduto}</p>}
@@ -418,13 +478,7 @@ export default function LojaPage() {
             <div style={{ marginTop: 24 }}>
               <h2>Lista de orcamentos</h2>
               <form onSubmit={handleBuscarOrcamentos} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}>
-                <label>Pesquisar
-                  <input
-                    value={buscaOrcamento}
-                    onChange={(event) => setBuscaOrcamento(event.target.value)}
-                    placeholder="Orcamento, cliente ou numero"
-                  />
-                </label>
+                <label>Pesquisar<input value={buscaOrcamento} onChange={(event) => setBuscaOrcamento(event.target.value)} placeholder="Orcamento, cliente ou numero" /></label>
                 <button type="submit">Buscar</button>
               </form>
             </div>
@@ -436,9 +490,9 @@ export default function LojaPage() {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                     <strong style={{ fontSize: 18 }}>{orcamento.nome_orcamento}</strong>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button type="button" title="Cadastrar produtos" onClick={() => abrirProdutosOrcamento(orcamento)}>📦</button>
+                      {opcoesSistema.produtos_orcamento && <button type="button" title="Cadastrar produtos" onClick={() => abrirProdutosOrcamento(orcamento)}>📦</button>}
                       <button type="button" title="Editar orcamento" onClick={() => abrirEditarOrcamento(orcamento)}>✏️</button>
-                      <button type="button" title="Aprovar pedido" onClick={() => handleAprovarOrcamento(orcamento)}>✅</button>
+                      {opcoesSistema.aprovacao_pedido && <button type="button" title="Aprovar pedido" onClick={() => handleAprovarOrcamento(orcamento)}>✅</button>}
                     </div>
                   </div>
                   <p>Cliente: {orcamento.cliente_nome || "Cliente nao informado"}</p>
@@ -455,18 +509,10 @@ export default function LojaPage() {
             <h1>Clientes</h1>
             <p>Cadastre os clientes da loja. CPF/CNPJ, e-mail e celular/WhatsApp sao opcionais.</p>
             <form onSubmit={handleCriarCliente}>
-              <label>Nome do cliente
-                <input value={novoCliente.nome} onChange={(event) => setNovoCliente((current) => ({ ...current, nome: event.target.value }))} />
-              </label>
-              <label>CPF/CNPJ
-                <input value={novoCliente.documento} onChange={(event) => setNovoCliente((current) => ({ ...current, documento: event.target.value }))} />
-              </label>
-              <label>E-mail
-                <input type="email" value={novoCliente.email} onChange={(event) => setNovoCliente((current) => ({ ...current, email: event.target.value }))} />
-              </label>
-              <label>Celular/WhatsApp
-                <input value={novoCliente.telefone} onChange={(event) => setNovoCliente((current) => ({ ...current, telefone: event.target.value }))} />
-              </label>
+              <label>Nome do cliente<input value={novoCliente.nome} onChange={(event) => setNovoCliente((current) => ({ ...current, nome: event.target.value }))} /></label>
+              <label>CPF/CNPJ<input value={novoCliente.documento} onChange={(event) => setNovoCliente((current) => ({ ...current, documento: event.target.value }))} /></label>
+              <label>E-mail<input type="email" value={novoCliente.email} onChange={(event) => setNovoCliente((current) => ({ ...current, email: event.target.value }))} /></label>
+              <label>Celular/WhatsApp<input value={novoCliente.telefone} onChange={(event) => setNovoCliente((current) => ({ ...current, telefone: event.target.value }))} /></label>
               <button type="submit">Cadastrar cliente</button>
             </form>
             {mensagemClientes && <p style={{ marginTop: 16 }}>{mensagemClientes}</p>}
@@ -475,18 +521,10 @@ export default function LojaPage() {
               <div className="metric" style={{ marginTop: 24 }}>
                 <strong style={{ fontSize: 18 }}>Editar cliente</strong>
                 <form onSubmit={handleEditarCliente} style={{ marginTop: 14 }}>
-                  <label>Nome do cliente
-                    <input value={clienteEditando.nome} onChange={(event) => setClienteEditando((current) => current ? { ...current, nome: event.target.value } : current)} />
-                  </label>
-                  <label>CPF/CNPJ
-                    <input value={clienteEditando.documento} onChange={(event) => setClienteEditando((current) => current ? { ...current, documento: event.target.value } : current)} />
-                  </label>
-                  <label>E-mail
-                    <input type="email" value={clienteEditando.email} onChange={(event) => setClienteEditando((current) => current ? { ...current, email: event.target.value } : current)} />
-                  </label>
-                  <label>Celular/WhatsApp
-                    <input value={clienteEditando.telefone} onChange={(event) => setClienteEditando((current) => current ? { ...current, telefone: event.target.value } : current)} />
-                  </label>
+                  <label>Nome do cliente<input value={clienteEditando.nome} onChange={(event) => setClienteEditando((current) => current ? { ...current, nome: event.target.value } : current)} /></label>
+                  <label>CPF/CNPJ<input value={clienteEditando.documento} onChange={(event) => setClienteEditando((current) => current ? { ...current, documento: event.target.value } : current)} /></label>
+                  <label>E-mail<input type="email" value={clienteEditando.email} onChange={(event) => setClienteEditando((current) => current ? { ...current, email: event.target.value } : current)} /></label>
+                  <label>Celular/WhatsApp<input value={clienteEditando.telefone} onChange={(event) => setClienteEditando((current) => current ? { ...current, telefone: event.target.value } : current)} /></label>
                   <div style={{ display: "flex", gap: 10 }}>
                     <button type="submit">Salvar alteracoes</button>
                     <button type="button" onClick={() => setClienteEditando(null)}>Cancelar</button>
@@ -518,7 +556,7 @@ export default function LojaPage() {
               <label>Nome<input value={novoUsuario.nome} onChange={(event) => setNovoUsuario((current) => ({ ...current, nome: event.target.value }))} /></label>
               <label>E-mail<input type="email" value={novoUsuario.email} onChange={(event) => setNovoUsuario((current) => ({ ...current, email: event.target.value }))} /></label>
               <label>Perfil
-                <select value={novoUsuario.perfil} onChange={(event) => setNovoUsuario((current) => ({ ...current, perfil: event.target.value }))} style={{ borderRadius: 14, padding: 14, background: "#0f172a", color: "white", border: "1px solid var(--border)" }}>
+                <select value={novoUsuario.perfil} onChange={(event) => setNovoUsuario((current) => ({ ...current, perfil: event.target.value }))}>
                   <option value="admin">Admin</option>
                   <option value="gerente">Gerente</option>
                   <option value="vendedor">Vendedor</option>
@@ -537,6 +575,53 @@ export default function LojaPage() {
                   <p>{usuario.email} • {usuario.perfil === "owner" ? "Master" : usuario.perfil}</p>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {abaAtiva === "ajustes" && (
+          <section className="card" style={{ maxWidth: "none" }}>
+            <h1>Ajustes</h1>
+            <p>Configure aparencia e habilite ou desabilite modulos. As regras de calculo serao desenvolvidas depois.</p>
+
+            <div className="metric" style={{ marginTop: 18 }}>
+              <strong style={{ fontSize: 18 }}>Aparencia</strong>
+              <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+                <button type="button" onClick={() => alterarTema("dark")} style={botaoAba(tema === "dark")}>Dark mode</button>
+                <button type="button" onClick={() => alterarTema("light")} style={botaoAba(tema === "light")}>Light mode</button>
+              </div>
+            </div>
+
+            <div className="metric" style={{ marginTop: 18 }}>
+              <strong style={{ fontSize: 18 }}>Opcoes habilitadas</strong>
+              <div style={{ display: "grid", gap: 12, marginTop: 14 }}>
+                {listaOpcoesSistema.map((opcao) => (
+                  <label key={opcao.chave} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <input type="checkbox" checked={opcoesSistema[opcao.chave]} onChange={() => alternarOpcao(opcao.chave)} style={{ width: 18, marginTop: 3 }} />
+                    <span>
+                      <strong style={{ fontSize: 16, marginTop: 0 }}>{opcao.titulo}</strong>
+                      <p>{opcao.descricao}</p>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {abaAtiva === "materiais" && (
+          <section className="card" style={{ maxWidth: "none" }}>
+            <h1>Cadastro de materiais</h1>
+            <p>Categoria ativa: {materialTitulo(categoriaMaterial)}. Esta tela base vai receber os cadastros completos depois.</p>
+            <div className="metric" style={{ marginTop: 18 }}>
+              <strong style={{ fontSize: 18 }}>{materialTitulo(categoriaMaterial)}</strong>
+              <form>
+                <label>Nome do material<input placeholder={`Ex: ${materialTitulo(categoriaMaterial)} principal`} /></label>
+                <label>Codigo / referencia<input placeholder="Opcional" /></label>
+                <label>Unidade<select><option>Unidade</option><option>Metro linear</option><option>Metro quadrado</option><option>Kit</option><option>Par</option></select></label>
+                <label>Custo base<input placeholder="0,00" /></label>
+                <button type="button">Salvar material</button>
+              </form>
             </div>
           </section>
         )}
