@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException, Query
 
 from app.db.supabase_client import get_supabase
 
@@ -25,16 +25,42 @@ PERMISSOES_MASTER = {
 }
 
 
-@router.get("/index")
-def index_loja():
-    return {
-        "titulo": "Painel da Loja",
-        "cards": [
-            {"label": "Orcamentos", "valor": 0},
-            {"label": "Aprovados", "valor": 0},
-            {"label": "Em producao", "valor": 0},
-        ],
-    }
+def normalizar_permissoes(permissoes: dict | None, perfil: str = "vendedor"):
+    base = dict(PERMISSOES_MASTER if perfil == "owner" else PERMISSOES_PADRAO)
+    if isinstance(permissoes, dict):
+        for chave in base:
+            if chave in permissoes:
+                base[chave] = bool(permissoes[chave])
+    if perfil == "owner":
+        return dict(PERMISSOES_MASTER)
+    base["usuarios"] = False
+    return base
+
+
+def usuario_atual(x_anodiza_key: str | None):
+    if not x_anodiza_key:
+        raise HTTPException(status_code=401, detail="Informe a chave de acesso")
+    try:
+        result = get_supabase().rpc("obter_pessoa_controle", {"v_id": x_anodiza_key}).execute()
+    except Exception as error:
+        raise HTTPException(status_code=401, detail=f"Acesso invalido: {error}") from error
+    if not result.data:
+        raise HTTPException(status_code=401, detail="Acesso invalido")
+    usuario = result.data
+    usuario["permissoes"] = normalizar_permissoes(usuario.get("permissoes"), usuario.get("perfil") or "vendedor")
+    return usuario
+
+
+def exigir_permissao(usuario: dict, chave: str):
+    if usuario.get("perfil") == "owner":
+        return
+    if not usuario.get("permissoes", {}).get(chave):
+        raise HTTPException(status_code=403, detail="Usuario sem permissao para este ambiente")
+
+
+def exigir_master(usuario: dict):
+    if usuario.get("perfil") != "owner":
+        raise HTTPException(status_code=403, detail="Apenas o usuario master pode acessar esta area")
 
 
 def buscar_empresa_id(supabase, empresa_slug: str):
@@ -44,6 +70,19 @@ def buscar_empresa_id(supabase, empresa_slug: str):
     if not empresa_result.data:
         return None
     return empresa_result.data[0]["id"]
+
+
+def empresa_do_usuario(supabase, empresa_slug: str, usuario: dict):
+    empresa_id = str(usuario.get("empresa_id") or "")
+    if not empresa_id:
+        raise HTTPException(status_code=401, detail="Empresa nao identificada")
+    if empresa_slug:
+        empresa_slug_id = buscar_empresa_id(supabase, empresa_slug)
+        if not empresa_slug_id:
+            raise HTTPException(status_code=400, detail="Empresa nao encontrada")
+        if str(empresa_slug_id) != empresa_id:
+            raise HTTPException(status_code=403, detail="Usuario nao pertence a esta empresa")
+    return empresa_id
 
 
 def buscar_loja_principal(supabase, empresa_id: str):
@@ -85,17 +124,6 @@ def buscar_usuario(supabase, empresa_id: str, usuario_id: str):
     return result.data[0]
 
 
-def normalizar_permissoes(permissoes: dict | None, perfil: str = "vendedor"):
-    base = dict(PERMISSOES_MASTER if perfil == "owner" else PERMISSOES_PADRAO)
-    if isinstance(permissoes, dict):
-        for chave in base:
-            if chave in permissoes:
-                base[chave] = bool(permissoes[chave])
-    if perfil == "owner":
-        base["usuarios"] = True
-    return base
-
-
 def buscar_orcamento(supabase, empresa_id: str, orcamento_id: str):
     if not orcamento_id:
         return None
@@ -131,12 +159,26 @@ def recalcular_valor_orcamento(supabase, orcamento_id: str):
     return total
 
 
+@router.get("/index")
+def index_loja(x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "painel")
+    return {
+        "titulo": "Painel da Loja",
+        "cards": [
+            {"label": "Orcamentos", "valor": 0},
+            {"label": "Aprovados", "valor": 0},
+            {"label": "Em producao", "valor": 0},
+        ],
+    }
+
+
 @router.get("/clientes")
-def listar_clientes(empresa_slug: str = Query(default="")):
+def listar_clientes(empresa_slug: str = Query(default=""), x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "clientes")
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        return []
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     result = (
         supabase.table("clientes")
@@ -149,7 +191,9 @@ def listar_clientes(empresa_slug: str = Query(default="")):
 
 
 @router.post("/clientes")
-def criar_cliente(payload: dict):
+def criar_cliente(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "clientes")
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     nome = str(payload.get("nome") or "").strip()
     documento = str(payload.get("documento") or "").strip()
@@ -160,9 +204,7 @@ def criar_cliente(payload: dict):
         raise HTTPException(status_code=400, detail="Informe o nome do cliente")
 
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     existente = (
         supabase.table("clientes")
@@ -191,7 +233,9 @@ def criar_cliente(payload: dict):
 
 
 @router.post("/clientes/editar")
-def editar_cliente(payload: dict):
+def editar_cliente(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "clientes")
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     cliente_id = str(payload.get("id") or "").strip()
     nome = str(payload.get("nome") or "").strip()
@@ -205,9 +249,7 @@ def editar_cliente(payload: dict):
         raise HTTPException(status_code=400, detail="Informe o nome do cliente")
 
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     cliente = buscar_cliente(supabase, empresa_id, cliente_id)
     if not cliente:
@@ -230,11 +272,11 @@ def editar_cliente(payload: dict):
 
 
 @router.get("/usuarios")
-def listar_usuarios(empresa_slug: str = Query(default="")):
+def listar_usuarios(empresa_slug: str = Query(default=""), x_anodiza_key: str | None = Header(default=None)):
+    usuario_atual_real = usuario_atual(x_anodiza_key)
+    exigir_master(usuario_atual_real)
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        return []
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario_atual_real)
 
     result = (
         supabase.table("usuarios")
@@ -245,14 +287,18 @@ def listar_usuarios(empresa_slug: str = Query(default="")):
     )
 
     lista = []
-    for usuario in result.data or []:
-        usuario["permissoes"] = normalizar_permissoes(usuario.get("permissoes"), usuario.get("perfil") or "vendedor")
-        lista.append(usuario)
+    for item in result.data or []:
+        item["permissoes"] = normalizar_permissoes(item.get("permissoes"), item.get("perfil") or "vendedor")
+        lista.append(item)
     return lista
 
 
 @router.post("/usuarios")
-def criar_usuario(payload: dict):
+def criar_usuario(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario_atual_real = usuario_atual(x_anodiza_key)
+    exigir_master(usuario_atual_real)
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    empresa_do_usuario(get_supabase(), empresa_slug, usuario_atual_real)
     try:
         result = get_supabase().rpc("criar_usuario_empresa", {"payload": payload}).execute()
     except Exception as error:
@@ -263,27 +309,23 @@ def criar_usuario(payload: dict):
 
 
 @router.post("/usuarios/permissoes")
-def editar_permissoes_usuario(payload: dict):
+def editar_permissoes_usuario(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario_atual_real = usuario_atual(x_anodiza_key)
+    exigir_master(usuario_atual_real)
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     usuario_id = str(payload.get("id") or "").strip()
-    solicitante_perfil = str(payload.get("solicitante_perfil") or "").strip()
     permissoes_payload = payload.get("permissoes") or {}
 
-    if solicitante_perfil != "owner":
-        raise HTTPException(status_code=403, detail="Apenas o usuario master pode alterar acessos")
-
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario_atual_real)
 
-    usuario = buscar_usuario(supabase, empresa_id, usuario_id)
-    if not usuario:
+    usuario_alvo = buscar_usuario(supabase, empresa_id, usuario_id)
+    if not usuario_alvo:
         raise HTTPException(status_code=400, detail="Usuario nao encontrado")
-    if usuario.get("perfil") == "owner":
+    if usuario_alvo.get("perfil") == "owner":
         raise HTTPException(status_code=400, detail="O usuario master sempre tem acesso total")
 
-    permissoes = normalizar_permissoes(permissoes_payload, usuario.get("perfil") or "vendedor")
+    permissoes = normalizar_permissoes(permissoes_payload, usuario_alvo.get("perfil") or "vendedor")
     permissoes["usuarios"] = False
 
     try:
@@ -303,11 +345,11 @@ def editar_permissoes_usuario(payload: dict):
 
 
 @router.get("/orcamentos")
-def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(default="")):
+def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(default=""), x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "orcamentos")
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        return []
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     clientes_result = supabase.table("clientes").select("id,nome").eq("empresa_id", empresa_id).execute()
     cliente_por_id = {cliente["id"]: cliente.get("nome", "") for cliente in (clientes_result.data or [])}
@@ -347,7 +389,9 @@ def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(
 
 
 @router.post("/orcamentos")
-def criar_orcamento(payload: dict):
+def criar_orcamento(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "orcamentos")
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     cliente_id = str(payload.get("cliente_id") or "").strip()
     nome_orcamento = str(payload.get("nome_orcamento") or "").strip()
@@ -358,9 +402,7 @@ def criar_orcamento(payload: dict):
         raise HTTPException(status_code=400, detail="Selecione o cliente")
 
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     cliente = buscar_cliente(supabase, empresa_id, cliente_id)
     if not cliente:
@@ -394,7 +436,9 @@ def criar_orcamento(payload: dict):
 
 
 @router.post("/orcamentos/editar")
-def editar_orcamento(payload: dict):
+def editar_orcamento(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "orcamentos")
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     orcamento_id = str(payload.get("id") or "").strip()
     cliente_id = str(payload.get("cliente_id") or "").strip()
@@ -408,9 +452,7 @@ def editar_orcamento(payload: dict):
         raise HTTPException(status_code=400, detail="Selecione o cliente")
 
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     orcamento = buscar_orcamento(supabase, empresa_id, orcamento_id)
     if not orcamento:
@@ -441,14 +483,14 @@ def editar_orcamento(payload: dict):
 
 
 @router.post("/orcamentos/aprovar")
-def aprovar_orcamento(payload: dict):
+def aprovar_orcamento(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "orcamentos")
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     orcamento_id = str(payload.get("id") or "").strip()
 
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     if not buscar_orcamento(supabase, empresa_id, orcamento_id):
         raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
@@ -464,11 +506,11 @@ def aprovar_orcamento(payload: dict):
 
 
 @router.get("/orcamentos/produtos")
-def listar_produtos_orcamento(empresa_slug: str = Query(default=""), orcamento_id: str = Query(default="")):
+def listar_produtos_orcamento(empresa_slug: str = Query(default=""), orcamento_id: str = Query(default=""), x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "orcamentos")
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        return []
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     if not buscar_orcamento(supabase, empresa_id, orcamento_id):
         return []
@@ -485,7 +527,9 @@ def listar_produtos_orcamento(empresa_slug: str = Query(default=""), orcamento_i
 
 
 @router.post("/orcamentos/produtos")
-def cadastrar_produto_orcamento(payload: dict):
+def cadastrar_produto_orcamento(payload: dict, x_anodiza_key: str | None = Header(default=None)):
+    usuario = usuario_atual(x_anodiza_key)
+    exigir_permissao(usuario, "orcamentos")
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     orcamento_id = str(payload.get("orcamento_id") or "").strip()
     nome = str(payload.get("nome") or "").strip()
@@ -505,9 +549,7 @@ def cadastrar_produto_orcamento(payload: dict):
         raise HTTPException(status_code=400, detail="Quantidade deve ser maior que zero")
 
     supabase = get_supabase()
-    empresa_id = buscar_empresa_id(supabase, empresa_slug)
-    if not empresa_id:
-        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+    empresa_id = empresa_do_usuario(supabase, empresa_slug, usuario)
 
     if not buscar_orcamento(supabase, empresa_id, orcamento_id):
         raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
