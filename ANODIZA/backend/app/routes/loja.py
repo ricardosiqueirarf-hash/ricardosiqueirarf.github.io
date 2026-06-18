@@ -4,6 +4,26 @@ from app.db.supabase_client import get_supabase
 
 router = APIRouter()
 
+PERMISSOES_PADRAO = {
+    "painel": True,
+    "orcamentos": True,
+    "clientes": True,
+    "usuarios": False,
+    "ajustes": False,
+    "produtos": False,
+    "materiais": False,
+}
+
+PERMISSOES_MASTER = {
+    "painel": True,
+    "orcamentos": True,
+    "clientes": True,
+    "usuarios": True,
+    "ajustes": True,
+    "produtos": True,
+    "materiais": True,
+}
+
 
 @router.get("/index")
 def index_loja():
@@ -47,6 +67,33 @@ def buscar_cliente(supabase, empresa_id: str, cliente_id: str):
     if not result.data:
         return None
     return result.data[0]
+
+
+def buscar_usuario(supabase, empresa_id: str, usuario_id: str):
+    if not usuario_id:
+        return None
+    result = (
+        supabase.table("usuarios")
+        .select("id,nome,email,perfil,ativo,loja_id,permissoes")
+        .eq("empresa_id", empresa_id)
+        .eq("id", usuario_id)
+        .limit(1)
+        .execute()
+    )
+    if not result.data:
+        return None
+    return result.data[0]
+
+
+def normalizar_permissoes(permissoes: dict | None, perfil: str = "vendedor"):
+    base = dict(PERMISSOES_MASTER if perfil == "owner" else PERMISSOES_PADRAO)
+    if isinstance(permissoes, dict):
+        for chave in base:
+            if chave in permissoes:
+                base[chave] = bool(permissoes[chave])
+    if perfil == "owner":
+        base["usuarios"] = True
+    return base
 
 
 def buscar_orcamento(supabase, empresa_id: str, orcamento_id: str):
@@ -129,13 +176,7 @@ def criar_cliente(payload: dict):
         return existente.data[0]
 
     loja = buscar_loja_principal(supabase, empresa_id)
-    dados = {
-        "empresa_id": empresa_id,
-        "nome": nome,
-        "documento": documento,
-        "email": email,
-        "telefone": telefone,
-    }
+    dados = {"empresa_id": empresa_id, "nome": nome, "documento": documento, "email": email, "telefone": telefone}
     if loja:
         dados["loja_id"] = loja["id"]
 
@@ -175,12 +216,7 @@ def editar_cliente(payload: dict):
     try:
         result = (
             supabase.table("clientes")
-            .update({
-                "nome": nome,
-                "documento": documento,
-                "email": email,
-                "telefone": telefone,
-            })
+            .update({"nome": nome, "documento": documento, "email": email, "telefone": telefone})
             .eq("empresa_id", empresa_id)
             .eq("id", cliente_id)
             .execute()
@@ -200,8 +236,70 @@ def listar_usuarios(empresa_slug: str = Query(default="")):
     if not empresa_id:
         return []
 
-    result = supabase.table("usuarios").select("id,nome,email,perfil,ativo,loja_id").eq("empresa_id", empresa_id).order("created_at", desc=False).execute()
-    return result.data or []
+    result = (
+        supabase.table("usuarios")
+        .select("id,nome,email,perfil,ativo,loja_id,permissoes")
+        .eq("empresa_id", empresa_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+
+    lista = []
+    for usuario in result.data or []:
+        usuario["permissoes"] = normalizar_permissoes(usuario.get("permissoes"), usuario.get("perfil") or "vendedor")
+        lista.append(usuario)
+    return lista
+
+
+@router.post("/usuarios")
+def criar_usuario(payload: dict):
+    try:
+        result = get_supabase().rpc("criar_usuario_empresa", {"payload": payload}).execute()
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Usuario nao criado")
+    return result.data
+
+
+@router.post("/usuarios/permissoes")
+def editar_permissoes_usuario(payload: dict):
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    usuario_id = str(payload.get("id") or "").strip()
+    solicitante_perfil = str(payload.get("solicitante_perfil") or "").strip()
+    permissoes_payload = payload.get("permissoes") or {}
+
+    if solicitante_perfil != "owner":
+        raise HTTPException(status_code=403, detail="Apenas o usuario master pode alterar acessos")
+
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+
+    usuario = buscar_usuario(supabase, empresa_id, usuario_id)
+    if not usuario:
+        raise HTTPException(status_code=400, detail="Usuario nao encontrado")
+    if usuario.get("perfil") == "owner":
+        raise HTTPException(status_code=400, detail="O usuario master sempre tem acesso total")
+
+    permissoes = normalizar_permissoes(permissoes_payload, usuario.get("perfil") or "vendedor")
+    permissoes["usuarios"] = False
+
+    try:
+        result = (
+            supabase.table("usuarios")
+            .update({"permissoes": permissoes})
+            .eq("empresa_id", empresa_id)
+            .eq("id", usuario_id)
+            .execute()
+        )
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Permissoes nao atualizadas")
+    return result.data[0]
 
 
 @router.get("/orcamentos")
@@ -329,13 +427,7 @@ def editar_orcamento(payload: dict):
     try:
         result = (
             supabase.table("orcamentos")
-            .update({
-                "cliente_id": cliente_id,
-                "cliente_nome": cliente["nome"],
-                "cliente_telefone": str(cliente.get("telefone") or ""),
-                "numero_pedido": numero_pedido,
-                "nome_orcamento": nome_orcamento,
-            })
+            .update({"cliente_id": cliente_id, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "numero_pedido": numero_pedido, "nome_orcamento": nome_orcamento})
             .eq("empresa_id", empresa_id)
             .eq("id", orcamento_id)
             .execute()
@@ -362,13 +454,7 @@ def aprovar_orcamento(payload: dict):
         raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
 
     try:
-        result = (
-            supabase.table("orcamentos")
-            .update({"status": "aprovado"})
-            .eq("empresa_id", empresa_id)
-            .eq("id", orcamento_id)
-            .execute()
-        )
+        result = supabase.table("orcamentos").update({"status": "aprovado"}).eq("empresa_id", empresa_id).eq("id", orcamento_id).execute()
     except Exception as error:
         raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
 
@@ -428,14 +514,7 @@ def cadastrar_produto_orcamento(payload: dict):
 
     valor_total = quantidade * valor_unitario
     try:
-        result = supabase.table("orcamento_produtos").insert({
-            "empresa_id": empresa_id,
-            "orcamento_id": orcamento_id,
-            "nome": nome,
-            "quantidade": quantidade,
-            "valor_unitario": valor_unitario,
-            "valor_total": valor_total,
-        }).execute()
+        result = supabase.table("orcamento_produtos").insert({"empresa_id": empresa_id, "orcamento_id": orcamento_id, "nome": nome, "quantidade": quantidade, "valor_unitario": valor_unitario, "valor_total": valor_total}).execute()
         recalcular_valor_orcamento(supabase, orcamento_id)
     except Exception as error:
         raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
@@ -443,14 +522,3 @@ def cadastrar_produto_orcamento(payload: dict):
     if not result.data:
         raise HTTPException(status_code=400, detail="Produto nao cadastrado")
     return result.data[0]
-
-
-@router.post("/usuarios")
-def criar_usuario(payload: dict):
-    try:
-        result = get_supabase().rpc("criar_usuario_empresa", {"payload": payload}).execute()
-    except Exception as error:
-        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
-    if not result.data:
-        raise HTTPException(status_code=400, detail="Usuario nao criado")
-    return result.data
