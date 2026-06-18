@@ -15,6 +15,7 @@ type Orcamento = {
   valor_total: number;
   created_at?: string;
 };
+type ProdutoOrcamento = { id: string; nome: string; quantidade: number; valor_unitario: number; valor_total: number };
 type LojaIndex = { titulo: string; cards: { label: string; valor: number }[] };
 type Aba = "painel" | "orcamentos" | "clientes" | "usuarios";
 type ClienteForm = { id?: string; nome: string; documento: string; email: string; telefone: string };
@@ -29,6 +30,7 @@ const fallbackIndex: LojaIndex = {
 };
 
 const clienteVazio: ClienteForm = { nome: "", documento: "", email: "", telefone: "" };
+const produtoVazio = { nome: "", quantidade: "1", valor_unitario: "" };
 
 function formatarValor(valor: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
@@ -45,15 +47,20 @@ export default function LojaPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const [produtos, setProdutos] = useState<ProdutoOrcamento[]>([]);
   const [buscaOrcamento, setBuscaOrcamento] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [mensagemClientes, setMensagemClientes] = useState("");
   const [mensagemOrcamentos, setMensagemOrcamentos] = useState("");
   const [mensagemNovoOrcamento, setMensagemNovoOrcamento] = useState("");
+  const [mensagemProduto, setMensagemProduto] = useState("");
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", email: "", perfil: "vendedor" });
   const [novoCliente, setNovoCliente] = useState<ClienteForm>(clienteVazio);
   const [clienteEditando, setClienteEditando] = useState<ClienteForm | null>(null);
   const [novoOrcamento, setNovoOrcamento] = useState({ nome_orcamento: "", cliente_id: "" });
+  const [orcamentoEditando, setOrcamentoEditando] = useState<{ id: string; nome_orcamento: string; cliente_id: string } | null>(null);
+  const [orcamentoProdutos, setOrcamentoProdutos] = useState<Orcamento | null>(null);
+  const [produtoForm, setProdutoForm] = useState(produtoVazio);
 
   async function carregarClientes(slug: string) {
     if (!slug) return;
@@ -88,6 +95,21 @@ export default function LojaPage() {
       const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
       setOrcamentos([]);
       setMensagemOrcamentos(`Nao foi possivel carregar os orcamentos. ${detalhe}`);
+    }
+  }
+
+  async function carregarProdutos(orcamentoId: string) {
+    if (!empresaSlug || !orcamentoId) return;
+    setMensagemProduto("Carregando produtos...");
+    try {
+      const params = new URLSearchParams({ empresa_slug: empresaSlug, orcamento_id: orcamentoId });
+      const lista = await apiGet<ProdutoOrcamento[]>(`/api/loja/orcamentos/produtos?${params.toString()}`);
+      setProdutos(lista);
+      setMensagemProduto(lista.length ? "" : "Nenhum produto cadastrado neste orcamento.");
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setProdutos([]);
+      setMensagemProduto(`Nao foi possivel carregar produtos. ${detalhe}`);
     }
   }
 
@@ -202,6 +224,66 @@ export default function LojaPage() {
     }
   }
 
+  function abrirEditarOrcamento(orcamento: Orcamento) {
+    setOrcamentoEditando({ id: orcamento.id, nome_orcamento: orcamento.nome_orcamento, cliente_id: orcamento.cliente_id || "" });
+    setOrcamentoProdutos(null);
+  }
+
+  async function handleEditarOrcamento(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!orcamentoEditando) return;
+    setMensagemOrcamentos("Salvando orcamento...");
+    try {
+      await apiPost("/api/loja/orcamentos/editar", { empresa_slug: empresaSlug, ...orcamentoEditando });
+      setOrcamentoEditando(null);
+      setMensagemOrcamentos("Orcamento atualizado.");
+      await carregarOrcamentos(empresaSlug, buscaOrcamento);
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setMensagemOrcamentos(`Nao foi possivel editar o orcamento. ${detalhe}`);
+    }
+  }
+
+  async function handleAprovarOrcamento(orcamento: Orcamento) {
+    if (typeof window !== "undefined" && !window.confirm(`Aprovar o pedido ${orcamento.nome_orcamento}?`)) return;
+    setMensagemOrcamentos("Aprovando pedido...");
+    try {
+      await apiPost("/api/loja/orcamentos/aprovar", { empresa_slug: empresaSlug, id: orcamento.id });
+      setMensagemOrcamentos("Pedido aprovado.");
+      await carregarOrcamentos(empresaSlug, buscaOrcamento);
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setMensagemOrcamentos(`Nao foi possivel aprovar o pedido. ${detalhe}`);
+    }
+  }
+
+  async function abrirProdutosOrcamento(orcamento: Orcamento) {
+    setOrcamentoProdutos(orcamento);
+    setOrcamentoEditando(null);
+    setProdutoForm(produtoVazio);
+    await carregarProdutos(orcamento.id);
+  }
+
+  async function handleCadastrarProduto(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!orcamentoProdutos) return;
+    if (!produtoForm.nome.trim()) {
+      setMensagemProduto("Informe o nome do produto.");
+      return;
+    }
+    setMensagemProduto("Cadastrando produto...");
+    try {
+      await apiPost("/api/loja/orcamentos/produtos", { empresa_slug: empresaSlug, orcamento_id: orcamentoProdutos.id, ...produtoForm });
+      setProdutoForm(produtoVazio);
+      setMensagemProduto("Produto cadastrado.");
+      await carregarProdutos(orcamentoProdutos.id);
+      await carregarOrcamentos(empresaSlug, buscaOrcamento);
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setMensagemProduto(`Nao foi possivel cadastrar o produto. ${detalhe}`);
+    }
+  }
+
   async function handleCriarUsuario(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!empresaSlug) {
@@ -253,7 +335,7 @@ export default function LojaPage() {
         {abaAtiva === "orcamentos" && (
           <section className="card" style={{ maxWidth: "none" }}>
             <h1>Orcamentos</h1>
-            <p>O orcamento tem nome proprio e pertence a um cliente cadastrado. A numeracao e automatica por cliente.</p>
+            <p>Use os icones da lista para produtos, edicao e aprovacao do pedido.</p>
 
             <div className="metric" style={{ marginTop: 18 }}>
               <strong style={{ fontSize: 18 }}>Criar orcamento</strong>
@@ -279,6 +361,60 @@ export default function LojaPage() {
               {!clientes.length && <p style={{ marginTop: 12 }}>Cadastre um cliente antes de criar orcamentos.</p>}
             </div>
 
+            {orcamentoEditando && (
+              <div className="metric" style={{ marginTop: 18 }}>
+                <strong style={{ fontSize: 18 }}>Editar orcamento</strong>
+                <form onSubmit={handleEditarOrcamento} style={{ marginTop: 14 }}>
+                  <label>Nome do orcamento
+                    <input value={orcamentoEditando.nome_orcamento} onChange={(event) => setOrcamentoEditando((current) => current ? { ...current, nome_orcamento: event.target.value } : current)} />
+                  </label>
+                  <label>Cliente
+                    <select
+                      value={orcamentoEditando.cliente_id}
+                      onChange={(event) => setOrcamentoEditando((current) => current ? { ...current, cliente_id: event.target.value } : current)}
+                      style={{ borderRadius: 14, padding: 14, background: "#0f172a", color: "white", border: "1px solid var(--border)" }}
+                    >
+                      <option value="">Selecione o cliente</option>
+                      {clientes.map((cliente) => (
+                        <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button type="submit">Salvar</button>
+                    <button type="button" onClick={() => setOrcamentoEditando(null)}>Cancelar</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {orcamentoProdutos && (
+              <div className="metric" style={{ marginTop: 18 }}>
+                <strong style={{ fontSize: 18 }}>Produtos de {orcamentoProdutos.nome_orcamento}</strong>
+                <form onSubmit={handleCadastrarProduto} style={{ marginTop: 14 }}>
+                  <label>Produto
+                    <input value={produtoForm.nome} onChange={(event) => setProdutoForm((current) => ({ ...current, nome: event.target.value }))} />
+                  </label>
+                  <label>Quantidade
+                    <input value={produtoForm.quantidade} onChange={(event) => setProdutoForm((current) => ({ ...current, quantidade: event.target.value }))} />
+                  </label>
+                  <label>Valor unitario
+                    <input value={produtoForm.valor_unitario} onChange={(event) => setProdutoForm((current) => ({ ...current, valor_unitario: event.target.value }))} />
+                  </label>
+                  <button type="submit">Cadastrar produto</button>
+                </form>
+                {mensagemProduto && <p style={{ marginTop: 12 }}>{mensagemProduto}</p>}
+                <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+                  {produtos.map((produto) => (
+                    <div key={produto.id} style={{ borderTop: "1px solid var(--border)", paddingTop: 8 }}>
+                      <strong>{produto.nome}</strong>
+                      <p>{produto.quantidade} x {formatarValor(produto.valor_unitario)} = {formatarValor(produto.valor_total)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ marginTop: 24 }}>
               <h2>Lista de orcamentos</h2>
               <form onSubmit={handleBuscarOrcamentos} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}>
@@ -297,7 +433,14 @@ export default function LojaPage() {
             <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
               {orcamentos.map((orcamento) => (
                 <div className="metric" key={orcamento.id}>
-                  <strong style={{ fontSize: 18 }}>{orcamento.nome_orcamento}</strong>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                    <strong style={{ fontSize: 18 }}>{orcamento.nome_orcamento}</strong>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button type="button" title="Cadastrar produtos" onClick={() => abrirProdutosOrcamento(orcamento)}>📦</button>
+                      <button type="button" title="Editar orcamento" onClick={() => abrirEditarOrcamento(orcamento)}>✏️</button>
+                      <button type="button" title="Aprovar pedido" onClick={() => handleAprovarOrcamento(orcamento)}>✅</button>
+                    </div>
+                  </div>
                   <p>Cliente: {orcamento.cliente_nome || "Cliente nao informado"}</p>
                   <p>Numero do cliente: #{orcamento.numero_pedido}</p>
                   <p>Status: {orcamento.status} • Valor: {formatarValor(orcamento.valor_total)}</p>
