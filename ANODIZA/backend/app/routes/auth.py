@@ -42,8 +42,9 @@ def login(payload: dict):
 @router.get("/me")
 def me(x_anodiza_key: str | None = Header(default=None)):
     if not x_anodiza_key:
-        raise HTTPException(status_code=401, detail="Sessao obrigatoria")
-    result = get_supabase().table("controle_sistema").select("id,pessoa,empresa,valido_ate").eq("id", x_anodiza_key).limit(1).execute()
-    if not result.data:
-        raise HTTPException(status_code=401, detail="Sessao invalida")
-    return {"ok": True}
+        raise HTTPException(status_code=401, detail="Informe a chave")
+    try:
+        pessoa = get_supabase().rpc("obter_pessoa_controle", {"v_id": x_anodiza_key}).execute()
+    except Exception as error:
+        raise HTTPException(status_code=401, detail=f"Controle invalido: {error}") from error
+    return {"ok": True, "usuario": pessoa.data}
