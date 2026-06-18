@@ -29,6 +29,15 @@ async function readErrorMessage(response: Response): Promise<string> {
   }
 }
 
+function extraHeaders() {
+  const headers: Record<string, string> = {};
+  if (typeof window !== "undefined") {
+    const chave = window.localStorage.getItem("anodiza_chave_acesso") || "";
+    if (chave) headers["X-Anodiza-Key"] = chave;
+  }
+  return headers;
+}
+
 function showDebugError(message: string) {
   if (typeof window !== "undefined") {
     console.error("ANODIZA API:", message);
@@ -37,7 +46,7 @@ function showDebugError(message: string) {
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, { cache: "no-store" });
+  const response = await fetch(`${API_URL}${path}`, { cache: "no-store", headers: extraHeaders() });
   if (!response.ok) {
     const message = await readErrorMessage(response);
     showDebugError(message);
@@ -49,7 +58,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...extraHeaders() },
     body: JSON.stringify(body),
   });
   if (!response.ok) {
