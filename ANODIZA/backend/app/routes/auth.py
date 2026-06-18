@@ -6,6 +6,16 @@ router = APIRouter()
 
 
 def registrar_acesso(data: dict):
+    usuario = data.get("usuario") or {}
+    usuario_id = usuario.get("id")
+    empresa_id = usuario.get("empresa_id")
+    if not usuario_id or not empresa_id:
+        return data
+    try:
+        controle = get_supabase().rpc("gerar_controle", {"v_pessoa": usuario_id, "v_empresa": empresa_id}).execute()
+        data["chave_acesso"] = controle.data
+    except Exception:
+        pass
     return data
 
 
@@ -33,4 +43,7 @@ def login(payload: dict):
 def me(x_anodiza_key: str | None = Header(default=None)):
     if not x_anodiza_key:
         raise HTTPException(status_code=401, detail="Sessao obrigatoria")
+    result = get_supabase().table("controle_sistema").select("id,pessoa,empresa,valido_ate").eq("id", x_anodiza_key).limit(1).execute()
+    if not result.data:
+        raise HTTPException(status_code=401, detail="Sessao invalida")
     return {"ok": True}
