@@ -38,7 +38,7 @@ def buscar_cliente(supabase, empresa_id: str, cliente_id: str):
         return None
     result = (
         supabase.table("clientes")
-        .select("id,nome,telefone,ativo")
+        .select("id,nome,documento,email,telefone,ativo")
         .eq("empresa_id", empresa_id)
         .eq("id", cliente_id)
         .limit(1)
@@ -66,7 +66,13 @@ def listar_clientes(empresa_slug: str = Query(default="")):
     if not empresa_id:
         return []
 
-    result = supabase.table("clientes").select("id,nome,telefone,ativo").eq("empresa_id", empresa_id).order("created_at", desc=False).execute()
+    result = (
+        supabase.table("clientes")
+        .select("id,nome,documento,email,telefone,ativo")
+        .eq("empresa_id", empresa_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
     return result.data or []
 
 
@@ -74,6 +80,9 @@ def listar_clientes(empresa_slug: str = Query(default="")):
 def criar_cliente(payload: dict):
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
     nome = str(payload.get("nome") or "").strip()
+    documento = str(payload.get("documento") or "").strip()
+    email = str(payload.get("email") or "").strip().lower()
+    telefone = str(payload.get("telefone") or "").strip()
 
     if not nome:
         raise HTTPException(status_code=400, detail="Informe o nome do cliente")
@@ -85,7 +94,7 @@ def criar_cliente(payload: dict):
 
     existente = (
         supabase.table("clientes")
-        .select("id,nome,telefone,ativo")
+        .select("id,nome,documento,email,telefone,ativo")
         .eq("empresa_id", empresa_id)
         .ilike("nome", nome)
         .limit(1)
@@ -95,7 +104,13 @@ def criar_cliente(payload: dict):
         return existente.data[0]
 
     loja = buscar_loja_principal(supabase, empresa_id)
-    dados = {"empresa_id": empresa_id, "nome": nome}
+    dados = {
+        "empresa_id": empresa_id,
+        "nome": nome,
+        "documento": documento,
+        "email": email,
+        "telefone": telefone,
+    }
     if loja:
         dados["loja_id"] = loja["id"]
 
@@ -106,6 +121,50 @@ def criar_cliente(payload: dict):
 
     if not result.data:
         raise HTTPException(status_code=400, detail="Cliente nao criado")
+    return result.data[0]
+
+
+@router.post("/clientes/editar")
+def editar_cliente(payload: dict):
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    cliente_id = str(payload.get("id") or "").strip()
+    nome = str(payload.get("nome") or "").strip()
+    documento = str(payload.get("documento") or "").strip()
+    email = str(payload.get("email") or "").strip().lower()
+    telefone = str(payload.get("telefone") or "").strip()
+
+    if not cliente_id:
+        raise HTTPException(status_code=400, detail="Cliente nao identificado")
+    if not nome:
+        raise HTTPException(status_code=400, detail="Informe o nome do cliente")
+
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+
+    cliente = buscar_cliente(supabase, empresa_id, cliente_id)
+    if not cliente:
+        raise HTTPException(status_code=400, detail="Cliente nao encontrado")
+
+    try:
+        result = (
+            supabase.table("clientes")
+            .update({
+                "nome": nome,
+                "documento": documento,
+                "email": email,
+                "telefone": telefone,
+            })
+            .eq("empresa_id", empresa_id)
+            .eq("id", cliente_id)
+            .execute()
+        )
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Cliente nao atualizado")
     return result.data[0]
 
 
@@ -193,7 +252,7 @@ def criar_orcamento(payload: dict):
         "numero_pedido": numero_pedido,
         "nome_orcamento": nome_orcamento,
         "cliente_nome": cliente["nome"],
-        "cliente_telefone": "",
+        "cliente_telefone": str(cliente.get("telefone") or ""),
         "status": "rascunho",
         "valor_total": 0,
         "dados": {},
