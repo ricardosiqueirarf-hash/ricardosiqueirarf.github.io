@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 
 type Usuario = { id: string; nome: string; email: string; perfil: string; ativo?: boolean };
+type Loja = { id: string; nome: string; slug?: string };
 type Orcamento = {
   id: string;
+  loja_id: string;
   loja_nome: string;
   numero_pedido: string;
   cliente_nome: string;
-  cliente_telefone: string;
   status: string;
   valor_total: number;
   created_at?: string;
@@ -35,13 +36,25 @@ export default function LojaPage() {
   const [data, setData] = useState<LojaIndex>(fallbackIndex);
   const [empresaSlug, setEmpresaSlug] = useState("");
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [lojas, setLojas] = useState<Loja[]>([]);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [buscaOrcamento, setBuscaOrcamento] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [mensagemOrcamentos, setMensagemOrcamentos] = useState("");
   const [mensagemNovoOrcamento, setMensagemNovoOrcamento] = useState("");
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", email: "", perfil: "vendedor" });
-  const [novoOrcamento, setNovoOrcamento] = useState({ cliente_nome: "", cliente_telefone: "", numero_pedido: "", valor_total: "" });
+  const [novoOrcamento, setNovoOrcamento] = useState({ loja_id: "", cliente_nome: "" });
+
+  async function carregarLojas(slug: string) {
+    if (!slug) return;
+    try {
+      const lista = await apiGet<Loja[]>(`/api/loja/lojas?empresa_slug=${encodeURIComponent(slug)}`);
+      setLojas(lista);
+      setNovoOrcamento((current) => current.loja_id || !lista[0] ? current : { ...current, loja_id: lista[0].id });
+    } catch {
+      setLojas([]);
+    }
+  }
 
   async function carregarUsuarios(slug: string) {
     if (!slug) return;
@@ -72,6 +85,7 @@ export default function LojaPage() {
     const slug = localStorage.getItem("anodiza_empresa_slug") || "";
     setEmpresaSlug(slug);
     apiGet<LojaIndex>("/api/loja/index").then(setData).catch(() => setData(fallbackIndex));
+    carregarLojas(slug);
     carregarUsuarios(slug);
   }, []);
 
@@ -82,6 +96,7 @@ export default function LojaPage() {
 
   async function abrirAbaOrcamentos() {
     setAbaAtiva("orcamentos");
+    await carregarLojas(empresaSlug);
     await carregarOrcamentos(empresaSlug);
   }
 
@@ -96,11 +111,20 @@ export default function LojaPage() {
       setMensagemNovoOrcamento("Entre novamente para identificar a empresa.");
       return;
     }
+    if (!novoOrcamento.loja_id) {
+      setMensagemNovoOrcamento("Selecione a loja.");
+      return;
+    }
+    if (!novoOrcamento.cliente_nome.trim()) {
+      setMensagemNovoOrcamento("Informe o nome do cliente.");
+      return;
+    }
+
     setMensagemNovoOrcamento("Criando orcamento...");
     try {
       await apiPost("/api/loja/orcamentos", { empresa_slug: empresaSlug, ...novoOrcamento });
-      setNovoOrcamento({ cliente_nome: "", cliente_telefone: "", numero_pedido: "", valor_total: "" });
-      setMensagemNovoOrcamento("Orcamento criado.");
+      setNovoOrcamento((current) => ({ loja_id: current.loja_id, cliente_nome: "" }));
+      setMensagemNovoOrcamento("Orcamento criado com numeracao automatica da loja.");
       await carregarOrcamentos(empresaSlug, buscaOrcamento);
     } catch (error) {
       const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
@@ -176,22 +200,25 @@ export default function LojaPage() {
         {abaAtiva === "orcamentos" && (
           <section className="card" style={{ maxWidth: "none" }}>
             <h1>Orcamentos</h1>
-            <p>Crie e pesquise orcamentos da empresa ativa.</p>
+            <p>O numero do orcamento e automatico por loja: cada loja tem sua propria sequencia 1, 2, 3...</p>
 
             <div className="metric" style={{ marginTop: 18 }}>
               <strong style={{ fontSize: 18 }}>Criar orcamento</strong>
               <form onSubmit={handleCriarOrcamento} style={{ marginTop: 14 }}>
+                <label>Loja
+                  <select
+                    value={novoOrcamento.loja_id}
+                    onChange={(event) => setNovoOrcamento((current) => ({ ...current, loja_id: event.target.value }))}
+                    style={{ borderRadius: 14, padding: 14, background: "#0f172a", color: "white", border: "1px solid var(--border)" }}
+                  >
+                    <option value="">Selecione a loja</option>
+                    {lojas.map((loja) => (
+                      <option key={loja.id} value={loja.id}>{loja.nome}</option>
+                    ))}
+                  </select>
+                </label>
                 <label>Nome do cliente
                   <input value={novoOrcamento.cliente_nome} onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_nome: event.target.value }))} />
-                </label>
-                <label>Numero do cliente / telefone
-                  <input value={novoOrcamento.cliente_telefone} onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_telefone: event.target.value }))} />
-                </label>
-                <label>Numero do pedido
-                  <input value={novoOrcamento.numero_pedido} onChange={(event) => setNovoOrcamento((current) => ({ ...current, numero_pedido: event.target.value }))} placeholder="Opcional" />
-                </label>
-                <label>Valor inicial
-                  <input value={novoOrcamento.valor_total} onChange={(event) => setNovoOrcamento((current) => ({ ...current, valor_total: event.target.value }))} placeholder="0" />
                 </label>
                 <button type="submit">Criar orcamento</button>
               </form>
@@ -205,7 +232,7 @@ export default function LojaPage() {
                   <input
                     value={buscaOrcamento}
                     onChange={(event) => setBuscaOrcamento(event.target.value)}
-                    placeholder="Loja, cliente, telefone ou numero"
+                    placeholder="Loja, cliente ou numero"
                   />
                 </label>
                 <button type="submit">Buscar</button>
@@ -216,9 +243,9 @@ export default function LojaPage() {
             <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
               {orcamentos.map((orcamento) => (
                 <div className="metric" key={orcamento.id}>
-                  <strong style={{ fontSize: 18 }}>{orcamento.cliente_nome || "Cliente nao informado"}</strong>
+                  <strong style={{ fontSize: 18 }}>Orcamento #{orcamento.numero_pedido}</strong>
+                  <p>Cliente: {orcamento.cliente_nome || "Cliente nao informado"}</p>
                   <p>Loja: {orcamento.loja_nome}</p>
-                  <p>Numero: {orcamento.numero_pedido || "sem numero"} • Telefone: {orcamento.cliente_telefone || "sem telefone"}</p>
                   <p>Status: {orcamento.status} • Valor: {formatarValor(orcamento.valor_total)}</p>
                 </div>
               ))}
