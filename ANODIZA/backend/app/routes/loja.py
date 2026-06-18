@@ -26,11 +26,41 @@ def buscar_empresa_id(supabase, empresa_slug: str):
     return empresa_result.data[0]["id"]
 
 
-def buscar_loja_principal(supabase, empresa_id: str):
-    lojas_result = supabase.table("lojas").select("id,nome").eq("empresa_id", empresa_id).limit(1).execute()
-    if not lojas_result.data:
+def buscar_loja(supabase, empresa_id: str, loja_id: str):
+    if not loja_id:
         return None
-    return lojas_result.data[0]
+    loja_result = (
+        supabase.table("lojas")
+        .select("id,nome")
+        .eq("empresa_id", empresa_id)
+        .eq("id", loja_id)
+        .limit(1)
+        .execute()
+    )
+    if not loja_result.data:
+        return None
+    return loja_result.data[0]
+
+
+def proximo_numero_orcamento(supabase, loja_id: str) -> int:
+    result = supabase.table("orcamentos").select("numero_pedido").eq("loja_id", loja_id).limit(2000).execute()
+    maior = 0
+    for item in result.data or []:
+        numero = str(item.get("numero_pedido") or "").strip()
+        if numero.isdigit():
+            maior = max(maior, int(numero))
+    return maior + 1
+
+
+@router.get("/lojas")
+def listar_lojas(empresa_slug: str = Query(default="")):
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        return []
+
+    result = supabase.table("lojas").select("id,nome,slug").eq("empresa_id", empresa_id).order("created_at", desc=False).execute()
+    return result.data or []
 
 
 @router.get("/usuarios")
@@ -56,7 +86,7 @@ def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(
 
     result = (
         supabase.table("orcamentos")
-        .select("id,loja_id,numero_pedido,cliente_nome,cliente_telefone,status,valor_total,created_at")
+        .select("id,loja_id,numero_pedido,cliente_nome,status,valor_total,created_at")
         .eq("empresa_id", empresa_id)
         .order("created_at", desc=True)
         .limit(500)
@@ -69,8 +99,7 @@ def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(
         loja_nome = loja_por_id.get(item.get("loja_id"), "Loja nao identificada")
         numero = str(item.get("numero_pedido") or "")
         cliente_nome = str(item.get("cliente_nome") or "")
-        cliente_telefone = str(item.get("cliente_telefone") or "")
-        texto_busca = f"{loja_nome} {numero} {cliente_nome} {cliente_telefone}".lower()
+        texto_busca = f"{loja_nome} {numero} {cliente_nome}".lower()
 
         if termo and termo not in texto_busca:
             continue
@@ -81,7 +110,6 @@ def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(
             "loja_nome": loja_nome,
             "numero_pedido": numero,
             "cliente_nome": cliente_nome,
-            "cliente_telefone": cliente_telefone,
             "status": item.get("status") or "rascunho",
             "valor_total": float(item.get("valor_total") or 0),
             "created_at": item.get("created_at"),
@@ -93,40 +121,34 @@ def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(
 @router.post("/orcamentos")
 def criar_orcamento(payload: dict):
     empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    loja_id = str(payload.get("loja_id") or "").strip()
     cliente_nome = str(payload.get("cliente_nome") or "").strip()
-    cliente_telefone = str(payload.get("cliente_telefone") or "").strip()
-    numero_pedido = str(payload.get("numero_pedido") or "").strip()
-    status = str(payload.get("status") or "rascunho").strip() or "rascunho"
-
-    try:
-        valor_total = float(payload.get("valor_total") or 0)
-    except (TypeError, ValueError):
-        valor_total = 0
 
     if not cliente_nome:
         raise HTTPException(status_code=400, detail="Informe o nome do cliente")
+    if not loja_id:
+        raise HTTPException(status_code=400, detail="Selecione a loja")
 
     supabase = get_supabase()
     empresa_id = buscar_empresa_id(supabase, empresa_slug)
     if not empresa_id:
         raise HTTPException(status_code=400, detail="Empresa nao identificada")
 
-    loja = buscar_loja_principal(supabase, empresa_id)
+    loja = buscar_loja(supabase, empresa_id, loja_id)
     if not loja:
-        raise HTTPException(status_code=400, detail="Loja nao identificada")
+        raise HTTPException(status_code=400, detail="Loja nao encontrada para esta empresa")
 
-    if not numero_pedido:
-        numero_pedido = f"ORC-{cliente_telefone[-4:] or '0000'}"
+    numero_pedido = str(proximo_numero_orcamento(supabase, loja_id))
 
     try:
         result = supabase.table("orcamentos").insert({
             "empresa_id": empresa_id,
-            "loja_id": loja["id"],
+            "loja_id": loja_id,
             "numero_pedido": numero_pedido,
             "cliente_nome": cliente_nome,
-            "cliente_telefone": cliente_telefone,
-            "status": status,
-            "valor_total": valor_total,
+            "cliente_telefone": "",
+            "status": "rascunho",
+            "valor_total": 0,
             "dados": {},
         }).execute()
     except Exception as error:
