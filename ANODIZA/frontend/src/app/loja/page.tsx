@@ -16,7 +16,7 @@ type Orcamento = {
   created_at?: string;
 };
 type LojaIndex = { titulo: string; cards: { label: string; valor: number }[] };
-type Aba = "painel" | "orcamentos" | "usuarios";
+type Aba = "painel" | "orcamentos" | "clientes" | "usuarios";
 
 const fallbackIndex: LojaIndex = {
   titulo: "Painel da Loja",
@@ -31,6 +31,10 @@ function formatarValor(valor: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
 }
 
+function botaoAba(ativa: boolean) {
+  return { background: ativa ? "var(--primary)" : "#0f172a", color: ativa ? "#111827" : "var(--text)", border: "1px solid var(--border)" };
+}
+
 export default function LojaPage() {
   const [abaAtiva, setAbaAtiva] = useState<Aba>("painel");
   const [data, setData] = useState<LojaIndex>(fallbackIndex);
@@ -40,16 +44,19 @@ export default function LojaPage() {
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [buscaOrcamento, setBuscaOrcamento] = useState("");
   const [mensagem, setMensagem] = useState("");
+  const [mensagemClientes, setMensagemClientes] = useState("");
   const [mensagemOrcamentos, setMensagemOrcamentos] = useState("");
   const [mensagemNovoOrcamento, setMensagemNovoOrcamento] = useState("");
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", email: "", perfil: "vendedor" });
-  const [novoOrcamento, setNovoOrcamento] = useState({ nome_orcamento: "", cliente_nome: "" });
+  const [novoCliente, setNovoCliente] = useState({ nome: "" });
+  const [novoOrcamento, setNovoOrcamento] = useState({ nome_orcamento: "", cliente_id: "" });
 
   async function carregarClientes(slug: string) {
     if (!slug) return;
     try {
       const lista = await apiGet<Cliente[]>(`/api/loja/clientes?empresa_slug=${encodeURIComponent(slug)}`);
       setClientes(lista);
+      setNovoOrcamento((current) => current.cliente_id || !lista[0] ? current : { ...current, cliente_id: lista[0].id });
     } catch {
       setClientes([]);
     }
@@ -88,6 +95,11 @@ export default function LojaPage() {
     carregarUsuarios(slug);
   }, []);
 
+  async function abrirAbaClientes() {
+    setAbaAtiva("clientes");
+    await carregarClientes(empresaSlug);
+  }
+
   async function abrirAbaUsuarios() {
     setAbaAtiva("usuarios");
     await carregarUsuarios(empresaSlug);
@@ -104,6 +116,29 @@ export default function LojaPage() {
     await carregarOrcamentos(empresaSlug, buscaOrcamento);
   }
 
+  async function handleCriarCliente(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!empresaSlug) {
+      setMensagemClientes("Entre novamente para identificar a empresa.");
+      return;
+    }
+    if (!novoCliente.nome.trim()) {
+      setMensagemClientes("Informe o nome do cliente.");
+      return;
+    }
+
+    setMensagemClientes("Cadastrando cliente...");
+    try {
+      await apiPost("/api/loja/clientes", { empresa_slug: empresaSlug, ...novoCliente });
+      setNovoCliente({ nome: "" });
+      setMensagemClientes("Cliente cadastrado.");
+      await carregarClientes(empresaSlug);
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setMensagemClientes(`Nao foi possivel cadastrar o cliente. ${detalhe}`);
+    }
+  }
+
   async function handleCriarOrcamento(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!empresaSlug) {
@@ -114,17 +149,16 @@ export default function LojaPage() {
       setMensagemNovoOrcamento("Informe o nome do orcamento.");
       return;
     }
-    if (!novoOrcamento.cliente_nome.trim()) {
-      setMensagemNovoOrcamento("Informe o nome do cliente.");
+    if (!novoOrcamento.cliente_id) {
+      setMensagemNovoOrcamento("Selecione o cliente.");
       return;
     }
 
     setMensagemNovoOrcamento("Criando orcamento...");
     try {
       await apiPost("/api/loja/orcamentos", { empresa_slug: empresaSlug, ...novoOrcamento });
-      setNovoOrcamento({ nome_orcamento: "", cliente_nome: novoOrcamento.cliente_nome });
+      setNovoOrcamento((current) => ({ nome_orcamento: "", cliente_id: current.cliente_id }));
       setMensagemNovoOrcamento("Orcamento criado com numeracao automatica do cliente.");
-      await carregarClientes(empresaSlug);
       await carregarOrcamentos(empresaSlug, buscaOrcamento);
     } catch (error) {
       const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
@@ -157,27 +191,10 @@ export default function LojaPage() {
         <p>Empresa ativa: {empresaSlug || "nao identificada"}</p>
 
         <nav style={{ display: "grid", gap: 10, marginTop: 28 }}>
-          <button
-            type="button"
-            onClick={() => setAbaAtiva("painel")}
-            style={{ background: abaAtiva === "painel" ? "var(--primary)" : "#0f172a", color: abaAtiva === "painel" ? "#111827" : "var(--text)", border: "1px solid var(--border)" }}
-          >
-            Painel
-          </button>
-          <button
-            type="button"
-            onClick={abrirAbaOrcamentos}
-            style={{ background: abaAtiva === "orcamentos" ? "var(--primary)" : "#0f172a", color: abaAtiva === "orcamentos" ? "#111827" : "var(--text)", border: "1px solid var(--border)" }}
-          >
-            Orcamentos
-          </button>
-          <button
-            type="button"
-            onClick={abrirAbaUsuarios}
-            style={{ background: abaAtiva === "usuarios" ? "var(--primary)" : "#0f172a", color: abaAtiva === "usuarios" ? "#111827" : "var(--text)", border: "1px solid var(--border)" }}
-          >
-            Usuarios
-          </button>
+          <button type="button" onClick={() => setAbaAtiva("painel")} style={botaoAba(abaAtiva === "painel")}>Painel</button>
+          <button type="button" onClick={abrirAbaOrcamentos} style={botaoAba(abaAtiva === "orcamentos")}>Orcamentos</button>
+          <button type="button" onClick={abrirAbaClientes} style={botaoAba(abaAtiva === "clientes")}>Clientes</button>
+          <button type="button" onClick={abrirAbaUsuarios} style={botaoAba(abaAtiva === "usuarios")}>Usuarios</button>
         </nav>
       </aside>
 
@@ -200,7 +217,7 @@ export default function LojaPage() {
         {abaAtiva === "orcamentos" && (
           <section className="card" style={{ maxWidth: "none" }}>
             <h1>Orcamentos</h1>
-            <p>Agora o orcamento tem nome proprio e pertence a um cliente. A numeracao e automatica por cliente: Cliente A 1, 2, 3; Cliente B 1, 2, 3.</p>
+            <p>O orcamento tem nome proprio e pertence a um cliente cadastrado. A numeracao e automatica por cliente.</p>
 
             <div className="metric" style={{ marginTop: 18 }}>
               <strong style={{ fontSize: 18 }}>Criar orcamento</strong>
@@ -208,17 +225,22 @@ export default function LojaPage() {
                 <label>Nome do orcamento
                   <input value={novoOrcamento.nome_orcamento} onChange={(event) => setNovoOrcamento((current) => ({ ...current, nome_orcamento: event.target.value }))} />
                 </label>
-                <label>Nome do cliente
-                  <input list="clientes-cadastrados" value={novoOrcamento.cliente_nome} onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_nome: event.target.value }))} />
-                  <datalist id="clientes-cadastrados">
+                <label>Cliente
+                  <select
+                    value={novoOrcamento.cliente_id}
+                    onChange={(event) => setNovoOrcamento((current) => ({ ...current, cliente_id: event.target.value }))}
+                    style={{ borderRadius: 14, padding: 14, background: "#0f172a", color: "white", border: "1px solid var(--border)" }}
+                  >
+                    <option value="">Selecione o cliente</option>
                     {clientes.map((cliente) => (
-                      <option key={cliente.id} value={cliente.nome} />
+                      <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
                     ))}
-                  </datalist>
+                  </select>
                 </label>
                 <button type="submit">Criar orcamento</button>
               </form>
               {mensagemNovoOrcamento && <p style={{ marginTop: 12 }}>{mensagemNovoOrcamento}</p>}
+              {!clientes.length && <p style={{ marginTop: 12 }}>Cadastre um cliente antes de criar orcamentos.</p>}
             </div>
 
             <div style={{ marginTop: 24 }}>
@@ -243,6 +265,28 @@ export default function LojaPage() {
                   <p>Cliente: {orcamento.cliente_nome || "Cliente nao informado"}</p>
                   <p>Numero do cliente: #{orcamento.numero_pedido}</p>
                   <p>Status: {orcamento.status} • Valor: {formatarValor(orcamento.valor_total)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {abaAtiva === "clientes" && (
+          <section className="card" style={{ maxWidth: "none" }}>
+            <h1>Clientes</h1>
+            <p>Cadastre os clientes da loja. Depois eles aparecem no dropdown de orcamentos.</p>
+            <form onSubmit={handleCriarCliente}>
+              <label>Nome do cliente
+                <input value={novoCliente.nome} onChange={(event) => setNovoCliente({ nome: event.target.value })} />
+              </label>
+              <button type="submit">Cadastrar cliente</button>
+            </form>
+            {mensagemClientes && <p style={{ marginTop: 16 }}>{mensagemClientes}</p>}
+            <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
+              {clientes.map((cliente) => (
+                <div className="metric" key={cliente.id}>
+                  <strong style={{ fontSize: 18 }}>{cliente.nome}</strong>
+                  <p>{cliente.ativo === false ? "Inativo" : "Ativo"}</p>
                 </div>
               ))}
             </div>
