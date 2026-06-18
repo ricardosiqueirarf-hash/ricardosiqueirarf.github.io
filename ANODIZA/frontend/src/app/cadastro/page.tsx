@@ -6,7 +6,7 @@ import { useState } from "react";
 import { apiPost } from "@/lib/api";
 
 type AuthResponse = {
-  access_token: string;
+  chave_acesso?: string;
   empresa_slug: string;
   usuario: { nome: string; email: string; perfil?: string; permissoes?: Record<string, boolean> };
 };
@@ -25,7 +25,7 @@ export default function CadastroPage() {
     setMensagem("Criando cadastro...");
     try {
       const data = await apiPost<AuthResponse>("/api/auth/cadastro", form);
-      localStorage.setItem("anodiza_token", data.access_token);
+      if (data.chave_acesso) localStorage.setItem("anodiza_chave_acesso", data.chave_acesso);
       localStorage.setItem("anodiza_empresa_slug", data.empresa_slug);
       localStorage.setItem("anodiza_usuario", JSON.stringify({ ...data.usuario, perfil: data.usuario.perfil || "owner" }));
       setMensagem(`Cadastro criado. Empresa: ${data.empresa_slug}`);
