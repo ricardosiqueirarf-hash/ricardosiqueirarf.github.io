@@ -54,7 +54,10 @@ a { color: inherit; text-decoration: none; }
 }
 
 .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
-.brand-mark { width: 42px; height: 42px; border-radius: 14px; background: var(--primary); color: #111827; display: grid; place-items: center; font-weight: 900; }
+.brand-mark { width: 42px; height: 42px; border-radius: 14px; background: var(--primary); color: #111827; display: grid; place-items: center; font-weight: 900; overflow: hidden; }
+.brand-mark img { width: 100%; height: 100%; object-fit: cover; }
+.logo-preview { width: 72px; height: 72px; border-radius: 18px; background: var(--primary); color: #111827; display: grid; place-items: center; font-weight: 900; overflow: hidden; }
+.logo-preview img { width: 100%; height: 100%; object-fit: cover; }
 h1 { margin: 0 0 8px; font-size: 28px; }
 h2 { margin: 0 0 8px; font-size: 22px; }
 p { margin: 0; color: var(--muted); line-height: 1.5; }
@@ -68,3 +71,19 @@ button { border: 0; border-radius: 14px; padding: 14px 18px; background: var(--p
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
 .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 22px; }
 .metric strong { display: block; font-size: 32px; margin-top: 10px; }
+
+.door-products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 20px; }
+.door-card { min-height: 360px; border: 1px solid var(--border); border-radius: 24px; overflow: hidden; background: linear-gradient(145deg, rgba(212,175,55,.12), transparent 35%), var(--surface); }
+.door-stage { height: 230px; display: grid; place-items: center; background: radial-gradient(circle at 50% 20%, rgba(212,175,55,.18), transparent 35%), linear-gradient(180deg, rgba(255,255,255,.04), transparent); perspective: 850px; }
+.door-visual { width: 150px; height: 185px; position: relative; transform-style: preserve-3d; transform: rotateX(8deg) rotateY(-18deg); }
+.door-frame { position: absolute; inset: 0; border: 10px solid #1f2937; border-radius: 8px; box-shadow: 0 28px 40px rgba(0,0,0,.35); background: linear-gradient(135deg, rgba(255,255,255,.3), rgba(255,255,255,.05)); }
+.door-glass { position: absolute; inset: 18px; border: 2px solid rgba(212,175,55,.28); background: linear-gradient(135deg, rgba(255,255,255,.26), rgba(59,130,246,.08) 45%, rgba(0,0,0,.2)); backdrop-filter: blur(2px); }
+.door-handle { position: absolute; right: 22px; top: 78px; width: 5px; height: 46px; border-radius: 4px; background: var(--primary); box-shadow: 0 0 12px rgba(212,175,55,.35); }
+.door-track { position: absolute; left: -25px; right: -25px; bottom: -16px; height: 8px; border-radius: 999px; background: #1f2937; box-shadow: 0 16px 20px rgba(0,0,0,.28); }
+.door-visual.sliding .door-frame:nth-child(2) { transform: translateX(44px) translateZ(-18px); opacity: .75; }
+.door-visual.swing .door-frame { transform-origin: left; transform: rotateY(-35deg); }
+.door-visual.tilt .door-frame { transform-origin: top; transform: rotateX(-42deg) translateY(18px); }
+.door-body { padding: 20px; }
+.door-body strong { font-size: 22px; }
+.door-body p { margin-top: 8px; }
+@media (max-width: 980px) { .door-products, .grid { grid-template-columns: 1fr; } .dashboard { grid-template-columns: 1fr; } .sidebar { border-right: 0; border-bottom: 1px solid var(--border); } }
