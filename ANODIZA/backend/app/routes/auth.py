@@ -27,4 +27,4 @@ def login(payload: dict):
 
 @router.get("/me")
 def me():
-    return {"ok": True}
+    return {"ok": True, "secure": False}
