@@ -8,7 +8,7 @@ import { apiPost } from "@/lib/api";
 type AuthResponse = {
   access_token: string;
   empresa_slug: string;
-  usuario: { nome: string; email: string };
+  usuario: { nome: string; email: string; perfil?: string; permissoes?: Record<string, boolean> };
 };
 
 export default function CadastroPage() {
@@ -27,6 +27,7 @@ export default function CadastroPage() {
       const data = await apiPost<AuthResponse>("/api/auth/cadastro", form);
       localStorage.setItem("anodiza_token", data.access_token);
       localStorage.setItem("anodiza_empresa_slug", data.empresa_slug);
+      localStorage.setItem("anodiza_usuario", JSON.stringify({ ...data.usuario, perfil: data.usuario.perfil || "owner" }));
       setMensagem(`Cadastro criado. Empresa: ${data.empresa_slug}`);
       router.push("/loja");
     } catch {
