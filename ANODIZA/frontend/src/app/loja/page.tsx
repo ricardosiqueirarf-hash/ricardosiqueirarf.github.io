@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 
 type Usuario = { id: string; nome: string; email: string; perfil: string; ativo?: boolean };
-type Cliente = { id: string; nome: string; telefone?: string; ativo?: boolean };
+type Cliente = { id: string; nome: string; documento?: string; email?: string; telefone?: string; ativo?: boolean };
 type Orcamento = {
   id: string;
   cliente_id?: string;
@@ -17,6 +17,7 @@ type Orcamento = {
 };
 type LojaIndex = { titulo: string; cards: { label: string; valor: number }[] };
 type Aba = "painel" | "orcamentos" | "clientes" | "usuarios";
+type ClienteForm = { id?: string; nome: string; documento: string; email: string; telefone: string };
 
 const fallbackIndex: LojaIndex = {
   titulo: "Painel da Loja",
@@ -26,6 +27,8 @@ const fallbackIndex: LojaIndex = {
     { label: "Em producao", valor: 0 },
   ],
 };
+
+const clienteVazio: ClienteForm = { nome: "", documento: "", email: "", telefone: "" };
 
 function formatarValor(valor: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
@@ -48,7 +51,8 @@ export default function LojaPage() {
   const [mensagemOrcamentos, setMensagemOrcamentos] = useState("");
   const [mensagemNovoOrcamento, setMensagemNovoOrcamento] = useState("");
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", email: "", perfil: "vendedor" });
-  const [novoCliente, setNovoCliente] = useState({ nome: "" });
+  const [novoCliente, setNovoCliente] = useState<ClienteForm>(clienteVazio);
+  const [clienteEditando, setClienteEditando] = useState<ClienteForm | null>(null);
   const [novoOrcamento, setNovoOrcamento] = useState({ nome_orcamento: "", cliente_id: "" });
 
   async function carregarClientes(slug: string) {
@@ -130,13 +134,45 @@ export default function LojaPage() {
     setMensagemClientes("Cadastrando cliente...");
     try {
       await apiPost("/api/loja/clientes", { empresa_slug: empresaSlug, ...novoCliente });
-      setNovoCliente({ nome: "" });
+      setNovoCliente(clienteVazio);
       setMensagemClientes("Cliente cadastrado.");
       await carregarClientes(empresaSlug);
     } catch (error) {
       const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
       setMensagemClientes(`Nao foi possivel cadastrar o cliente. ${detalhe}`);
     }
+  }
+
+  async function handleEditarCliente(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!clienteEditando) return;
+    if (!clienteEditando.nome.trim()) {
+      setMensagemClientes("Informe o nome do cliente.");
+      return;
+    }
+
+    setMensagemClientes("Salvando cliente...");
+    try {
+      await apiPost("/api/loja/clientes/editar", { empresa_slug: empresaSlug, ...clienteEditando });
+      setClienteEditando(null);
+      setMensagemClientes("Cliente atualizado.");
+      await carregarClientes(empresaSlug);
+      await carregarOrcamentos(empresaSlug, buscaOrcamento);
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : "Erro desconhecido";
+      setMensagemClientes(`Nao foi possivel editar o cliente. ${detalhe}`);
+    }
+  }
+
+  function iniciarEdicaoCliente(cliente: Cliente) {
+    setClienteEditando({
+      id: cliente.id,
+      nome: cliente.nome || "",
+      documento: cliente.documento || "",
+      email: cliente.email || "",
+      telefone: cliente.telefone || "",
+    });
+    setMensagemClientes("");
   }
 
   async function handleCriarOrcamento(event: React.FormEvent<HTMLFormElement>) {
@@ -274,19 +310,57 @@ export default function LojaPage() {
         {abaAtiva === "clientes" && (
           <section className="card" style={{ maxWidth: "none" }}>
             <h1>Clientes</h1>
-            <p>Cadastre os clientes da loja. Depois eles aparecem no dropdown de orcamentos.</p>
+            <p>Cadastre os clientes da loja. CPF/CNPJ, e-mail e celular/WhatsApp sao opcionais.</p>
             <form onSubmit={handleCriarCliente}>
               <label>Nome do cliente
-                <input value={novoCliente.nome} onChange={(event) => setNovoCliente({ nome: event.target.value })} />
+                <input value={novoCliente.nome} onChange={(event) => setNovoCliente((current) => ({ ...current, nome: event.target.value }))} />
+              </label>
+              <label>CPF/CNPJ
+                <input value={novoCliente.documento} onChange={(event) => setNovoCliente((current) => ({ ...current, documento: event.target.value }))} />
+              </label>
+              <label>E-mail
+                <input type="email" value={novoCliente.email} onChange={(event) => setNovoCliente((current) => ({ ...current, email: event.target.value }))} />
+              </label>
+              <label>Celular/WhatsApp
+                <input value={novoCliente.telefone} onChange={(event) => setNovoCliente((current) => ({ ...current, telefone: event.target.value }))} />
               </label>
               <button type="submit">Cadastrar cliente</button>
             </form>
             {mensagemClientes && <p style={{ marginTop: 16 }}>{mensagemClientes}</p>}
+
+            {clienteEditando && (
+              <div className="metric" style={{ marginTop: 24 }}>
+                <strong style={{ fontSize: 18 }}>Editar cliente</strong>
+                <form onSubmit={handleEditarCliente} style={{ marginTop: 14 }}>
+                  <label>Nome do cliente
+                    <input value={clienteEditando.nome} onChange={(event) => setClienteEditando((current) => current ? { ...current, nome: event.target.value } : current)} />
+                  </label>
+                  <label>CPF/CNPJ
+                    <input value={clienteEditando.documento} onChange={(event) => setClienteEditando((current) => current ? { ...current, documento: event.target.value } : current)} />
+                  </label>
+                  <label>E-mail
+                    <input type="email" value={clienteEditando.email} onChange={(event) => setClienteEditando((current) => current ? { ...current, email: event.target.value } : current)} />
+                  </label>
+                  <label>Celular/WhatsApp
+                    <input value={clienteEditando.telefone} onChange={(event) => setClienteEditando((current) => current ? { ...current, telefone: event.target.value } : current)} />
+                  </label>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button type="submit">Salvar alteracoes</button>
+                    <button type="button" onClick={() => setClienteEditando(null)}>Cancelar</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
             <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
               {clientes.map((cliente) => (
                 <div className="metric" key={cliente.id}>
                   <strong style={{ fontSize: 18 }}>{cliente.nome}</strong>
+                  <p>CPF/CNPJ: {cliente.documento || "nao informado"}</p>
+                  <p>E-mail: {cliente.email || "nao informado"}</p>
+                  <p>WhatsApp: {cliente.telefone || "nao informado"}</p>
                   <p>{cliente.ativo === false ? "Inativo" : "Ativo"}</p>
+                  <button type="button" onClick={() => iniciarEdicaoCliente(cliente)}>Editar</button>
                 </div>
               ))}
             </div>
