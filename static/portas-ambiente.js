@@ -27,6 +27,13 @@
             .replaceAll("'", "&#039;");
     }
 
+    function obterListaPortas() {
+        try {
+            if (Array.isArray(portas)) return portas;
+        } catch (_) {}
+        return Array.isArray(window.portas) ? window.portas : [];
+    }
+
     function obterAmbientePorta(porta) {
         return String(porta?.dados?.ambiente || porta?.ambiente || "").trim();
     }
@@ -169,9 +176,9 @@
 
     function enriquecerTabelaPortas() {
         const table = document.querySelector("#portasSalvas table.portas-table");
-        if (!table || !Array.isArray(window.portas || portas)) return;
+        const listaPortas = obterListaPortas();
+        if (!table || !Array.isArray(listaPortas)) return;
 
-        const listaPortas = window.portas || portas;
         const header = table.querySelector("thead tr");
         if (header && !Array.from(header.children).some((th) => th.textContent.trim() === "Ambiente")) {
             const th = document.createElement("th");
@@ -190,8 +197,8 @@
 
     function enriquecerResumoOrcamento() {
         const resumo = document.getElementById("printResumo");
-        if (!resumo || !Array.isArray(window.portas || portas)) return;
-        const listaPortas = window.portas || portas;
+        const listaPortas = obterListaPortas();
+        if (!resumo || !Array.isArray(listaPortas)) return;
 
         resumo.querySelectorAll(".print-item").forEach((item, index) => {
             if (item.querySelector("[data-ambiente-resumo='true']")) return;
@@ -205,8 +212,8 @@
 
     function enriquecerOrdemProducao() {
         const ordem = document.getElementById("printOrdem");
-        if (!ordem || !Array.isArray(window.portas || portas)) return;
-        const listaPortas = window.portas || portas;
+        const listaPortas = obterListaPortas();
+        if (!ordem || !Array.isArray(listaPortas)) return;
 
         ordem.querySelectorAll(".print-item .op-info").forEach((info, index) => {
             if (info.querySelector("[data-ambiente-op='true']")) return;
@@ -226,7 +233,7 @@
     }
 
     function portasExpandidasPorQuantidade() {
-        const listaPortas = window.portas || portas || [];
+        const listaPortas = obterListaPortas();
         const expandidas = [];
         listaPortas.forEach((porta) => {
             const qtd = parseInt(porta?.quantidade || "1", 10) || 1;
