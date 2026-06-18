@@ -49,6 +49,22 @@ def buscar_cliente(supabase, empresa_id: str, cliente_id: str):
     return result.data[0]
 
 
+def buscar_orcamento(supabase, empresa_id: str, orcamento_id: str):
+    if not orcamento_id:
+        return None
+    result = (
+        supabase.table("orcamentos")
+        .select("id,empresa_id,cliente_id,numero_pedido,nome_orcamento,cliente_nome,status,valor_total")
+        .eq("empresa_id", empresa_id)
+        .eq("id", orcamento_id)
+        .limit(1)
+        .execute()
+    )
+    if not result.data:
+        return None
+    return result.data[0]
+
+
 def proximo_numero_orcamento(supabase, cliente_id: str) -> int:
     result = supabase.table("orcamentos").select("numero_pedido").eq("cliente_id", cliente_id).limit(2000).execute()
     maior = 0
@@ -57,6 +73,15 @@ def proximo_numero_orcamento(supabase, cliente_id: str) -> int:
         if numero.isdigit():
             maior = max(maior, int(numero))
     return maior + 1
+
+
+def recalcular_valor_orcamento(supabase, orcamento_id: str):
+    produtos = supabase.table("orcamento_produtos").select("valor_total").eq("orcamento_id", orcamento_id).execute()
+    total = 0.0
+    for item in produtos.data or []:
+        total += float(item.get("valor_total") or 0)
+    supabase.table("orcamentos").update({"valor_total": total}).eq("id", orcamento_id).execute()
+    return total
 
 
 @router.get("/clientes")
@@ -267,6 +292,156 @@ def criar_orcamento(payload: dict):
 
     if not result.data:
         raise HTTPException(status_code=400, detail="Orcamento nao criado")
+    return result.data[0]
+
+
+@router.post("/orcamentos/editar")
+def editar_orcamento(payload: dict):
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    orcamento_id = str(payload.get("id") or "").strip()
+    cliente_id = str(payload.get("cliente_id") or "").strip()
+    nome_orcamento = str(payload.get("nome_orcamento") or "").strip()
+
+    if not orcamento_id:
+        raise HTTPException(status_code=400, detail="Orcamento nao identificado")
+    if not nome_orcamento:
+        raise HTTPException(status_code=400, detail="Informe o nome do orcamento")
+    if not cliente_id:
+        raise HTTPException(status_code=400, detail="Selecione o cliente")
+
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+
+    orcamento = buscar_orcamento(supabase, empresa_id, orcamento_id)
+    if not orcamento:
+        raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
+
+    cliente = buscar_cliente(supabase, empresa_id, cliente_id)
+    if not cliente:
+        raise HTTPException(status_code=400, detail="Cliente nao encontrado")
+
+    numero_pedido = str(orcamento.get("numero_pedido") or "")
+    if str(orcamento.get("cliente_id") or "") != cliente_id:
+        numero_pedido = str(proximo_numero_orcamento(supabase, cliente_id))
+
+    try:
+        result = (
+            supabase.table("orcamentos")
+            .update({
+                "cliente_id": cliente_id,
+                "cliente_nome": cliente["nome"],
+                "cliente_telefone": str(cliente.get("telefone") or ""),
+                "numero_pedido": numero_pedido,
+                "nome_orcamento": nome_orcamento,
+            })
+            .eq("empresa_id", empresa_id)
+            .eq("id", orcamento_id)
+            .execute()
+        )
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Orcamento nao atualizado")
+    return result.data[0]
+
+
+@router.post("/orcamentos/aprovar")
+def aprovar_orcamento(payload: dict):
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    orcamento_id = str(payload.get("id") or "").strip()
+
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+
+    if not buscar_orcamento(supabase, empresa_id, orcamento_id):
+        raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
+
+    try:
+        result = (
+            supabase.table("orcamentos")
+            .update({"status": "aprovado"})
+            .eq("empresa_id", empresa_id)
+            .eq("id", orcamento_id)
+            .execute()
+        )
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Orcamento nao aprovado")
+    return result.data[0]
+
+
+@router.get("/orcamentos/produtos")
+def listar_produtos_orcamento(empresa_slug: str = Query(default=""), orcamento_id: str = Query(default="")):
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        return []
+
+    if not buscar_orcamento(supabase, empresa_id, orcamento_id):
+        return []
+
+    result = (
+        supabase.table("orcamento_produtos")
+        .select("id,nome,quantidade,valor_unitario,valor_total,created_at")
+        .eq("empresa_id", empresa_id)
+        .eq("orcamento_id", orcamento_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+    return result.data or []
+
+
+@router.post("/orcamentos/produtos")
+def cadastrar_produto_orcamento(payload: dict):
+    empresa_slug = str(payload.get("empresa_slug") or "").strip()
+    orcamento_id = str(payload.get("orcamento_id") or "").strip()
+    nome = str(payload.get("nome") or "").strip()
+
+    try:
+        quantidade = float(payload.get("quantidade") or 1)
+    except (TypeError, ValueError):
+        quantidade = 1
+    try:
+        valor_unitario = float(payload.get("valor_unitario") or 0)
+    except (TypeError, ValueError):
+        valor_unitario = 0
+
+    if not nome:
+        raise HTTPException(status_code=400, detail="Informe o nome do produto")
+    if quantidade <= 0:
+        raise HTTPException(status_code=400, detail="Quantidade deve ser maior que zero")
+
+    supabase = get_supabase()
+    empresa_id = buscar_empresa_id(supabase, empresa_slug)
+    if not empresa_id:
+        raise HTTPException(status_code=400, detail="Empresa nao identificada")
+
+    if not buscar_orcamento(supabase, empresa_id, orcamento_id):
+        raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
+
+    valor_total = quantidade * valor_unitario
+    try:
+        result = supabase.table("orcamento_produtos").insert({
+            "empresa_id": empresa_id,
+            "orcamento_id": orcamento_id,
+            "nome": nome,
+            "quantidade": quantidade,
+            "valor_unitario": valor_unitario,
+            "valor_total": valor_total,
+        }).execute()
+        recalcular_valor_orcamento(supabase, orcamento_id)
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"Erro na API: {error}") from error
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Produto nao cadastrado")
     return result.data[0]
 
 
