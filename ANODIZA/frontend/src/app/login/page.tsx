@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiPost } from "@/lib/api";
 
+type LoginResponse = {
+  access_token?: string;
+  empresa_slug?: string;
+  usuario?: { nome: string; email: string; perfil?: string; permissoes?: Record<string, boolean> };
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [empresaSlug, setEmpresaSlug] = useState("anodiza");
@@ -16,7 +22,10 @@ export default function LoginPage() {
     event.preventDefault();
     setMensagem("Entrando...");
     try {
-      await apiPost("/api/auth/login", { empresa_slug: empresaSlug, email, senha });
+      const data = await apiPost<LoginResponse>("/api/auth/login", { empresa_slug: empresaSlug, email, senha });
+      if (data.access_token) localStorage.setItem("anodiza_token", data.access_token);
+      localStorage.setItem("anodiza_empresa_slug", data.empresa_slug || empresaSlug);
+      if (data.usuario) localStorage.setItem("anodiza_usuario", JSON.stringify(data.usuario));
       setMensagem("Login realizado.");
       router.push("/loja");
     } catch {
