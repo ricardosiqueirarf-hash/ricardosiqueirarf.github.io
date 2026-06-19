@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class CadastroRequest(BaseModel):
@@ -8,11 +8,31 @@ class CadastroRequest(BaseModel):
     email: EmailStr
     senha: str = Field(min_length=6)
 
+    @field_validator("empresa_nome", "loja_nome", "nome", "email", "senha", mode="before")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
 
 class LoginRequest(BaseModel):
     empresa_slug: str = Field(min_length=2)
     email: EmailStr
     senha: str = Field(min_length=6)
+
+    @field_validator("empresa_slug", "email", "senha", mode="before")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
 
 
 class UsuarioResponse(BaseModel):
