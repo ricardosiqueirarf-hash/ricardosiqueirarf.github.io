@@ -6,11 +6,6 @@ from app.routes import auth, clientes, colaboradores, loja, pedidos, tenants
 
 settings = get_settings()
 origins = [origin.strip().rstrip("/") for origin in settings.cors_origins.split(",") if origin.strip()]
-origins.extend([
-    "https://anodiza-frontend.onrender.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-])
 origins = sorted(set(origins))
 
 app = FastAPI(title="ANODIZA API", version="0.1.0")
@@ -18,7 +13,6 @@ app = FastAPI(title="ANODIZA API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=".*",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
