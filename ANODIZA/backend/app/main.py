@@ -23,7 +23,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(clientes.router, prefix="/api/loja", tags=["loja-clientes"])
 app.include_router(colaboradores.router, prefix="/api/loja", tags=["loja-acessos"])
 app.include_router(pedidos.router, prefix="/api/loja", tags=["loja-orcamentos"])
-app.include_router(loja.router, prefix="/api/loja", tags=["loja-compat"])
+app.include_router(loja.router, prefix="/api/loja", tags=["loja-painel"])
 
 
 @app.get("/api/health")
