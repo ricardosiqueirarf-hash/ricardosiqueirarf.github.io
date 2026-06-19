@@ -19,10 +19,9 @@ def listar(empresa_id: str, busca: str = ""):
     return lista
 
 
-def proximo_numero(cliente_id: str) -> int:
-    result = pedidos_repo.supabase_client().table("orcamentos").select("numero_pedido").eq("cliente_id", cliente_id).limit(2000).execute()
+def proximo_numero(empresa_id: str, cliente_id: str) -> int:
     maior = 0
-    for item in result.data or []:
+    for item in pedidos_repo.listar_numeros_por_cliente(empresa_id, cliente_id):
         numero = str(item.get("numero_pedido") or "").strip()
         if numero.isdigit():
             maior = max(maior, int(numero))
@@ -40,10 +39,10 @@ def criar(empresa_id: str, payload: PedidoCreate, current_user: dict, request: R
     if not cliente:
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
     loja = buscar_loja_principal(empresa_id)
-    dados = {"empresa_id": empresa_id, "cliente_id": cliente_id, "numero_pedido": str(proximo_numero(cliente_id)), "nome_orcamento": nome, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
+    dados = {"cliente_id": cliente_id, "numero_pedido": str(proximo_numero(empresa_id, cliente_id)), "nome_orcamento": nome, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
     if loja:
         dados["loja_id"] = loja["id"]
-    pedido = pedidos_repo.inserir(dados)
+    pedido = pedidos_repo.inserir(empresa_id, dados)
     if not pedido:
         raise HTTPException(status_code=400, detail="Orcamento nao criado")
     audit_event(current_user, "criar", "orcamento", pedido.get("id"), None, pedido, request)
@@ -59,7 +58,7 @@ def editar(empresa_id: str, payload: PedidoUpdate, current_user: dict, request: 
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
     numero = str(pedido.get("numero_pedido") or "")
     if str(pedido.get("cliente_id") or "") != payload.cliente_id:
-        numero = str(proximo_numero(payload.cliente_id))
+        numero = str(proximo_numero(empresa_id, payload.cliente_id))
     dados = {"cliente_id": payload.cliente_id, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "numero_pedido": numero, "nome_orcamento": payload.nome_orcamento.strip()}
     atualizado = pedidos_repo.atualizar(empresa_id, payload.id, dados)
     if not atualizado:
@@ -86,8 +85,10 @@ def listar_linhas(empresa_id: str, item_id: str):
 
 
 def recalcular_total(empresa_id: str, item_id: str):
+    if not pedidos_repo.buscar(empresa_id, item_id):
+        raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
     total = sum(float(item.get("valor_total") or 0) for item in pedidos_repo.listar_linhas(empresa_id, item_id))
-    pedidos_repo.atualizar_total(item_id, total)
+    pedidos_repo.atualizar_total(empresa_id, item_id, total)
     return total
 
 
@@ -98,8 +99,8 @@ def criar_linha(empresa_id: str, payload: PedidoProdutoCreate, current_user: dic
         raise HTTPException(status_code=400, detail="Quantidade deve ser maior que zero")
     if not pedidos_repo.buscar(empresa_id, payload.orcamento_id):
         raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
-    dados = {"empresa_id": empresa_id, "orcamento_id": payload.orcamento_id, "nome": payload.nome.strip(), "quantidade": payload.quantidade, "valor_unitario": payload.valor_unitario, "valor_total": payload.quantidade * payload.valor_unitario}
-    linha = pedidos_repo.inserir_linha(dados)
+    dados = {"orcamento_id": payload.orcamento_id, "nome": payload.nome.strip(), "quantidade": payload.quantidade, "valor_unitario": payload.valor_unitario, "valor_total": payload.quantidade * payload.valor_unitario}
+    linha = pedidos_repo.inserir_linha(empresa_id, dados)
     if not linha:
         raise HTTPException(status_code=400, detail="Produto nao cadastrado")
     recalcular_total(empresa_id, payload.orcamento_id)
