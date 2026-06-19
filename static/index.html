@@ -1,41 +1,30 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Color Glass Fortaleza | Portas e Estruturas Premium em Vidro e Alumínio</title>
 
+  <meta name="description" content="Portas, divisórias, cristaleiras e estruturas sob medida em vidro e alumínio para ambientes sofisticados. Acabamento premium, design marcante e atendimento em Fortaleza/CE." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://colorglassfortaleza.com.br/" />
+
   <link rel="icon" href="/favicon.ico?v=5" sizes="any" />
   <link rel="shortcut icon" href="/favicon.ico?v=5" />
   <link rel="icon" type="image/png" sizes="512x512" href="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo-512.png?v=5" />
   <link rel="apple-touch-icon" sizes="180x180" href="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo-512.png?v=5" />
-  <meta name="theme-color" content="#030303" />
-
-  <meta
-    name="description"
-    content="Portas, divisórias, cristaleiras e estruturas sob medida em vidro e alumínio para ambientes sofisticados. Acabamento premium, design leve e atendimento em Fortaleza/CE."
-  />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://colorglassfortaleza.com.br/" />
+  <meta name="theme-color" content="#050505" />
 
   <meta property="og:title" content="Color Glass Fortaleza | Vidro e Alumínio Premium" />
-  <meta
-    property="og:description"
-    content="Soluções sob medida em vidro e alumínio para transformar closets, cozinhas, salas, escritórios e ambientes planejados com acabamento premium."
-  />
+  <meta property="og:description" content="Soluções sob medida em vidro e alumínio para closets, cristaleiras, cozinhas e ambientes planejados com acabamento premium." />
   <meta property="og:url" content="https://colorglassfortaleza.com.br/" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:image" content="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo.jpg" />
-  <meta property="og:image:width" content="600" />
-  <meta property="og:image:height" content="600" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Color Glass Fortaleza | Vidro e Alumínio Premium" />
-  <meta
-    name="twitter:description"
-    content="Portas, divisórias, cristaleiras e estruturas sob medida com estética sofisticada e acabamento impecável."
-  />
+  <meta name="twitter:description" content="Portas e estruturas sob medida com estética sofisticada e acabamento premium." />
   <meta name="twitter:image" content="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/logo.jpg" />
 
   <script type="application/ld+json">
@@ -53,9 +42,7 @@
       "addressRegion": "CE",
       "addressCountry": "BR"
     },
-    "sameAs": [
-      "https://www.instagram.com/colorglassfortaleza"
-    ]
+    "sameAs": ["https://www.instagram.com/colorglassfortaleza"]
   }
   </script>
 
@@ -63,27 +50,31 @@
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-76VHRNES8D');
+    gtag("js", new Date());
+    gtag("config", "G-76VHRNES8D");
   </script>
-  <script src="global.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --cg-black: #030303;
-      --cg-ink: #080808;
-      --cg-panel: #101010;
-      --cg-card: #151515;
-      --cg-soft: #1f1f1f;
-      --cg-white: #f7f4ef;
-      --cg-muted: #aaa39a;
-      --cg-muted-2: #746e66;
-      --cg-line: rgba(255, 255, 255, 0.1);
-      --cg-line-strong: rgba(255, 255, 255, 0.18);
-      --cg-warm: #d6b084;
-      --cg-warm-2: #8b6849;
-      --cg-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
-      --cg-radius: 28px;
+      --bg: #050505;
+      --bg-2: #0a0a0a;
+      --card: rgba(18, 18, 18, 0.72);
+      --card-solid: #121212;
+      --text: #f6f1e9;
+      --muted: #b9b0a5;
+      --muted-2: #827a70;
+      --line: rgba(255, 255, 255, 0.09);
+      --line-2: rgba(255, 255, 255, 0.16);
+      --gold: #d8b27f;
+      --gold-2: #8f6841;
+      --radius: 30px;
+      --shadow: 0 34px 90px rgba(0, 0, 0, 0.55);
+      --container: 1240px;
+      --header-h: 86px;
     }
 
     * {
@@ -94,18 +85,30 @@
 
     html {
       scroll-behavior: smooth;
-      background: var(--cg-black);
+      background: var(--bg);
     }
 
     body {
       min-height: 100vh;
-      color: var(--cg-white);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at 72% 8%, rgba(214, 176, 132, 0.12), transparent 26rem),
-        radial-gradient(circle at 6% 38%, rgba(255, 255, 255, 0.06), transparent 20rem),
-        linear-gradient(180deg, #020202 0%, #090909 48%, #030303 100%);
-      font-family: Inter, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        radial-gradient(circle at 16% 18%, rgba(216, 178, 127, 0.12), transparent 28rem),
+        radial-gradient(circle at 82% 8%, rgba(255, 255, 255, 0.06), transparent 22rem),
+        linear-gradient(180deg, #020202 0%, #080808 46%, #030303 100%);
       overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image: radial-gradient(rgba(255,255,255,0.2) 0.6px, transparent 0.6px);
+      background-size: 8px 8px;
+      mix-blend-mode: soft-light;
     }
 
     a {
@@ -114,23 +117,44 @@
     }
 
     img {
+      display: block;
+      width: 100%;
       max-width: 100%;
     }
 
-    .page-shell {
-      width: min(100%, 1180px);
+    button {
+      font: inherit;
+    }
+
+    .cursor-glow {
+      position: fixed;
+      width: 320px;
+      height: 320px;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      pointer-events: none;
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(216,178,127,0.18) 0%, rgba(216,178,127,0.06) 36%, transparent 72%);
+      filter: blur(10px);
+    }
+
+    .container {
+      width: min(var(--container), calc(100% - 40px));
       margin: 0 auto;
-      padding: 0 24px;
+      position: relative;
+      z-index: 3;
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 18px;
-      color: var(--cg-warm);
-      font-size: 0.72rem;
-      font-weight: 800;
+      color: var(--gold);
+      font-size: 0.74rem;
+      font-weight: 900;
       letter-spacing: 0.28em;
       text-transform: uppercase;
     }
@@ -140,121 +164,160 @@
       width: 34px;
       height: 1px;
       background: currentColor;
-      opacity: 0.65;
+      opacity: 0.75;
+    }
+
+    .section {
+      position: relative;
+      z-index: 3;
+      padding: clamp(86px, 9vw, 128px) 0;
     }
 
     .section-title {
-      max-width: 760px;
-      font-size: clamp(2rem, 4.6vw, 4rem);
-      line-height: 0.98;
-      letter-spacing: -0.06em;
+      max-width: 850px;
+      font-size: clamp(2.2rem, 5.4vw, 4.9rem);
+      line-height: 0.94;
+      letter-spacing: -0.065em;
       font-weight: 300;
     }
 
-    .section-subtitle {
-      max-width: 690px;
-      margin-top: 20px;
-      color: var(--cg-muted);
-      font-size: 1rem;
-      line-height: 1.8;
+    .section-title strong,
+    .hero-title strong {
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    .section-copy {
+      max-width: 720px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 1.04rem;
+      line-height: 1.9;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 34px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      min-height: 52px;
-      padding: 0 22px;
-      border: 1px solid var(--cg-line-strong);
+      min-height: 54px;
+      padding: 0 24px;
+      border: 1px solid var(--line-2);
       border-radius: 999px;
-      background: transparent;
-      color: var(--cg-white);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
       cursor: pointer;
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 900;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
       white-space: nowrap;
     }
 
     .btn:hover {
-      transform: translateY(-2px);
-      border-color: rgba(214, 176, 132, 0.65);
-      background: rgba(214, 176, 132, 0.08);
+      transform: translateY(-3px);
+      border-color: rgba(216, 178, 127, 0.62);
+      background: rgba(216, 178, 127, 0.08);
     }
 
     .btn-primary {
-      background: var(--cg-white);
-      color: #080808;
-      border-color: var(--cg-white);
-      box-shadow: 0 18px 36px rgba(247, 244, 239, 0.12);
+      background: var(--text);
+      color: #070707;
+      border-color: var(--text);
+      box-shadow: 0 18px 44px rgba(246, 241, 233, 0.14);
     }
 
     .btn-primary:hover {
-      background: var(--cg-warm);
-      border-color: var(--cg-warm);
-      color: #070707;
+      background: var(--gold);
+      border-color: var(--gold);
+      box-shadow: 0 20px 50px rgba(216, 178, 127, 0.22);
     }
 
-    .arrow {
-      font-size: 1rem;
-      line-height: 1;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: var(--header-h);
       z-index: 30;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      background: rgba(3, 3, 3, 0.82);
+      border-bottom: 1px solid transparent;
+      transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+    }
+
+    .site-header.scrolled {
+      background: rgba(4, 4, 4, 0.78);
+      border-color: rgba(255,255,255,0.07);
       backdrop-filter: blur(18px);
     }
 
     .nav {
+      min-height: var(--header-h);
       display: grid;
-      grid-template-columns: 230px 1fr auto;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: 28px;
-      min-height: 92px;
+      gap: 24px;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 18px;
-      width: 244px;
-      min-height: 58px;
+      gap: 16px;
     }
 
-    .logo-symbol {
+    .brand-mark {
       position: relative;
       display: grid;
-      grid-template-columns: repeat(2, 21px);
-      grid-template-rows: repeat(2, 21px);
-      gap: 6px;
+      place-items: center;
       width: 52px;
       height: 52px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(216,178,127,0.25);
       transform: rotate(45deg);
-      flex: 0 0 auto;
     }
 
-    .logo-symbol span {
-      display: block;
-      border: 3px solid var(--cg-white);
-      border-radius: 8px;
-      box-shadow: 0 0 18px rgba(247, 244, 239, 0.16);
+    .brand-mark span {
+      position: relative;
+      z-index: 1;
+      color: var(--gold);
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
     }
 
-    .logo-wordmark {
+    .brand-text {
       display: grid;
-      gap: 4px;
-      color: var(--cg-white);
-      font-size: 1.32rem;
-      font-weight: 300;
-      letter-spacing: 0.48em;
-      line-height: 0.98;
+      gap: 2px;
+      line-height: 1;
+    }
+
+    .brand-text strong {
+      font-size: 0.94rem;
+      font-weight: 800;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+
+    .brand-text small {
+      color: var(--muted-2);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
     }
 
@@ -262,593 +325,764 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: clamp(20px, 3vw, 46px);
+      gap: clamp(18px, 3vw, 34px);
     }
 
     .nav-links a {
-      color: rgba(247, 244, 239, 0.76);
-      font-size: 0.72rem;
+      color: rgba(246,241,233,0.72);
+      font-size: 0.73rem;
       font-weight: 900;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.17em;
       text-transform: uppercase;
-      transition: color 0.2s ease;
+      transition: color 0.25s ease;
     }
 
     .nav-links a:hover {
-      color: var(--cg-white);
+      color: var(--text);
     }
 
     .hero {
       position: relative;
-      min-height: calc(100svh - 92px);
+      min-height: 100svh;
+      padding: calc(var(--header-h) + 44px) 0 44px;
+      display: flex;
+      align-items: center;
+      overflow: clip;
+    }
+
+    .hero-grid {
       display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-      overflow: hidden;
+      grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+      gap: 42px;
+      align-items: center;
     }
 
     .hero-copy {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: clamp(70px, 8vw, 118px) 24px clamp(50px, 7vw, 90px) max(24px, calc((100vw - 1180px) / 2 + 24px));
-      background:
-        linear-gradient(90deg, rgba(3, 3, 3, 1) 0%, rgba(3, 3, 3, 0.96) 62%, rgba(3, 3, 3, 0.35) 100%),
-        radial-gradient(circle at 18% 28%, rgba(214, 176, 132, 0.14), transparent 20rem);
-      z-index: 2;
+      max-width: 660px;
     }
 
-    .hero h1 {
-      max-width: 650px;
-      font-size: clamp(2.9rem, 6.6vw, 6.8rem);
-      line-height: 0.92;
-      letter-spacing: -0.075em;
+    .hero-title {
+      font-size: clamp(3rem, 7.2vw, 7rem);
+      line-height: 0.88;
+      letter-spacing: -0.08em;
       font-weight: 300;
     }
 
-    .hero h1 strong {
-      color: var(--cg-warm);
-      font-weight: 400;
+    .hero-text {
+      max-width: 590px;
+      margin-top: 25px;
+      color: rgba(246,241,233,0.76);
+      font-size: clamp(1rem, 1.25vw, 1.15rem);
+      line-height: 1.9;
     }
 
-    .hero p {
-      max-width: 560px;
-      margin-top: 24px;
-      color: rgba(247, 244, 239, 0.74);
-      font-size: clamp(1rem, 1.35vw, 1.16rem);
-      line-height: 1.85;
-    }
-
-    .hero-actions {
+    .hero-badges {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .hero-badge {
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.035);
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-stage {
+      position: relative;
+      min-height: 760px;
+      perspective: 1200px;
+    }
+
+    .hero-card-main,
+    .hero-card-side,
+    .stack-card,
+    .showcase-card,
+    .details-visual,
+    .cinema-band,
+    .cta-box {
+      will-change: transform;
+    }
+
+    .hero-card-main {
+      position: absolute;
+      inset: 0 82px 82px 0;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 36px;
+      background: #111;
+      box-shadow: var(--shadow);
+      transform: rotate(-4deg);
+    }
+
+    .hero-card-main img,
+    .hero-card-side img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.04);
+      filter: saturate(1.04) contrast(1.08) brightness(0.82);
+    }
+
+    .hero-card-main::after,
+    .hero-card-side::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.52) 100%),
+        radial-gradient(circle at 72% 20%, rgba(216,178,127,0.22), transparent 22rem);
+    }
+
+    .hero-card-side {
+      position: absolute;
+      right: 0;
+      top: 72px;
+      width: 42%;
+      height: 52%;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 28px;
+      background: #111;
+      box-shadow: var(--shadow);
+      transform: rotate(6deg);
+    }
+
+    .hero-floating {
+      position: absolute;
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 22px;
+      background: rgba(10,10,10,0.66);
+      box-shadow: 0 22px 55px rgba(0,0,0,0.32);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero-floating.metric {
+      left: 34px;
+      bottom: 24px;
+      min-width: 220px;
+      padding: 18px;
+    }
+
+    .hero-floating.metric strong {
+      display: block;
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: -0.05em;
+    }
+
+    .hero-floating.metric span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .hero-floating.quote {
+      right: 38px;
+      bottom: 10px;
+      width: 270px;
+      padding: 18px;
+    }
+
+    .hero-floating.quote small {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+    }
+
+    .hero-floating.quote p {
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .hero-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 30px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: rgba(255,255,255,0.035);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-strip-item {
+      padding: 22px 24px;
+      border-right: 1px solid var(--line);
+    }
+
+    .hero-strip-item:last-child {
+      border-right: 0;
+    }
+
+    .hero-strip-item strong {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 300;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-strip-item span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      line-height: 1.5;
+      text-transform: uppercase;
+    }
+
+    .about-grid,
+    .details-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.88fr) minmax(420px, 1fr);
+      gap: clamp(38px, 6vw, 78px);
+      align-items: center;
+    }
+
+    .premium-points {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
       margin-top: 34px;
     }
 
-    .hero-media {
+    .premium-point,
+    .detail-item,
+    .process-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+      border-radius: 22px;
+      transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    }
+
+    .premium-point:hover,
+    .detail-item:hover,
+    .process-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(216,178,127,0.28);
+      background: linear-gradient(180deg, rgba(216,178,127,0.08), rgba(255,255,255,0.025));
+    }
+
+    .premium-point {
+      padding: 18px;
+    }
+
+    .premium-point strong,
+    .detail-item strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.98rem;
+    }
+
+    .premium-point p,
+    .detail-item p,
+    .process-card p {
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.72;
+    }
+
+    .stack-visual {
       position: relative;
-      min-height: 620px;
+      min-height: 660px;
+    }
+
+    .stack-card {
+      position: absolute;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: #111;
+      box-shadow: var(--shadow);
+    }
+
+    .stack-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.02) contrast(1.06) brightness(0.84);
+    }
+
+    .stack-card.one {
+      inset: 0 80px 110px 0;
+      transform: rotate(-6deg);
+    }
+
+    .stack-card.two {
+      inset: 150px 0 40px 140px;
+      transform: rotate(7deg);
+    }
+
+    .stack-overlay {
+      position: absolute;
+      left: 40px;
+      bottom: 20px;
+      width: min(365px, calc(100% - 80px));
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 24px;
+      background: rgba(8,8,8,0.72);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 22px 55px rgba(0,0,0,0.32);
+    }
+
+    .stack-overlay strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .stack-overlay p {
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.72;
+    }
+
+    .showcase-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .showcase-card {
+      position: relative;
+      min-height: 340px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: #111;
+      box-shadow: var(--shadow);
       isolation: isolate;
     }
 
-    .hero-media::before {
+    .showcase-card.large {
+      grid-column: span 7;
+      min-height: 610px;
+    }
+
+    .showcase-card.medium {
+      grid-column: span 5;
+      min-height: 610px;
+    }
+
+    .showcase-card.small {
+      grid-column: span 4;
+      min-height: 370px;
+    }
+
+    .showcase-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1) contrast(1.08) brightness(0.82);
+      transition: transform 0.75s ease, filter 0.75s ease;
+    }
+
+    .showcase-card::after {
       content: "";
       position: absolute;
       inset: 0;
       z-index: 1;
       background:
-        linear-gradient(90deg, rgba(3, 3, 3, 0.78) 0%, rgba(3, 3, 3, 0.12) 34%, rgba(3, 3, 3, 0.25) 100%),
-        linear-gradient(180deg, rgba(3, 3, 3, 0.05), rgba(3, 3, 3, 0.78));
-      pointer-events: none;
+        linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.62) 100%),
+        radial-gradient(circle at 78% 18%, rgba(216,178,127,0.22), transparent 20rem);
     }
 
-    .hero-media img {
+    .showcase-card:hover img {
+      transform: scale(1.065);
+      filter: saturate(1.08) contrast(1.1) brightness(0.9);
+    }
+
+    .showcase-copy {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2;
+      padding: 26px;
+    }
+
+    .showcase-copy small {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .showcase-copy h3 {
+      margin-bottom: 10px;
+      font-size: 1.35rem;
+      letter-spacing: -0.035em;
+    }
+
+    .showcase-copy p {
+      max-width: 460px;
+      color: rgba(246,241,233,0.78);
+      font-size: 0.95rem;
+      line-height: 1.72;
+    }
+
+    .cinema-band,
+    .cta-box {
+      position: relative;
+      min-height: 540px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      background: #0d0d0d;
+      box-shadow: var(--shadow);
+    }
+
+    .cinema-band img,
+    .cta-box img,
+    .details-visual img {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: saturate(0.95) contrast(1.08) brightness(0.62);
-      transform: scale(1.02);
     }
 
-    .trust-bar {
+    .cinema-band img {
+      filter: saturate(1.02) contrast(1.08) brightness(0.58);
+      transform: scale(1.03);
+    }
+
+    .cinema-band::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(216,178,127,0.24), transparent 22rem),
+        linear-gradient(90deg, rgba(5,5,5,0.9) 0%, rgba(5,5,5,0.62) 42%, rgba(5,5,5,0.12) 100%);
+    }
+
+    .cinema-content {
       position: relative;
-      z-index: 3;
-      grid-column: 1 / -1;
+      z-index: 2;
+      width: min(680px, 100%);
+      padding: clamp(34px, 6vw, 76px);
+    }
+
+    .detail-list {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(3, 3, 3, 0.86);
+      gap: 18px;
     }
 
-    .trust-item {
-      display: grid;
-      grid-template-columns: 48px 1fr;
-      align-items: center;
-      gap: 16px;
-      min-height: 104px;
-      padding: 22px clamp(22px, 4vw, 58px);
-      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    .detail-item {
+      padding: 22px;
     }
 
-    .trust-item:last-child {
-      border-right: 0;
+    .details-visual {
+      position: relative;
+      overflow: hidden;
+      min-height: 620px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: #111;
+      box-shadow: var(--shadow);
     }
 
-    .trust-icon {
-      display: grid;
-      place-items: center;
-      width: 48px;
-      height: 48px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 999px;
-      color: var(--cg-warm);
-      font-size: 1.25rem;
+    .details-visual img {
+      filter: saturate(1.04) contrast(1.08) brightness(0.78);
     }
 
-    .trust-item strong {
+    .details-visual::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.68) 100%);
+    }
+
+    .details-tag {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1;
+      padding: 18px 20px;
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 20px;
+      background: rgba(10,10,10,0.68);
+      backdrop-filter: blur(14px);
+    }
+
+    .details-tag small {
       display: block;
-      margin-bottom: 6px;
-      font-size: 0.92rem;
-    }
-
-    .trust-item span {
-      color: var(--cg-muted);
-      font-size: 0.86rem;
-      line-height: 1.5;
-    }
-
-    section {
-      padding: clamp(78px, 9vw, 126px) 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
-    .split {
-      display: grid;
-      grid-template-columns: minmax(0, 0.86fr) minmax(360px, 1.14fr);
-      gap: clamp(36px, 6vw, 84px);
-      align-items: center;
-    }
-
-    .metric-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 22px;
-      margin-top: 36px;
-      padding-top: 28px;
-      border-top: 1px solid var(--cg-line);
-    }
-
-    .metric strong {
-      display: block;
-      color: var(--cg-white);
-      font-size: clamp(1.8rem, 3vw, 2.6rem);
-      font-weight: 300;
-      letter-spacing: -0.06em;
-    }
-
-    .metric span {
-      display: block;
-      margin-top: 8px;
-      color: var(--cg-muted);
-      font-size: 0.7rem;
+      margin-bottom: 8px;
+      color: var(--gold);
+      font-size: 0.72rem;
       font-weight: 900;
-      letter-spacing: 0.16em;
-      line-height: 1.45;
+      letter-spacing: 0.17em;
       text-transform: uppercase;
     }
 
-    .visual-card {
-      position: relative;
-      min-height: 640px;
+    .details-tag p {
+      color: var(--text);
+      font-size: 0.94rem;
+      line-height: 1.72;
+    }
+
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 42px;
       overflow: hidden;
-      border: 1px solid var(--cg-line);
-      border-radius: var(--cg-radius);
-      background: var(--cg-panel);
-      box-shadow: var(--cg-shadow);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(255,255,255,0.03);
     }
 
-    .visual-card > img {
-      width: 100%;
-      height: 100%;
-      min-height: inherit;
-      object-fit: cover;
-      filter: saturate(0.9) contrast(1.08) brightness(0.76);
+    .process-card {
+      position: relative;
+      min-height: 250px;
+      padding: 30px;
+      border-radius: 0;
+      border: 0;
+      border-right: 1px solid var(--line);
     }
 
-    .feature-stack {
+    .process-card:last-child {
+      border-right: 0;
+    }
+
+    .process-card::before {
+      content: "";
       position: absolute;
-      top: 8%;
-      right: 6%;
-      display: grid;
-      gap: 18px;
-      width: min(320px, 82%);
+      top: 26px;
+      left: 30px;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: var(--gold);
+      box-shadow: 0 0 0 8px rgba(216,178,127,0.11);
     }
 
-    .feature-pill {
-      display: grid;
-      grid-template-columns: 34px 1fr;
-      gap: 14px;
-      padding: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      background: rgba(16, 16, 16, 0.72);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 18px 38px rgba(0, 0, 0, 0.26);
-    }
-
-    .feature-pill i {
-      color: var(--cg-warm);
-      font-style: normal;
-      font-size: 1.35rem;
-    }
-
-    .feature-pill strong {
+    .process-card small {
       display: block;
-      margin-bottom: 7px;
-      font-size: 0.92rem;
+      margin: 36px 0 18px;
+      color: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
     }
 
-    .feature-pill span {
-      color: var(--cg-muted);
-      font-size: 0.84rem;
-      line-height: 1.55;
-    }
-
-    .products-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 26px;
-      margin-bottom: 34px;
-    }
-
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 22px;
-    }
-
-    .product-card {
-      position: relative;
-      min-height: 430px;
-      overflow: hidden;
-      border: 1px solid var(--cg-line);
-      border-radius: 20px;
-      background: var(--cg-card);
-      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
-      transition: transform 0.25s ease, border-color 0.25s ease;
-    }
-
-    .product-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(214, 176, 132, 0.38);
-    }
-
-    .product-card img {
-      width: 100%;
-      height: 270px;
-      object-fit: cover;
-      filter: saturate(0.92) contrast(1.05) brightness(0.74);
-      transition: transform 0.35s ease;
-    }
-
-    .product-card:hover img {
-      transform: scale(1.04);
-    }
-
-    .product-copy {
-      position: relative;
-      min-height: 160px;
-      margin-top: -54px;
-      padding: 76px 24px 24px;
-      background: linear-gradient(180deg, rgba(21, 21, 21, 0) 0%, rgba(21, 21, 21, 0.96) 30%, #151515 100%);
-    }
-
-    .product-copy h3 {
+    .process-card h3 {
       margin-bottom: 10px;
-      font-size: 1.15rem;
+      font-size: 1.12rem;
       letter-spacing: -0.02em;
     }
 
-    .product-copy p {
-      color: var(--cg-muted);
-      font-size: 0.92rem;
-      line-height: 1.65;
+    .cta-box img {
+      filter: saturate(1) contrast(1.08) brightness(0.50);
+      transform: scale(1.03);
     }
 
-    .product-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 18px;
-      color: var(--cg-white);
-      font-size: 0.72rem;
-      font-weight: 900;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .experience {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
-      margin-top: 40px;
-    }
-
-    .experience-card {
-      padding: 26px;
-      border: 1px solid var(--cg-line);
-      border-radius: 22px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
-    }
-
-    .experience-card span {
-      display: grid;
-      place-items: center;
-      width: 42px;
-      height: 42px;
-      margin-bottom: 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(214, 176, 132, 0.36);
-      color: var(--cg-warm);
-    }
-
-    .experience-card h3 {
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-
-    .experience-card p {
-      color: var(--cg-muted);
-      font-size: 0.9rem;
-      line-height: 1.65;
-    }
-
-    .preview-3d-section {
+    .cta-box::after {
+      content: "";
+      position: absolute;
+      inset: 0;
       background:
-        radial-gradient(circle at 50% 0%, rgba(214, 176, 132, 0.12), transparent 26rem),
-        #050505;
+        radial-gradient(circle at 15% 15%, rgba(216,178,127,0.26), transparent 20rem),
+        linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.84) 100%);
     }
 
-    .preview-wrap {
-      display: grid;
-      grid-template-columns: minmax(0, 0.84fr) minmax(320px, 1fr);
-      gap: clamp(32px, 6vw, 74px);
-      align-items: center;
-    }
-
-    .preview-3d-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 28px;
-    }
-
-    .preview-3d-btn {
-      min-height: 46px;
-      padding: 0 18px;
-      border-radius: 999px;
-      border: 1px solid var(--cg-line-strong);
-      background: transparent;
-      color: var(--cg-muted);
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .preview-3d-btn:hover,
-    .preview-3d-btn.is-active {
-      border-color: var(--cg-warm);
-      background: rgba(214, 176, 132, 0.1);
-      color: var(--cg-white);
-    }
-
-    #preview-3d {
-      width: min(520px, 100%);
-      aspect-ratio: 1 / 1;
-      margin-left: auto;
-      overflow: hidden;
-      border: 1px solid var(--cg-line);
-      border-radius: var(--cg-radius);
-      background:
-        radial-gradient(circle at 50% 25%, rgba(214, 176, 132, 0.18), transparent 18rem),
-        linear-gradient(145deg, #151515, #050505);
-      box-shadow: var(--cg-shadow);
-    }
-
-    #preview-3d canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    .process {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 0;
-      margin-top: 42px;
-      border: 1px solid var(--cg-line);
-      border-radius: 24px;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.025);
-    }
-
-    .process-step {
-      padding: 30px;
-      border-right: 1px solid var(--cg-line);
-    }
-
-    .process-step:last-child {
-      border-right: 0;
-    }
-
-    .process-step small {
-      display: block;
-      margin-bottom: 24px;
-      color: var(--cg-warm);
-      font-weight: 900;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .process-step h3 {
-      margin-bottom: 12px;
-      font-size: 1.05rem;
-    }
-
-    .process-step p {
-      color: var(--cg-muted);
-      font-size: 0.9rem;
-      line-height: 1.65;
-    }
-
-    .cta-band {
+    .cta-content {
       position: relative;
-      overflow: hidden;
-      padding: clamp(54px, 7vw, 86px);
-      border: 1px solid var(--cg-line);
-      border-radius: 30px;
-      background:
-        linear-gradient(90deg, rgba(3, 3, 3, 0.96) 0%, rgba(3, 3, 3, 0.76) 52%, rgba(3, 3, 3, 0.9) 100%),
-        url("https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png") center right / cover;
-      box-shadow: var(--cg-shadow);
-    }
-
-    .cta-band .section-title {
-      max-width: 720px;
-    }
-
-    .cta-band .hero-actions {
-      margin-top: 30px;
+      z-index: 1;
+      display: flex;
+      align-items: flex-end;
+      min-height: 540px;
+      padding: clamp(34px, 6vw, 66px);
     }
 
     footer {
-      padding: 46px 0 58px;
-      color: var(--cg-muted-2);
+      position: relative;
+      z-index: 3;
+      padding: 42px 0 58px;
+      color: var(--muted-2);
     }
 
-    .footer-content {
+    .footer-wrap {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 24px;
-    }
-
-    .footer-brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 18px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255,255,255,0.07);
     }
 
     .footer-links {
       display: flex;
       align-items: center;
-      gap: 18px;
-      font-size: 0.92rem;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
     .footer-links a {
-      color: var(--cg-muted);
+      color: var(--muted);
       text-decoration: underline;
       text-underline-offset: 4px;
     }
 
     .reveal {
       opacity: 0;
-      transform: translateY(22px);
-      transition: opacity 0.55s ease, transform 0.55s ease;
+      transform: translateY(38px);
+      transition: opacity 0.85s ease, transform 0.85s ease;
     }
 
-    .reveal.show {
+    .reveal.is-visible {
       opacity: 1;
       transform: translateY(0);
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 1100px) {
       .nav {
         grid-template-columns: 1fr;
-        gap: 16px;
-        padding: 18px 0;
+        gap: 14px;
+        padding: 16px 0;
       }
 
-      .brand {
-        width: 230px;
+      .site-header {
+        height: auto;
       }
 
       .nav-links {
         justify-content: flex-start;
-        gap: 18px;
-        overflow-x: auto;
-        padding-bottom: 3px;
       }
 
-      .nav .btn {
+      .nav-cta {
         justify-self: start;
       }
 
-      .hero,
-      .split,
-      .preview-wrap {
+      .hero {
+        padding-top: 170px;
+      }
+
+      .hero-grid,
+      .about-grid,
+      .details-grid {
         grid-template-columns: 1fr;
       }
 
-      .hero-copy {
-        padding: 72px 24px 44px;
+      .hero-stage {
+        min-height: 680px;
       }
 
-      .hero-media {
-        min-height: 430px;
+      .hero-strip,
+      .process-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
 
-      .trust-bar,
-      .products-grid,
-      .experience,
-      .process {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .trust-item:nth-child(2),
-      .process-step:nth-child(2) {
+      .hero-strip-item:nth-child(2),
+      .process-card:nth-child(2) {
         border-right: 0;
       }
 
-      .trust-item:last-child {
-        grid-column: 1 / -1;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      .hero-strip-item:nth-child(n + 3),
+      .process-card:nth-child(n + 3) {
+        border-top: 1px solid var(--line);
       }
 
-      .visual-card {
-        min-height: 520px;
-      }
-
-      #preview-3d {
-        margin-left: 0;
+      .showcase-card.large,
+      .showcase-card.medium,
+      .showcase-card.small {
+        grid-column: span 6;
       }
     }
 
-    @media (max-width: 640px) {
-      .page-shell {
-        padding: 0 18px;
-      }
-
+    @media (max-width: 820px) {
       .nav-links {
         display: none;
       }
 
-      .hero h1,
-      .section-title {
-        letter-spacing: -0.055em;
+      .hero {
+        padding-top: 124px;
       }
 
-      .hero-actions,
-      .products-head,
-      .footer-content {
-        align-items: stretch;
+      .hero-stage {
+        min-height: 560px;
+      }
+
+      .hero-card-main {
+        inset: 0 30px 60px 0;
+      }
+
+      .hero-card-side {
+        width: 44%;
+        height: 46%;
+      }
+
+      .showcase-card.large,
+      .showcase-card.medium,
+      .showcase-card.small {
+        grid-column: span 12;
+        min-height: 390px;
+      }
+
+      .premium-points,
+      .hero-strip,
+      .process-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-strip-item,
+      .process-card {
+        border-right: 0 !important;
+      }
+
+      .hero-strip-item + .hero-strip-item,
+      .process-card + .process-card {
+        border-top: 1px solid var(--line);
+      }
+
+      .details-visual {
+        min-height: 450px;
+      }
+
+      .footer-wrap {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        width: min(var(--container), calc(100% - 24px));
+      }
+
+      .btn-row {
         flex-direction: column;
       }
 
@@ -856,300 +1090,372 @@
         width: 100%;
       }
 
-      .trust-bar,
-      .products-grid,
-      .experience,
-      .process,
-      .metric-row {
-        grid-template-columns: 1fr;
+      .hero-title {
+        font-size: clamp(2.58rem, 14vw, 4rem);
       }
 
-      .trust-item,
-      .trust-item:nth-child(2),
-      .process-step,
-      .process-step:nth-child(2) {
-        border-right: 0;
+      .hero-stage {
+        min-height: 470px;
       }
 
-      .trust-item + .trust-item,
-      .process-step + .process-step {
-        border-top: 1px solid var(--cg-line);
+      .hero-card-main {
+        inset: 0 0 52px 0;
+        transform: rotate(-2deg);
       }
 
-      .feature-stack {
-        position: relative;
-        inset: auto;
+      .hero-card-side {
+        display: none;
+      }
+
+      .hero-floating.metric {
+        left: 16px;
+        bottom: 12px;
+        min-width: auto;
+      }
+
+      .hero-floating.quote {
+        right: 16px;
+        bottom: -16px;
+        width: calc(100% - 32px);
+      }
+
+      .stack-visual {
+        min-height: 460px;
+      }
+
+      .stack-card.one {
+        inset: 0 30px 100px 0;
+      }
+
+      .stack-card.two {
+        inset: 120px 0 24px 60px;
+      }
+
+      .stack-overlay {
+        left: 16px;
+        right: 16px;
+        bottom: 14px;
         width: auto;
-        margin: -210px 18px 22px;
       }
 
-      .feature-pill {
-        padding: 18px;
-      }
-
-      .cta-band {
-        padding: 36px 22px;
-      }
-
-      .footer-links {
-        flex-direction: column;
-        align-items: flex-start;
+      .cursor-glow {
+        display: none;
       }
     }
   </style>
 </head>
-<body id="top">
-  <header>
-    <div class="page-shell nav">
+<body>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <header class="site-header" id="siteHeader">
+    <div class="container nav">
       <a class="brand" href="#top" aria-label="Color Glass Fortaleza - início">
-        <span class="logo-symbol" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-        <span class="logo-wordmark"><span>Color</span><span>Glass</span></span>
+        <span class="brand-mark" aria-hidden="true"><span>CG</span></span>
+        <span class="brand-text">
+          <strong>Color Glass</strong>
+          <small>Fortaleza</small>
+        </span>
       </a>
 
       <nav class="nav-links" aria-label="Navegação principal">
         <a href="#quem-somos">Quem somos</a>
-        <a href="#produtos">Produtos</a>
+        <a href="#ambientes">Ambientes</a>
         <a href="#diferenciais">Diferenciais</a>
         <a href="#processo">Processo</a>
+        <a href="#contato">Contato</a>
       </nav>
 
-      <a class="btn" href="login.html" id="ctaTop">Acesso parceiro</a>
+      <a class="btn nav-cta" href="login.html">Acesso parceiro</a>
     </div>
   </header>
 
-  <main>
-    <section class="hero" aria-label="Soluções premium Color Glass">
-      <div class="hero-copy">
-        <span class="eyebrow">Soluções premium</span>
-        <h1>Portas e estruturas em vidro e alumínio para <strong>ambientes planejados.</strong></h1>
-        <p>
-          A Color Glass cria peças sob medida para quem busca um lar mais sofisticado, leve e funcional.
-          Cada porta, divisória e estrutura é pensada para valorizar o espaço com acabamento refinado,
-          linhas elegantes e presença discreta.
-        </p>
-        <div class="hero-actions">
-          <button class="btn btn-primary" type="button" id="ctaHero">Conheça nossos produtos <span class="arrow">→</span></button>
-          <button class="btn" type="button" id="ctaOrcamento">Solicite um orçamento <span class="arrow">→</span></button>
-        </div>
-      </div>
+  <main id="top">
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <span class="eyebrow">Design que impacta</span>
+            <h1 class="hero-title">Portas e estruturas que fazem o ambiente parecer <strong>muito acima do comum.</strong></h1>
+            <p class="hero-text">
+              Closets, cristaleiras, divisórias e soluções sob medida em vidro e alumínio para projetos que precisam impressionar no primeiro olhar — e continuar bonitos em cada detalhe de acabamento.
+            </p>
 
-      <div class="hero-media" aria-hidden="true">
-        <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="" />
-      </div>
-
-      <div class="trust-bar" aria-label="Destaques Color Glass">
-        <div class="trust-item">
-          <span class="trust-icon">♢</span>
-          <div>
-            <strong>Padrão premium</strong>
-            <span>Materiais selecionados e acabamento visualmente impecável.</span>
-          </div>
-        </div>
-        <div class="trust-item">
-          <span class="trust-icon">⌁</span>
-          <div>
-            <strong>Sob medida</strong>
-            <span>Projetos personalizados para closets, cozinhas, salas e escritórios.</span>
-          </div>
-        </div>
-        <div class="trust-item">
-          <span class="trust-icon">✓</span>
-          <div>
-            <strong>Entrega acompanhada</strong>
-            <span>Atendimento próximo do primeiro contato ao pós-venda.</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="quem-somos" class="reveal">
-      <div class="page-shell split">
-        <div>
-          <span class="eyebrow">Excelência em cada detalhe</span>
-          <h2 class="section-title">Vidro e alumínio com estética limpa, prazo cumprido e padrão premium.</h2>
-          <p class="section-subtitle">
-            Somos especialistas em soluções para móveis planejados e ambientes sofisticados.
-            Unimos design, tecnologia e acabamento de alto nível para transformar espaços comuns
-            em composições elegantes, duráveis e sob medida para a sua rotina.
-          </p>
-          <div class="hero-actions">
-            <button class="btn btn-primary" type="button" id="ctaProdutos">Nossos produtos <span class="arrow">→</span></button>
-            <button class="btn" type="button" id="ctaEspecialista">Fale com um especialista <span class="arrow">→</span></button>
-          </div>
-          <div class="metric-row" aria-label="Números Color Glass">
-            <div class="metric">
-              <strong data-count="15" data-suffix="+">0</strong>
-              <span>Anos de experiência</span>
+            <div class="hero-badges">
+              <span class="hero-badge">Sob medida</span>
+              <span class="hero-badge">Acabamento premium</span>
+              <span class="hero-badge">Fortaleza/CE</span>
             </div>
-            <div class="metric">
-              <strong data-count="1659" data-suffix="+">0</strong>
+
+            <div class="btn-row">
+              <button class="btn btn-primary" id="ctaHero" type="button">Solicitar orçamento</button>
+              <button class="btn" id="ctaExplore" type="button">Ver ambientes</button>
+            </div>
+          </div>
+
+          <div class="hero-stage">
+            <div class="hero-card-main parallax-card">
+              <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Closet premium com portas em vidro e alumínio" />
+            </div>
+
+            <div class="hero-card-side parallax-card">
+              <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png" alt="Estrutura premium Color Glass" />
+            </div>
+
+            <div class="hero-floating metric">
+              <strong>1.659+</strong>
               <span>Projetos entregues</span>
             </div>
-            <div class="metric">
-              <strong data-count="100" data-suffix="%">0</strong>
-              <span>Média das avaliações</span>
+
+            <div class="hero-floating quote">
+              <small>Padrão Color Glass</small>
+              <p>Ambientes mais leves, sofisticados e visualmente marcantes, com acabamento pensado para valorizar o projeto.</p>
             </div>
           </div>
         </div>
 
-        <div class="visual-card">
-          <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Closet com portas em vidro e alumínio Color Glass" />
-          <div class="feature-stack" id="diferenciais">
-            <div class="feature-pill">
-              <i>◇</i>
-              <div>
-                <strong>Design sofisticado</strong>
-                <span>Acabamentos que valorizam cada detalhe do projeto.</span>
-              </div>
-            </div>
-            <div class="feature-pill">
-              <i>▤</i>
-              <div>
-                <strong>Transparência e leveza</strong>
-                <span>Vidros que ampliam ambientes e elevam a experiência visual.</span>
-              </div>
-            </div>
-            <div class="feature-pill">
-              <i>✓</i>
-              <div>
-                <strong>Acabamento premium</strong>
-                <span>Perfis de alumínio e vidros selecionados com rigor e qualidade.</span>
-              </div>
-            </div>
+        <div class="hero-strip reveal">
+          <div class="hero-strip-item">
+            <strong>15+</strong>
+            <span>Anos de experiência em soluções sob medida</span>
+          </div>
+          <div class="hero-strip-item">
+            <strong>5,0★</strong>
+            <span>Percepção de qualidade e acabamento premium</span>
+          </div>
+          <div class="hero-strip-item">
+            <strong>Vidro + Alumínio</strong>
+            <span>Combinação ideal para leveza, brilho e sofisticação</span>
+          </div>
+          <div class="hero-strip-item">
+            <strong>Atendimento próximo</strong>
+            <span>Do primeiro contato até a entrega final</span>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="produtos" class="reveal">
-      <div class="page-shell">
-        <div class="products-head">
-          <div>
-            <span class="eyebrow">Soluções que transformam</span>
-            <h2 class="section-title">Nossos produtos</h2>
-          </div>
-          <button class="btn" type="button" id="ctaTodosProdutos">Ver todos os produtos <span class="arrow">→</span></button>
-        </div>
-
-        <div class="products-grid">
-          <article class="product-card">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="Portas de correr em vidro e alumínio" />
-            <div class="product-copy">
-              <h3>Portas de giro</h3>
-              <p>Soluções elegantes para otimizar espaços com movimento suave, leveza visual e acabamento sofisticado.</p>
-              <a class="product-link" href="#contato">Saiba mais <span>→</span></a>
-            </div>
-          </article>
-
-          <article class="product-card">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Portas de abrir em vidro e alumínio" />
-            <div class="product-copy">
-              <h3>Portas de divisão de ambiente</h3>
-              <p>Funcionalidade e presença para closets, cristaleiras e móveis planejados que merecem destaque.</p>
-              <a class="product-link" href="#contato">Saiba mais <span>→</span></a>
-            </div>
-          </article>
-
-          <article class="product-card">
-            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png" alt="Divisórias e estruturas em vidro e alumínio" />
-            <div class="product-copy">
-              <h3>Estruturas</h3>
-              <p>Integração entre ambientes com privacidade, sofisticação e um visual arquitetônico contemporâneo.</p>
-              <a class="product-link" href="#contato">Saiba mais <span>→</span></a>
-            </div>
-          </article>
-        </div>
-
-        <div class="experience">
-          <div class="experience-card">
-            <span>01</span>
-            <h3>Closets premium</h3>
-            <p>Portas e perfis que deixam o closet mais organizado, iluminado e elegante.</p>
-          </div>
-          <div class="experience-card">
-            <span>02</span>
-            <h3>Cristaleiras</h3>
-            <p>Estruturas leves para expor peças especiais com proteção e brilho na medida certa.</p>
-          </div>
-          <div class="experience-card">
-            <span>03</span>
-            <h3>Cozinhas planejadas</h3>
-            <p>Vidros e alumínio para armários, nichos e composições modernas de alto padrão.</p>
-          </div>
-          <div class="experience-card">
-            <span>04</span>
-            <h3>Ambientes integrados</h3>
-            <p>Divisórias e fechamentos sob medida para separar sem pesar no projeto.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="preview-3d-section reveal" aria-label="Prévia de perfis 3D">
-      <div class="page-shell preview-wrap">
+    <section class="section reveal" id="quem-somos">
+      <div class="container about-grid">
         <div>
-          <span class="eyebrow">Escolha o acabamento</span>
-          <h2 class="section-title">Perfis que combinam com o nível do seu ambiente.</h2>
-          <p class="section-subtitle">
-            Veja opções de perfil clássico, slim e invisível para encontrar a linguagem ideal do seu projeto:
-            mais presença, mais leveza ou máxima discrição visual.
+          <span class="eyebrow">Excelência visual</span>
+          <h2 class="section-title">Não vendemos apenas portas. Criamos <strong>presença estética</strong> para o ambiente.</h2>
+          <p class="section-copy">
+            A Color Glass desenvolve soluções em vidro e alumínio com foco em impacto visual, leveza arquitetônica e acabamento premium. Cada composição é pensada para destacar o projeto, aumentar a percepção de valor e trazer um resultado final mais refinado.
           </p>
-          <div class="preview-3d-controls" role="group" aria-label="Perfis 3D">
-            <button class="preview-3d-btn is-active" type="button" data-model="1036.glb">Clássico</button>
-            <button class="preview-3d-btn" type="button" data-model="3545.glb">Slim</button>
-            <button class="preview-3d-btn" type="button" data-model="3446.glb">Invisível</button>
+
+          <div class="premium-points">
+            <div class="premium-point">
+              <strong>Acabamento que eleva o projeto</strong>
+              <p>Junções mais limpas, melhor percepção visual e uma linguagem contemporânea para ambientes planejados.</p>
+            </div>
+            <div class="premium-point">
+              <strong>Sob medida de verdade</strong>
+              <p>Soluções pensadas conforme ambiente, aplicação, proporção e objetivo estético do cliente.</p>
+            </div>
+            <div class="premium-point">
+              <strong>Leveza e sofisticação</strong>
+              <p>Vidro e alumínio usados para ampliar visualmente o espaço sem pesar na composição.</p>
+            </div>
+            <div class="premium-point">
+              <strong>Presença premium</strong>
+              <p>Peças que fazem o ambiente parecer mais caro, mais organizado e mais bem resolvido.</p>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" id="ctaEspecialista" type="button">Falar com especialista</button>
           </div>
         </div>
-        <div id="preview-3d"></div>
+
+        <div class="stack-visual">
+          <div class="stack-card one parallax-card">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="Ambiente planejado com portas Color Glass" />
+          </div>
+          <div class="stack-card two parallax-card">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Closet sofisticado com estrutura em vidro e alumínio" />
+          </div>
+          <div class="stack-overlay">
+            <strong>Estética limpa. Materiais nobres. Resultado memorável.</strong>
+            <p>A proposta é simples: transformar portas, divisórias e estruturas em protagonistas do projeto.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section id="processo" class="reveal">
-      <div class="page-shell">
-        <span class="eyebrow">Do desejo à entrega</span>
-        <h2 class="section-title">Um processo claro para um resultado premium.</h2>
-        <p class="section-subtitle">
-          A experiência Color Glass foi pensada para deixar sua decisão simples, segura e bem orientada —
-          da primeira conversa até a peça instalada no seu ambiente.
+    <section class="section reveal" id="ambientes">
+      <div class="container">
+        <div class="showcase-head">
+          <div>
+            <span class="eyebrow">Aplicações que impressionam</span>
+            <h2 class="section-title">Ambientes que ganham outro nível com vidro e alumínio.</h2>
+          </div>
+          <button class="btn" id="ctaAmbientes" type="button">Solicitar projeto</button>
+        </div>
+
+        <div class="showcase-grid">
+          <article class="showcase-card large">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Closet premium com portas em vidro e alumínio" />
+            <div class="showcase-copy">
+              <small>Closets premium</small>
+              <h3>Mais elegância, organização e presença visual.</h3>
+              <p>Perfis e vidros que deixam o closet mais leve, iluminado e muito mais sofisticado no conjunto final.</p>
+            </div>
+          </article>
+
+          <article class="showcase-card medium">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png" alt="Estruturas e divisórias premium em vidro e alumínio" />
+            <div class="showcase-copy">
+              <small>Divisórias e estruturas</small>
+              <h3>Integração com personalidade arquitetônica.</h3>
+              <p>Separações elegantes, transparência controlada e um visual que valoriza o ambiente sem pesar.</p>
+            </div>
+          </article>
+
+          <article class="showcase-card small">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="Portas Color Glass para cristaleiras" />
+            <div class="showcase-copy">
+              <small>Cristaleiras</small>
+              <h3>Exposição com brilho e refinamento.</h3>
+              <p>Perfeito para valorizar objetos, louças e composições decorativas.</p>
+            </div>
+          </article>
+
+          <article class="showcase-card small">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Portas premium para cozinhas planejadas" />
+            <div class="showcase-copy">
+              <small>Cozinhas planejadas</small>
+              <h3>Linhas limpas e percepção de alto padrão.</h3>
+              <p>Acabamentos que ajudam o mobiliário a parecer mais moderno e valioso.</p>
+            </div>
+          </article>
+
+          <article class="showcase-card small">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png" alt="Estruturas sob medida Color Glass" />
+            <div class="showcase-copy">
+              <small>Portas de giro</small>
+              <h3>Soluções leves, discretas e sofisticadas.</h3>
+              <p>Para quem quer funcionalidade com uma estética bem resolvida.</p>
+            </div>
+          </article>
+
+          <article class="showcase-card small">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="Detalhes Color Glass" />
+            <div class="showcase-copy">
+              <small>Ambientes integrados</small>
+              <h3>Separar sem perder amplitude visual.</h3>
+              <p>Uma linguagem premium para projetos mais leves e contemporâneos.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="container">
+        <div class="cinema-band">
+          <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor2.png" alt="Projeto premium Color Glass" />
+          <div class="cinema-content">
+            <span class="eyebrow">Impacto visual imediato</span>
+            <h2 class="section-title">O objetivo é simples: fazer o cliente olhar e pensar <strong>“isso é outro padrão”.</strong></h2>
+            <p class="section-copy">
+              Quando o acabamento está certo, o ambiente inteiro sobe de nível. É isso que uma boa solução em vidro e alumínio faz em closets, cozinhas, cristaleiras e divisórias.
+            </p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="ctaBand" type="button">Quero esse resultado</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="diferenciais">
+      <div class="container">
+        <span class="eyebrow">O que sustenta a estética</span>
+        <h2 class="section-title">Beleza sem execução boa não se sustenta. Aqui, os detalhes importam.</h2>
+        <p class="section-copy">
+          A força visual de um ambiente premium depende de acabamento, proporção, escolha dos materiais e cuidado na aplicação. É isso que faz o projeto parecer realmente superior.
         </p>
 
-        <div class="process">
-          <div class="process-step">
-            <small>Etapa 01</small>
-            <h3>Entendimento</h3>
-            <p>Você nos conta o ambiente, objetivo, medidas iniciais e estilo desejado.</p>
+        <div class="details-grid" style="margin-top: 38px;">
+          <div class="detail-list">
+            <div class="detail-item">
+              <strong>Visual limpo e contemporâneo</strong>
+              <p>Perfis e vidros que conversam com arquitetura atual, trazendo leveza, brilho e sofisticação visual.</p>
+            </div>
+            <div class="detail-item">
+              <strong>Acabamento premium</strong>
+              <p>Cada detalhe precisa parecer bem resolvido. O resultado final deve transmitir precisão e valor.</p>
+            </div>
+            <div class="detail-item">
+              <strong>Projeto sob medida</strong>
+              <p>Mais que encaixar uma peça, a ideia é encontrar a solução certa para o ambiente e para o efeito estético desejado.</p>
+            </div>
+            <div class="detail-item">
+              <strong>Atendimento próximo</strong>
+              <p>O cliente é orientado do início ao fim para que a decisão seja mais segura e o resultado final mais satisfatório.</p>
+            </div>
           </div>
-          <div class="process-step">
-            <small>Etapa 02</small>
-            <h3>Direcionamento</h3>
-            <p>Indicamos produto, linha de perfil, tipo de vidro e melhor aplicação para o uso.</p>
-          </div>
-          <div class="process-step">
-            <small>Etapa 03</small>
-            <h3>Produção</h3>
-            <p>As peças são feitas sob medida com atenção ao encaixe, alinhamento e acabamento.</p>
-          </div>
-          <div class="process-step">
-            <small>Etapa 04</small>
-            <h3>Entrega</h3>
-            <p>Você recebe uma solução pronta para valorizar o ambiente com segurança e beleza.</p>
+
+          <div class="details-visual">
+            <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/imagemcolor1.png" alt="Detalhe de ambiente premium Color Glass" />
+            <div class="details-tag">
+              <small>Padrão premium</small>
+              <p>A percepção de qualidade nasce da soma entre estética, leveza visual, encaixe no ambiente e acabamento final.</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="contato" class="reveal">
-      <div class="page-shell">
-        <div class="cta-band">
-          <span class="eyebrow">Seu ambiente merece esse detalhe</span>
-          <h2 class="section-title">Vamos criar uma solução sob medida para o seu projeto?</h2>
-          <p class="section-subtitle">
-            Fale com a Color Glass e receba orientação sobre portas, divisórias, cristaleiras e estruturas
-            em vidro e alumínio com padrão premium.
-          </p>
-          <div class="hero-actions">
-            <button class="btn btn-primary" type="button" id="ctaBottom">Falar no WhatsApp <span class="arrow">→</span></button>
-            <a class="btn" href="https://instagram.com/colorglassfortaleza" target="_blank" rel="noopener">Ver Instagram <span class="arrow">→</span></a>
+    <section class="section reveal" id="processo">
+      <div class="container">
+        <span class="eyebrow">Do primeiro contato à entrega</span>
+        <h2 class="section-title">Um processo claro para um resultado visualmente marcante.</h2>
+        <p class="section-copy">
+          A experiência precisa ser simples para o cliente e precisa na execução. Assim o ambiente recebe uma solução bonita, coerente e bem orientada em cada etapa.
+        </p>
+
+        <div class="process-grid">
+          <article class="process-card">
+            <small>Etapa 01</small>
+            <h3>Entendimento do projeto</h3>
+            <p>Você apresenta o ambiente, objetivo e referências para entendermos a linguagem certa da solução.</p>
+          </article>
+          <article class="process-card">
+            <small>Etapa 02</small>
+            <h3>Direcionamento estético</h3>
+            <p>Indicamos aplicação, perfil e proposta visual que melhor valorizam o espaço e o uso desejado.</p>
+          </article>
+          <article class="process-card">
+            <small>Etapa 03</small>
+            <h3>Produção sob medida</h3>
+            <p>As peças são preparadas com foco em proporção, acabamento e presença visual no ambiente final.</p>
+          </article>
+          <article class="process-card">
+            <small>Etapa 04</small>
+            <h3>Entrega e valorização</h3>
+            <p>O resultado final transforma o espaço com mais leveza, sofisticação e percepção de alto padrão.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="contato">
+      <div class="container">
+        <div class="cta-box">
+          <img src="https://hfhwvzldhgqniqnurync.supabase.co/storage/v1/object/public/teste/colorpng.png" alt="Projeto premium Color Glass" />
+          <div class="cta-content">
+            <div>
+              <span class="eyebrow">Seu ambiente merece esse nível</span>
+              <h2 class="section-title">Vamos criar uma solução sob medida para deixar o seu projeto <strong>visualmente inesquecível?</strong></h2>
+              <p class="section-copy">
+                Fale com a Color Glass e receba orientação para portas, cristaleiras, divisórias e estruturas em vidro e alumínio com padrão premium.
+              </p>
+              <div class="btn-row">
+                <button class="btn btn-primary" id="ctaBottom" type="button">Falar no WhatsApp</button>
+                <a class="btn" href="https://instagram.com/colorglassfortaleza" target="_blank" rel="noopener">Ver Instagram</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1157,10 +1463,13 @@
   </main>
 
   <footer>
-    <div class="page-shell footer-content">
-      <div class="footer-brand" aria-label="Color Glass">
-        <span class="logo-symbol" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-        <span class="logo-wordmark"><span>Color</span><span>Glass</span></span>
+    <div class="container footer-wrap">
+      <div class="brand" aria-label="Color Glass">
+        <span class="brand-mark" aria-hidden="true"><span>CG</span></span>
+        <span class="brand-text">
+          <strong>Color Glass</strong>
+          <small>Fortaleza</small>
+        </span>
       </div>
       <div>
         <strong>Color Glass Fortaleza</strong> © 2026 — Portas e estruturas premium em vidro e alumínio.<br />
@@ -1173,64 +1482,200 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
   <script>
     const waBase = "https://wa.me/5585988241620";
-    const encode = (message) => encodeURIComponent(message);
-    const msgOrcamento = "Olá! Quero fazer um orçamento com a Color Glass para uma solução premium em vidro e alumínio. Pode me orientar?";
-    const msgProdutos = "Olá! Quero conhecer as opções de portas, divisórias, cristaleiras e estruturas em vidro e alumínio da Color Glass.";
+    const msgOrcamento = "Olá! Quero solicitar um orçamento com a Color Glass para um projeto em vidro e alumínio.";
+    const msgAmbientes = "Olá! Quero conhecer melhor as soluções da Color Glass para o meu ambiente.";
+    const header = document.getElementById("siteHeader");
+    const cursorGlow = document.getElementById("cursorGlow");
 
     const openWA = (message) => {
-      window.open(`${waBase}?text=${encode(message)}`, "_blank", "noopener");
+      window.open(`${waBase}?text=${encodeURIComponent(message)}`, "_blank", "noopener");
     };
 
-    const revealElements = document.querySelectorAll(".reveal");
-    const counters = document.querySelectorAll("[data-count]");
-    let countersStarted = false;
-
-    const animateCounters = () => {
-      if (countersStarted) return;
-      countersStarted = true;
-
-      counters.forEach((counter) => {
-        const target = Number(counter.dataset.count || 0);
-        const suffix = counter.dataset.suffix || "";
-        const duration = 1400;
-        const startTime = performance.now();
-
-        const step = (now) => {
-          const progress = Math.min((now - startTime) / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3);
-          counter.textContent = Math.floor(eased * target) + suffix;
-
-          if (progress < 1) requestAnimationFrame(step);
-        };
-
-        requestAnimationFrame(step);
-      });
-    };
-
-    const onScroll = () => {
-      revealElements.forEach((element) => {
-        const rect = element.getBoundingClientRect();
-        if (rect.top < window.innerHeight - 110) element.classList.add("show");
-      });
-
-      const metricRow = document.querySelector(".metric-row");
-      if (metricRow && metricRow.getBoundingClientRect().top < window.innerHeight - 80) {
-        animateCounters();
-      }
-    };
-
-    document.getElementById("ctaHero").addEventListener("click", () => document.getElementById("produtos").scrollIntoView({ behavior: "smooth" }));
-    document.getElementById("ctaOrcamento").addEventListener("click", () => openWA(msgOrcamento));
-    document.getElementById("ctaProdutos").addEventListener("click", () => document.getElementById("produtos").scrollIntoView({ behavior: "smooth" }));
+    document.getElementById("ctaHero").addEventListener("click", () => openWA(msgOrcamento));
     document.getElementById("ctaEspecialista").addEventListener("click", () => openWA(msgOrcamento));
-    document.getElementById("ctaTodosProdutos").addEventListener("click", () => openWA(msgProdutos));
+    document.getElementById("ctaAmbientes").addEventListener("click", () => openWA(msgAmbientes));
+    document.getElementById("ctaBand").addEventListener("click", () => openWA(msgOrcamento));
     document.getElementById("ctaBottom").addEventListener("click", () => openWA(msgOrcamento));
+    document.getElementById("ctaExplore").addEventListener("click", () => {
+      document.getElementById("ambientes").scrollIntoView({ behavior: "smooth" });
+    });
 
-    window.addEventListener("load", onScroll);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const updateHeader = () => {
+      if (window.scrollY > 20) header.classList.add("scrolled");
+      else header.classList.remove("scrolled");
+    };
+
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+
+    if (window.matchMedia("(pointer:fine)").matches) {
+      window.addEventListener("mousemove", (event) => {
+        cursorGlow.style.left = `${event.clientX}px`;
+        cursorGlow.style.top = `${event.clientY}px`;
+      });
+    }
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+
+    document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+
+    document.querySelectorAll(".parallax-card").forEach((card) => {
+      card.addEventListener("mousemove", (event) => {
+        if (window.innerWidth <= 820) return;
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        card.style.transform = `rotateY(${x * 8}deg) rotateX(${y * -8}deg) translateZ(0)`;
+      });
+
+      card.addEventListener("mouseleave", () => {
+        card.style.transform = "";
+      });
+    });
+
+    if (window.gsap) {
+      gsap.registerPlugin(ScrollTrigger);
+
+      gsap.from(".hero-copy .eyebrow", {
+        y: 28,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out"
+      });
+
+      gsap.from(".hero-title", {
+        y: 52,
+        opacity: 0,
+        duration: 1.1,
+        delay: 0.08,
+        ease: "power3.out"
+      });
+
+      gsap.from(".hero-text", {
+        y: 34,
+        opacity: 0,
+        duration: 0.9,
+        delay: 0.2,
+        ease: "power3.out"
+      });
+
+      gsap.from(".hero-badges .hero-badge", {
+        y: 22,
+        opacity: 0,
+        duration: 0.7,
+        delay: 0.32,
+        stagger: 0.08,
+        ease: "power3.out"
+      });
+
+      gsap.from(".hero-copy .btn-row .btn", {
+        y: 24,
+        opacity: 0,
+        duration: 0.7,
+        delay: 0.48,
+        stagger: 0.08,
+        ease: "power3.out"
+      });
+
+      gsap.from(".hero-card-main", {
+        x: 86,
+        y: 32,
+        rotate: -9,
+        opacity: 0,
+        duration: 1.2,
+        delay: 0.15,
+        ease: "power4.out"
+      });
+
+      gsap.from(".hero-card-side", {
+        x: 86,
+        y: -22,
+        rotate: 12,
+        opacity: 0,
+        duration: 1.15,
+        delay: 0.34,
+        ease: "power4.out"
+      });
+
+      gsap.from(".hero-floating", {
+        y: 28,
+        opacity: 0,
+        duration: 0.8,
+        delay: 0.72,
+        stagger: 0.12,
+        ease: "power3.out"
+      });
+
+      gsap.utils.toArray(".showcase-card, .premium-point, .detail-item, .process-card").forEach((item, index) => {
+        gsap.from(item, {
+          y: 46,
+          opacity: 0,
+          duration: 0.9,
+          delay: (index % 3) * 0.035,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: item,
+            start: "top 84%"
+          }
+        });
+      });
+
+      gsap.to(".hero-card-main img", {
+        yPercent: 8,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+
+      gsap.to(".hero-card-side img", {
+        yPercent: -10,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+
+      gsap.to(".cinema-band img", {
+        scale: 1.1,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".cinema-band",
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+
+      gsap.to(".cta-box img", {
+        scale: 1.1,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".cta-box",
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+    }
   </script>
-  <script type="module" src="preview3d.js"></script>
 </body>
 </html>
