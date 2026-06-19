@@ -5,7 +5,7 @@ class CadastroRequest(BaseModel):
     empresa_nome: str = Field(min_length=2)
     nome: str = Field(min_length=2)
     email: EmailStr
-    senha: str = Field(min_length=6)
+    senha: str = Field(min_length=8)
 
     @field_validator("empresa_nome", "nome", "email", "senha", mode="before")
     @classmethod
