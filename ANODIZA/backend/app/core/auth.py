@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Callable
@@ -6,7 +7,10 @@ from typing import Callable
 from fastapi import Depends, Header, HTTPException, Request
 
 from app.core.config import get_settings
+from app.core.security import client_ip
 from app.db.supabase_client import get_supabase
+
+logger = logging.getLogger(__name__)
 
 PERMISSOES_PADRAO = {
     "painel": True,
@@ -50,10 +54,7 @@ def normalize_permissions(permissoes, perfil: str = "vendedor") -> dict:
 
 
 def _client_ip(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for") or ""
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else ""
+    return client_ip(request)
 
 
 def create_session(usuario: dict, request: Request) -> str:
@@ -85,7 +86,7 @@ def audit_event(usuario: dict | None, acao: str, recurso: str, recurso_id: str |
             "user_agent": request.headers.get("user-agent", "") if request else "",
         }).execute()
     except Exception:
-        pass
+        logger.exception("Falha ao registrar evento de auditoria: acao=%s recurso=%s recurso_id=%s", acao, recurso, recurso_id)
 
 
 def get_current_user(request: Request, x_anodiza_key: str | None = Header(default=None)) -> dict:
