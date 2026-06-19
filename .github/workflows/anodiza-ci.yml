@@ -1,0 +1,60 @@
+name: ANODIZA CI
+
+on:
+  pull_request:
+    paths:
+      - "ANODIZA/**"
+      - ".github/workflows/anodiza-ci.yml"
+  push:
+    branches:
+      - main
+      - work
+    paths:
+      - "ANODIZA/**"
+      - ".github/workflows/anodiza-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ANODIZA/backend
+    env:
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_BACKEND_KEY: dummy
+      SIGNING_KEY: abcdefghijklmnopqrstuvwxyz123456
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Compile backend
+        run: python -m compileall app
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ANODIZA/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
