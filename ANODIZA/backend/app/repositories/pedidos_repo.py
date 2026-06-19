@@ -1,8 +1,16 @@
 from app.repositories.common import supabase_client
 
 
-def listar(empresa_id: str):
-    result = supabase_client().table("orcamentos").select("id,cliente_id,numero_pedido,nome_orcamento,cliente_nome,status,valor_total,created_at").eq("empresa_id", empresa_id).order("created_at", desc=True).limit(500).execute()
+def listar(empresa_id: str, limit: int = 500, offset: int = 0):
+    result = (
+        supabase_client()
+        .table("orcamentos")
+        .select("id,cliente_id,numero_pedido,nome_orcamento,cliente_nome,status,valor_total,created_at")
+        .eq("empresa_id", empresa_id)
+        .order("created_at", desc=True)
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
     return result.data or []
 
 
@@ -24,8 +32,17 @@ def atualizar(empresa_id: str, item_id: str, dados: dict):
     return result.data[0] if result.data else None
 
 
-def listar_linhas(empresa_id: str, item_id: str):
-    result = supabase_client().table("orcamento_produtos").select("id,nome,quantidade,valor_unitario,valor_total,created_at").eq("empresa_id", empresa_id).eq("orcamento_id", item_id).order("created_at", desc=False).execute()
+def listar_linhas(empresa_id: str, item_id: str, limit: int = 500, offset: int = 0):
+    result = (
+        supabase_client()
+        .table("orcamento_produtos")
+        .select("id,nome,quantidade,valor_unitario,valor_total,created_at")
+        .eq("empresa_id", empresa_id)
+        .eq("orcamento_id", item_id)
+        .order("created_at", desc=False)
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
     return result.data or []
 
 
