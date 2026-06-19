@@ -55,7 +55,9 @@ def cadastro(payload: CadastroRequest, request: Request):
         settings.auth_rate_limit_attempts,
         settings.auth_rate_limit_window_seconds,
     )
-    return issue_login_response(run_rpc("cadastro_empresa", payload.model_dump()), request)
+    dados = payload.model_dump()
+    dados["loja_nome"] = dados["empresa_nome"]
+    return issue_login_response(run_rpc("cadastro_empresa", dados), request)
 
 
 @router.post("/login")
