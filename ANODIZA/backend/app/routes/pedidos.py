@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.core.auth import assert_same_company, require_permission
+from app.schemas.pedidos import PedidoCreate, PedidoProdutoCreate, PedidoUpdate
 from app.services import pedidos_service
 
 router = APIRouter()
@@ -10,3 +11,33 @@ router = APIRouter()
 def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(default=""), current_user: dict = Depends(require_permission("orcamentos"))):
     empresa_id = assert_same_company(current_user, empresa_slug=empresa_slug)
     return pedidos_service.listar(empresa_id, busca)
+
+
+@router.post("/orcamentos")
+def criar_orcamento(payload: PedidoCreate, request: Request, current_user: dict = Depends(require_permission("orcamentos"))):
+    empresa_id = assert_same_company(current_user, empresa_slug=payload.empresa_slug)
+    return pedidos_service.criar(empresa_id, payload, current_user, request)
+
+
+@router.post("/orcamentos/editar")
+def editar_orcamento(payload: PedidoUpdate, request: Request, current_user: dict = Depends(require_permission("orcamentos"))):
+    empresa_id = assert_same_company(current_user, empresa_slug=payload.empresa_slug)
+    return pedidos_service.editar(empresa_id, payload, current_user, request)
+
+
+@router.post("/orcamentos/aprovar")
+def aprovar_orcamento(payload: dict, request: Request, current_user: dict = Depends(require_permission("orcamentos"))):
+    empresa_id = assert_same_company(current_user, empresa_slug=str(payload.get("empresa_slug") or ""))
+    return pedidos_service.aprovar(empresa_id, str(payload.get("id") or ""), current_user, request)
+
+
+@router.get("/orcamentos/produtos")
+def listar_produtos_orcamento(empresa_slug: str = Query(default=""), orcamento_id: str = Query(default=""), current_user: dict = Depends(require_permission("orcamentos"))):
+    empresa_id = assert_same_company(current_user, empresa_slug=empresa_slug)
+    return pedidos_service.listar_linhas(empresa_id, orcamento_id)
+
+
+@router.post("/orcamentos/produtos")
+def cadastrar_produto_orcamento(payload: PedidoProdutoCreate, request: Request, current_user: dict = Depends(require_permission("orcamentos"))):
+    empresa_id = assert_same_company(current_user, empresa_slug=payload.empresa_slug)
+    return pedidos_service.criar_linha(empresa_id, payload, current_user, request)
