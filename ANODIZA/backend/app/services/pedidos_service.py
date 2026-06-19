@@ -6,10 +6,10 @@ from app.repositories.common import buscar_loja_principal
 from app.schemas.pedidos import PedidoCreate, PedidoProdutoCreate, PedidoUpdate
 
 
-def listar(empresa_id: str, busca: str = ""):
+def listar(empresa_id: str, busca: str = "", limit: int = 500, offset: int = 0):
     termo = busca.strip().lower()
     lista = []
-    for item in pedidos_repo.listar(empresa_id):
+    for item in pedidos_repo.listar(empresa_id, limit=limit, offset=offset):
         cliente_nome = str(item.get("cliente_nome") or "")
         numero = str(item.get("numero_pedido") or "")
         nome = str(item.get("nome_orcamento") or "")
@@ -78,16 +78,16 @@ def aprovar(empresa_id: str, item_id: str, current_user: dict, request: Request)
     return atualizado
 
 
-def listar_linhas(empresa_id: str, item_id: str):
+def listar_linhas(empresa_id: str, item_id: str, limit: int = 500, offset: int = 0):
     if not pedidos_repo.buscar(empresa_id, item_id):
         return []
-    return pedidos_repo.listar_linhas(empresa_id, item_id)
+    return pedidos_repo.listar_linhas(empresa_id, item_id, limit=limit, offset=offset)
 
 
 def recalcular_total(empresa_id: str, item_id: str):
     if not pedidos_repo.buscar(empresa_id, item_id):
         raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
-    total = sum(float(item.get("valor_total") or 0) for item in pedidos_repo.listar_linhas(empresa_id, item_id))
+    total = sum(float(item.get("valor_total") or 0) for item in pedidos_repo.listar_linhas(empresa_id, item_id, limit=5000, offset=0))
     pedidos_repo.atualizar_total(empresa_id, item_id, total)
     return total
 
