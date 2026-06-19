@@ -1,0 +1,17 @@
+# Segredos locais
+.env
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+
+# Logs e respostas de teste
+logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
