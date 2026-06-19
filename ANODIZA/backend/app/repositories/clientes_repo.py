@@ -1,13 +1,14 @@
 from app.repositories.common import supabase_client
 
 
-def listar_clientes(empresa_id: str):
+def listar_clientes(empresa_id: str, limit: int = 500, offset: int = 0):
     return (
         supabase_client()
         .table("clientes")
         .select("id,nome,documento,email,telefone,ativo")
         .eq("empresa_id", empresa_id)
         .order("created_at", desc=False)
+        .range(offset, offset + limit - 1)
         .execute()
         .data
         or []
