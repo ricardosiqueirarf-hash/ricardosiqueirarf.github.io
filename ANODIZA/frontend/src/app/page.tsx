@@ -1,22 +1,136 @@
 import Link from "next/link";
 
+const metrics = [
+  { label: "Orcamentos ativos", value: "128", trend: "+18%" },
+  { label: "Conversao media", value: "42%", trend: "+7%" },
+  { label: "Tempo economizado", value: "31h", trend: "semana" },
+];
+
+const features = [
+  "Orcamentos inteligentes para portas de aluminio e vidro",
+  "Gestao multiempresa com usuarios, permissoes e auditoria",
+  "Base pronta para WhatsApp, CRM, pagamentos e producao",
+];
+
 export default function HomePage() {
   return (
-    <main className="page-shell">
-      <section className="card">
-        <div className="brand">
-          <div className="brand-mark">A</div>
-          <div>
+    <main className="home-page">
+      <div className="home-noise" aria-hidden="true" />
+      <div className="home-orb home-orb-one" aria-hidden="true" />
+      <div className="home-orb home-orb-two" aria-hidden="true" />
+      <div className="home-grid-bg" aria-hidden="true" />
+
+      <nav className="home-nav" aria-label="Navegacao principal">
+        <Link href="/" className="home-logo" aria-label="ANODIZA inicio">
+          <span className="home-logo-mark">A</span>
+          <span>
             <strong>ANODIZA</strong>
-            <p>Sistema para lojas</p>
+            <small>SaaS industrial</small>
+          </span>
+        </Link>
+        <div className="home-nav-actions">
+          <Link href="/login" className="home-nav-link">Entrar</Link>
+          <Link href="/cadastro" className="home-nav-cta">Comecar agora</Link>
+        </div>
+      </nav>
+
+      <section className="home-hero">
+        <div className="home-hero-copy">
+          <div className="home-badge">
+            <span className="home-badge-dot" />
+            Plataforma SaaS para vidro e aluminio
+          </div>
+
+          <h1>
+            O sistema premium para empresas de <span>portas de aluminio e vidro.</span>
+          </h1>
+
+          <p className="home-subtitle">
+            Centralize clientes, orcamentos, usuarios e permissoes em uma base moderna,
+            escalavel e pronta para transformar operacoes moveleiras em software de alta performance.
+          </p>
+
+          <div className="home-hero-actions">
+            <Link href="/cadastro" className="home-primary-button">
+              Criar primeiro acesso
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/login" className="home-secondary-button">
+              Acessar painel
+            </Link>
+          </div>
+
+          <div className="home-trust-row" aria-label="Destaques do produto">
+            <span>Multiempresa</span>
+            <span>Permissoes</span>
+            <span>Auditoria</span>
+            <span>API-ready</span>
           </div>
         </div>
-        <h1>Bem-vindo</h1>
-        <p>Acesse sua conta ou crie o primeiro cadastro.</p>
-        <div style={{ display: "grid", gap: 12, marginTop: 24 }}>
-          <Link href="/login"><button>Entrar</button></Link>
-          <Link href="/cadastro"><button>Criar cadastro</button></Link>
+
+        <div className="home-hero-visual" aria-label="Previa visual do painel ANODIZA">
+          <div className="home-dashboard-shell">
+            <div className="home-dashboard-topbar">
+              <div className="home-window-dots" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="home-search-pill">Buscar pedido, cliente ou produto</div>
+            </div>
+
+            <div className="home-dashboard-body">
+              <aside className="home-dashboard-sidebar" aria-hidden="true">
+                <span className="active" />
+                <span />
+                <span />
+                <span />
+              </aside>
+
+              <div className="home-dashboard-content">
+                <div className="home-panel-heading">
+                  <div>
+                    <small>Visao geral</small>
+                    <strong>Operacao em tempo real</strong>
+                  </div>
+                  <span>Online</span>
+                </div>
+
+                <div className="home-metrics-grid">
+                  {metrics.map((metric) => (
+                    <div className="home-metric-card" key={metric.label}>
+                      <small>{metric.label}</small>
+                      <strong>{metric.value}</strong>
+                      <span>{metric.trend}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="home-production-card">
+                  <div className="home-production-info">
+                    <small>Pedido em destaque</small>
+                    <strong>Closet premium bronze</strong>
+                    <p>4 portas • vidro reflecta • trilho superior</p>
+                  </div>
+                  <div className="home-door-preview" aria-hidden="true">
+                    <span className="home-door-frame" />
+                    <span className="home-door-glass" />
+                    <span className="home-door-handle" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <section className="home-feature-strip" aria-label="Recursos principais">
+        {features.map((feature, index) => (
+          <article className="home-feature-card" key={feature}>
+            <span>0{index + 1}</span>
+            <p>{feature}</p>
+          </article>
+        ))}
       </section>
     </main>
   );
