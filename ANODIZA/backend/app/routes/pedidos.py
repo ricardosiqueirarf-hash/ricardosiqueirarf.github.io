@@ -8,9 +8,15 @@ router = APIRouter()
 
 
 @router.get("/orcamentos")
-def listar_orcamentos(empresa_slug: str = Query(default=""), busca: str = Query(default=""), current_user: dict = Depends(require_permission("orcamentos"))):
+def listar_orcamentos(
+    empresa_slug: str = Query(default=""),
+    busca: str = Query(default=""),
+    limit: int = Query(default=500, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    current_user: dict = Depends(require_permission("orcamentos")),
+):
     empresa_id = assert_same_company(current_user, empresa_slug=empresa_slug)
-    return pedidos_service.listar(empresa_id, busca)
+    return pedidos_service.listar(empresa_id, busca, limit=limit, offset=offset)
 
 
 @router.post("/orcamentos")
@@ -32,9 +38,15 @@ def aprovar_orcamento(payload: dict, request: Request, current_user: dict = Depe
 
 
 @router.get("/orcamentos/produtos")
-def listar_produtos_orcamento(empresa_slug: str = Query(default=""), orcamento_id: str = Query(default=""), current_user: dict = Depends(require_permission("orcamentos"))):
+def listar_produtos_orcamento(
+    empresa_slug: str = Query(default=""),
+    orcamento_id: str = Query(default=""),
+    limit: int = Query(default=500, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    current_user: dict = Depends(require_permission("orcamentos")),
+):
     empresa_id = assert_same_company(current_user, empresa_slug=empresa_slug)
-    return pedidos_service.listar_linhas(empresa_id, orcamento_id)
+    return pedidos_service.listar_linhas(empresa_id, orcamento_id, limit=limit, offset=offset)
 
 
 @router.post("/orcamentos/produtos")
