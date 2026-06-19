@@ -14,7 +14,7 @@ type AuthResponse = {
 export default function CadastroPage() {
   const router = useRouter();
   const [mensagem, setMensagem] = useState("");
-  const [form, setForm] = useState({ empresa_nome: "", loja_nome: "", nome: "", email: "", senha: "" });
+  const [form, setForm] = useState({ empresa_nome: "", nome: "", email: "", senha: "" });
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -24,14 +24,21 @@ export default function CadastroPage() {
     event.preventDefault();
     setMensagem("Criando cadastro...");
     try {
-      const data = await apiPost<AuthResponse>("/api/auth/cadastro", form);
-      if (data.chave_acesso) localStorage.setItem("anodiza_chave_acesso", data.chave_acesso);
+      const payload = {
+        empresa_nome: form.empresa_nome.trim(),
+        nome: form.nome.trim(),
+        email: form.email.trim().toLowerCase(),
+        senha: form.senha,
+      };
+      const data = await apiPost<AuthResponse>("/api/auth/cadastro", payload);
+      if (!data.chave_acesso) throw new Error("Sessao nao criada pelo backend.");
+      localStorage.setItem("anodiza_chave_acesso", data.chave_acesso);
       localStorage.setItem("anodiza_empresa_slug", data.empresa_slug);
-      localStorage.setItem("anodiza_usuario", JSON.stringify({ ...data.usuario, perfil: data.usuario.perfil || "owner" }));
+      localStorage.removeItem("anodiza_usuario");
       setMensagem(`Cadastro criado. Empresa: ${data.empresa_slug}`);
       router.push("/loja");
-    } catch {
-      setMensagem("Nao foi possivel criar o cadastro. Confira os dados e tente novamente.");
+    } catch (error) {
+      setMensagem(error instanceof Error ? error.message : "Nao foi possivel criar o cadastro. Confira os dados e tente novamente.");
     }
   }
 
@@ -40,13 +47,12 @@ export default function CadastroPage() {
       <section className="card">
         <div className="brand"><div className="brand-mark">A</div><div><strong>ANODIZA</strong><p>Novo ambiente</p></div></div>
         <h1>Criar cadastro</h1>
-        <p>Crie a empresa, a primeira loja e o usuario principal. O identificador da empresa sera gerado automaticamente.</p>
+        <p>Crie sua empresa e o usuario principal. O identificador da empresa sera gerado automaticamente.</p>
         <form onSubmit={handleSubmit}>
-          <label>Nome da empresa<input value={form.empresa_nome} onChange={(event) => updateField("empresa_nome", event.target.value)} /></label>
-          <label>Nome da loja<input value={form.loja_nome} onChange={(event) => updateField("loja_nome", event.target.value)} /></label>
-          <label>Seu nome<input value={form.nome} onChange={(event) => updateField("nome", event.target.value)} /></label>
-          <label>E-mail<input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} /></label>
-          <label>Senha<input type="password" value={form.senha} onChange={(event) => updateField("senha", event.target.value)} /></label>
+          <label>Nome da empresa<input required minLength={2} value={form.empresa_nome} onChange={(event) => updateField("empresa_nome", event.target.value)} /></label>
+          <label>Seu nome<input required minLength={2} value={form.nome} onChange={(event) => updateField("nome", event.target.value)} /></label>
+          <label>E-mail<input required type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} /></label>
+          <label>Senha<input required minLength={6} type="password" value={form.senha} onChange={(event) => updateField("senha", event.target.value)} /></label>
           <button type="submit">Criar ambiente</button>
         </form>
         {mensagem && <p style={{ marginTop: 16 }}>{mensagem}</p>}
