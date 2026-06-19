@@ -64,6 +64,7 @@ tr:hover { background: #e6f0fa; }
                 <label><input type="checkbox" value="deslizante"> Deslizante</label>
                 <label><input type="checkbox" value="pivotante"> Pivotante</label>
                 <label><input type="checkbox" value="estrutural"> Estrutural</label>
+                <label><input type="checkbox" value="prateleiras"> Prateleiras</label>
             </div>
         </div>
 
@@ -87,7 +88,15 @@ tr:hover { background: #e6f0fa; }
         <table>
             <thead>
                 <tr>
-                    <th>Nome</th><th>Custo</th><th>Margem</th><th>Perda</th><th>Preço Final</th><th>Tipologias</th><th>Insumos</th><th>Puxadores</th><th>Ações</th>
+                    <th>Nome</th>
+                    <th>Custo</th>
+                    <th>Margem</th>
+                    <th>Perda</th>
+                    <th>Preço Final</th>
+                    <th>Tipologias</th>
+                    <th>Insumos</th>
+                    <th>Puxadores</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody id="tabela"></tbody>
@@ -99,12 +108,43 @@ const BASE_URL = "https://colorglass.onrender.com";
 const TIPO_ANTIGO = "correr";
 const TIPO_NOVO = "divisao_ambiente";
 const LABEL_NOVO = "Divisão de ambiente";
+window.__perfilEditarData = [];
 
-function normalizarTipologia(valor){ return String(valor || "").trim() === TIPO_ANTIGO ? TIPO_NOVO : String(valor || "").trim(); }
-function normalizarTipologias(lista){ return (Array.isArray(lista) ? lista : []).map(normalizarTipologia).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i); }
-function formatarTipologia(valor){ const tipo = normalizarTipologia(valor); const mapa = {giro:"Giro",deslizante:"Deslizante",divisao_ambiente:LABEL_NOVO,pivotante:"Pivotante",estrutural:"Estrutural"}; return mapa[tipo] || tipo || "-"; }
-function formatarTipologias(lista){ return normalizarTipologias(lista).map(formatarTipologia).join(", "); }
-function normalizarListaTexto(lista){ return (Array.isArray(lista) ? lista : []).map(v => String(v || "").trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i); }
+function normalizarTipologia(valor) {
+    return String(valor || "").trim() === TIPO_ANTIGO ? TIPO_NOVO : String(valor || "").trim();
+}
+
+function normalizarTipologias(lista) {
+    return (Array.isArray(lista) ? lista : [])
+        .map(normalizarTipologia)
+        .filter(Boolean)
+        .filter((valor, index, array) => array.indexOf(valor) === index);
+}
+
+function formatarTipologia(valor) {
+    const tipo = normalizarTipologia(valor);
+    const mapa = {
+        giro: "Giro",
+        deslizante: "Deslizante",
+        divisao_ambiente: LABEL_NOVO,
+        pivotante: "Pivotante",
+        estrutural: "Estrutural",
+        prateleiras: "Prateleiras"
+    };
+    return mapa[tipo] || tipo || "-";
+}
+
+function formatarTipologias(lista) {
+    const texto = normalizarTipologias(lista).map(formatarTipologia).join(", ");
+    return texto || "-";
+}
+
+function normalizarListaTexto(lista) {
+    return (Array.isArray(lista) ? lista : [])
+        .map(valor => String(valor || "").trim())
+        .filter(Boolean)
+        .filter((valor, index, array) => array.indexOf(valor) === index);
+}
 
 let insumosLista = [];
 let puxadoresLista = [];
@@ -112,7 +152,7 @@ let puxadoresLista = [];
 async function carregarInsumos() {
     const res = await fetch(`${BASE_URL}/api/materiais`);
     const data = await res.json();
-    insumosLista = data.map(m => m.nome);
+    insumosLista = Array.isArray(data) ? data.map(material => material.nome).filter(Boolean) : [];
     atualizarSelects();
 }
 
@@ -160,7 +200,7 @@ function atualizarPuxadoresCheckboxes(selecionados = []) {
     });
 }
 
-function adicionarInsumo(botao) {
+function adicionarInsumo() {
     const container = document.getElementById("insumos-container");
     const novoItem = document.createElement("div");
     novoItem.className = "insumo-item";
@@ -169,10 +209,21 @@ function adicionarInsumo(botao) {
     atualizarSelects();
 }
 
-function removerInsumo(botao) { botao.parentElement.remove(); }
-function getInsumosSelecionados() { return Array.from(document.querySelectorAll(".insumo-select")).map(s => s.value).filter(v => v); }
-function getPuxadoresSelecionados() { return Array.from(document.querySelectorAll("#puxadores-container input:checked")).map(c => c.value).filter(Boolean); }
-function getTipologiasSelecionadas() { return normalizarTipologias(Array.from(document.querySelectorAll(".tipologias input:checked")).map(c => c.value)); }
+function removerInsumo(botao) {
+    botao.parentElement.remove();
+}
+
+function getInsumosSelecionados() {
+    return Array.from(document.querySelectorAll(".insumo-select")).map(select => select.value).filter(Boolean);
+}
+
+function getPuxadoresSelecionados() {
+    return Array.from(document.querySelectorAll("#puxadores-container input:checked")).map(input => input.value).filter(Boolean);
+}
+
+function getTipologiasSelecionadas() {
+    return normalizarTipologias(Array.from(document.querySelectorAll(".tipologias input:checked")).map(input => input.value));
+}
 
 function formatarPuxadores(lista) {
     const ids = normalizarListaTexto(lista);
@@ -184,18 +235,39 @@ function formatarPuxadores(lista) {
     }).join(", ");
 }
 
+function numeroMoeda(valor) {
+    const numero = Number(valor || 0);
+    return Number.isFinite(numero) ? numero.toFixed(2) : "0.00";
+}
+
 async function carregar() {
     const res = await fetch(`${BASE_URL}/api/perfis`);
     const data = await res.json();
+    const lista = Array.isArray(data) ? data : [];
     const tbody = document.getElementById("tabela");
     tbody.innerHTML = "";
+    window.__perfilEditarData = [];
 
-    data.forEach(p => {
-        p.tipologias = normalizarTipologias(p.tipologias);
-        p.puxadores = normalizarListaTexto(p.puxadores);
+    lista.forEach((perfil, index) => {
+        const p = {
+            ...perfil,
+            tipologias: normalizarTipologias(perfil.tipologias),
+            puxadores: normalizarListaTexto(perfil.puxadores)
+        };
+        window.__perfilEditarData[index] = p;
 
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${p.nome}</td><td>R$ ${Number(p.custo).toFixed(2)}</td><td>${p.margem}%</td><td>${p.perda}%</td><td><b>R$ ${Number(p.preco).toFixed(2)}</b></td><td>${formatarTipologias(p.tipologias)}</td><td>${(p.insumos || []).join(", ")}</td><td>${formatarPuxadores(p.puxadores)}</td><td><button onclick='editar(${JSON.stringify(p)})'>Editar</button> <button onclick="excluir('${p.id}')">Excluir</button></td>`;
+        tr.innerHTML = `
+            <td>${p.nome || "-"}</td>
+            <td>R$ ${numeroMoeda(p.custo)}</td>
+            <td>${p.margem ?? 0}%</td>
+            <td>${p.perda ?? 0}%</td>
+            <td><b>R$ ${numeroMoeda(p.preco)}</b></td>
+            <td>${formatarTipologias(p.tipologias)}</td>
+            <td>${(p.insumos || []).join(", ") || "-"}</td>
+            <td>${formatarPuxadores(p.puxadores)}</td>
+            <td><button onclick="editar(window.__perfilEditarData[${index}])">Editar</button> <button class="btn-danger" onclick="excluir('${p.id}')">Excluir</button></td>
+        `;
         tbody.appendChild(tr);
     });
 }
@@ -217,7 +289,7 @@ function atualizarPrecoPreview() {
 
 async function salvar() {
     const id = perfil_id.value;
-    const nome = nomeInput.value;
+    const nome = nomeInput.value.trim();
     const custo = parseFloat(custoInput.value);
     const margem = parseFloat(margemInput.value);
     const perda = parseFloat(perdaInput.value);
@@ -233,27 +305,36 @@ async function salvar() {
     const payload = { nome, custo, margem, perda, tipologias, insumos, puxadores };
     const url = id ? `${BASE_URL}/api/perfis/${id}` : `${BASE_URL}/api/perfis`;
     const method = id ? "PUT" : "POST";
-    await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+
+    await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
     cancelar();
     carregar();
 }
 
 function editar(p) {
+    if (!p) return;
     p.tipologias = normalizarTipologias(p.tipologias);
     p.puxadores = normalizarListaTexto(p.puxadores);
 
     perfil_id.value = p.id;
-    nomeInput.value = p.nome;
-    custoInput.value = p.custo;
-    margemInput.value = p.margem;
-    perdaInput.value = p.perda;
+    nomeInput.value = p.nome || "";
+    custoInput.value = p.custo ?? "";
+    margemInput.value = p.margem ?? "";
+    perdaInput.value = p.perda ?? "";
     atualizarPrecoPreview();
 
-    document.querySelectorAll(".tipologias input").forEach(c => c.checked = p.tipologias?.includes(normalizarTipologia(c.value)));
+    document.querySelectorAll(".tipologias input").forEach(input => {
+        input.checked = p.tipologias.includes(normalizarTipologia(input.value));
+    });
 
     const container = document.getElementById("insumos-container");
     container.innerHTML = "";
-    (p.insumos?.length ? p.insumos : [""]).forEach(insumo => {
+    (p.insumos?.length ? p.insumos : [""]).forEach(() => {
         const div = document.createElement("div");
         div.className = "insumo-item";
         div.innerHTML = `<select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button><button type="button" onclick="removerInsumo(this)">-</button>`;
@@ -261,7 +342,9 @@ function editar(p) {
     });
 
     atualizarSelects();
-    document.querySelectorAll(".insumo-select").forEach((s, i) => s.value = p.insumos?.[i] || "");
+    document.querySelectorAll(".insumo-select").forEach((select, index) => {
+        select.value = p.insumos?.[index] || "";
+    });
     atualizarPuxadoresCheckboxes(p.puxadores);
 }
 
@@ -278,14 +361,14 @@ function cancelar() {
     margemInput.value = "";
     perdaInput.value = "";
     atualizarPrecoPreview();
-    document.querySelectorAll(".tipologias input").forEach(c => c.checked = false);
+    document.querySelectorAll(".tipologias input").forEach(input => input.checked = false);
     document.getElementById("insumos-container").innerHTML = `<div class="insumo-item"><select class="insumo-select"></select><button type="button" onclick="adicionarInsumo(this)">+</button></div>`;
     atualizarSelects();
     atualizarPuxadoresCheckboxes();
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-    ["input", "change"].forEach((eventType) => {
+    ["input", "change"].forEach(eventType => {
         custoInput.addEventListener(eventType, atualizarPrecoPreview);
         margemInput.addEventListener(eventType, atualizarPrecoPreview);
         perdaInput.addEventListener(eventType, atualizarPrecoPreview);
