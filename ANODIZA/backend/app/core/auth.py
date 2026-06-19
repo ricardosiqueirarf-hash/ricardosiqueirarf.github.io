@@ -113,6 +113,17 @@ def get_current_user(request: Request, x_anodiza_key: str | None = Header(defaul
     if expira_em and datetime.fromisoformat(expira_em.replace("Z", "+00:00")) <= datetime.now(timezone.utc):
         raise HTTPException(status_code=401, detail="Sessao expirada")
 
+    empresa_result = (
+        supabase.table("empresas")
+        .select("id,status")
+        .eq("id", acesso["empresa"])
+        .eq("status", "ativa")
+        .limit(1)
+        .execute()
+    )
+    if not empresa_result.data:
+        raise HTTPException(status_code=403, detail="Empresa inativa ou nao autorizada")
+
     usuario_result = (
         supabase.table("usuarios")
         .select("id,empresa_id,loja_id,nome,email,perfil,ativo,permissoes")
@@ -128,7 +139,7 @@ def get_current_user(request: Request, x_anodiza_key: str | None = Header(defaul
     usuario = usuario_result.data[0]
     usuario["permissoes"] = normalize_permissions(usuario.get("permissoes"), usuario.get("perfil") or "vendedor")
     try:
-        supabase.table("controle_sistema").update({"ultimo_uso_em": datetime.now(timezone.utc).isoformat()}).eq("id", acesso["id"]).execute()
+        supabase.table("controle_sistema").update({"ultimo_uso_em": datetime.now(timezone.utc).isoformat()}).eq("empresa", acesso["empresa"]).eq("id", acesso["id"]).execute()
     except Exception:
         pass
     return usuario
