@@ -20,10 +20,8 @@ def listar(empresa_id: str, busca: str = ""):
 
 
 def proximo_numero(cliente_id: str) -> int:
-    maior = 0
-    for item in pedidos_repo.listar(""):
-        pass
     result = pedidos_repo.supabase_client().table("orcamentos").select("numero_pedido").eq("cliente_id", cliente_id).limit(2000).execute()
+    maior = 0
     for item in result.data or []:
         numero = str(item.get("numero_pedido") or "").strip()
         if numero.isdigit():
@@ -87,8 +85,8 @@ def listar_linhas(empresa_id: str, item_id: str):
     return pedidos_repo.listar_linhas(empresa_id, item_id)
 
 
-def recalcular_total(item_id: str):
-    total = sum(float(item.get("valor_total") or 0) for item in pedidos_repo.listar_linhas("", item_id))
+def recalcular_total(empresa_id: str, item_id: str):
+    total = sum(float(item.get("valor_total") or 0) for item in pedidos_repo.listar_linhas(empresa_id, item_id))
     pedidos_repo.atualizar_total(item_id, total)
     return total
 
@@ -104,6 +102,6 @@ def criar_linha(empresa_id: str, payload: PedidoProdutoCreate, current_user: dic
     linha = pedidos_repo.inserir_linha(dados)
     if not linha:
         raise HTTPException(status_code=400, detail="Produto nao cadastrado")
-    recalcular_total(payload.orcamento_id)
+    recalcular_total(empresa_id, payload.orcamento_id)
     audit_event(current_user, "criar", "orcamento_produto", linha.get("id"), None, linha, request)
     return linha
