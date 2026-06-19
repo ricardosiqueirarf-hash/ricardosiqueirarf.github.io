@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: sefaz-homologacao-teste
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn sefaz_test_server:app
+    healthCheckPath: /healthz
+    envVars:
+      - key: SEFAZ_AMBIENTE
+        value: homologacao
+      - key: SEFAZ_TP_AMB
+        value: "2"
+      - key: SEFAZ_UF
+        value: CE
+      - key: SEFAZ_CUF
+        value: "23"
+      - key: SEFAZ_TEST_TOKEN
+        sync: false
+      - key: SEFAZ_STATUS_URL
+        sync: false
+      - key: SEFAZ_CERT_PEM_PATH
+        sync: false
+      - key: SEFAZ_KEY_PEM_PATH
+        sync: false
