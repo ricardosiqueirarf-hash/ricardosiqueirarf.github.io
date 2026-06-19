@@ -6,8 +6,8 @@ from app.repositories.common import buscar_loja_principal
 from app.schemas.clientes import ClienteCreate, ClienteUpdate
 
 
-def listar(empresa_id: str):
-    return clientes_repo.listar_clientes(empresa_id)
+def listar(empresa_id: str, limit: int = 500, offset: int = 0):
+    return clientes_repo.listar_clientes(empresa_id, limit=limit, offset=offset)
 
 
 def criar(empresa_id: str, payload: ClienteCreate, current_user: dict, request: Request):
