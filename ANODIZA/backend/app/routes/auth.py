@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
 from app.core.auth import audit_event, create_session, get_current_user, revoke_current_session
+from app.core.config import get_settings
+from app.core.security import enforce_auth_rate_limit
 from app.db.supabase_client import get_supabase
+from app.models.schemas import CadastroRequest, LoginRequest
 
 router = APIRouter()
 
@@ -43,14 +46,30 @@ def issue_login_response(data: dict, request: Request):
 
 
 @router.post("/cadastro")
-def cadastro(payload: dict, request: Request):
-    return issue_login_response(run_rpc("cadastro_empresa", payload), request)
+def cadastro(payload: CadastroRequest, request: Request):
+    settings = get_settings()
+    enforce_auth_rate_limit(
+        request,
+        "cadastro",
+        str(payload.email),
+        settings.auth_rate_limit_attempts,
+        settings.auth_rate_limit_window_seconds,
+    )
+    return issue_login_response(run_rpc("cadastro_empresa", payload.model_dump()), request)
 
 
 @router.post("/login")
-def login(payload: dict, request: Request):
+def login(payload: LoginRequest, request: Request):
+    settings = get_settings()
+    enforce_auth_rate_limit(
+        request,
+        "login",
+        f"{payload.empresa_slug}:{payload.email}",
+        settings.auth_rate_limit_attempts,
+        settings.auth_rate_limit_window_seconds,
+    )
     try:
-        data = run_rpc("login_empresa", payload)
+        data = run_rpc("login_empresa", payload.model_dump())
     except HTTPException as error:
         raise HTTPException(status_code=401, detail="Empresa, e-mail ou senha invalidos") from error
     return issue_login_response(data, request)
