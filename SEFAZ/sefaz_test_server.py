@@ -1,21 +1,25 @@
 """
-Servidor local para testar comunicação com SEFAZ via HTML.
+Servidor Flask para testar comunicação com SEFAZ via HTML.
 
-Como usar:
-
+Local:
 1. cd SEFAZ
 2. python -m venv .venv
 3. .venv\Scripts\activate  # Windows
 4. pip install -r requirements.txt
 5. copie .env.example para .env e configure certificado/endpoints
 6. python sefaz_test_server.py
-7. abra sefaz_teste.html no navegador
+7. abra http://127.0.0.1:5055
+
+Render:
+- Root Directory: SEFAZ
+- Build Command: pip install -r requirements.txt
+- Start Command: gunicorn sefaz_test_server:app
 
 Importante:
-- Este servidor é local e de teste.
-- Não usar em produção.
+- Este servidor é de teste/homologação.
+- Não usar para emissão real em produção.
 - Não envia certificado para o navegador.
-- O certificado fica no .env local.
+- O certificado fica em variável/secret do ambiente.
 """
 
 from __future__ import annotations
@@ -42,11 +46,17 @@ app = Flask(__name__)
 
 @app.after_request
 def add_cors_headers(response):
-    """Permite abrir o HTML como arquivo local e chamar o backend local."""
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    """Permite abrir o HTML localmente e também usar o app hospedado."""
+    allowed_origin = os.getenv("SEFAZ_ALLOWED_ORIGIN", "*").strip() or "*"
+    response.headers["Access-Control-Allow-Origin"] = allowed_origin
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-SEFAZ-TEST-TOKEN"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
+
+
+@app.route("/healthz", methods=["GET"])
+def healthz():
+    return jsonify({"ok": True, "service": "sefaz-test", "ambiente": "homologacao"})
 
 
 @app.route("/", methods=["GET"])
@@ -62,6 +72,10 @@ def preview_status_payload():
     if request.method == "OPTIONS":
         return "", 204
 
+    auth_error = require_test_token()
+    if auth_error:
+        return auth_error
+
     data = request.get_json(silent=True) or {}
     try:
         payload = build_status_payload(data)
@@ -75,50 +89,72 @@ def consultar_status():
     if request.method == "OPTIONS":
         return "", 204
 
+    auth_error = require_test_token()
+    if auth_error:
+        return auth_error
+
     data = request.get_json(silent=True) or {}
 
     try:
-      payload = build_status_payload(data)
-      status_url = get_status_url(data)
-      timeout = int(data.get("timeout") or 30)
+        payload = build_status_payload(data)
+        status_url = get_status_url(data)
+        timeout = int(data.get("timeout") or 30)
 
-      request_log = save_log("request_status_servico", payload)
+        request_log = save_log("request_status_servico", payload)
 
-      headers = {
-          "Content-Type": "application/soap+xml; charset=utf-8",
-      }
+        headers = {
+            "Content-Type": "application/soap+xml; charset=utf-8",
+        }
 
-      cert = get_requests_cert()
+        cert = get_requests_cert()
 
-      response = requests.post(
-          status_url,
-          data=payload.encode("utf-8"),
-          headers=headers,
-          cert=cert,
-          timeout=timeout,
-      )
+        response = requests.post(
+            status_url,
+            data=payload.encode("utf-8"),
+            headers=headers,
+            cert=cert,
+            timeout=timeout,
+        )
 
-      response_log = save_log("response_status_servico", response.text)
-      parsed = parse_sefaz_response(response.text)
+        response_log = save_log("response_status_servico", response.text)
+        parsed = parse_sefaz_response(response.text)
 
-      body = {
-          "ok": response.ok,
-          "http_status": response.status_code,
-          "cStat": parsed.get("cStat"),
-          "xMotivo": parsed.get("xMotivo"),
-          "request_log": str(request_log),
-          "response_log": str(response_log),
-          "response_text": response.text,
-      }
+        body = {
+            "ok": response.ok,
+            "http_status": response.status_code,
+            "cStat": parsed.get("cStat"),
+            "xMotivo": parsed.get("xMotivo"),
+            "request_log": str(request_log),
+            "response_log": str(response_log),
+            "response_text": response.text,
+        }
 
-      status_code = 200 if response.ok else 502
-      return jsonify(body), status_code
+        status_code = 200 if response.ok else 502
+        return jsonify(body), status_code
 
     except Exception as exc:
-      return jsonify({
-          "ok": False,
-          "error": str(exc),
-      }), 500
+        return jsonify({
+            "ok": False,
+            "error": str(exc),
+        }), 500
+
+
+def require_test_token():
+    """
+    Proteção simples para não deixar uma URL pública no Render chamando a SEFAZ livremente.
+
+    Se SEFAZ_TEST_TOKEN estiver vazio, não exige token.
+    Em Render, configure SEFAZ_TEST_TOKEN como secret/env var.
+    """
+    expected_token = os.getenv("SEFAZ_TEST_TOKEN", "").strip()
+    if not expected_token:
+        return None
+
+    provided_token = request.headers.get("X-SEFAZ-TEST-TOKEN", "").strip()
+    if provided_token != expected_token:
+        return jsonify({"ok": False, "error": "Token de teste inválido ou ausente."}), 401
+
+    return None
 
 
 def build_status_payload(data: dict[str, Any]) -> str:
@@ -144,7 +180,7 @@ def get_status_url(data: dict[str, Any]) -> str:
     status_url = str(data.get("status_url") or os.getenv("SEFAZ_STATUS_URL") or "").strip()
 
     if not status_url or "URL-DE-HOMOLOGACAO" in status_url:
-        raise ValueError("Informe SEFAZ_STATUS_URL no formulário ou no .env.")
+        raise ValueError("Informe SEFAZ_STATUS_URL no formulário ou no ambiente do Render.")
 
     if not status_url.lower().startswith("https://"):
         raise ValueError("Use endpoint HTTPS da SEFAZ em homologação.")
@@ -160,9 +196,8 @@ def get_requests_cert():
     - SEFAZ_CERT_PEM_PATH + SEFAZ_KEY_PEM_PATH
     - SEFAZ_CERT_PEM_PATH contendo cert+key juntos
 
-    Conversão local comum:
-    openssl pkcs12 -in certificado.pfx -clcerts -nokeys -out cert.pem
-    openssl pkcs12 -in certificado.pfx -nocerts -nodes -out key.pem
+    Para Render, prefira Secret Files ou variáveis com conteúdo PEM materializado em arquivo
+    antes do start command. Não commitar certificado no GitHub.
     """
     cert_pem = os.getenv("SEFAZ_CERT_PEM_PATH", "").strip()
     key_pem = os.getenv("SEFAZ_KEY_PEM_PATH", "").strip()
@@ -173,8 +208,6 @@ def get_requests_cert():
     if cert_pem:
         return cert_pem
 
-    # Permite testar payload/endpoint sem cert em ambientes que não exijam mTLS.
-    # Para SEFAZ real, normalmente o certificado será exigido.
     return None
 
 
@@ -213,5 +246,6 @@ def only_digits(value: str) -> str:
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("SEFAZ_TEST_PORT", "5055"))
-    app.run(host="127.0.0.1", port=port, debug=True)
+    port = int(os.getenv("PORT") or os.getenv("SEFAZ_TEST_PORT", "5055"))
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    app.run(host="0.0.0.0", port=port, debug=debug)
