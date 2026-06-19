@@ -32,8 +32,8 @@ def buscar_orcamento(supabase, empresa_id: str, orcamento_id: str):
     return result.data[0] if result.data else None
 
 
-def proximo_numero_orcamento(supabase, cliente_id: str) -> int:
-    result = supabase.table("orcamentos").select("numero_pedido").eq("cliente_id", cliente_id).limit(2000).execute()
+def proximo_numero_orcamento(supabase, empresa_id: str, cliente_id: str) -> int:
+    result = supabase.table("orcamentos").select("numero_pedido").eq("empresa_id", empresa_id).eq("cliente_id", cliente_id).limit(2000).execute()
     maior = 0
     for item in result.data or []:
         numero = str(item.get("numero_pedido") or "").strip()
@@ -42,10 +42,12 @@ def proximo_numero_orcamento(supabase, cliente_id: str) -> int:
     return maior + 1
 
 
-def recalcular_valor_orcamento(supabase, orcamento_id: str):
-    produtos = supabase.table("orcamento_produtos").select("valor_total").eq("orcamento_id", orcamento_id).execute()
+def recalcular_valor_orcamento(supabase, empresa_id: str, orcamento_id: str):
+    if not buscar_orcamento(supabase, empresa_id, orcamento_id):
+        raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
+    produtos = supabase.table("orcamento_produtos").select("valor_total").eq("empresa_id", empresa_id).eq("orcamento_id", orcamento_id).execute()
     total = sum(float(item.get("valor_total") or 0) for item in (produtos.data or []))
-    supabase.table("orcamentos").update({"valor_total": total}).eq("id", orcamento_id).execute()
+    supabase.table("orcamentos").update({"valor_total": total}).eq("empresa_id", empresa_id).eq("id", orcamento_id).execute()
     return total
 
 
@@ -208,7 +210,7 @@ def criar_orcamento(payload: dict, request: Request, current_user: dict = Depend
     if not cliente:
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
     loja = buscar_loja_principal(supabase, empresa_id)
-    dados = {"empresa_id": empresa_id, "cliente_id": cliente_id, "numero_pedido": str(proximo_numero_orcamento(supabase, cliente_id)), "nome_orcamento": nome_orcamento, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
+    dados = {"empresa_id": empresa_id, "cliente_id": cliente_id, "numero_pedido": str(proximo_numero_orcamento(supabase, empresa_id, cliente_id)), "nome_orcamento": nome_orcamento, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
     if loja:
         dados["loja_id"] = loja["id"]
     result = supabase.table("orcamentos").insert(dados).execute()
@@ -233,7 +235,7 @@ def editar_orcamento(payload: dict, request: Request, current_user: dict = Depen
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
     numero_pedido = str(orcamento.get("numero_pedido") or "")
     if str(orcamento.get("cliente_id") or "") != cliente_id:
-        numero_pedido = str(proximo_numero_orcamento(supabase, cliente_id))
+        numero_pedido = str(proximo_numero_orcamento(supabase, empresa_id, cliente_id))
     dados = {"cliente_id": cliente_id, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "numero_pedido": numero_pedido, "nome_orcamento": nome_orcamento}
     result = supabase.table("orcamentos").update(dados).eq("empresa_id", empresa_id).eq("id", orcamento_id).execute()
     if not result.data:
@@ -286,8 +288,8 @@ def cadastrar_produto_orcamento(payload: dict, request: Request, current_user: d
         raise HTTPException(status_code=400, detail="Orcamento nao encontrado")
     dados = {"empresa_id": empresa_id, "orcamento_id": orcamento_id, "nome": nome, "quantidade": quantidade, "valor_unitario": valor_unitario, "valor_total": quantidade * valor_unitario}
     result = supabase.table("orcamento_produtos").insert(dados).execute()
-    recalcular_valor_orcamento(supabase, orcamento_id)
     if not result.data:
         raise HTTPException(status_code=400, detail="Produto nao cadastrado")
+    recalcular_valor_orcamento(supabase, empresa_id, orcamento_id)
     audit_event(current_user, "criar", "orcamento_produto", result.data[0].get("id"), None, result.data[0], request)
     return result.data[0]
