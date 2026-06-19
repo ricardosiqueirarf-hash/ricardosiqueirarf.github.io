@@ -52,7 +52,7 @@ export default function CadastroPage() {
           <label>Nome da empresa<input required minLength={2} value={form.empresa_nome} onChange={(event) => updateField("empresa_nome", event.target.value)} /></label>
           <label>Seu nome<input required minLength={2} value={form.nome} onChange={(event) => updateField("nome", event.target.value)} /></label>
           <label>E-mail<input required type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} /></label>
-          <label>Senha<input required minLength={6} type="password" value={form.senha} onChange={(event) => updateField("senha", event.target.value)} /></label>
+          <label>Senha<input required minLength={8} type="password" value={form.senha} onChange={(event) => updateField("senha", event.target.value)} /></label>
           <button type="submit">Criar ambiente</button>
         </form>
         {mensagem && <p style={{ marginTop: 16 }}>{mensagem}</p>}
