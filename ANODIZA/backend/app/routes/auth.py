@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
 from app.core.auth import audit_event, create_session, get_current_user, revoke_current_session
@@ -7,6 +9,7 @@ from app.db.supabase_client import get_supabase
 from app.models.schemas import CadastroRequest, LoginRequest
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def sanitize_user(usuario: dict) -> dict:
@@ -21,14 +24,24 @@ def sanitize_user(usuario: dict) -> dict:
     }
 
 
+def normalize_rpc_data(data):
+    if isinstance(data, dict):
+        return data
+    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
+        return data[0]
+    return None
+
+
 def run_rpc(name: str, payload: dict):
     try:
         result = get_supabase().rpc(name, {"payload": payload}).execute()
     except Exception as error:
+        logger.exception("Falha ao executar RPC de autenticacao: %s", name)
         raise HTTPException(status_code=400, detail="Operacao nao realizada") from error
-    if not result.data:
+    data = normalize_rpc_data(result.data)
+    if not data:
         raise HTTPException(status_code=400, detail="Operacao nao realizada")
-    return result.data
+    return data
 
 
 def issue_login_response(data: dict, request: Request):
@@ -55,9 +68,7 @@ def cadastro(payload: CadastroRequest, request: Request):
         settings.auth_rate_limit_attempts,
         settings.auth_rate_limit_window_seconds,
     )
-    dados = payload.model_dump()
-    dados["loja_nome"] = dados["empresa_nome"]
-    return issue_login_response(run_rpc("cadastro_empresa", dados), request)
+    return issue_login_response(run_rpc("cadastro_empresa", payload.model_dump()), request)
 
 
 @router.post("/login")
