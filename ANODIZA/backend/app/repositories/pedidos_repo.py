@@ -13,7 +13,8 @@ def buscar(empresa_id: str, item_id: str):
     return result.data[0] if result.data else None
 
 
-def inserir(dados: dict):
+def inserir(empresa_id: str, dados: dict):
+    dados = {**dados, "empresa_id": empresa_id}
     result = supabase_client().table("orcamentos").insert(dados).execute()
     return result.data[0] if result.data else None
 
@@ -28,10 +29,24 @@ def listar_linhas(empresa_id: str, item_id: str):
     return result.data or []
 
 
-def inserir_linha(dados: dict):
+def inserir_linha(empresa_id: str, dados: dict):
+    dados = {**dados, "empresa_id": empresa_id}
     result = supabase_client().table("orcamento_produtos").insert(dados).execute()
     return result.data[0] if result.data else None
 
 
-def atualizar_total(item_id: str, total: float):
-    supabase_client().table("orcamentos").update({"valor_total": total}).eq("id", item_id).execute()
+def atualizar_total(empresa_id: str, item_id: str, total: float):
+    supabase_client().table("orcamentos").update({"valor_total": total}).eq("empresa_id", empresa_id).eq("id", item_id).execute()
+
+
+def listar_numeros_por_cliente(empresa_id: str, cliente_id: str):
+    result = (
+        supabase_client()
+        .table("orcamentos")
+        .select("numero_pedido")
+        .eq("empresa_id", empresa_id)
+        .eq("cliente_id", cliente_id)
+        .limit(2000)
+        .execute()
+    )
+    return result.data or []
