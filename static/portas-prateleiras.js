@@ -84,7 +84,7 @@
         if (typeof atualizarDobradicasInputs === "function") atualizarDobradicasInputs();
         if (typeof atualizarLimiteDobradicas === "function") atualizarLimiteDobradicas();
 
-        if (tipo === "deslizante" || tipo === "correr") {
+        if (tipo === "deslizante" || tipo === "correr" || tipo === "divisao_ambiente") {
             if (typeof carregarSistemas === "function") {
                 carregarSistemas().then(() => {
                     if (typeof atualizarTrilhosDoSistema === "function") atualizarTrilhosDoSistema();
@@ -96,6 +96,7 @@
         if (typeof desenharPorta === "function") desenharPorta();
         if (typeof atualizarCamposObrigatorios === "function") atualizarCamposObrigatorios();
     }
+    renderCamposPrateleiras.__prateleirasFix = true;
 
     function calcularMedidasPortaComPrateleiras() {
         const larguraMm = numeroCampo("largura");
@@ -162,8 +163,11 @@
         instalarTipologiaPrateleiras();
 
         try {
-            window.renderCampos = renderCamposPrateleiras;
-            renderCampos = renderCamposPrateleiras;
+            const renderAtual = typeof window.renderCampos === "function" ? window.renderCampos : null;
+            if (!renderAtual || (!renderAtual.__divisaoAmbienteFix && !renderAtual.__prateleirasFix)) {
+                window.renderCampos = renderCamposPrateleiras;
+                renderCampos = renderCamposPrateleiras;
+            }
         } catch (_) {}
 
         try {
