@@ -5,6 +5,7 @@ from typing import Callable
 
 from fastapi import Depends, Header, HTTPException, Request
 
+from app.core.config import get_settings
 from app.db.supabase_client import get_supabase
 
 PERMISSOES_PADRAO = {
@@ -58,7 +59,7 @@ def _client_ip(request: Request) -> str:
 def create_session(usuario: dict, request: Request) -> str:
     session_key = generate_session_key()
     session_hash = hash_session_key(session_key)
-    expira_em = (datetime.now(timezone.utc) + timedelta(hours=12)).isoformat()
+    expira_em = (datetime.now(timezone.utc) + timedelta(minutes=get_settings().session_minutes)).isoformat()
     get_supabase().table("controle_sistema").insert({
         "chave_hash": session_hash,
         "pessoa": usuario["id"],
