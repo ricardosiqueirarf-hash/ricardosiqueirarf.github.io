@@ -6,6 +6,7 @@ from app.schemas.materiais import MaterialCreate, MaterialDelete, MaterialUpdate
 
 
 TIPOLOGIAS_VALIDAS = {"giro", "deslizante", "divisao_ambiente", "pivotante", "estrutural", "prateleiras"}
+CATEGORIAS_AGREGAVEIS = {"perfil", "vidro", "puxador", "insumo", "trilho", "componente", "sistema", "outro"}
 
 
 def calcular_preco(custo: float, margem: float, perda: float) -> float:
@@ -94,21 +95,44 @@ def montar_dados(empresa_id: str, payload: MaterialCreate, configuracao: dict):
 
 def validar_configuracao(empresa_id: str, categoria: str, configuracao: dict):
     config = dict(configuracao or {})
+    agregados = dict(config.get("agregados") or {})
 
-    if categoria != "perfil":
-        return config
+    if categoria == "perfil":
+        tipologias = [t for t in config.get("tipologias", []) if t in TIPOLOGIAS_VALIDAS]
+        if not tipologias:
+            raise HTTPException(status_code=400, detail="Selecione ao menos uma tipologia para o perfil")
 
-    tipologias = [t for t in config.get("tipologias", []) if t in TIPOLOGIAS_VALIDAS]
-    if not tipologias:
-        raise HTTPException(status_code=400, detail="Selecione ao menos uma tipologia para o perfil")
+        insumos_ids = validar_materiais_relacionados(empresa_id, config.get("insumos_ids", []), categorias_validas={"insumo", "trilho", "componente", "outro"})
+        puxadores_ids = validar_materiais_relacionados(empresa_id, config.get("puxadores_ids", []), categorias_validas={"puxador"})
 
-    insumos_ids = validar_materiais_relacionados(empresa_id, config.get("insumos_ids", []), categorias_validas={"insumo", "trilho", "componente", "outro"})
-    puxadores_ids = validar_materiais_relacionados(empresa_id, config.get("puxadores_ids", []), categorias_validas={"puxador"})
+        config["tipologias"] = tipologias
+        config["insumos_ids"] = insumos_ids
+        config["puxadores_ids"] = puxadores_ids
+        agregados["puxador"] = puxadores_ids
 
-    config["tipologias"] = tipologias
-    config["insumos_ids"] = insumos_ids
-    config["puxadores_ids"] = puxadores_ids
+    if categoria == "sistema":
+        trilhos_ids = validar_materiais_relacionados(empresa_id, config.get("trilhos_ids", []), categorias_validas={"trilho"})
+        perfis_ids = validar_materiais_relacionados(empresa_id, config.get("perfis_ids", []), categorias_validas={"perfil"})
+
+        config["trilhos_ids"] = trilhos_ids
+        config["perfis_ids"] = perfis_ids
+        agregados["trilho"] = trilhos_ids
+        agregados["perfil"] = perfis_ids
+
+    config["agregados"] = validar_agregados(empresa_id, agregados)
     return config
+
+
+def validar_agregados(empresa_id: str, agregados: dict):
+    agregados_validos: dict[str, list[str]] = {}
+    for categoria, ids in (agregados or {}).items():
+        categoria_texto = str(categoria or "").strip()
+        if categoria_texto not in CATEGORIAS_AGREGAVEIS:
+            continue
+        ids_validos = validar_materiais_relacionados(empresa_id, ids or [], categorias_validas={categoria_texto})
+        if ids_validos:
+            agregados_validos[categoria_texto] = ids_validos
+    return agregados_validos
 
 
 def validar_materiais_relacionados(empresa_id: str, ids: list[str], categorias_validas: set[str]):
@@ -120,6 +144,8 @@ def validar_materiais_relacionados(empresa_id: str, ids: list[str], categorias_v
             raise HTTPException(status_code=400, detail="Material relacionado nao encontrado")
         if material.get("categoria") not in categorias_validas:
             raise HTTPException(status_code=400, detail="Material relacionado possui categoria invalida")
-        ids_validos.append(str(material_id))
+        material_id_str = str(material_id)
+        if material_id_str not in ids_validos:
+            ids_validos.append(material_id_str)
 
     return ids_validos
