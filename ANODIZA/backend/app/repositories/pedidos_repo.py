@@ -56,6 +56,18 @@ def atualizar_total(empresa_id: str, item_id: str, total: float):
     supabase_client().table("orcamentos").update({"valor_total": total}).eq("empresa_id", empresa_id).eq("id", item_id).execute()
 
 
+def listar_numeros_por_empresa(empresa_id: str):
+    result = (
+        supabase_client()
+        .table("orcamentos")
+        .select("numero_pedido")
+        .eq("empresa_id", empresa_id)
+        .limit(5000)
+        .execute()
+    )
+    return result.data or []
+
+
 def listar_numeros_por_cliente(empresa_id: str, cliente_id: str):
     result = (
         supabase_client()
