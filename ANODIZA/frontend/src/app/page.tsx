@@ -7,10 +7,21 @@ const metrics = [
 ];
 
 const features = [
-  "Orcamentos inteligentes para portas de aluminio e vidro",
-  "Gestao multiempresa com usuarios, permissoes e auditoria",
-  "Base pronta para WhatsApp, CRM, pagamentos e producao",
+  {
+    title: "Orcamento de portas e estruturas 3D",
+    body: "Calcule portas de aluminio e vidro com suas proprias regras de precificacao — e avance para estruturas complexas em tres dimensoes, sem depender de planilhas ou modelos fixos.",
+  },
+  {
+    title: "Regras de negocio sob medida",
+    body: "Cada empresa tem sua propria forma de precificar. O Anodiza se adapta as suas regras, nao o contrario.",
+  },
+  {
+    title: "Financeiro centralizado de verdade",
+    body: "Organize recebimentos, pagamentos e conciliacao em uma base pronta para integracao com Inter, Asaas, Santander e outros bancos.",
+  },
 ];
+
+const ecosystem = ["CRM", "ERP", "WhatsApp", "Inter", "Asaas", "Santander", "API-ready"];
 
 export default function HomePage() {
   return (
@@ -38,21 +49,21 @@ export default function HomePage() {
         <div className="home-hero-copy">
           <div className="home-badge">
             <span className="home-badge-dot" />
-            Plataforma SaaS para vidro e aluminio
+            Plataforma SaaS para empresas de portas de aluminio e vidro
           </div>
 
           <h1>
-            O sistema premium para empresas de <span>portas de aluminio e vidro.</span>
+            Orce portas de aluminio, vidro e estruturas 3D <span>com as regras do seu negocio.</span>
           </h1>
 
           <p className="home-subtitle">
-            Centralize clientes, orcamentos e usuarios em uma base moderna,
-            escalavel e pronta para transformar operacoes moveleiras em software de alta performance.
+            Centralize orcamentos, estoque, financeiro e clientes em uma plataforma moldada
+            para a forma como sua empresa realmente precifica, produz e vende.
           </p>
 
           <div className="home-hero-actions">
             <Link href="/cadastro" className="home-primary-button">
-              Criar primeiro acesso
+              Testar gratuitamente
               <span aria-hidden="true">→</span>
             </Link>
             <Link href="/login" className="home-secondary-button">
@@ -61,10 +72,10 @@ export default function HomePage() {
           </div>
 
           <div className="home-trust-row" aria-label="Destaques do produto">
+            <span>Orcamento 3D</span>
+            <span>Regras proprias</span>
             <span>Multiempresa</span>
-            <span>Permissoes</span>
-            <span>Auditoria</span>
-            <span>API-ready</span>
+            <span>Integracoes</span>
           </div>
         </div>
 
@@ -119,13 +130,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="home-feature-strip" aria-label="Recursos principais">
+      <section className="home-feature-strip" aria-label="Diferenciais principais">
         {features.map((feature, index) => (
-          <article className="home-feature-card" key={feature}>
+          <article className="home-feature-card" key={feature.title}>
             <span>0{index + 1}</span>
-            <p>{feature}</p>
+            <strong>{feature.title}</strong>
+            <p>{feature.body}</p>
           </article>
         ))}
+      </section>
+
+      <section className="home-content-section">
+        <p className="home-section-kicker">Para quem decide</p>
+        <h2>Feito para quem dirige a operacao, nao so para quem usa o sistema</h2>
+        <p>
+          Voce nao precisa de mais uma ferramenta generica de gestao. Precisa de um sistema que entenda
+          como sua fabrica ou loja realmente orca, produz, cobra e entrega — crescendo junto com as regras
+          especificas do seu negocio.
+        </p>
+      </section>
+
+      <section className="home-content-section home-ecosystem-section">
+        <p className="home-section-kicker">Ecossistema</p>
+        <h2>Construido para se conectar com o que voce ja usa</h2>
+        <p>
+          APIs para CRM, ERP, WhatsApp e os principais bancos do mercado — para parar de operar em silos.
+        </p>
+        <div className="home-ecosystem-row" aria-label="Integracoes e canais">
+          {ecosystem.map((item) => <span key={item}>{item}</span>)}
+        </div>
       </section>
     </main>
   );
