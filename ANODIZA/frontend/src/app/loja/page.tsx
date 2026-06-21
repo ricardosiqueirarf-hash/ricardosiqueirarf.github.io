@@ -14,6 +14,9 @@ type AuthMe = { ok: boolean; usuario: Usuario };
 type Cliente = { id: string; nome: string; documento?: string; email?: string; telefone?: string };
 type Orcamento = { id: string; nome_orcamento: string; cliente_nome: string; numero_pedido: string; status: string; valor_total: number; cliente_id?: string };
 
+type ClienteForm = { nome: string; documento: string; email: string; telefone: string };
+type OrcamentoForm = { nome_orcamento: string; cliente_id: string };
+
 const basePermissoes: Permissoes = {
   painel: true,
   orcamentos: true,
@@ -38,14 +41,17 @@ const masterPermissoes: Permissoes = {
 
 const titulos: Record<Aba, { titulo: string; subtitulo: string }> = {
   painel: { titulo: "Central operacional", subtitulo: "Visão geral da loja, sessão e módulos ativos." },
-  orcamentos: { titulo: "Orçamentos", subtitulo: "Criação e acompanhamento de propostas comerciais." },
+  orcamentos: { titulo: "Orçamentos", subtitulo: "Criação, edição, aprovação e acompanhamento de propostas comerciais." },
   clientes: { titulo: "Clientes", subtitulo: "Base comercial conectada aos pedidos e orçamentos." },
   usuarios: { titulo: "Usuários", subtitulo: "Acessos internos, perfis e permissões da empresa." },
   produtos: { titulo: "Produtos configuráveis", subtitulo: "A empresa cria seus próprios produtos e regras de cálculo." },
-  materiais: { titulo: "Materiais", subtitulo: "Perfis, vidros, puxadores, insumos e componentes." },
+  materiais: { titulo: "Materiais", subtitulo: "Perfis, sistemas, vidros, puxadores, trilhos, insumos e componentes." },
   tags: { titulo: "Tags inteligentes", subtitulo: "Características e regras de negócio para cálculo automático." },
   ajustes: { titulo: "Ajustes", subtitulo: "Configurações administrativas do ambiente." },
 };
+
+const clienteVazio: ClienteForm = { nome: "", documento: "", email: "", telefone: "" };
+const orcamentoVazio: OrcamentoForm = { nome_orcamento: "", cliente_id: "" };
 
 function normalizar(permissoes?: Partial<Permissoes>, perfil?: string): Permissoes {
   if (perfil === "owner") return masterPermissoes;
@@ -66,8 +72,10 @@ export default function LojaPage() {
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [mensagem, setMensagem] = useState("");
-  const [novoCliente, setNovoCliente] = useState({ nome: "", documento: "", email: "", telefone: "" });
-  const [novoOrcamento, setNovoOrcamento] = useState({ nome_orcamento: "", cliente_id: "" });
+  const [clienteForm, setClienteForm] = useState<ClienteForm>(clienteVazio);
+  const [clienteEditandoId, setClienteEditandoId] = useState("");
+  const [orcamentoForm, setOrcamentoForm] = useState<OrcamentoForm>(orcamentoVazio);
+  const [orcamentoEditandoId, setOrcamentoEditandoId] = useState("");
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", email: "", perfil: "vendedor", senha: "" });
 
   const permissoes = normalizar(usuario?.permissoes, usuario?.perfil);
@@ -129,25 +137,89 @@ export default function LojaPage() {
     router.push("/login");
   }
 
-  async function criarCliente(event: React.FormEvent<HTMLFormElement>) {
+  function resetarCliente() {
+    setClienteForm(clienteVazio);
+    setClienteEditandoId("");
+  }
+
+  function editarCliente(cliente: Cliente) {
+    setClienteEditandoId(cliente.id);
+    setClienteForm({
+      nome: cliente.nome || "",
+      documento: cliente.documento || "",
+      email: cliente.email || "",
+      telefone: cliente.telefone || "",
+    });
+    setMensagem("");
+  }
+
+  async function salvarCliente(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMensagem("");
     try {
-      await apiPost("/api/loja/clientes", { empresa_slug: empresaSlug, ...novoCliente });
-      setNovoCliente({ nome: "", documento: "", email: "", telefone: "" });
+      if (clienteEditandoId) {
+        await apiPost("/api/loja/clientes/editar", { empresa_slug: empresaSlug, id: clienteEditandoId, ...clienteForm });
+      } else {
+        await apiPost("/api/loja/clientes", { empresa_slug: empresaSlug, ...clienteForm });
+      }
+      resetarCliente();
       await carregarClientes(empresaSlug);
     } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao criar cliente");
+      setMensagem(error instanceof Error ? error.message : "Erro ao salvar cliente");
     }
   }
 
-  async function criarOrcamento(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function apagarCliente(cliente: Cliente) {
+    if (!window.confirm(`Apagar ${cliente.nome}? O cliente será removido da lista, mas orçamentos antigos continuam preservados.`)) return;
+    setMensagem("");
     try {
-      await apiPost("/api/loja/orcamentos", { empresa_slug: empresaSlug, ...novoOrcamento });
-      setNovoOrcamento({ nome_orcamento: "", cliente_id: "" });
+      await apiPost("/api/loja/clientes/excluir", { empresa_slug: empresaSlug, id: cliente.id });
+      if (clienteEditandoId === cliente.id) resetarCliente();
+      await carregarClientes(empresaSlug);
+    } catch (error) {
+      setMensagem(error instanceof Error ? error.message : "Erro ao apagar cliente");
+    }
+  }
+
+  function resetarOrcamento() {
+    setOrcamentoForm(orcamentoVazio);
+    setOrcamentoEditandoId("");
+  }
+
+  function editarOrcamento(orcamento: Orcamento) {
+    setOrcamentoEditandoId(orcamento.id);
+    setOrcamentoForm({
+      nome_orcamento: orcamento.nome_orcamento || "",
+      cliente_id: orcamento.cliente_id || "",
+    });
+    setMensagem("");
+  }
+
+  async function salvarOrcamento(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMensagem("");
+    try {
+      if (orcamentoEditandoId) {
+        await apiPost("/api/loja/orcamentos/editar", { empresa_slug: empresaSlug, id: orcamentoEditandoId, ...orcamentoForm });
+      } else {
+        await apiPost("/api/loja/orcamentos", { empresa_slug: empresaSlug, ...orcamentoForm });
+      }
+      resetarOrcamento();
       await carregarOrcamentos(empresaSlug);
     } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao criar orcamento");
+      setMensagem(error instanceof Error ? error.message : "Erro ao salvar orçamento");
+    }
+  }
+
+  async function aprovarOrcamento(orcamento: Orcamento) {
+    if (orcamento.status === "aprovado") return;
+    if (!window.confirm(`Aprovar orçamento ${orcamento.nome_orcamento}?`)) return;
+    setMensagem("");
+    try {
+      await apiPost("/api/loja/orcamentos/aprovar", { empresa_slug: empresaSlug, id: orcamento.id });
+      await carregarOrcamentos(empresaSlug);
+    } catch (error) {
+      setMensagem(error instanceof Error ? error.message : "Erro ao aprovar orçamento");
     }
   }
 
@@ -208,14 +280,66 @@ export default function LojaPage() {
         </header>
 
         {mensagem && <p>{mensagem}</p>}
+
         {aba === "painel" && <section className="card"><h1>Painel da Loja</h1><p>Usuário validado pelo backend. O menu é apenas visual; o bloqueio real está na API.</p><div className="grid"><div className="metric"><p>Clientes carregados</p><strong>{clientes.length}</strong></div><div className="metric"><p>Perfil</p><strong>{usuario.perfil || "-"}</strong></div><div className="metric"><p>Empresa ativa</p><strong>{empresaSlug || "-"}</strong></div></div></section>}
-        {aba === "clientes" && <section className="card" style={{ maxWidth: "none" }}><h1>Clientes</h1><form onSubmit={criarCliente}><label>Nome<input value={novoCliente.nome} onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })} /></label><label>CPF/CNPJ<input value={novoCliente.documento} onChange={(e) => setNovoCliente({ ...novoCliente, documento: e.target.value })} /></label><label>E-mail<input value={novoCliente.email} onChange={(e) => setNovoCliente({ ...novoCliente, email: e.target.value })} /></label><label>Celular<input value={novoCliente.telefone} onChange={(e) => setNovoCliente({ ...novoCliente, telefone: e.target.value })} /></label><button>Cadastrar</button></form>{clientes.map((c) => <div className="metric" key={c.id}><strong>{c.nome}</strong><p>{c.documento || "Sem documento"} • {c.email || "Sem e-mail"} • {c.telefone || "Sem telefone"}</p></div>)}</section>}
-        {aba === "orcamentos" && <section className="card" style={{ maxWidth: "none" }}><h1>Orçamentos</h1><form onSubmit={criarOrcamento}><label>Nome<input value={novoOrcamento.nome_orcamento} onChange={(e) => setNovoOrcamento({ ...novoOrcamento, nome_orcamento: e.target.value })} /></label><label>Cliente<select value={novoOrcamento.cliente_id} onChange={(e) => setNovoOrcamento({ ...novoOrcamento, cliente_id: e.target.value })}><option value="">Selecione</option>{clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></label><button>Criar</button></form>{orcamentos.map((o) => <div className="metric" key={o.id}><strong>{o.nome_orcamento}</strong><p>{o.cliente_nome} • #{o.numero_pedido} • {o.status} • {dinheiro(o.valor_total)}</p></div>)}</section>}
+
+        {aba === "clientes" && (
+          <section className="card" style={{ maxWidth: "none" }}>
+            <h1>Clientes</h1>
+            <form onSubmit={salvarCliente}>
+              <label>Nome<input value={clienteForm.nome} onChange={(e) => setClienteForm({ ...clienteForm, nome: e.target.value })} /></label>
+              <label>CPF/CNPJ<input value={clienteForm.documento} onChange={(e) => setClienteForm({ ...clienteForm, documento: e.target.value })} /></label>
+              <label>E-mail<input value={clienteForm.email} onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })} /></label>
+              <label>Celular<input value={clienteForm.telefone} onChange={(e) => setClienteForm({ ...clienteForm, telefone: e.target.value })} /></label>
+              <button>{clienteEditandoId ? "Salvar alterações" : "Cadastrar"}</button>
+              {clienteEditandoId && <button type="button" onClick={resetarCliente}>Cancelar edição</button>}
+            </form>
+            <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
+              {clientes.map((c) => (
+                <div className="metric" key={c.id}>
+                  <strong>{c.nome}</strong>
+                  <p>{c.documento || "Sem documento"} • {c.email || "Sem e-mail"} • {c.telefone || "Sem telefone"}</p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button type="button" onClick={() => editarCliente(c)}>Editar</button>
+                    <button type="button" onClick={() => apagarCliente(c)}>Apagar</button>
+                  </div>
+                </div>
+              ))}
+              {!clientes.length && <p>Nenhum cliente cadastrado.</p>}
+            </div>
+          </section>
+        )}
+
+        {aba === "orcamentos" && (
+          <section className="card" style={{ maxWidth: "none" }}>
+            <h1>Orçamentos</h1>
+            <form onSubmit={salvarOrcamento}>
+              <label>Nome<input value={orcamentoForm.nome_orcamento} onChange={(e) => setOrcamentoForm({ ...orcamentoForm, nome_orcamento: e.target.value })} /></label>
+              <label>Cliente<select value={orcamentoForm.cliente_id} onChange={(e) => setOrcamentoForm({ ...orcamentoForm, cliente_id: e.target.value })}><option value="">Selecione</option>{clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></label>
+              <button>{orcamentoEditandoId ? "Salvar alterações" : "Criar"}</button>
+              {orcamentoEditandoId && <button type="button" onClick={resetarOrcamento}>Cancelar edição</button>}
+            </form>
+            <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
+              {orcamentos.map((o) => (
+                <div className="metric" key={o.id}>
+                  <strong>{o.nome_orcamento}</strong>
+                  <p>{o.cliente_nome} • #{o.numero_pedido} • {o.status} • {dinheiro(o.valor_total)}</p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button type="button" onClick={() => editarOrcamento(o)}>Editar nome/cliente</button>
+                    <button type="button" onClick={() => aprovarOrcamento(o)} disabled={o.status === "aprovado"}>{o.status === "aprovado" ? "Aprovado" : "Aprovar"}</button>
+                  </div>
+                </div>
+              ))}
+              {!orcamentos.length && <p>Nenhum orçamento cadastrado.</p>}
+            </div>
+          </section>
+        )}
+
         {aba === "usuarios" && isMaster && <section className="card" style={{ maxWidth: "none" }}><h1>Usuários</h1><form onSubmit={criarUsuario}><label>Nome<input value={novoUsuario.nome} onChange={(e) => setNovoUsuario({ ...novoUsuario, nome: e.target.value })} /></label><label>E-mail<input value={novoUsuario.email} onChange={(e) => setNovoUsuario({ ...novoUsuario, email: e.target.value })} /></label><label>Senha inicial<input type="password" value={novoUsuario.senha} onChange={(e) => setNovoUsuario({ ...novoUsuario, senha: e.target.value })} /></label><label>Perfil<select value={novoUsuario.perfil} onChange={(e) => setNovoUsuario({ ...novoUsuario, perfil: e.target.value })}><option value="vendedor">Vendedor</option><option value="financeiro">Financeiro</option><option value="producao">Produção</option><option value="gerente">Gerente</option></select></label><button>Criar</button></form>{usuarios.map((u) => <div className="metric" key={u.id}><strong>{u.nome}</strong><p>{u.email} • {u.perfil}</p>{u.perfil === "owner" ? <p>Master com acesso total.</p> : <button onClick={() => salvarPermissoes(u, normalizar(u.permissoes, u.perfil))}>Salvar acessos atuais</button>}</div>)}</section>}
         {aba === "produtos" && <ProdutosPanel empresaSlug={empresaSlug} />}
         {aba === "materiais" && <MateriaisPanel empresaSlug={empresaSlug} />}
         {aba === "tags" && <TagsPanel empresaSlug={empresaSlug} />}
-        {aba === "ajustes" && <section className="card"><h1>Ajustes</h1><p>Área protegida por permissão real no backend.</p></section>}
+        {aba === "ajustes" && <section className="card"><h1>Ajustes</h1><p>Configurações gerais da empresa em breve.</p></section>}
       </section>
     </main>
   );
