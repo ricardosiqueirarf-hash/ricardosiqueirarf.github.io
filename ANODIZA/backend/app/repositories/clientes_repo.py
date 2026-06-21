@@ -1,11 +1,14 @@
 from app.repositories.common import supabase_client
 
 
+CLIENTE_SELECT = "id,empresa_id,loja_id,nome,documento,email,telefone,ativo"
+
+
 def listar_clientes(empresa_id: str, limit: int = 500, offset: int = 0):
     return (
         supabase_client()
         .table("clientes")
-        .select("id,nome,documento,email,telefone,ativo")
+        .select(CLIENTE_SELECT)
         .eq("empresa_id", empresa_id)
         .order("created_at", desc=False)
         .range(offset, offset + limit - 1)
@@ -21,7 +24,7 @@ def buscar_cliente(empresa_id: str, cliente_id: str):
     result = (
         supabase_client()
         .table("clientes")
-        .select("id,nome,documento,email,telefone,ativo")
+        .select(CLIENTE_SELECT)
         .eq("empresa_id", empresa_id)
         .eq("id", cliente_id)
         .limit(1)
@@ -34,7 +37,7 @@ def buscar_por_nome(empresa_id: str, nome: str):
     result = (
         supabase_client()
         .table("clientes")
-        .select("id,nome,documento,email,telefone,ativo")
+        .select(CLIENTE_SELECT)
         .eq("empresa_id", empresa_id)
         .ilike("nome", nome)
         .limit(1)
