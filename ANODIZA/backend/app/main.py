@@ -1,8 +1,24 @@
-from fastapi import FastAPI
+import json
+import logging
+import traceback
+from typing import Any
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.routes import auth, clientes, colaboradores, loja, pedidos, tenants
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+
+logger = logging.getLogger("anodiza")
 
 settings = get_settings()
 origins = [origin.strip().rstrip("/") for origin in settings.cors_origins.split(",") if origin.strip()]
@@ -22,6 +38,150 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+SENSITIVE_KEYS = {"senha", "password", "token", "chave_acesso", "authorization", "x-anodiza-key"}
+
+
+def mask_sensitive_data(value: Any) -> Any:
+    if isinstance(value, dict):
+        masked = {}
+
+        for key, item in value.items():
+            key_lower = str(key).lower()
+
+            if key_lower in SENSITIVE_KEYS:
+                masked[key] = "***"
+            else:
+                masked[key] = mask_sensitive_data(item)
+
+        return masked
+
+    if isinstance(value, list):
+        return [mask_sensitive_data(item) for item in value]
+
+    return value
+
+
+def mask_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    safe_errors = []
+
+    for error in errors:
+        safe_error = dict(error)
+        loc = safe_error.get("loc") or []
+        loc_parts = {str(part).lower() for part in loc}
+
+        if "input" in safe_error and loc_parts.intersection(SENSITIVE_KEYS):
+            safe_error["input"] = "***"
+        else:
+            safe_error = mask_sensitive_data(safe_error)
+
+        safe_errors.append(safe_error)
+
+    return safe_errors
+
+
+async def read_safe_body(request: Request) -> Any:
+    try:
+        raw_body = await request.body()
+
+        if not raw_body:
+            return None
+
+        try:
+            parsed = json.loads(raw_body.decode("utf-8"))
+            return mask_sensitive_data(parsed)
+        except Exception:
+            return raw_body.decode("utf-8", errors="replace")[:2000]
+
+    except Exception as error:
+        return f"Nao foi possivel ler body: {error}"
+
+
+@app.middleware("http")
+async def request_log_middleware(request: Request, call_next):
+    logger.info(
+        "REQUEST_START method=%s path=%s client=%s",
+        request.method,
+        request.url.path,
+        request.client.host if request.client else None,
+    )
+
+    response = await call_next(request)
+
+    logger.info(
+        "REQUEST_END method=%s path=%s status=%s",
+        request.method,
+        request.url.path,
+        response.status_code,
+    )
+
+    return response
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    safe_errors = mask_validation_errors(exc.errors())
+    safe_body = mask_sensitive_data(exc.body)
+
+    logger.error(
+        "VALIDATION_ERROR method=%s path=%s errors=%s body=%s",
+        request.method,
+        request.url.path,
+        safe_errors,
+        safe_body,
+    )
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": safe_errors,
+            "message": "Erro de validacao no payload enviado para a API.",
+        },
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    safe_body = await read_safe_body(request)
+
+    logger.warning(
+        "HTTP_ERROR method=%s path=%s status=%s detail=%s body=%s",
+        request.method,
+        request.url.path,
+        exc.status_code,
+        exc.detail,
+        safe_body,
+    )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=getattr(exc, "headers", None),
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    safe_body = await read_safe_body(request)
+
+    logger.error(
+        "UNHANDLED_ERROR method=%s path=%s error=%s body=%s traceback=%s",
+        request.method,
+        request.url.path,
+        str(exc),
+        safe_body,
+        traceback.format_exc(),
+    )
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Erro interno no servidor.",
+            "message": "Falha inesperada no backend. Veja os logs do Render.",
+        },
+    )
+
 
 app.include_router(tenants.router, prefix="/api/tenants", tags=["tenants"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
