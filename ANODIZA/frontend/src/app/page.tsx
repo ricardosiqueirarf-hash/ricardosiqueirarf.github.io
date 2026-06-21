@@ -112,11 +112,6 @@ export default function HomePage() {
                     <strong>Gestao de estoque</strong>
                     <p>Perfis • vidros • insumos • reposicao inteligente</p>
                   </div>
-                  <div className="home-door-preview" aria-hidden="true">
-                    <span className="home-door-frame" />
-                    <span className="home-door-glass" />
-                    <span className="home-door-handle" />
-                  </div>
                 </div>
               </div>
             </div>
