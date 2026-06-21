@@ -1,39 +1,17 @@
 import logging
 import traceback
-from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
 from app.core.auth import audit_event, create_session, get_current_user, revoke_current_session
 from app.core.config import get_settings
+from app.core.logging_utils import mask_sensitive_data
 from app.core.security import enforce_auth_rate_limit
 from app.db.supabase_client import get_supabase
 from app.models.schemas import CadastroRequest, LoginRequest
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-SENSITIVE_KEYS = {"senha", "password", "token", "chave_acesso", "authorization", "x-anodiza-key"}
-
-
-def mask_sensitive_data(value: Any) -> Any:
-    if isinstance(value, dict):
-        masked = {}
-
-        for key, item in value.items():
-            key_lower = str(key).lower()
-
-            if key_lower in SENSITIVE_KEYS:
-                masked[key] = "***"
-            else:
-                masked[key] = mask_sensitive_data(item)
-
-        return masked
-
-    if isinstance(value, list):
-        return [mask_sensitive_data(item) for item in value]
-
-    return value
 
 
 def sanitize_user(usuario: dict) -> dict:
