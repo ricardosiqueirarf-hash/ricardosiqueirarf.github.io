@@ -4,9 +4,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 TipoCampo = Literal["numero", "texto", "material", "booleano"]
-CategoriaMaterial = Literal["perfil", "vidro", "puxador", "insumo", "trilho", "componente", "outro"]
+CategoriaMaterial = Literal["perfil", "vidro", "puxador", "insumo", "trilho", "componente", "sistema", "outro"]
 OrigemComponente = Literal["campo_material", "insumos_do_material", "tag_regras", "valor_adicional"]
 BaseQuantidade = Literal["unidade", "quantidade", "area", "perimetro", "largura_m", "altura_m", "campo_numero", "campo_mm_para_m"]
+
+
+CATEGORIAS_MATERIAIS = {"perfil", "vidro", "puxador", "insumo", "trilho", "componente", "sistema", "outro"}
 
 
 class ProdutoConfiguravelCreate(BaseModel):
@@ -89,8 +92,10 @@ def normalizar_configuracao_produto(configuracao: dict[str, Any]) -> dict[str, A
         }
         if tipo == "material":
             categoria = str(campo.get("categoria") or "outro").strip()
-            item["categoria"] = categoria if categoria in {"perfil", "vidro", "puxador", "insumo", "trilho", "componente", "outro"} else "outro"
+            item["categoria"] = categoria if categoria in CATEGORIAS_MATERIAIS else "outro"
             item["permitir_sem_item"] = bool(campo.get("permitir_sem_item", False))
+            item["depende_de"] = _slug(str(campo.get("depende_de") or ""))
+            item["usar_agregados"] = bool(campo.get("usar_agregados", False))
         campos.append(item)
 
     for componente in config.get("componentes") or []:
