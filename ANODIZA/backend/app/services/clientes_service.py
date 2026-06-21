@@ -3,7 +3,7 @@ from fastapi import HTTPException, Request
 from app.core.auth import audit_event
 from app.repositories import clientes_repo
 from app.repositories.common import garantir_loja_operacional
-from app.schemas.clientes import ClienteCreate, ClienteUpdate
+from app.schemas.clientes import ClienteCreate, ClienteDelete, ClienteUpdate
 
 
 def listar(empresa_id: str, limit: int = 500, offset: int = 0):
@@ -61,3 +61,16 @@ def editar(empresa_id: str, payload: ClienteUpdate, current_user: dict, request:
         raise HTTPException(status_code=400, detail="Cliente nao atualizado")
     audit_event(current_user, "editar", "cliente", payload.id, anterior, cliente, request)
     return cliente
+
+
+def excluir(empresa_id: str, payload: ClienteDelete, current_user: dict, request: Request):
+    cliente = clientes_repo.buscar_cliente(empresa_id, payload.id)
+    if not cliente:
+        raise HTTPException(status_code=400, detail="Cliente nao encontrado")
+
+    arquivado = clientes_repo.arquivar_cliente(empresa_id, payload.id)
+    if not arquivado:
+        raise HTTPException(status_code=400, detail="Cliente nao removido")
+
+    audit_event(current_user, "excluir", "cliente", payload.id, cliente, arquivado, request)
+    return {"ok": True, "cliente": arquivado}
