@@ -3,7 +3,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-CategoriaMaterial = Literal["perfil", "vidro", "puxador", "insumo", "trilho", "componente", "outro"]
+CategoriaMaterial = Literal["perfil", "vidro", "puxador", "insumo", "trilho", "componente", "sistema", "outro"]
 UnidadeCalculo = Literal["unidade", "metro_linear", "metro_quadrado", "kit", "par"]
 OperadorRegra = Literal["contem_todas", "contem_qualquer"]
 
