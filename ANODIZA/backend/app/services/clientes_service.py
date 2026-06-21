@@ -2,7 +2,7 @@ from fastapi import HTTPException, Request
 
 from app.core.auth import audit_event
 from app.repositories import clientes_repo
-from app.repositories.common import buscar_loja_principal
+from app.repositories.common import garantir_loja_operacional
 from app.schemas.clientes import ClienteCreate, ClienteUpdate
 
 
@@ -19,16 +19,18 @@ def criar(empresa_id: str, payload: ClienteCreate, current_user: dict, request: 
     if existente:
         return existente
 
-    loja = buscar_loja_principal(empresa_id)
+    loja = garantir_loja_operacional(empresa_id)
+    if not loja:
+        raise HTTPException(status_code=400, detail="Nao foi possivel preparar a operacao interna para criar clientes")
+
     dados = {
         "empresa_id": empresa_id,
+        "loja_id": loja["id"],
         "nome": nome,
         "documento": payload.documento.strip(),
         "email": payload.email.strip().lower(),
         "telefone": payload.telefone.strip(),
     }
-    if loja:
-        dados["loja_id"] = loja["id"]
 
     cliente = clientes_repo.criar_cliente(dados)
     if not cliente:
