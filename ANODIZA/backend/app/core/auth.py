@@ -20,6 +20,7 @@ PERMISSOES_PADRAO = {
     "ajustes": False,
     "produtos": False,
     "materiais": False,
+    "tags": False,
 }
 
 PERMISSOES_MASTER = {
@@ -30,6 +31,7 @@ PERMISSOES_MASTER = {
     "ajustes": True,
     "produtos": True,
     "materiais": True,
+    "tags": True,
 }
 
 
