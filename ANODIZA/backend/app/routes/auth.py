@@ -87,13 +87,7 @@ def cadastro(payload: CadastroRequest, request: Request):
         settings.auth_rate_limit_window_seconds,
     )
 
-    dados = payload.model_dump()
-
-    # Compatibilidade com a RPC atual do Supabase:
-    # o formulário não mostra "nome da loja", mas a função cadastro_empresa ainda espera loja_nome.
-    dados["loja_nome"] = dados["empresa_nome"]
-
-    return issue_login_response(run_rpc("cadastro_empresa", dados), request)
+    return issue_login_response(run_rpc("cadastro_empresa", payload.model_dump()), request)
 
 
 @router.post("/login")
