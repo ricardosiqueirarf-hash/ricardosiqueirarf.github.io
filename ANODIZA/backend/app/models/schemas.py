@@ -3,12 +3,11 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 class CadastroRequest(BaseModel):
     empresa_nome: str = Field(min_length=2)
-    loja_nome: str = Field(min_length=2)
     nome: str = Field(min_length=2)
     email: EmailStr
-    senha: str = Field(min_length=6)
+    senha: str = Field(min_length=8)
 
-    @field_validator("empresa_nome", "loja_nome", "nome", "email", "senha", mode="before")
+    @field_validator("empresa_nome", "nome", "email", "senha", mode="before")
     @classmethod
     def strip_text(cls, value: str) -> str:
         return value.strip() if isinstance(value, str) else value
@@ -50,10 +49,9 @@ class UsuarioResponse(BaseModel):
 
 
 class AuthResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    usuario: UsuarioResponse
+    chave_acesso: str
     empresa_slug: str
+    usuario: UsuarioResponse
 
 
 class TenantResponse(BaseModel):
