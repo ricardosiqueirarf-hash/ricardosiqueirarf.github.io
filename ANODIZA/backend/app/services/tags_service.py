@@ -5,7 +5,7 @@ from app.repositories import materiais_repo, tags_repo
 from app.schemas.tags import MaterialTagsUpdate, RegraTagCreate, RegraTagDelete, RegraTagUpdate, TagCreate, TagDelete, TagUpdate
 
 
-CATEGORIAS_VALIDAS = {"perfil", "vidro", "puxador", "insumo", "trilho", "componente", "outro"}
+CATEGORIAS_VALIDAS = {"perfil", "vidro", "puxador", "insumo", "trilho", "componente", "sistema", "outro"}
 UNIDADES_VALIDAS = {"unidade", "metro_linear", "metro_quadrado", "kit", "par"}
 
 
