@@ -31,3 +31,13 @@ class ClienteUpdate(ClienteCreate):
     @classmethod
     def strip_id(cls, value: str) -> str:
         return value.strip() if isinstance(value, str) else value
+
+
+class ClienteDelete(BaseModel):
+    empresa_slug: str = ""
+    id: str = Field(min_length=1)
+
+    @field_validator("empresa_slug", "id", mode="before")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
