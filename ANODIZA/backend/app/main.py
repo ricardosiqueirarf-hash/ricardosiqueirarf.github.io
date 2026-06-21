@@ -11,7 +11,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.core.logging_utils import mask_sensitive_data, mask_validation_errors
-from app.routes import auth, clientes, colaboradores, loja, pedidos, tenants
+from app.routes import auth, clientes, colaboradores, loja, materiais, pedidos, tenants
 
 
 logging.basicConfig(
@@ -158,6 +158,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(clientes.router, prefix="/api/loja", tags=["loja-clientes"])
 app.include_router(colaboradores.router, prefix="/api/loja", tags=["loja-acessos"])
 app.include_router(pedidos.router, prefix="/api/loja", tags=["loja-orcamentos"])
+app.include_router(materiais.router, prefix="/api/loja", tags=["loja-materiais"])
 app.include_router(loja.router, prefix="/api/loja", tags=["loja-painel"])
 
 
