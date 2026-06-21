@@ -17,6 +17,7 @@ from asaas_client import criar_cobranca_boleto, obter_ou_criar_cliente
 TABELA_ASAAS_COBRANCAS = os.getenv("SUPABASE_TABLE_ASAAS_COBRANCAS", "asaas_cobrancas")
 LAST_APPROVAL_BOLETOS = {}
 LAST_APPROVAL_ERROS = {}
+LAST_PENDING_PARCELAMENTO = set()
 INSTALADO = False
 
 
@@ -52,6 +53,14 @@ def _money_br(valor):
     numero = _valor_decimal(valor)
     texto = f"{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"R$ {texto}"
+
+
+def _max_parcelas_telegram():
+    try:
+        max_parcelas = int(os.getenv("ASAAS_MAX_PARCELAS_TELEGRAM", "6") or 6)
+    except (TypeError, ValueError):
+        max_parcelas = 6
+    return max(1, min(max_parcelas, 12))
 
 
 def _buscar_orcamento(uuid):
@@ -151,7 +160,7 @@ def _listar_boletos_salvos(uuid):
     return r.json() or []
 
 
-def _salvar_cobranca(orcamento, cliente, parcela, valor, vencimento, customer_id, cobranca):
+def _salvar_cobranca(orcamento, cliente, parcela, valor, vencimento, customer_id, cobranca, percentual):
     from app import SUPABASE_URL, HEADERS
 
     external_reference = f"orcamento:{orcamento.get('id')}:parcela:{parcela}"
@@ -163,7 +172,7 @@ def _salvar_cobranca(orcamento, cliente, parcela, valor, vencimento, customer_id
         "cliente_email": cliente.get("email"),
         "cliente_whatsapp": _somente_digitos(cliente.get("whatsapp")),
         "parcela": parcela,
-        "percentual": 50,
+        "percentual": float(percentual),
         "valor": float(_valor_decimal(valor)),
         "vencimento": vencimento.isoformat(),
         "asaas_customer_id": customer_id,
@@ -186,9 +195,25 @@ def _salvar_cobranca(orcamento, cliente, parcela, valor, vencimento, customer_id
     return itens[0] if itens else payload
 
 
-def emitir_boletos_asaas_50_50(uuid):
+def _dividir_valor_em_parcelas(valor_total, parcelas):
+    parcelas = max(1, int(parcelas))
+    valor_total = _valor_decimal(valor_total)
+    valor_base = (valor_total / Decimal(parcelas)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    valores = [valor_base for _ in range(parcelas)]
+    diferenca = valor_total - sum(valores, Decimal("0.00"))
+    valores[-1] = (valores[-1] + diferenca).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return valores
+
+
+def emitir_boletos_asaas_parcelado(uuid, parcelas=2):
+    try:
+        parcelas = int(parcelas)
+    except (TypeError, ValueError):
+        parcelas = 2
+    parcelas = max(1, min(parcelas, _max_parcelas_telegram()))
+
     existentes = _listar_boletos_salvos(uuid)
-    if len(existentes) >= 2:
+    if len(existentes) >= parcelas:
         return existentes
 
     orcamento = _buscar_orcamento(uuid)
@@ -207,21 +232,15 @@ def emitir_boletos_asaas_50_50(uuid):
         raise ValueError("Asaas não retornou ID do cliente.")
 
     hoje = _agora_fortaleza_date()
-    vencimento_1 = hoje
-    vencimento_2 = _adicionar_dias_uteis(hoje, 8)
-
-    valor_1 = (valor_total / Decimal("2")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    valor_2 = (valor_total - valor_1).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
+    valores = _dividir_valor_em_parcelas(valor_total, parcelas)
+    percentual = (Decimal("100") / Decimal(parcelas)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     numero_pedido = orcamento.get("numero_pedido") or "-"
-    specs = [
-        (1, valor_1, vencimento_1, f"Pedido {numero_pedido} - Entrada 50%"),
-        (2, valor_2, vencimento_2, f"Pedido {numero_pedido} - Saldo 50%"),
-    ]
 
     boletos = []
-    for parcela, valor, vencimento, descricao in specs:
-        external_reference = f"orcamento:{uuid}:parcela:{parcela}"
+    for indice, valor in enumerate(valores, start=1):
+        vencimento = hoje if indice == 1 else _adicionar_dias_uteis(hoje, 7 * (indice - 1))
+        descricao = f"Pedido {numero_pedido} - Parcela {indice}/{parcelas}"
+        external_reference = f"orcamento:{uuid}:parcela:{indice}"
 
         if any(str(item.get("external_reference")) == external_reference for item in existentes):
             continue
@@ -233,9 +252,13 @@ def emitir_boletos_asaas_50_50(uuid):
             descricao=descricao,
             external_reference=external_reference,
         )
-        boletos.append(_salvar_cobranca(orcamento, cliente, parcela, valor, vencimento, customer_id, cobranca))
+        boletos.append(_salvar_cobranca(orcamento, cliente, indice, valor, vencimento, customer_id, cobranca, percentual))
 
     return _listar_boletos_salvos(uuid)
+
+
+def emitir_boletos_asaas_50_50(uuid):
+    return emitir_boletos_asaas_parcelado(uuid, 2)
 
 
 def _formatar_boletos_telegram(uuid, boletos):
@@ -272,6 +295,36 @@ def _validar_token_webhook():
     return recebido == esperado
 
 
+def _parse_parcelamento_callback(callback_data):
+    partes = str(callback_data or "").split(":")
+    if len(partes) != 3 or partes[0] != "parcelar_orcamento":
+        return None, None
+    uuid = partes[1].strip()
+    try:
+        parcelas = int(partes[2])
+    except (TypeError, ValueError):
+        return None, None
+    if not uuid or parcelas < 1 or parcelas > _max_parcelas_telegram():
+        return None, None
+    return uuid, parcelas
+
+
+def _parcelas_token(uuid, parcelas):
+    return f"{uuid}::parcelas::{parcelas}"
+
+
+def _parse_parcelas_token(valor):
+    texto = str(valor or "")
+    if "::parcelas::" not in texto:
+        return texto, None
+    uuid, parcelas_texto = texto.split("::parcelas::", 1)
+    try:
+        parcelas = int(parcelas_texto)
+    except (TypeError, ValueError):
+        parcelas = None
+    return uuid.strip(), parcelas
+
+
 def _registrar_endpoint_boletos(module):
     bp = module.orcamentos_bp
 
@@ -285,8 +338,10 @@ def _registrar_endpoint_boletos(module):
 
     @bp.route("/api/orcamento/<uuid>/emitir-boletos-asaas", methods=["POST"])
     def emitir_boletos_asaas_manual(uuid):
+        data = request.get_json(silent=True) or {}
+        parcelas = data.get("parcelas") or data.get("quantidade_parcelas") or 2
         try:
-            boletos = emitir_boletos_asaas_50_50(uuid)
+            boletos = emitir_boletos_asaas_parcelado(uuid, parcelas)
             return jsonify({"success": True, "boletos": boletos})
         except Exception as exc:
             return jsonify({"success": False, "error": str(exc)}), 500
@@ -326,30 +381,53 @@ def install(module):
     if INSTALADO:
         return
 
+    original_validar = module._validar_callback_orcamento
     original_aprovar = module._aprovar_orcamento_por_telegram
     original_editar = module._editar_mensagem_telegram
+    original_responder = module._responder_callback_telegram
+
+    def validar_callback_com_parcelamento(callback_data):
+        uuid_parcela, parcelas = _parse_parcelamento_callback(callback_data)
+        if uuid_parcela and parcelas:
+            return "aprovar_orcamento", _parcelas_token(uuid_parcela, parcelas)
+        return original_validar(callback_data)
 
     def aprovar_com_asaas(uuid):
-        resultado = original_aprovar(uuid)
+        uuid_real, parcelas = _parse_parcelas_token(uuid)
+        if not parcelas:
+            LAST_PENDING_PARCELAMENTO.add(uuid_real)
+            return {"success": True, "parcelamento_pendente": True, "uuid": uuid_real}
+
+        resultado = original_aprovar(uuid_real)
         if not resultado.get("success"):
             return resultado
 
         try:
-            boletos = emitir_boletos_asaas_50_50(uuid)
-            LAST_APPROVAL_BOLETOS[uuid] = boletos
-            LAST_APPROVAL_ERROS.pop(uuid, None)
+            boletos = emitir_boletos_asaas_parcelado(uuid_real, parcelas)
+            LAST_APPROVAL_BOLETOS[uuid_real] = boletos
+            LAST_APPROVAL_ERROS.pop(uuid_real, None)
+            LAST_PENDING_PARCELAMENTO.discard(uuid_real)
             resultado["asaas_success"] = True
+            resultado["parcelas"] = parcelas
             resultado["boletos"] = boletos
         except Exception as exc:
-            LAST_APPROVAL_ERROS[uuid] = str(exc)
+            LAST_APPROVAL_ERROS[uuid_real] = str(exc)
+            LAST_PENDING_PARCELAMENTO.discard(uuid_real)
             resultado["asaas_success"] = False
             resultado["asaas_error"] = str(exc)
 
         return resultado
 
+    def responder_callback_com_parcelamento(callback_query_id, texto):
+        if texto == "Pedido aprovado":
+            texto = "Escolha o parcelamento"
+        return original_responder(callback_query_id, texto)
+
     def editar_mensagem_com_boletos(message, texto):
         if texto == "Pedido aprovado":
             uuid = _extrair_uuid_mensagem(message)
+            if uuid and uuid in LAST_PENDING_PARCELAMENTO:
+                return _editar_mensagem_escolha_parcelas(message, uuid)
             if uuid and uuid in LAST_APPROVAL_BOLETOS:
                 texto = _formatar_boletos_telegram(uuid, LAST_APPROVAL_BOLETOS[uuid])
             elif uuid and uuid in LAST_APPROVAL_ERROS:
@@ -361,8 +439,49 @@ def install(module):
                 )
         return original_editar(message, texto)
 
+    def _editar_mensagem_escolha_parcelas(message, uuid):
+        config = module.load_telegram_env()
+        token = config.get("TELEGRAM_TOKEN")
+        if not token or not message:
+            return original_editar(message, "Escolha o parcelamento")
+
+        chat = message.get("chat") or {}
+        chat_id = chat.get("id")
+        message_id = message.get("message_id")
+        if not chat_id or not message_id:
+            return original_editar(message, "Escolha o parcelamento")
+
+        texto_base = (message.get("text") or "").strip()
+        texto = f"{texto_base}\n\nEscolha em quantas parcelas deseja gerar no Asaas:"
+        if "UUID:" not in texto:
+            texto = f"{texto}\n\nUUID: {uuid}"
+
+        botoes = []
+        linha = []
+        for parcela in range(1, _max_parcelas_telegram() + 1):
+            linha.append({"text": f"{parcela}x", "callback_data": f"parcelar_orcamento:{uuid}:{parcela}"})
+            if len(linha) == 3:
+                botoes.append(linha)
+                linha = []
+        if linha:
+            botoes.append(linha)
+
+        requests.post(
+            module._telegram_api_url(token, "editMessageText"),
+            json={
+                "chat_id": chat_id,
+                "message_id": message_id,
+                "text": texto,
+                "reply_markup": {"inline_keyboard": botoes},
+            },
+            timeout=10,
+        )
+        return None
+
+    module._validar_callback_orcamento = validar_callback_com_parcelamento
     module._aprovar_orcamento_por_telegram = aprovar_com_asaas
+    module._responder_callback_telegram = responder_callback_com_parcelamento
     module._editar_mensagem_telegram = editar_mensagem_com_boletos
     _registrar_endpoint_boletos(module)
     INSTALADO = True
-    print("[ASAAS] Integração de boletos instalada no fluxo de aprovação Telegram.")
+    print("[ASAAS] Integração de boletos com parcelamento instalada no fluxo de aprovação Telegram.")
