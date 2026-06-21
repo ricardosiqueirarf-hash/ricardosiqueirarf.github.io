@@ -3,7 +3,7 @@ import Link from "next/link";
 const metrics = [
   { label: "Orcamentos aprovados", value: "128", trend: "+18%" },
   { label: "Conversao media", value: "42%", trend: "+7%" },
-  { label: "Faturamento", value: "121.765,56", trend: "mes" },
+  { label: "Base de clientes", value: "45", trend: "+14%" },
 ];
 
 const features = [
