@@ -10,6 +10,7 @@ def listar_clientes(empresa_id: str, limit: int = 500, offset: int = 0):
         .table("clientes")
         .select(CLIENTE_SELECT)
         .eq("empresa_id", empresa_id)
+        .eq("ativo", True)
         .order("created_at", desc=False)
         .range(offset, offset + limit - 1)
         .execute()
@@ -39,6 +40,7 @@ def buscar_por_nome(empresa_id: str, nome: str):
         .table("clientes")
         .select(CLIENTE_SELECT)
         .eq("empresa_id", empresa_id)
+        .eq("ativo", True)
         .ilike("nome", nome)
         .limit(1)
         .execute()
@@ -56,6 +58,18 @@ def editar_cliente(empresa_id: str, cliente_id: str, dados: dict):
         supabase_client()
         .table("clientes")
         .update(dados)
+        .eq("empresa_id", empresa_id)
+        .eq("id", cliente_id)
+        .execute()
+    )
+    return result.data[0] if result.data else None
+
+
+def arquivar_cliente(empresa_id: str, cliente_id: str):
+    result = (
+        supabase_client()
+        .table("clientes")
+        .update({"ativo": False})
         .eq("empresa_id", empresa_id)
         .eq("id", cliente_id)
         .execute()
