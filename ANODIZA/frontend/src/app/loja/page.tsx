@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet, apiPost } from "@/lib/api";
 import MateriaisPanel from "./MateriaisPanel";
+import ProdutosPanel from "./ProdutosPanel";
 import TagsPanel from "./TagsPanel";
 
 type Aba = "painel" | "orcamentos" | "clientes" | "usuarios" | "ajustes" | "produtos" | "materiais" | "tags";
@@ -40,7 +41,7 @@ const titulos: Record<Aba, { titulo: string; subtitulo: string }> = {
   orcamentos: { titulo: "Orçamentos", subtitulo: "Criação e acompanhamento de propostas comerciais." },
   clientes: { titulo: "Clientes", subtitulo: "Base comercial conectada aos pedidos e orçamentos." },
   usuarios: { titulo: "Usuários", subtitulo: "Acessos internos, perfis e permissões da empresa." },
-  produtos: { titulo: "Produtos", subtitulo: "Catálogo comercial protegido por permissão." },
+  produtos: { titulo: "Produtos configuráveis", subtitulo: "A empresa cria seus próprios produtos e regras de cálculo." },
   materiais: { titulo: "Materiais", subtitulo: "Perfis, vidros, puxadores, insumos e componentes." },
   tags: { titulo: "Tags inteligentes", subtitulo: "Características e regras de negócio para cálculo automático." },
   ajustes: { titulo: "Ajustes", subtitulo: "Configurações administrativas do ambiente." },
@@ -211,7 +212,7 @@ export default function LojaPage() {
         {aba === "clientes" && <section className="card" style={{ maxWidth: "none" }}><h1>Clientes</h1><form onSubmit={criarCliente}><label>Nome<input value={novoCliente.nome} onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })} /></label><label>CPF/CNPJ<input value={novoCliente.documento} onChange={(e) => setNovoCliente({ ...novoCliente, documento: e.target.value })} /></label><label>E-mail<input value={novoCliente.email} onChange={(e) => setNovoCliente({ ...novoCliente, email: e.target.value })} /></label><label>Celular<input value={novoCliente.telefone} onChange={(e) => setNovoCliente({ ...novoCliente, telefone: e.target.value })} /></label><button>Cadastrar</button></form>{clientes.map((c) => <div className="metric" key={c.id}><strong>{c.nome}</strong><p>{c.documento || "Sem documento"} • {c.email || "Sem e-mail"} • {c.telefone || "Sem telefone"}</p></div>)}</section>}
         {aba === "orcamentos" && <section className="card" style={{ maxWidth: "none" }}><h1>Orçamentos</h1><form onSubmit={criarOrcamento}><label>Nome<input value={novoOrcamento.nome_orcamento} onChange={(e) => setNovoOrcamento({ ...novoOrcamento, nome_orcamento: e.target.value })} /></label><label>Cliente<select value={novoOrcamento.cliente_id} onChange={(e) => setNovoOrcamento({ ...novoOrcamento, cliente_id: e.target.value })}><option value="">Selecione</option>{clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></label><button>Criar</button></form>{orcamentos.map((o) => <div className="metric" key={o.id}><strong>{o.nome_orcamento}</strong><p>{o.cliente_nome} • #{o.numero_pedido} • {o.status} • {dinheiro(o.valor_total)}</p></div>)}</section>}
         {aba === "usuarios" && isMaster && <section className="card" style={{ maxWidth: "none" }}><h1>Usuários</h1><form onSubmit={criarUsuario}><label>Nome<input value={novoUsuario.nome} onChange={(e) => setNovoUsuario({ ...novoUsuario, nome: e.target.value })} /></label><label>E-mail<input value={novoUsuario.email} onChange={(e) => setNovoUsuario({ ...novoUsuario, email: e.target.value })} /></label><label>Senha inicial<input type="password" value={novoUsuario.senha} onChange={(e) => setNovoUsuario({ ...novoUsuario, senha: e.target.value })} /></label><label>Perfil<select value={novoUsuario.perfil} onChange={(e) => setNovoUsuario({ ...novoUsuario, perfil: e.target.value })}><option value="vendedor">Vendedor</option><option value="financeiro">Financeiro</option><option value="producao">Produção</option><option value="gerente">Gerente</option></select></label><button>Criar</button></form>{usuarios.map((u) => <div className="metric" key={u.id}><strong>{u.nome}</strong><p>{u.email} • {u.perfil}</p>{u.perfil === "owner" ? <p>Master com acesso total.</p> : <button onClick={() => salvarPermissoes(u, normalizar(u.permissoes, u.perfil))}>Salvar acessos atuais</button>}</div>)}</section>}
-        {aba === "produtos" && <section className="card"><h1>Produtos</h1><p>Área protegida por permissão real no backend.</p></section>}
+        {aba === "produtos" && <ProdutosPanel empresaSlug={empresaSlug} />}
         {aba === "materiais" && <MateriaisPanel empresaSlug={empresaSlug} />}
         {aba === "tags" && <TagsPanel empresaSlug={empresaSlug} />}
         {aba === "ajustes" && <section className="card"><h1>Ajustes</h1><p>Área protegida por permissão real no backend.</p></section>}
