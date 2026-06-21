@@ -27,8 +27,10 @@ def sanitize_user(usuario: dict) -> dict:
 def normalize_rpc_data(data):
     if isinstance(data, dict):
         return data
+
     if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
         return data[0]
+
     return None
 
 
@@ -38,19 +40,34 @@ def run_rpc(name: str, payload: dict):
     except Exception as error:
         logger.exception("Falha ao executar RPC de autenticacao: %s", name)
         raise HTTPException(status_code=400, detail="Operacao nao realizada") from error
+
     data = normalize_rpc_data(result.data)
+
     if not data:
         raise HTTPException(status_code=400, detail="Operacao nao realizada")
+
     return data
 
 
 def issue_login_response(data: dict, request: Request):
     usuario = data.get("usuario") or {}
+
     if not usuario.get("id") or not usuario.get("empresa_id"):
         raise HTTPException(status_code=400, detail="Usuario nao identificado")
+
     chave = create_session(usuario, request)
     usuario_seguro = sanitize_user(usuario)
-    audit_event(usuario_seguro, "login", "auth", usuario.get("id"), None, {"empresa_slug": data.get("empresa_slug")}, request)
+
+    audit_event(
+        usuario_seguro,
+        "login",
+        "auth",
+        usuario.get("id"),
+        None,
+        {"empresa_slug": data.get("empresa_slug")},
+        request,
+    )
+
     return {
         "chave_acesso": chave,
         "empresa_slug": data.get("empresa_slug"),
@@ -61,6 +78,7 @@ def issue_login_response(data: dict, request: Request):
 @router.post("/cadastro")
 def cadastro(payload: CadastroRequest, request: Request):
     settings = get_settings()
+
     enforce_auth_rate_limit(
         request,
         "cadastro",
@@ -68,12 +86,20 @@ def cadastro(payload: CadastroRequest, request: Request):
         settings.auth_rate_limit_attempts,
         settings.auth_rate_limit_window_seconds,
     )
-    return issue_login_response(run_rpc("cadastro_empresa", payload.model_dump()), request)
+
+    dados = payload.model_dump()
+
+    # Compatibilidade com a RPC atual do Supabase:
+    # o formulário não mostra "nome da loja", mas a função cadastro_empresa ainda espera loja_nome.
+    dados["loja_nome"] = dados["empresa_nome"]
+
+    return issue_login_response(run_rpc("cadastro_empresa", dados), request)
 
 
 @router.post("/login")
 def login(payload: LoginRequest, request: Request):
     settings = get_settings()
+
     enforce_auth_rate_limit(
         request,
         "login",
@@ -81,10 +107,12 @@ def login(payload: LoginRequest, request: Request):
         settings.auth_rate_limit_attempts,
         settings.auth_rate_limit_window_seconds,
     )
+
     try:
         data = run_rpc("login_empresa", payload.model_dump())
     except HTTPException as error:
         raise HTTPException(status_code=401, detail="Empresa, e-mail ou senha invalidos") from error
+
     return issue_login_response(data, request)
 
 
@@ -94,7 +122,21 @@ def me(current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/logout")
-def logout(request: Request, x_anodiza_key: str | None = Header(default=None), current_user: dict = Depends(get_current_user)):
+def logout(
+    request: Request,
+    x_anodiza_key: str | None = Header(default=None),
+    current_user: dict = Depends(get_current_user),
+):
     revoke_current_session(request, x_anodiza_key)
-    audit_event(current_user, "logout", "auth", current_user.get("id"), None, None, request)
+
+    audit_event(
+        current_user,
+        "logout",
+        "auth",
+        current_user.get("id"),
+        None,
+        None,
+        request,
+    )
+
     return {"ok": True}
