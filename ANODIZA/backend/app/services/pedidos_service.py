@@ -1,9 +1,13 @@
+import logging
+
 from fastapi import HTTPException, Request
 
 from app.core.auth import audit_event
 from app.repositories import clientes_repo, pedidos_repo
 from app.repositories.common import buscar_loja_principal
 from app.schemas.pedidos import PedidoCreate, PedidoProdutoCreate, PedidoUpdate
+
+logger = logging.getLogger(__name__)
 
 
 def listar(empresa_id: str, busca: str = "", limit: int = 500, offset: int = 0):
@@ -19,9 +23,9 @@ def listar(empresa_id: str, busca: str = "", limit: int = 500, offset: int = 0):
     return lista
 
 
-def proximo_numero(empresa_id: str, cliente_id: str) -> int:
+def proximo_numero(empresa_id: str, cliente_id: str | None = None) -> int:
     maior = 0
-    for item in pedidos_repo.listar_numeros_por_cliente(empresa_id, cliente_id):
+    for item in pedidos_repo.listar_numeros_por_empresa(empresa_id):
         numero = str(item.get("numero_pedido") or "").strip()
         if numero.isdigit():
             maior = max(maior, int(numero))
@@ -39,10 +43,14 @@ def criar(empresa_id: str, payload: PedidoCreate, current_user: dict, request: R
     if not cliente:
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
     loja = buscar_loja_principal(empresa_id)
-    dados = {"cliente_id": cliente_id, "numero_pedido": str(proximo_numero(empresa_id, cliente_id)), "nome_orcamento": nome, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
+    dados = {"cliente_id": cliente_id, "numero_pedido": str(proximo_numero(empresa_id)), "nome_orcamento": nome, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
     if loja:
         dados["loja_id"] = loja["id"]
-    pedido = pedidos_repo.inserir(empresa_id, dados)
+    try:
+        pedido = pedidos_repo.inserir(empresa_id, dados)
+    except Exception as error:
+        logger.exception("Falha ao criar orcamento: empresa_id=%s cliente_id=%s numero=%s", empresa_id, cliente_id, dados.get("numero_pedido"))
+        raise HTTPException(status_code=400, detail=f"Orcamento nao criado: {str(error)}") from error
     if not pedido:
         raise HTTPException(status_code=400, detail="Orcamento nao criado")
     audit_event(current_user, "criar", "orcamento", pedido.get("id"), None, pedido, request)
@@ -57,8 +65,6 @@ def editar(empresa_id: str, payload: PedidoUpdate, current_user: dict, request: 
     if not cliente:
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
     numero = str(pedido.get("numero_pedido") or "")
-    if str(pedido.get("cliente_id") or "") != payload.cliente_id:
-        numero = str(proximo_numero(empresa_id, payload.cliente_id))
     dados = {"cliente_id": payload.cliente_id, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "numero_pedido": numero, "nome_orcamento": payload.nome_orcamento.strip()}
     atualizado = pedidos_repo.atualizar(empresa_id, payload.id, dados)
     if not atualizado:
