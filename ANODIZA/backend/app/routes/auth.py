@@ -1,4 +1,6 @@
 import logging
+import traceback
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
@@ -10,6 +12,28 @@ from app.models.schemas import CadastroRequest, LoginRequest
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+SENSITIVE_KEYS = {"senha", "password", "token", "chave_acesso", "authorization", "x-anodiza-key"}
+
+
+def mask_sensitive_data(value: Any) -> Any:
+    if isinstance(value, dict):
+        masked = {}
+
+        for key, item in value.items():
+            key_lower = str(key).lower()
+
+            if key_lower in SENSITIVE_KEYS:
+                masked[key] = "***"
+            else:
+                masked[key] = mask_sensitive_data(item)
+
+        return masked
+
+    if isinstance(value, list):
+        return [mask_sensitive_data(item) for item in value]
+
+    return value
 
 
 def sanitize_user(usuario: dict) -> dict:
@@ -35,16 +59,45 @@ def normalize_rpc_data(data):
 
 
 def run_rpc(name: str, payload: dict):
+    safe_payload = mask_sensitive_data(payload)
+
+    logger.info("RPC_START name=%s payload=%s", name, safe_payload)
+
     try:
         result = get_supabase().rpc(name, {"payload": payload}).execute()
     except Exception as error:
-        logger.exception("Falha ao executar RPC de autenticacao: %s", name)
-        raise HTTPException(status_code=400, detail="Operacao nao realizada") from error
+        logger.error(
+            "RPC_EXCEPTION name=%s payload=%s error=%s traceback=%s",
+            name,
+            safe_payload,
+            str(error),
+            traceback.format_exc(),
+        )
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Falha ao executar RPC {name}: {str(error)}",
+        ) from error
+
+    safe_result = mask_sensitive_data(result.data)
+    logger.info("RPC_RESULT name=%s raw_data=%s", name, safe_result)
 
     data = normalize_rpc_data(result.data)
 
     if not data:
-        raise HTTPException(status_code=400, detail="Operacao nao realizada")
+        logger.error(
+            "RPC_EMPTY_RESULT name=%s payload=%s raw_data=%s",
+            name,
+            safe_payload,
+            safe_result,
+        )
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"RPC {name} nao retornou dados validos.",
+        )
+
+    logger.info("RPC_SUCCESS name=%s", name)
 
     return data
 
@@ -53,6 +106,11 @@ def issue_login_response(data: dict, request: Request):
     usuario = data.get("usuario") or {}
 
     if not usuario.get("id") or not usuario.get("empresa_id"):
+        logger.error(
+            "LOGIN_RESPONSE_INVALID usuario=%s data=%s",
+            mask_sensitive_data(usuario),
+            mask_sensitive_data(data),
+        )
         raise HTTPException(status_code=400, detail="Usuario nao identificado")
 
     chave = create_session(usuario, request)
@@ -78,6 +136,9 @@ def issue_login_response(data: dict, request: Request):
 @router.post("/cadastro")
 def cadastro(payload: CadastroRequest, request: Request):
     settings = get_settings()
+    payload_dict = payload.model_dump()
+
+    logger.info("CADASTRO_START payload=%s", mask_sensitive_data(payload_dict))
 
     enforce_auth_rate_limit(
         request,
@@ -87,12 +148,27 @@ def cadastro(payload: CadastroRequest, request: Request):
         settings.auth_rate_limit_window_seconds,
     )
 
-    return issue_login_response(run_rpc("cadastro_empresa", payload.model_dump()), request)
+    response = issue_login_response(run_rpc("cadastro_empresa", payload_dict), request)
+
+    logger.info(
+        "CADASTRO_SUCCESS empresa_slug=%s usuario_id=%s",
+        response.get("empresa_slug"),
+        response.get("usuario", {}).get("id"),
+    )
+
+    return response
 
 
 @router.post("/login")
 def login(payload: LoginRequest, request: Request):
     settings = get_settings()
+    payload_dict = payload.model_dump()
+
+    logger.info(
+        "LOGIN_START empresa_slug=%s email=%s",
+        payload.empresa_slug,
+        payload.email,
+    )
 
     enforce_auth_rate_limit(
         request,
@@ -103,11 +179,25 @@ def login(payload: LoginRequest, request: Request):
     )
 
     try:
-        data = run_rpc("login_empresa", payload.model_dump())
+        data = run_rpc("login_empresa", payload_dict)
     except HTTPException as error:
+        logger.warning(
+            "LOGIN_FAILED empresa_slug=%s email=%s detail=%s",
+            payload.empresa_slug,
+            payload.email,
+            error.detail,
+        )
         raise HTTPException(status_code=401, detail="Empresa, e-mail ou senha invalidos") from error
 
-    return issue_login_response(data, request)
+    response = issue_login_response(data, request)
+
+    logger.info(
+        "LOGIN_SUCCESS empresa_slug=%s usuario_id=%s",
+        response.get("empresa_slug"),
+        response.get("usuario", {}).get("id"),
+    )
+
+    return response
 
 
 @router.get("/me")
