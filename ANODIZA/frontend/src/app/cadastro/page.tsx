@@ -23,21 +23,40 @@ export default function CadastroPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMensagem("Criando cadastro...");
+
+    const payload = {
+      empresa_nome: form.empresa_nome.trim(),
+      nome: form.nome.trim(),
+      email: form.email.trim().toLowerCase(),
+      senha: form.senha,
+    };
+
+    console.info("[ANODIZA][cadastro] Enviando cadastro", {
+      empresa_nome: payload.empresa_nome,
+      nome: payload.nome,
+      email: payload.email,
+      senha_length: payload.senha.length,
+    });
+
     try {
-      const payload = {
-        empresa_nome: form.empresa_nome.trim(),
-        nome: form.nome.trim(),
-        email: form.email.trim().toLowerCase(),
-        senha: form.senha,
-      };
       const data = await apiPost<AuthResponse>("/api/auth/cadastro", payload);
+
+      console.info("[ANODIZA][cadastro] Cadastro criado", {
+        empresa_slug: data.empresa_slug,
+        usuario_email: data.usuario?.email,
+        tem_chave_acesso: Boolean(data.chave_acesso),
+      });
+
       if (!data.chave_acesso) throw new Error("Sessao nao criada pelo backend.");
+
       localStorage.setItem("anodiza_chave_acesso", data.chave_acesso);
       localStorage.setItem("anodiza_empresa_slug", data.empresa_slug);
       localStorage.removeItem("anodiza_usuario");
       setMensagem(`Cadastro criado. Empresa: ${data.empresa_slug}`);
       router.push("/loja");
     } catch (error) {
+      console.error("[ANODIZA][cadastro] Falha ao criar cadastro", error);
+
       setMensagem(error instanceof Error ? error.message : "Nao foi possivel criar o cadastro. Confira os dados e tente novamente.");
     }
   }
