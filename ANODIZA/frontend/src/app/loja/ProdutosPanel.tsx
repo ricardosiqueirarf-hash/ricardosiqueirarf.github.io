@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 
-type CategoriaMaterial = "perfil" | "vidro" | "puxador" | "insumo" | "trilho" | "componente" | "outro";
+type CategoriaMaterial = "perfil" | "vidro" | "puxador" | "insumo" | "trilho" | "componente" | "sistema" | "outro";
 type TipoCampo = "numero" | "texto" | "material" | "booleano";
 type OrigemComponente = "campo_material" | "insumos_do_material" | "tag_regras" | "valor_adicional";
 type BaseQuantidade = "unidade" | "area" | "perimetro" | "largura_m" | "altura_m" | "campo_numero" | "campo_mm_para_m";
@@ -16,6 +16,8 @@ type CampoProduto = {
   obrigatorio: boolean;
   padrao?: unknown;
   permitir_sem_item?: boolean;
+  depende_de?: string;
+  usar_agregados?: boolean;
 };
 
 type ComponenteProduto = {
@@ -48,6 +50,7 @@ type Material = {
   unidade: string;
   preco_unitario: number;
   ativo: boolean;
+  configuracao?: { agregados?: Record<string, string[]>; puxadores_ids?: string[]; trilhos_ids?: string[]; perfis_ids?: string[]; [key: string]: unknown };
 };
 
 type Orcamento = { id: string; nome_orcamento: string; cliente_nome: string; numero_pedido: string; valor_total: number };
@@ -67,10 +70,11 @@ type ProdutoForm = {
 
 const categorias: Array<{ value: CategoriaMaterial; label: string }> = [
   { value: "perfil", label: "Perfil" },
+  { value: "sistema", label: "Sistema" },
   { value: "vidro", label: "Vidro" },
   { value: "puxador", label: "Puxador" },
-  { value: "insumo", label: "Insumo" },
   { value: "trilho", label: "Trilho" },
+  { value: "insumo", label: "Insumo" },
   { value: "componente", label: "Componente" },
   { value: "outro", label: "Outro" },
 ];
@@ -96,7 +100,7 @@ const produtoInicial: ProdutoForm = {
   altura_key: "altura",
 };
 
-const campoInicial: CampoProduto = { chave: "", rotulo: "", tipo: "numero", obrigatorio: true, categoria: "perfil" };
+const campoInicial: CampoProduto = { chave: "", rotulo: "", tipo: "numero", obrigatorio: true, categoria: "perfil", depende_de: "", usar_agregados: false };
 const componenteInicial: ComponenteProduto = { nome: "", origem: "campo_material", campo_material: "", campo_origem: "", base_quantidade: "unidade", multiplicador: 1 };
 
 function dinheiro(valor: number) {
@@ -138,11 +142,21 @@ function formFromProduto(produto: Produto): ProdutoForm {
   };
 }
 
+function idsAgregados(material: Material | undefined, categoria?: CategoriaMaterial) {
+  if (!material || !categoria) return [];
+  const config = material.configuracao || {};
+  let ids = config.agregados?.[categoria] || [];
+  if (categoria === "puxador" && !ids.length) ids = config.puxadores_ids || [];
+  if (categoria === "trilho" && !ids.length) ids = config.trilhos_ids || [];
+  if (categoria === "perfil" && !ids.length) ids = config.perfis_ids || [];
+  return ids.map(String);
+}
+
 function portaGiroModelo(): ProdutoForm {
   return {
     id: "",
     nome: "Porta de Giro",
-    descricao: "Modelo editável baseado no orçamento antigo da ColorGlass: perfil por perímetro, vidro por área, insumos do perfil, puxador, tags e valor adicional.",
+    descricao: "Modelo editável: perfil por perímetro, vidro por área, insumos do perfil, puxador agregado ao perfil, tags e valor adicional.",
     ativo: true,
     largura_key: "largura",
     altura_key: "altura",
@@ -151,7 +165,7 @@ function portaGiroModelo(): ProdutoForm {
       { chave: "altura", rotulo: "Altura (mm)", tipo: "numero", obrigatorio: true, padrao: 2000 },
       { chave: "perfil", rotulo: "Perfil", tipo: "material", categoria: "perfil", obrigatorio: true },
       { chave: "vidro", rotulo: "Vidro", tipo: "material", categoria: "vidro", obrigatorio: true },
-      { chave: "puxador", rotulo: "Puxador", tipo: "material", categoria: "puxador", obrigatorio: false, permitir_sem_item: true },
+      { chave: "puxador", rotulo: "Puxador", tipo: "material", categoria: "puxador", obrigatorio: false, permitir_sem_item: true, depende_de: "perfil", usar_agregados: true },
       { chave: "medida_puxador", rotulo: "Tamanho do puxador (mm)", tipo: "numero", obrigatorio: false, padrao: 0 },
       { chave: "dobradicas", rotulo: "Quantidade de dobradiças", tipo: "numero", obrigatorio: false, padrao: 2 },
       { chave: "valor_adicional", rotulo: "Valor adicional (R$)", tipo: "numero", obrigatorio: false, padrao: 0 },
@@ -163,6 +177,35 @@ function portaGiroModelo(): ProdutoForm {
       { nome: "Puxador", origem: "campo_material", campo_material: "puxador", campo_origem: "medida_puxador", base_quantidade: "campo_mm_para_m", multiplicador: 1 },
       { nome: "Regras por tags", origem: "tag_regras", base_quantidade: "unidade", multiplicador: 1 },
       { nome: "Valor adicional", origem: "valor_adicional", campo_origem: "valor_adicional", base_quantidade: "unidade", multiplicador: 1 },
+    ],
+  };
+}
+
+function sistemaDeslizanteModelo(): ProdutoForm {
+  return {
+    id: "",
+    nome: "Porta Deslizante com Sistema",
+    descricao: "Modelo editável: sistema selecionado filtra trilhos compatíveis; perfil pode filtrar puxadores compatíveis.",
+    ativo: true,
+    largura_key: "largura",
+    altura_key: "altura",
+    campos: [
+      { chave: "largura", rotulo: "Largura (mm)", tipo: "numero", obrigatorio: true, padrao: 1200 },
+      { chave: "altura", rotulo: "Altura (mm)", tipo: "numero", obrigatorio: true, padrao: 2200 },
+      { chave: "sistema", rotulo: "Sistema", tipo: "material", categoria: "sistema", obrigatorio: true },
+      { chave: "trilho", rotulo: "Trilho", tipo: "material", categoria: "trilho", obrigatorio: true, depende_de: "sistema", usar_agregados: true },
+      { chave: "perfil", rotulo: "Perfil", tipo: "material", categoria: "perfil", obrigatorio: true },
+      { chave: "vidro", rotulo: "Vidro", tipo: "material", categoria: "vidro", obrigatorio: true },
+      { chave: "puxador", rotulo: "Puxador", tipo: "material", categoria: "puxador", obrigatorio: false, permitir_sem_item: true, depende_de: "perfil", usar_agregados: true },
+      { chave: "medida_puxador", rotulo: "Tamanho do puxador (mm)", tipo: "numero", obrigatorio: false, padrao: 0 },
+    ],
+    componentes: [
+      { nome: "Sistema", origem: "campo_material", campo_material: "sistema", base_quantidade: "unidade", multiplicador: 1 },
+      { nome: "Trilho", origem: "campo_material", campo_material: "trilho", base_quantidade: "largura_m", multiplicador: 1 },
+      { nome: "Perfil", origem: "campo_material", campo_material: "perfil", base_quantidade: "perimetro", multiplicador: 1 },
+      { nome: "Vidro", origem: "campo_material", campo_material: "vidro", base_quantidade: "area", multiplicador: 1 },
+      { nome: "Puxador", origem: "campo_material", campo_material: "puxador", campo_origem: "medida_puxador", base_quantidade: "campo_mm_para_m", multiplicador: 1 },
+      { nome: "Regras por tags", origem: "tag_regras", base_quantidade: "unidade", multiplicador: 1 },
     ],
   };
 }
@@ -182,6 +225,7 @@ export default function ProdutosPanel({ empresaSlug }: { empresaSlug: string }) 
   const [mensagem, setMensagem] = useState("");
 
   const produtoAtual = useMemo(() => produtos.find((produto) => produto.id === produtoSelecionado) || null, [produtos, produtoSelecionado]);
+  const materialPorId = useMemo(() => new Map(materiais.map((material) => [String(material.id), material])), [materiais]);
 
   async function carregarTudo() {
     if (!empresaSlug) return;
@@ -220,7 +264,7 @@ export default function ProdutosPanel({ empresaSlug }: { empresaSlug: string }) 
       setMensagem("Ja existe um campo com esta chave");
       return;
     }
-    setForm({ ...form, campos: [...form.campos, { ...novoCampo, chave }] });
+    setForm({ ...form, campos: [...form.campos, { ...novoCampo, chave, depende_de: novoCampo.depende_de || "" }] });
     setNovoCampo(campoInicial);
   }
 
@@ -317,18 +361,46 @@ export default function ProdutosPanel({ empresaSlug }: { empresaSlug: string }) 
     return materiais.filter((material) => material.ativo && (!categoria || material.categoria === categoria));
   }
 
+  function materiaisParaCampo(campo: CampoProduto) {
+    const lista = materiaisPorCategoria(campo.categoria);
+    if (!campo.usar_agregados || !campo.depende_de) return lista;
+
+    const materialBase = materialPorId.get(String(valores[campo.depende_de] || ""));
+    const ids = idsAgregados(materialBase, campo.categoria);
+    if (!materialBase) return [];
+    return lista.filter((material) => ids.includes(String(material.id)));
+  }
+
+  function atualizarValorCampo(campo: CampoProduto, valor: string) {
+    const proximos = { ...valores, [campo.chave]: valor };
+    const campos = produtoAtual?.configuracao?.campos || [];
+    for (const dependente of campos) {
+      if (dependente.tipo !== "material" || dependente.depende_de !== campo.chave || !dependente.usar_agregados) continue;
+      const materialSelecionado = materialPorId.get(String(proximos[dependente.chave] || ""));
+      const materialBase = materialPorId.get(String(valor || ""));
+      const ids = idsAgregados(materialBase, dependente.categoria);
+      if (materialSelecionado && !ids.includes(String(materialSelecionado.id))) {
+        proximos[dependente.chave] = "";
+      }
+    }
+    setValores(proximos);
+  }
+
   const camposMaterial = form.campos.filter((campo) => campo.tipo === "material");
   const camposNumero = form.campos.filter((campo) => campo.tipo === "numero");
 
   return (
     <section className="card" style={{ maxWidth: "none" }}>
       <h1>Produtos configuráveis</h1>
-      <p>A empresa cria o próprio produto para orçamento. A porta de giro deixa de ser fixa: vira apenas um modelo possível de configuração.</p>
+      <p>A empresa cria o próprio produto para orçamento. Os campos podem respeitar agregados: perfil limita puxador, sistema limita trilho.</p>
       {mensagem && <p>{mensagem}</p>}
 
       <section style={{ marginTop: 20 }}>
         <h2>1. Criar produto</h2>
-        <button type="button" onClick={() => setForm(portaGiroModelo())}>Usar modelo editável de Porta de Giro</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button type="button" onClick={() => setForm(portaGiroModelo())}>Usar modelo editável de Porta de Giro</button>
+          <button type="button" onClick={() => setForm(sistemaDeslizanteModelo())}>Usar modelo com Sistema + Trilho</button>
+        </div>
         <form onSubmit={salvarProduto}>
           <label>Nome do produto<input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex: Porta de Giro, Closet, Adega" /></label>
           <label>Descrição<input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></label>
@@ -343,20 +415,22 @@ export default function ProdutosPanel({ empresaSlug }: { empresaSlug: string }) 
       <section style={{ marginTop: 24 }}>
         <h2>2. Campos do produto</h2>
         <div className="grid">
-          <label>Chave<input value={novoCampo.chave} onChange={(e) => setNovoCampo({ ...novoCampo, chave: slug(e.target.value) })} placeholder="largura, perfil, vidro" /></label>
+          <label>Chave<input value={novoCampo.chave} onChange={(e) => setNovoCampo({ ...novoCampo, chave: slug(e.target.value) })} placeholder="largura, perfil, sistema, trilho" /></label>
           <label>Rótulo<input value={novoCampo.rotulo} onChange={(e) => setNovoCampo({ ...novoCampo, rotulo: e.target.value, chave: novoCampo.chave || slug(e.target.value) })} placeholder="Largura (mm)" /></label>
           <label>Tipo<select value={novoCampo.tipo} onChange={(e) => setNovoCampo({ ...novoCampo, tipo: e.target.value as TipoCampo })}><option value="numero">Número</option><option value="texto">Texto</option><option value="material">Material</option><option value="booleano">Sim/Não</option></select></label>
           {novoCampo.tipo === "material" && <label>Categoria<select value={novoCampo.categoria || "perfil"} onChange={(e) => setNovoCampo({ ...novoCampo, categoria: e.target.value as CategoriaMaterial })}>{categorias.map((categoria) => <option key={categoria.value} value={categoria.value}>{categoria.label}</option>)}</select></label>}
+          {novoCampo.tipo === "material" && <label>Usar agregados?<select value={novoCampo.usar_agregados ? "sim" : "nao"} onChange={(e) => setNovoCampo({ ...novoCampo, usar_agregados: e.target.value === "sim" })}><option value="nao">Não</option><option value="sim">Sim</option></select></label>}
+          {novoCampo.tipo === "material" && novoCampo.usar_agregados && <label>Depende de<select value={novoCampo.depende_de || ""} onChange={(e) => setNovoCampo({ ...novoCampo, depende_de: e.target.value })}><option value="">Selecione</option>{camposMaterial.map((campo) => <option key={campo.chave} value={campo.chave}>{campo.rotulo}</option>)}</select></label>}
           <label>Obrigatório<select value={novoCampo.obrigatorio ? "sim" : "nao"} onChange={(e) => setNovoCampo({ ...novoCampo, obrigatorio: e.target.value === "sim" })}><option value="sim">Sim</option><option value="nao">Não</option></select></label>
           <label>Valor padrão<input value={String(novoCampo.padrao || "")} onChange={(e) => setNovoCampo({ ...novoCampo, padrao: e.target.value })} /></label>
           <button type="button" onClick={adicionarCampo}>Adicionar campo</button>
         </div>
-        <div style={{ display: "grid", gap: 10, marginTop: 16 }}>{form.campos.map((campo) => <div className="metric" key={campo.chave}><strong>{campo.rotulo}</strong><p>{campo.chave} • {campo.tipo} • {campo.tipo === "material" ? categoriaLabel(campo.categoria) : ""} • {campo.obrigatorio ? "Obrigatório" : "Opcional"}</p><button type="button" onClick={() => removerCampo(campo.chave)}>Remover</button></div>)}{!form.campos.length && <p>Nenhum campo criado.</p>}</div>
+        <div style={{ display: "grid", gap: 10, marginTop: 16 }}>{form.campos.map((campo) => <div className="metric" key={campo.chave}><strong>{campo.rotulo}</strong><p>{campo.chave} • {campo.tipo} • {campo.tipo === "material" ? categoriaLabel(campo.categoria) : ""} • {campo.obrigatorio ? "Obrigatório" : "Opcional"}{campo.usar_agregados ? ` • agregado de ${campo.depende_de || "-"}` : ""}</p><button type="button" onClick={() => removerCampo(campo.chave)}>Remover</button></div>)}{!form.campos.length && <p>Nenhum campo criado.</p>}</div>
       </section>
 
       <section style={{ marginTop: 24 }}>
         <h2>3. Componentes de cálculo</h2>
-        <p>Use a lógica antiga como blocos: perfil por perímetro, vidro por área, insumos do perfil, puxador por campo em mm, tags e valor adicional.</p>
+        <p>Use a lógica antiga como blocos: perfil por perímetro, vidro por área, sistema por unidade, trilho por largura, tags e valor adicional.</p>
         <div className="grid">
           <label>Nome<input value={novoComponente.nome} onChange={(e) => setNovoComponente({ ...novoComponente, nome: e.target.value })} placeholder="Perfil, Vidro, Puxador" /></label>
           <label>Origem<select value={novoComponente.origem} onChange={(e) => setNovoComponente({ ...novoComponente, origem: e.target.value as OrigemComponente })}><option value="campo_material">Material escolhido em campo</option><option value="insumos_do_material">Insumos do material</option><option value="tag_regras">Regras por tags</option><option value="valor_adicional">Valor adicional manual</option></select></label>
@@ -381,7 +455,7 @@ export default function ProdutosPanel({ empresaSlug }: { empresaSlug: string }) 
           <label>Quantidade<input type="number" min="1" step="1" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} /></label>
           <label>Orçamento<select value={orcamentoSelecionado} onChange={(e) => setOrcamentoSelecionado(e.target.value)}><option value="">Selecione para adicionar</option>{orcamentos.map((orcamento) => <option key={orcamento.id} value={orcamento.id}>{orcamento.cliente_nome} • #{orcamento.numero_pedido} • {orcamento.nome_orcamento}</option>)}</select></label>
         </div>
-        {produtoAtual && <div className="grid" style={{ marginTop: 16 }}>{(produtoAtual.configuracao?.campos || []).map((campo) => <label key={campo.chave}>{campo.rotulo}{campo.tipo === "material" ? <select value={valores[campo.chave] || ""} onChange={(e) => setValores({ ...valores, [campo.chave]: e.target.value })}><option value="">Selecione</option>{campo.permitir_sem_item && <option value="sem_item">Sem item</option>}{materiaisPorCategoria(campo.categoria).map((material) => <option key={material.id} value={material.id}>{material.nome} • {dinheiro(Number(material.preco_unitario))}</option>)}</select> : <input type={campo.tipo === "numero" ? "number" : "text"} value={valores[campo.chave] || ""} onChange={(e) => setValores({ ...valores, [campo.chave]: e.target.value })} />}</label>)}</div>}
+        {produtoAtual && <div className="grid" style={{ marginTop: 16 }}>{(produtoAtual.configuracao?.campos || []).map((campo) => <label key={campo.chave}>{campo.rotulo}{campo.tipo === "material" ? <select value={valores[campo.chave] || ""} onChange={(e) => atualizarValorCampo(campo, e.target.value)}><option value="">{campo.usar_agregados && campo.depende_de && !valores[campo.depende_de] ? `Selecione ${campo.depende_de} primeiro` : "Selecione"}</option>{campo.permitir_sem_item && <option value="sem_item">Sem item</option>}{materiaisParaCampo(campo).map((material) => <option key={material.id} value={material.id}>{material.nome} • {dinheiro(Number(material.preco_unitario))}</option>)}</select> : <input type={campo.tipo === "numero" ? "number" : "text"} value={valores[campo.chave] || ""} onChange={(e) => atualizarValorCampo(campo, e.target.value)} />}</label>)}</div>}
         <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}><button type="button" onClick={calcularProduto}>Calcular</button><button type="button" onClick={adicionarAoOrcamento}>Adicionar ao orçamento</button></div>
         {calculo && <div className="metric" style={{ marginTop: 16 }}><strong>{calculo.nome}: {dinheiro(calculo.valor_total)}</strong><p>Unitário: {dinheiro(calculo.valor_unitario)} • Quantidade: {calculo.quantidade}</p><div style={{ display: "grid", gap: 8, marginTop: 12 }}>{calculo.linhas.map((linha, index) => <p key={index}>{linha.nome} — {linha.material || ""}: {linha.quantidade} {linha.unidade} × {dinheiro(linha.valor_unitario)} = {dinheiro(linha.total)}</p>)}</div></div>}
       </section>
