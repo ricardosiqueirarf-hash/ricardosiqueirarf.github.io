@@ -67,7 +67,17 @@ async def request_log_middleware(request: Request, call_next):
         request.client.host if request.client else None,
     )
 
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except Exception as error:
+        logger.error(
+            "REQUEST_EXCEPTION method=%s path=%s error=%s traceback=%s",
+            request.method,
+            request.url.path,
+            str(error),
+            traceback.format_exc(),
+        )
+        raise
 
     logger.info(
         "REQUEST_END method=%s path=%s status=%s",
