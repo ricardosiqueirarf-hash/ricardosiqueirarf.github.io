@@ -125,6 +125,7 @@ def calcular_produto(empresa_id: str, produto: dict, valores: dict, quantidade: 
 
     medidas = calcular_medidas(config, valores)
     materiais_cache = carregar_materiais_campos(empresa_id, campos, valores)
+    validar_dependencias_material(campos, materiais_cache)
 
     linhas = []
     valor_unitario = 0.0
@@ -207,6 +208,37 @@ def carregar_materiais_campos(empresa_id: str, campos: list[dict], valores: dict
             raise HTTPException(status_code=400, detail=f"Material de categoria invalida em {campo.get('rotulo') or chave}")
         cache[chave] = material
     return cache
+
+
+def validar_dependencias_material(campos: list[dict], materiais_cache: dict):
+    for campo in campos:
+        if campo.get("tipo") != "material" or not campo.get("usar_agregados"):
+            continue
+        chave = campo.get("chave")
+        depende_de = campo.get("depende_de")
+        categoria = campo.get("categoria")
+        material = materiais_cache.get(chave)
+        material_base = materiais_cache.get(depende_de)
+        if not material or not material_base:
+            continue
+        ids = ids_agregados(material_base, categoria)
+        if str(material.get("id")) not in ids:
+            raise HTTPException(status_code=400, detail=f"{material.get('nome')} nao esta agregado a {material_base.get('nome')}")
+
+
+def ids_agregados(material: dict, categoria: str | None):
+    if not categoria:
+        return []
+    config = material.get("configuracao") or {}
+    agregados = config.get("agregados") or {}
+    ids = agregados.get(categoria) or []
+    if categoria == "puxador" and not ids:
+        ids = config.get("puxadores_ids") or []
+    if categoria == "trilho" and not ids:
+        ids = config.get("trilhos_ids") or []
+    if categoria == "perfil" and not ids:
+        ids = config.get("perfis_ids") or []
+    return [str(item) for item in ids or []]
 
 
 def calcular_componente_material(componente: dict, materiais_cache: dict, valores: dict, medidas: dict):
