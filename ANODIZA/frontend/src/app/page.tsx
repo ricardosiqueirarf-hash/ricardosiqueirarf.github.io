@@ -1,163 +1,109 @@
 import Link from "next/link";
 
-const metrics = [
-  { label: "Orcamentos aprovados", value: "128", trend: "+18%" },
-  { label: "Conversao media", value: "42%", trend: "+7%" },
-  { label: "Base de clientes", value: "45", trend: "+14%" },
+const tags = [
+  { icon: "◈", label: "ORCAMENTO 3D" },
+  { icon: "⚙", label: "REGRAS PROPRIAS" },
+  { icon: "▦", label: "MULTIEMPRESA" },
+  { icon: "⛓", label: "API-READY" },
 ];
 
-const features = [
+const cards = [
   {
+    icon: "◈",
     title: "Orcamento de portas e estruturas 3D",
-    body: "Calcule portas de aluminio e vidro com suas proprias regras de precificacao — e avance para estruturas complexas em tres dimensoes, sem depender de planilhas ou modelos fixos.",
+    body: "Calcule com suas regras de precificacao e va alem, orcando estruturas complexas em 3D.",
   },
   {
+    icon: "⚙",
     title: "Regras de negocio sob medida",
-    body: "Cada empresa tem sua propria forma de precificar. O Anodiza se adapta as suas regras, nao o contrario.",
+    body: "O Anodiza se adapta as suas regras de precificacao, nao o contrario.",
   },
   {
+    icon: "◉",
     title: "Financeiro centralizado de verdade",
-    body: "Organize recebimentos, pagamentos e conciliacao em uma base pronta para integracao com Inter, Asaas, Santander e outros bancos.",
+    body: "Integracao nativa com Inter, Asaas, Santander e outros bancos.",
   },
 ];
-
-const ecosystem = ["CRM", "ERP", "WhatsApp", "Inter", "Asaas", "Santander", "API-ready"];
 
 export default function HomePage() {
   return (
-    <main className="home-page">
-      <div className="home-noise" aria-hidden="true" />
-      <div className="home-orb home-orb-one" aria-hidden="true" />
-      <div className="home-orb home-orb-two" aria-hidden="true" />
-      <div className="home-grid-bg" aria-hidden="true" />
+    <main className="reference-page">
+      <section className="reference-hero">
+        <svg className="reference-hero-bg" viewBox="0 0 1100 760" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="anodizaGlow1" cx="80%" cy="8%" r="55%">
+              <stop offset="0%" stopColor="#3a2c0a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#070705" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="anodizaGlow2" cx="5%" cy="92%" r="40%">
+              <stop offset="0%" stopColor="#1a1408" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#070705" stopOpacity="0" />
+            </radialGradient>
+            <pattern id="anodizaGrid" width="34" height="34" patternUnits="userSpaceOnUse">
+              <path d="M0 34L34 34L34 0" fill="none" stroke="#E8C158" strokeOpacity="0.06" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="1100" height="760" fill="#070705" />
+          <rect width="1100" height="760" fill="url(#anodizaGrid)" />
+          <rect width="1100" height="760" fill="url(#anodizaGlow1)" />
+          <rect width="1100" height="760" fill="url(#anodizaGlow2)" />
+        </svg>
 
-      <nav className="home-nav" aria-label="Navegacao principal">
-        <Link href="/" className="home-logo" aria-label="ANODIZA inicio">
-          <span className="home-logo-mark">A</span>
-          <span>
-            <strong>ANODIZA</strong>
-            <small>SaaS industrial</small>
-          </span>
-        </Link>
-        <div className="home-nav-actions">
-          <Link href="/login" className="home-nav-link">Entrar</Link>
-          <Link href="/cadastro" className="home-nav-cta">Comecar agora</Link>
-        </div>
-      </nav>
+        <div className="reference-hero-content">
+          <nav className="reference-navbar" aria-label="Navegacao principal">
+            <Link href="/" className="reference-logo" aria-label="ANODIZA inicio">
+              <span className="reference-logo-mark">A</span>
+              <span>
+                <strong>ANODIZA</strong>
+                <small>SAAS INDUSTRIAL</small>
+              </span>
+            </Link>
 
-      <section className="home-hero">
-        <div className="home-hero-copy">
-          <div className="home-badge">
-            <span className="home-badge-dot" />
+            <div className="reference-nav-actions">
+              <Link href="/login" className="reference-nav-login">Entrar</Link>
+              <Link href="/cadastro" className="reference-nav-button">Comecar agora</Link>
+            </div>
+          </nav>
+
+          <span className="reference-badge">
+            <span className="reference-dot" />
             Plataforma SaaS para empresas de portas de aluminio e vidro
-          </div>
+          </span>
 
-          <h1>
-            Orce portas de aluminio, vidro e estruturas 3D <span>com as regras do seu negocio.</span>
+          <h1 className="reference-title">
+            O unico sistema que orca <span>portas e estruturas 3D</span> de aluminio e vidro com as regras do seu negocio.
           </h1>
 
-          <p className="home-subtitle">
-            Centralize orcamentos, estoque, financeiro e clientes em uma plataforma moldada
-            para a forma como sua empresa realmente precifica, produz e vende.
+          <p className="reference-subtitle">
+            Centralize orcamentos, estoque, financeiro e clientes em uma unica plataforma — moldada para a forma como sua empresa realmente trabalha, com integracao direta a Inter, Asaas, Santander e mais.
           </p>
 
-          <div className="home-hero-actions">
-            <Link href="/cadastro" className="home-primary-button">
+          <div className="reference-cta-row">
+            <Link href="/cadastro" className="reference-cta-primary">
               Testar gratuitamente
               <span aria-hidden="true">→</span>
             </Link>
-            <Link href="/login" className="home-secondary-button">
-              Acessar painel
-            </Link>
+            <Link href="/login" className="reference-cta-secondary">Acessar painel</Link>
           </div>
 
-          <div className="home-trust-row" aria-label="Destaques do produto">
-            <span>Orcamento 3D</span>
-            <span>Regras proprias</span>
-            <span>Multiempresa</span>
-            <span>Integracoes</span>
+          <div className="reference-tags" aria-label="Funcionalidades principais">
+            {tags.map((tag) => (
+              <span className="reference-tag" key={tag.label}>
+                <span aria-hidden="true">{tag.icon}</span>
+                {tag.label}
+              </span>
+            ))}
           </div>
-        </div>
 
-        <div className="home-hero-visual" aria-label="Previa visual do painel ANODIZA">
-          <div className="home-dashboard-shell">
-            <div className="home-dashboard-topbar">
-              <div className="home-window-dots" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="home-search-pill">Buscar pedido, cliente</div>
-            </div>
-
-            <div className="home-dashboard-body">
-              <aside className="home-dashboard-sidebar" aria-hidden="true">
-                <span className="active" />
-                <span />
-                <span />
-                <span />
-              </aside>
-
-              <div className="home-dashboard-content">
-                <div className="home-panel-heading">
-                  <div>
-                    <small>Visao geral</small>
-                    <strong>Operacao em tempo real</strong>
-                  </div>
-                  <span>Online</span>
-                </div>
-
-                <div className="home-metrics-grid">
-                  {metrics.map((metric) => (
-                    <div className="home-metric-card" key={metric.label}>
-                      <small>{metric.label}</small>
-                      <strong>{metric.value}</strong>
-                      <span>{metric.trend}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="home-production-card">
-                  <div className="home-production-info">
-                    <small>Relatorio</small>
-                    <strong>Gestao de estoque</strong>
-                    <p>Perfis • vidros • insumos • reposicao inteligente</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="reference-cards-grid">
+            {cards.map((card) => (
+              <article className="reference-card" key={card.title}>
+                <div className="reference-card-icon" aria-hidden="true">{card.icon}</div>
+                <h2>{card.title}</h2>
+                <p>{card.body}</p>
+              </article>
+            ))}
           </div>
-        </div>
-      </section>
-
-      <section className="home-feature-strip" aria-label="Diferenciais principais">
-        {features.map((feature, index) => (
-          <article className="home-feature-card" key={feature.title}>
-            <span>0{index + 1}</span>
-            <strong>{feature.title}</strong>
-            <p>{feature.body}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="home-content-section">
-        <p className="home-section-kicker">Para quem decide</p>
-        <h2>Feito para quem dirige a operacao, nao so para quem usa o sistema</h2>
-        <p>
-          Voce nao precisa de mais uma ferramenta generica de gestao. Precisa de um sistema que entenda
-          como sua fabrica ou loja realmente orca, produz, cobra e entrega — crescendo junto com as regras
-          especificas do seu negocio.
-        </p>
-      </section>
-
-      <section className="home-content-section home-ecosystem-section">
-        <p className="home-section-kicker">Ecossistema</p>
-        <h2>Construido para se conectar com o que voce ja usa</h2>
-        <p>
-          APIs para CRM, ERP, WhatsApp e os principais bancos do mercado — para parar de operar em silos.
-        </p>
-        <div className="home-ecosystem-row" aria-label="Integracoes e canais">
-          {ecosystem.map((item) => <span key={item}>{item}</span>)}
         </div>
       </section>
     </main>
