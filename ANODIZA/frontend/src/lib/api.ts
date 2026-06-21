@@ -34,7 +34,6 @@ async function readErrorMessage(response: Response): Promise<string> {
       message?: string;
     };
 
-    if (response.status === 401) return "Sessao invalida ou expirada.";
     if (response.status === 403) return "Voce nao tem permissao para esta acao.";
 
     if (Array.isArray(data.detail)) {
@@ -43,6 +42,7 @@ async function readErrorMessage(response: Response): Promise<string> {
 
     if (typeof data.detail === "string") return data.detail;
     if (typeof data.message === "string") return data.message;
+    if (response.status === 401) return "Sessao invalida ou expirada.";
 
     return `Erro ${response.status} na API`;
   } catch {
