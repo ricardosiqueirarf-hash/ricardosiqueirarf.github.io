@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 const metrics = [
-  { label: "Orcamentos ativos", value: "128", trend: "+18%" },
+  { label: "Orcamentos aprovados", value: "128", trend: "+18%" },
   { label: "Conversao media", value: "42%", trend: "+7%" },
-  { label: "Tempo economizado", value: "31h", trend: "semana" },
+  { label: "Faturamento", value: "121.765,56", trend: "mes" },
 ];
 
 const features = [
@@ -46,7 +46,7 @@ export default function HomePage() {
           </h1>
 
           <p className="home-subtitle">
-            Centralize clientes, orcamentos, usuarios e permissoes em uma base moderna,
+            Centralize clientes, orcamentos e usuarios em uma base moderna,
             escalavel e pronta para transformar operacoes moveleiras em software de alta performance.
           </p>
 
@@ -76,7 +76,7 @@ export default function HomePage() {
                 <span />
                 <span />
               </div>
-              <div className="home-search-pill">Buscar pedido, cliente ou produto</div>
+              <div className="home-search-pill">Buscar pedido, cliente</div>
             </div>
 
             <div className="home-dashboard-body">
@@ -108,9 +108,9 @@ export default function HomePage() {
 
                 <div className="home-production-card">
                   <div className="home-production-info">
-                    <small>Pedido em destaque</small>
-                    <strong>Closet premium bronze</strong>
-                    <p>4 portas • vidro reflecta • trilho superior</p>
+                    <small>Relatorio</small>
+                    <strong>Gestao de estoque</strong>
+                    <p>Perfis • vidros • insumos • reposicao inteligente</p>
                   </div>
                   <div className="home-door-preview" aria-hidden="true">
                     <span className="home-door-frame" />
