@@ -41,6 +41,17 @@ app.add_middleware(
 )
 
 
+def cors_error_headers(request: Request) -> dict[str, str]:
+    origin = request.headers.get("origin") or ""
+    permitido = origin if origin in origins or origin.endswith(".onrender.com") else "https://anodiza-frontend.onrender.com"
+    return {
+        "Access-Control-Allow-Origin": permitido,
+        "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": request.headers.get("access-control-request-headers") or "*",
+        "Vary": "Origin",
+    }
+
+
 async def read_safe_body(request: Request) -> Any:
     try:
         raw_body = await request.body()
@@ -77,7 +88,14 @@ async def request_log_middleware(request: Request, call_next):
             str(error),
             traceback.format_exc(),
         )
-        raise
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Erro interno no servidor.",
+                "message": "Falha inesperada no backend. Veja os logs do Render.",
+            },
+            headers=cors_error_headers(request),
+        )
 
     logger.info(
         "REQUEST_END method=%s path=%s status=%s",
@@ -108,6 +126,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "detail": safe_errors,
             "message": "Erro de validacao no payload enviado para a API.",
         },
+        headers=cors_error_headers(request),
     )
 
 
@@ -127,7 +146,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
-        headers=getattr(exc, "headers", None),
+        headers={**cors_error_headers(request), **(getattr(exc, "headers", None) or {})},
     )
 
 
@@ -150,6 +169,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
             "detail": "Erro interno no servidor.",
             "message": "Falha inesperada no backend. Veja os logs do Render.",
         },
+        headers=cors_error_headers(request),
     )
 
 
