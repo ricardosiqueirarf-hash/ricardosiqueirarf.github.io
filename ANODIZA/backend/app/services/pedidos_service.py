@@ -4,7 +4,7 @@ from fastapi import HTTPException, Request
 
 from app.core.auth import audit_event
 from app.repositories import clientes_repo, pedidos_repo
-from app.repositories.common import buscar_loja_principal
+from app.repositories.common import garantir_loja_operacional
 from app.schemas.pedidos import PedidoCreate, PedidoProdutoCreate, PedidoUpdate
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,16 @@ def proximo_numero(empresa_id: str, cliente_id: str | None = None) -> int:
     return maior + 1
 
 
+def loja_id_do_cliente_ou_operacao(empresa_id: str, cliente: dict):
+    loja_id = str(cliente.get("loja_id") or "").strip()
+    if loja_id:
+        return loja_id
+    loja = garantir_loja_operacional(empresa_id)
+    if not loja:
+        raise HTTPException(status_code=400, detail="Nao foi possivel preparar a operacao interna para criar orcamentos")
+    return str(loja["id"])
+
+
 def criar(empresa_id: str, payload: PedidoCreate, current_user: dict, request: Request):
     nome = payload.nome_orcamento.strip()
     cliente_id = payload.cliente_id.strip()
@@ -42,14 +52,12 @@ def criar(empresa_id: str, payload: PedidoCreate, current_user: dict, request: R
     cliente = clientes_repo.buscar_cliente(empresa_id, cliente_id)
     if not cliente:
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
-    loja = buscar_loja_principal(empresa_id)
-    dados = {"cliente_id": cliente_id, "numero_pedido": str(proximo_numero(empresa_id)), "nome_orcamento": nome, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
-    if loja:
-        dados["loja_id"] = loja["id"]
+    loja_id = loja_id_do_cliente_ou_operacao(empresa_id, cliente)
+    dados = {"loja_id": loja_id, "cliente_id": cliente_id, "numero_pedido": str(proximo_numero(empresa_id)), "nome_orcamento": nome, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "status": "rascunho", "valor_total": 0, "dados": {}}
     try:
         pedido = pedidos_repo.inserir(empresa_id, dados)
     except Exception as error:
-        logger.exception("Falha ao criar orcamento: empresa_id=%s cliente_id=%s numero=%s", empresa_id, cliente_id, dados.get("numero_pedido"))
+        logger.exception("Falha ao criar orcamento: empresa_id=%s loja_id=%s cliente_id=%s numero=%s", empresa_id, loja_id, cliente_id, dados.get("numero_pedido"))
         raise HTTPException(status_code=400, detail=f"Orcamento nao criado: {str(error)}") from error
     if not pedido:
         raise HTTPException(status_code=400, detail="Orcamento nao criado")
@@ -65,7 +73,8 @@ def editar(empresa_id: str, payload: PedidoUpdate, current_user: dict, request: 
     if not cliente:
         raise HTTPException(status_code=400, detail="Cliente nao encontrado")
     numero = str(pedido.get("numero_pedido") or "")
-    dados = {"cliente_id": payload.cliente_id, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "numero_pedido": numero, "nome_orcamento": payload.nome_orcamento.strip()}
+    loja_id = loja_id_do_cliente_ou_operacao(empresa_id, cliente)
+    dados = {"loja_id": loja_id, "cliente_id": payload.cliente_id, "cliente_nome": cliente["nome"], "cliente_telefone": str(cliente.get("telefone") or ""), "numero_pedido": numero, "nome_orcamento": payload.nome_orcamento.strip()}
     atualizado = pedidos_repo.atualizar(empresa_id, payload.id, dados)
     if not atualizado:
         raise HTTPException(status_code=400, detail="Orcamento nao atualizado")
