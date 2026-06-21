@@ -12,7 +12,24 @@ type Permissoes = Record<Aba, boolean>;
 type Usuario = { id?: string; nome?: string; email?: string; perfil?: string; permissoes?: Partial<Permissoes> };
 type AuthMe = { ok: boolean; usuario: Usuario };
 type Cliente = { id: string; nome: string; documento?: string; email?: string; telefone?: string };
-type Orcamento = { id: string; nome_orcamento: string; cliente_nome: string; numero_pedido: string; status: string; valor_total: number; cliente_id?: string };
+type Orcamento = {
+  id: string;
+  nome_orcamento: string;
+  cliente_nome: string;
+  numero_pedido: string;
+  status: string;
+  valor_total: number;
+  preco?: number;
+  custo?: number;
+  margem?: number;
+  margem_percentual?: number;
+  cliente_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  aprovado_em?: string;
+  usuario_nome?: string;
+  aprovado_por?: string;
+};
 
 type ClienteForm = { nome: string; documento: string; email: string; telefone: string };
 type OrcamentoForm = { nome_orcamento: string; cliente_id: string };
@@ -41,7 +58,7 @@ const masterPermissoes: Permissoes = {
 
 const titulos: Record<Aba, { titulo: string; subtitulo: string }> = {
   painel: { titulo: "Central operacional", subtitulo: "Visão geral da loja, sessão e módulos ativos." },
-  orcamentos: { titulo: "Orçamentos", subtitulo: "Criação, edição, aprovação e acompanhamento de propostas comerciais." },
+  orcamentos: { titulo: "Orçamentos", subtitulo: "Tabela operacional com cliente, datas, preço, custo, margem, aprovação e usuário." },
   clientes: { titulo: "Clientes", subtitulo: "Base comercial conectada aos pedidos e orçamentos." },
   usuarios: { titulo: "Usuários", subtitulo: "Acessos internos, perfis e permissões da empresa." },
   produtos: { titulo: "Produtos configuráveis", subtitulo: "A empresa cria seus próprios produtos e regras de cálculo." },
@@ -60,6 +77,17 @@ function normalizar(permissoes?: Partial<Permissoes>, perfil?: string): Permisso
 
 function dinheiro(valor: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor || 0);
+}
+
+function dataCurta(valor?: string) {
+  if (!valor) return "-";
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return "-";
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }).format(data);
+}
+
+function percentual(valor?: number) {
+  return `${Number(valor || 0).toFixed(1).replace(".", ",")}%`;
 }
 
 export default function LojaPage() {
@@ -319,18 +347,47 @@ export default function LojaPage() {
               <button>{orcamentoEditandoId ? "Salvar alterações" : "Criar"}</button>
               {orcamentoEditandoId && <button type="button" onClick={resetarOrcamento}>Cancelar edição</button>}
             </form>
-            <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
-              {orcamentos.map((o) => (
-                <div className="metric" key={o.id}>
-                  <strong>{o.nome_orcamento}</strong>
-                  <p>{o.cliente_nome} • #{o.numero_pedido} • {o.status} • {dinheiro(o.valor_total)}</p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button type="button" onClick={() => editarOrcamento(o)}>Editar nome/cliente</button>
-                    <button type="button" onClick={() => aprovarOrcamento(o)} disabled={o.status === "aprovado"}>{o.status === "aprovado" ? "Aprovado" : "Aprovar"}</button>
-                  </div>
-                </div>
-              ))}
-              {!orcamentos.length && <p>Nenhum orçamento cadastrado.</p>}
+            <div style={{ overflowX: "auto", marginTop: 18 }}>
+              <table style={{ width: "100%", minWidth: 1180, borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: 10 }}>#</th>
+                    <th style={{ textAlign: "left", padding: 10 }}>Orçamento</th>
+                    <th style={{ textAlign: "left", padding: 10 }}>Cliente</th>
+                    <th style={{ textAlign: "left", padding: 10 }}>Criação</th>
+                    <th style={{ textAlign: "left", padding: 10 }}>Aprovação</th>
+                    <th style={{ textAlign: "right", padding: 10 }}>Custo</th>
+                    <th style={{ textAlign: "right", padding: 10 }}>Margem</th>
+                    <th style={{ textAlign: "right", padding: 10 }}>Preço</th>
+                    <th style={{ textAlign: "left", padding: 10 }}>Status</th>
+                    <th style={{ textAlign: "left", padding: 10 }}>Criado por</th>
+                    <th style={{ textAlign: "left", padding: 10 }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orcamentos.map((o) => (
+                    <tr key={o.id} style={{ borderTop: "1px solid var(--border)" }}>
+                      <td style={{ padding: 10 }}>{o.numero_pedido || "-"}</td>
+                      <td style={{ padding: 10 }}><strong>{o.nome_orcamento}</strong></td>
+                      <td style={{ padding: 10 }}>{o.cliente_nome || "-"}</td>
+                      <td style={{ padding: 10 }}>{dataCurta(o.created_at)}</td>
+                      <td style={{ padding: 10 }}>{dataCurta(o.aprovado_em)}</td>
+                      <td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.custo || 0)}</td>
+                      <td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.margem || 0)} <small>({percentual(o.margem_percentual)})</small></td>
+                      <td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.preco ?? o.valor_total)}</td>
+                      <td style={{ padding: 10 }}>{o.status || "rascunho"}</td>
+                      <td style={{ padding: 10 }}>{o.usuario_nome || "-"}</td>
+                      <td style={{ padding: 10 }}>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <button type="button" onClick={() => editarOrcamento(o)}>Editar</button>
+                          <button type="button" onClick={() => aprovarOrcamento(o)} disabled={o.status === "aprovado"}>{o.status === "aprovado" ? "Aprovado" : "Aprovar"}</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!orcamentos.length && <p style={{ marginTop: 12 }}>Nenhum orçamento cadastrado.</p>}
             </div>
           </section>
         )}
