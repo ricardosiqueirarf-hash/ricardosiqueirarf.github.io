@@ -32,6 +32,32 @@ function aplicarValorCampoPorta(id, valor) {
     el.value = valorSalvoPorta({ [id]: valor }, id);
 }
 
+function aplicarDadosBasicosPorta(dados) {
+    // O perfil precisa ser aplicado antes do puxador, porque o select de puxadores é filtrado pelo perfil.
+    const perfilEl = document.getElementById('perfil');
+    if (perfilEl && dados.perfil) {
+        perfilEl.value = valorSalvoPorta(dados, 'perfil');
+    }
+
+    if (typeof atualizarPuxadoresSelect === 'function') {
+        atualizarPuxadoresSelect();
+    }
+
+    Object.keys(dados).forEach((k) => {
+        if (k === 'perfil' || k === 'puxador') return;
+        const el = document.getElementById(k);
+        if (el) el.value = valorSalvoPorta(dados, k);
+    });
+
+    const puxadorEl = document.getElementById('puxador');
+    if (puxadorEl && dados.puxador) {
+        puxadorEl.value = valorSalvoPorta(dados, 'puxador');
+    }
+
+    if (typeof atualizarPuxadorTipo === 'function') atualizarPuxadorTipo();
+    if (typeof atualizarCamposObrigatorios === 'function') atualizarCamposObrigatorios();
+}
+
 async function restaurarSistemaETrilhosPorta(porta) {
     if (!porta || (porta.tipo !== 'deslizante' && porta.tipo !== 'correr')) return;
     const dados = porta.dados || {};
@@ -68,10 +94,7 @@ function preencherCamposPorta(porta) {
     if (typeof renderCampos === 'function') renderCampos();
 
     const dados = porta.dados || {};
-    Object.keys(dados).forEach((k) => {
-        const el = document.getElementById(k);
-        if (el) el.value = valorSalvoPorta(dados, k);
-    });
+    aplicarDadosBasicosPorta(dados);
 
     if (typeof preencherAlturasDobradicas === 'function') preencherAlturasDobradicas(dados);
 
@@ -79,6 +102,11 @@ function preencherCamposPorta(porta) {
         setTimeout(() => restaurarSistemaETrilhosPorta(porta), 0);
         setTimeout(() => restaurarSistemaETrilhosPorta(porta), 250);
         setTimeout(() => restaurarSistemaETrilhosPorta(porta), 800);
+
+        // Alguns fixes recriam campos/trilhos de forma assíncrona. Reaplica perfil + puxador depois disso.
+        setTimeout(() => aplicarDadosBasicosPorta(dados), 0);
+        setTimeout(() => aplicarDadosBasicosPorta(dados), 250);
+        setTimeout(() => aplicarDadosBasicosPorta(dados), 800);
     }
 
     if (typeof atualizarPuxadorTipo === 'function') atualizarPuxadorTipo();
@@ -102,6 +130,7 @@ function copiarPorta(id) {
 
 window.carregarSistemas = carregarSistemas;
 window.restaurarSistemaETrilhosPorta = restaurarSistemaETrilhosPorta;
+window.aplicarDadosBasicosPorta = aplicarDadosBasicosPorta;
 window.preencherCamposPorta = preencherCamposPorta;
 window.editarPorta = editarPorta;
 window.copiarPorta = copiarPorta;
