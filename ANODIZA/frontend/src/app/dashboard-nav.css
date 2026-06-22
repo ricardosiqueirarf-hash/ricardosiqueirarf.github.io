@@ -1,27 +1,66 @@
-.app-nav .nav-group {
+.app-nav .nav-dropdown-group {
+  position: relative;
   display: grid;
-  gap: 7px;
-  padding: 12px 0 4px;
-  border-top: 1px solid rgba(255, 255, 255, .07);
+  min-width: 0;
 }
 
-.app-nav .nav-group:first-child {
-  border-top: 0;
-  padding-top: 0;
+.app-nav .nav-dropdown-group:hover,
+.app-nav .nav-dropdown-group:focus-within {
+  z-index: 40;
 }
 
-.app-nav .nav-group-title {
-  display: block;
-  padding: 0 10px 2px;
-  color: rgba(212, 175, 55, .78);
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-}
-
-.app-nav .nav-group button {
+.app-nav .nav-dropdown-trigger {
   width: 100%;
+  justify-content: flex-start;
+}
+
+.app-nav .nav-dropdown-trigger.nav-active {
+  border-color: rgba(212, 175, 55, .35);
+  background: linear-gradient(135deg, rgba(212, 175, 55, .14), rgba(255, 255, 255, .055));
+  color: #fff5c7;
+}
+
+.app-nav .nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(212, 175, 55, .22);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .045)),
+    rgba(6, 9, 18, .94);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .12);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px) scale(.98);
+  transform-origin: top;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.app-nav .nav-dropdown-group:hover .nav-dropdown-menu,
+.app-nav .nav-dropdown-group:focus-within .nav-dropdown-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.app-nav .nav-dropdown-menu button {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .04);
+  box-shadow: none;
+}
+
+.app-nav .nav-dropdown-menu button:hover,
+.app-nav .nav-dropdown-menu button.nav-active {
+  transform: translateX(3px);
+  background: rgba(212, 175, 55, .12);
 }
 
 .app-nav > button:last-child {
@@ -35,4 +74,17 @@
 .app-nav > button:last-child::before {
   background: #f87171;
   box-shadow: 0 0 14px rgba(248, 113, 113, .65);
+}
+
+@media (max-width: 980px) {
+  .app-nav .nav-dropdown-menu {
+    position: static;
+    display: none;
+    margin-top: 7px;
+  }
+
+  .app-nav .nav-dropdown-group:hover .nav-dropdown-menu,
+  .app-nav .nav-dropdown-group:focus-within .nav-dropdown-menu {
+    display: grid;
+  }
 }
