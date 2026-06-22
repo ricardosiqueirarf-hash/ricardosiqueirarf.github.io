@@ -279,6 +279,12 @@ export default function LojaPage() {
     return <button className={aba === chave ? "nav-active" : ""} onClick={() => abrir(chave)}>{rotulo}</button>;
   }
 
+  function grupoMenu(titulo: string, itens: Array<React.ReactNode>) {
+    const visiveis = itens.filter(Boolean);
+    if (!visiveis.length) return null;
+    return <div className="nav-group"><span className="nav-group-title">{titulo}</span>{visiveis}</div>;
+  }
+
   if (carregando) return <main className="dashboard"><section className="card"><h1>Carregando sessão...</h1><p>Validando usuário no backend.</p></section></main>;
   if (!usuario) return <main className="dashboard"><section className="card"><h1>Sessão inválida</h1><button onClick={() => router.push("/login")}>Entrar</button></section></main>;
 
@@ -288,14 +294,11 @@ export default function LojaPage() {
         <div className="brand"><div className="brand-mark">A</div><div><strong>ANODIZA</strong><p>{usuario.nome}</p></div></div>
         <p>Empresa: {empresaSlug}</p>
         <nav className="app-nav">
-          {itemMenu("painel", "Painel")}
-          {itemMenu("orcamentos", "Orçamentos")}
-          {itemMenu("clientes", "Clientes")}
-          {isMaster && <button className={aba === "usuarios" ? "nav-active" : ""} onClick={() => abrir("usuarios")}>Usuários</button>}
-          {itemMenu("produtos", "Produtos")}
-          {itemMenu("materiais", "Materiais")}
-          {itemMenu("tags", "Tags")}
-          {itemMenu("ajustes", "Ajustes")}
+          {grupoMenu("Gerencial", [itemMenu("painel", "Painel")])}
+          {grupoMenu("Orçamentos", [itemMenu("orcamentos", "Orçamentos"), itemMenu("clientes", "Clientes")])}
+          {grupoMenu("Cadastro", [itemMenu("materiais", "Materiais")])}
+          {grupoMenu("Usuários", [isMaster && <button key="usuarios" className={aba === "usuarios" ? "nav-active" : ""} onClick={() => abrir("usuarios")}>Usuários</button>])}
+          {grupoMenu("Cálculos", [itemMenu("produtos", "Produtos"), itemMenu("tags", "Tags")])}
           <button onClick={sair}>Sair</button>
         </nav>
       </aside>
