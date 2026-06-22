@@ -99,21 +99,48 @@ button:disabled {
 
 /* Estrutura principal */
 .dashboard {
-  grid-template-columns: 292px minmax(0, 1fr);
+  grid-template-columns: 228px minmax(0, 1fr);
   overflow: visible;
 }
 
 .sidebar {
   z-index: 300;
+  padding: 22px 12px;
+}
+
+.sidebar::before {
+  inset: 10px;
+  border-radius: 24px;
 }
 
 .sidebar .brand {
   align-items: center;
+  gap: 10px;
+  margin: 4px 6px 14px;
+  padding: 10px;
+  border-radius: 20px;
+}
+
+.sidebar .brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  flex: 0 0 auto;
 }
 
 .sidebar .brand strong,
 .settings-brand-preview strong {
-  letter-spacing: .18em;
+  letter-spacing: .16em;
+}
+
+.sidebar .brand p,
+.sidebar > p {
+  font-size: 11px;
+}
+
+.sidebar > p {
+  margin: 0 6px 16px;
+  padding: 8px 10px;
 }
 
 .main {
@@ -205,14 +232,25 @@ button:disabled {
 
 /* Navegação */
 .app-nav {
-  gap: 9px;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 0 4px;
 }
 
 .app-nav button,
 .sidebar nav button {
-  min-height: 44px;
-  border-radius: 15px;
+  min-height: 42px;
+  border-radius: 14px;
   outline: none;
+  padding-inline: 12px;
+  font-size: 13px;
+}
+
+.app-nav button::before,
+.sidebar nav button::before {
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
 }
 
 .app-nav button:focus-visible,
