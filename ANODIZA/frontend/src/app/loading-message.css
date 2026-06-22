@@ -22,20 +22,7 @@
 }
 
 .dashboard > .card:has(> h1 + p)::before {
-  content: "";
-  width: min(280px, 74%);
-  height: 10px;
-  margin-bottom: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(212, 175, 55, .26);
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, transparent, rgba(255, 241, 168, .9), #d4af37, rgba(255, 241, 168, .9), transparent) 0 0 / 42% 100% no-repeat,
-    linear-gradient(90deg, rgba(255, 255, 255, .055), rgba(212, 175, 55, .08), rgba(255, 255, 255, .055));
-  box-shadow:
-    0 0 30px rgba(212, 175, 55, .18),
-    inset 0 0 18px rgba(212, 175, 55, .12);
-  animation: anodizaSessionLoadBar 1.45s ease-in-out infinite;
+  content: none;
 }
 
 .dashboard > .card:has(> h1 + p)::after {
@@ -89,12 +76,6 @@
   background: #34d399;
   box-shadow: 0 0 18px #34d399;
   animation: anodizaSessionPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes anodizaSessionLoadBar {
-  0% { background-position: -46% 0, 0 0; }
-  50% { background-position: 62% 0, 0 0; }
-  100% { background-position: 146% 0, 0 0; }
 }
 
 @keyframes anodizaSessionGrid {
