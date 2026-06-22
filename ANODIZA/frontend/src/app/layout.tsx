@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./dashboard.css";
 import "./dashboard-nav.css";
+import "./loading-message.css";
 import "./reference-landing.css";
 import type { Metadata } from "next";
 
