@@ -30,12 +30,28 @@ class PortaGiroPayload(BaseModel):
     lado_puxador: str = "direito"
     altura_puxador: float = Field(default=1000, ge=0)
     dobradicas: int = Field(default=2, ge=2)
+    dobradicas_alturas: list[float] = Field(default_factory=list)
+    lado_dobradica: str = "esquerdo"
     valor_adicional: float = Field(default=0, ge=0)
     observacao_venda: str = ""
     observacao_producao: str = ""
     acessorio: str = ""
+    ambiente: str = ""
 
-    @field_validator("empresa_slug", "orcamento_id", "perfil_id", "vidro_id", "puxador_id", "lado_puxador", "observacao_venda", "observacao_producao", "acessorio", mode="before")
+    @field_validator(
+        "empresa_slug",
+        "orcamento_id",
+        "perfil_id",
+        "vidro_id",
+        "puxador_id",
+        "lado_puxador",
+        "lado_dobradica",
+        "observacao_venda",
+        "observacao_producao",
+        "acessorio",
+        "ambiente",
+        mode="before",
+    )
     @classmethod
     def strip_text(cls, value: str) -> str:
         return value.strip() if isinstance(value, str) else value
@@ -44,12 +60,20 @@ class PortaGiroPayload(BaseModel):
     def validar(self):
         if self.lado_puxador not in {"direito", "esquerdo"}:
             raise ValueError("lado_puxador deve ser direito ou esquerdo")
+        if self.lado_dobradica not in {"direito", "esquerdo"}:
+            raise ValueError("lado_dobradica deve ser direito ou esquerdo")
         if self.dobradicas < 2:
             raise ValueError("Porta de giro precisa de pelo menos 2 dobradicas")
         if self.altura <= 200:
             raise ValueError("Altura precisa ser maior que 200mm para distribuir dobradicas")
         if self.dobradicas > 12:
             raise ValueError("Quantidade de dobradicas muito alta")
+        if self.dobradicas_alturas:
+            if len(self.dobradicas_alturas) != self.dobradicas:
+                raise ValueError("A quantidade de alturas precisa ser igual a quantidade de dobradicas")
+            for altura_dobradica in self.dobradicas_alturas:
+                if altura_dobradica <= 0 or altura_dobradica >= self.altura:
+                    raise ValueError("Alturas das dobradicas precisam estar dentro da altura da porta")
         return self
 
 
