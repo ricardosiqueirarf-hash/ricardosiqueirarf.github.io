@@ -1,3 +1,24 @@
+:root {
+  --anodiza-sidebar-width: 292px;
+  --anodiza-submenu-width: 220px;
+}
+
+.dashboard {
+  overflow: visible;
+}
+
+.sidebar {
+  width: var(--anodiza-sidebar-width);
+  min-width: var(--anodiza-sidebar-width);
+  max-width: var(--anodiza-sidebar-width);
+  justify-self: start;
+  overflow: visible;
+}
+
+.app-nav {
+  width: 100%;
+}
+
 .app-nav .nav-dropdown-group {
   position: static;
   display: grid;
@@ -12,7 +33,14 @@
 
 .app-nav .nav-dropdown-trigger {
   width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
   justify-content: space-between;
+}
+
+.app-nav button.nav-active,
+.app-nav .nav-dropdown-trigger.nav-active {
+  transform: none;
 }
 
 .app-nav .nav-dropdown-trigger::after {
@@ -40,8 +68,8 @@
 .app-nav .nav-dropdown-menu {
   position: absolute !important;
   top: 0 !important;
-  left: 228px !important;
-  width: 190px;
+  left: var(--anodiza-sidebar-width) !important;
+  width: var(--anodiza-submenu-width);
   height: 100vh;
   min-height: 100vh;
   display: grid;
@@ -111,10 +139,20 @@
 .dashboard:has(.nav-dropdown-trigger.nav-active + .nav-dropdown-menu),
 .dashboard:has(.nav-dropdown-group:hover .nav-dropdown-menu),
 .dashboard:has(.nav-dropdown-group:focus-within .nav-dropdown-menu) {
-  grid-template-columns: 418px minmax(0, 1fr) !important;
+  grid-template-columns: calc(var(--anodiza-sidebar-width) + var(--anodiza-submenu-width)) minmax(0, 1fr) !important;
 }
 
 @media (max-width: 980px) {
+  .dashboard {
+    overflow: hidden;
+  }
+
+  .sidebar {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+
   .app-nav .nav-dropdown-group {
     position: relative;
   }
