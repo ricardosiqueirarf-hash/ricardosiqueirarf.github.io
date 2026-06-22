@@ -1,1 +1,4 @@
-/* sidebar extension restored */
+.sidebar { position: relative; overflow: visible; }
+.app-nav { position: static; overflow: visible; }
+.app-nav .nav-dropdown-group { position: static; }
+.app-nav .nav-dropdown-menu { position: absolute; top: 0; left: 228px; width: 190px; min-height: 100vh; height: 100vh; }
