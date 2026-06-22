@@ -5,6 +5,7 @@ import "./dashboard-layer.css";
 import "./loading-message.css";
 import "./global-door-3d.css";
 import "./reference-landing.css";
+import "./ux-polish.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
