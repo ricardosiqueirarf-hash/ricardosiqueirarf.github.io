@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet, apiPost } from "@/lib/api";
+import GlobalQuotePanel from "./GlobalQuotePanel";
 import MateriaisPanel from "./MateriaisPanel";
 import ProdutosPanel from "./ProdutosPanel";
 import TagsPanel from "./TagsPanel";
@@ -98,6 +99,7 @@ export default function LojaPage() {
   const [aba, setAba] = useState<Aba>("painel");
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const [orcamentoProduto, setOrcamentoProduto] = useState<Orcamento | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [mensagem, setMensagem] = useState("");
   const [clienteForm, setClienteForm] = useState<ClienteForm>(clienteVazio);
@@ -153,6 +155,7 @@ export default function LojaPage() {
     if (!pode(chave)) return;
     setAba(chave);
     setMensagem("");
+    setOrcamentoProduto(null);
     if (chave === "clientes") await carregarClientes(empresaSlug);
     if (chave === "orcamentos") { await carregarClientes(empresaSlug); await carregarOrcamentos(empresaSlug); }
     if (chave === "usuarios") await carregarUsuarios(empresaSlug);
@@ -347,8 +350,9 @@ export default function LojaPage() {
               <button>{orcamentoEditandoId ? "Salvar alterações" : "Criar"}</button>
               {orcamentoEditandoId && <button type="button" onClick={resetarOrcamento}>Cancelar edição</button>}
             </form>
+            {orcamentoProduto && <GlobalQuotePanel empresaSlug={empresaSlug} orcamento={orcamentoProduto} onClose={() => setOrcamentoProduto(null)} onSaved={() => carregarOrcamentos(empresaSlug)} />}
             <div style={{ overflowX: "auto", marginTop: 18 }}>
-              <table style={{ width: "100%", minWidth: 1180, borderCollapse: "collapse" }}>
+              <table style={{ width: "100%", minWidth: 1280, borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
                     <th style={{ textAlign: "left", padding: 10 }}>#</th>
@@ -379,6 +383,7 @@ export default function LojaPage() {
                       <td style={{ padding: 10 }}>{o.usuario_nome || "-"}</td>
                       <td style={{ padding: 10 }}>
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <button type="button" onClick={() => setOrcamentoProduto(o)}>Orçamento</button>
                           <button type="button" onClick={() => editarOrcamento(o)}>Editar</button>
                           <button type="button" onClick={() => aprovarOrcamento(o)} disabled={o.status === "aprovado"}>{o.status === "aprovado" ? "Aprovado" : "Aprovar"}</button>
                         </div>
