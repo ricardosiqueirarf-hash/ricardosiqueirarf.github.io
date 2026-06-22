@@ -276,13 +276,21 @@ export default function LojaPage() {
 
   function itemMenu(chave: Aba, rotulo: string) {
     if (!pode(chave)) return null;
-    return <button className={aba === chave ? "nav-active" : ""} onClick={() => abrir(chave)}>{rotulo}</button>;
+    return <button key={chave} type="button" role="menuitem" className={aba === chave ? "nav-active" : ""} onClick={() => abrir(chave)}>{rotulo}</button>;
   }
 
-  function grupoMenu(titulo: string, itens: Array<React.ReactNode>) {
+  function grupoMenu(titulo: string, itens: Array<React.ReactNode>, chaves: Aba[]) {
     const visiveis = itens.filter(Boolean);
     if (!visiveis.length) return null;
-    return <div className="nav-group"><span className="nav-group-title">{titulo}</span>{visiveis}</div>;
+    const ativo = chaves.includes(aba);
+    return (
+      <div className="nav-dropdown-group">
+        <button type="button" className={`nav-dropdown-trigger ${ativo ? "nav-active" : ""}`} aria-haspopup="menu" aria-expanded="false">
+          {titulo}
+        </button>
+        <div className="nav-dropdown-menu" role="menu">{visiveis}</div>
+      </div>
+    );
   }
 
   if (carregando) return <main className="dashboard"><section className="card"><h1>Carregando sessão...</h1><p>Validando usuário no backend.</p></section></main>;
@@ -294,11 +302,11 @@ export default function LojaPage() {
         <div className="brand"><div className="brand-mark">A</div><div><strong>ANODIZA</strong><p>{usuario.nome}</p></div></div>
         <p>Empresa: {empresaSlug}</p>
         <nav className="app-nav">
-          {grupoMenu("Gerencial", [itemMenu("painel", "Painel")])}
-          {grupoMenu("Orçamentos", [itemMenu("orcamentos", "Orçamentos"), itemMenu("clientes", "Clientes")])}
-          {grupoMenu("Cadastro", [itemMenu("materiais", "Materiais")])}
-          {grupoMenu("Usuários", [isMaster && <button key="usuarios" className={aba === "usuarios" ? "nav-active" : ""} onClick={() => abrir("usuarios")}>Usuários</button>])}
-          {grupoMenu("Cálculos", [itemMenu("produtos", "Produtos"), itemMenu("tags", "Tags")])}
+          {grupoMenu("Gerencial", [itemMenu("painel", "Painel")], ["painel"])}
+          {grupoMenu("Orçamentos", [itemMenu("orcamentos", "Orçamentos"), itemMenu("clientes", "Clientes")], ["orcamentos", "clientes"])}
+          {grupoMenu("Cadastro", [itemMenu("materiais", "Materiais")], ["materiais"])}
+          {grupoMenu("Usuários", [isMaster ? itemMenu("usuarios", "Usuários") : null], ["usuarios"])}
+          {grupoMenu("Cálculos", [itemMenu("produtos", "Produtos"), itemMenu("tags", "Tags")], ["produtos", "tags"])}
           <button onClick={sair}>Sair</button>
         </nav>
       </aside>
