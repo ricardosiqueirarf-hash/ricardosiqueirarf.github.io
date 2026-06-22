@@ -65,7 +65,7 @@ const titulos: Record<Aba, { titulo: string; subtitulo: string }> = {
   produtos: { titulo: "Produtos configuráveis", subtitulo: "A empresa cria seus próprios produtos e regras de cálculo." },
   materiais: { titulo: "Materiais", subtitulo: "Perfis, sistemas, vidros, puxadores, trilhos, insumos e componentes." },
   tags: { titulo: "Tags inteligentes", subtitulo: "Características e regras de negócio para cálculo automático." },
-  ajustes: { titulo: "Ajustes", subtitulo: "Configurações administrativas do ambiente." },
+  ajustes: { titulo: "Ajustes", subtitulo: "Integrações e configurações administrativas do ambiente." },
 };
 
 const clienteVazio: ClienteForm = { nome: "", documento: "", email: "", telefone: "" };
@@ -168,19 +168,11 @@ export default function LojaPage() {
     router.push("/login");
   }
 
-  function resetarCliente() {
-    setClienteForm(clienteVazio);
-    setClienteEditandoId("");
-  }
+  function resetarCliente() { setClienteForm(clienteVazio); setClienteEditandoId(""); }
 
   function editarCliente(cliente: Cliente) {
     setClienteEditandoId(cliente.id);
-    setClienteForm({
-      nome: cliente.nome || "",
-      documento: cliente.documento || "",
-      email: cliente.email || "",
-      telefone: cliente.telefone || "",
-    });
+    setClienteForm({ nome: cliente.nome || "", documento: cliente.documento || "", email: cliente.email || "", telefone: cliente.telefone || "" });
     setMensagem("");
   }
 
@@ -188,16 +180,11 @@ export default function LojaPage() {
     event.preventDefault();
     setMensagem("");
     try {
-      if (clienteEditandoId) {
-        await apiPost("/api/loja/clientes/editar", { empresa_slug: empresaSlug, id: clienteEditandoId, ...clienteForm });
-      } else {
-        await apiPost("/api/loja/clientes", { empresa_slug: empresaSlug, ...clienteForm });
-      }
+      if (clienteEditandoId) await apiPost("/api/loja/clientes/editar", { empresa_slug: empresaSlug, id: clienteEditandoId, ...clienteForm });
+      else await apiPost("/api/loja/clientes", { empresa_slug: empresaSlug, ...clienteForm });
       resetarCliente();
       await carregarClientes(empresaSlug);
-    } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao salvar cliente");
-    }
+    } catch (error) { setMensagem(error instanceof Error ? error.message : "Erro ao salvar cliente"); }
   }
 
   async function apagarCliente(cliente: Cliente) {
@@ -207,22 +194,14 @@ export default function LojaPage() {
       await apiPost("/api/loja/clientes/excluir", { empresa_slug: empresaSlug, id: cliente.id });
       if (clienteEditandoId === cliente.id) resetarCliente();
       await carregarClientes(empresaSlug);
-    } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao apagar cliente");
-    }
+    } catch (error) { setMensagem(error instanceof Error ? error.message : "Erro ao apagar cliente"); }
   }
 
-  function resetarOrcamento() {
-    setOrcamentoForm(orcamentoVazio);
-    setOrcamentoEditandoId("");
-  }
+  function resetarOrcamento() { setOrcamentoForm(orcamentoVazio); setOrcamentoEditandoId(""); }
 
   function editarOrcamento(orcamento: Orcamento) {
     setOrcamentoEditandoId(orcamento.id);
-    setOrcamentoForm({
-      nome_orcamento: orcamento.nome_orcamento || "",
-      cliente_id: orcamento.cliente_id || "",
-    });
+    setOrcamentoForm({ nome_orcamento: orcamento.nome_orcamento || "", cliente_id: orcamento.cliente_id || "" });
     setMensagem("");
   }
 
@@ -230,16 +209,11 @@ export default function LojaPage() {
     event.preventDefault();
     setMensagem("");
     try {
-      if (orcamentoEditandoId) {
-        await apiPost("/api/loja/orcamentos/editar", { empresa_slug: empresaSlug, id: orcamentoEditandoId, ...orcamentoForm });
-      } else {
-        await apiPost("/api/loja/orcamentos", { empresa_slug: empresaSlug, ...orcamentoForm });
-      }
+      if (orcamentoEditandoId) await apiPost("/api/loja/orcamentos/editar", { empresa_slug: empresaSlug, id: orcamentoEditandoId, ...orcamentoForm });
+      else await apiPost("/api/loja/orcamentos", { empresa_slug: empresaSlug, ...orcamentoForm });
       resetarOrcamento();
       await carregarOrcamentos(empresaSlug);
-    } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao salvar orçamento");
-    }
+    } catch (error) { setMensagem(error instanceof Error ? error.message : "Erro ao salvar orçamento"); }
   }
 
   async function aprovarOrcamento(orcamento: Orcamento) {
@@ -249,9 +223,7 @@ export default function LojaPage() {
     try {
       await apiPost("/api/loja/orcamentos/aprovar", { empresa_slug: empresaSlug, id: orcamento.id });
       await carregarOrcamentos(empresaSlug);
-    } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao aprovar orçamento");
-    }
+    } catch (error) { setMensagem(error instanceof Error ? error.message : "Erro ao aprovar orçamento"); }
   }
 
   async function criarUsuario(event: React.FormEvent<HTMLFormElement>) {
@@ -260,23 +232,23 @@ export default function LojaPage() {
       await apiPost("/api/loja/usuarios", { empresa_slug: empresaSlug, ...novoUsuario });
       setNovoUsuario({ nome: "", email: "", perfil: "vendedor", senha: "" });
       await carregarUsuarios(empresaSlug);
-    } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao criar usuario");
-    }
+    } catch (error) { setMensagem(error instanceof Error ? error.message : "Erro ao criar usuario"); }
   }
 
   async function salvarPermissoes(alvo: Usuario, permissoesNovas: Partial<Permissoes>) {
     try {
       await apiPost("/api/loja/usuarios/permissoes", { empresa_slug: empresaSlug, id: alvo.id, permissoes: permissoesNovas });
       await carregarUsuarios(empresaSlug);
-    } catch (error) {
-      setMensagem(error instanceof Error ? error.message : "Erro ao alterar acessos");
-    }
+    } catch (error) { setMensagem(error instanceof Error ? error.message : "Erro ao alterar acessos"); }
   }
 
   function itemMenu(chave: Aba, rotulo: string) {
     if (!pode(chave)) return null;
     return <button key={chave} type="button" role="menuitem" className={aba === chave ? "nav-active" : ""} onClick={() => abrir(chave)}>{rotulo}</button>;
+  }
+
+  function itemIntegracaoBloqueada(rotulo: string) {
+    return <button key={rotulo} type="button" role="menuitem" className="nav-disabled" disabled title="Integração futura liberada mediante contrato com a ANODIZA.">{rotulo}</button>;
   }
 
   function grupoMenu(titulo: string, itens: Array<React.ReactNode>, chaves: Aba[]) {
@@ -285,15 +257,13 @@ export default function LojaPage() {
     const ativo = chaves.includes(aba);
     return (
       <div className="nav-dropdown-group">
-        <button type="button" className={`nav-dropdown-trigger ${ativo ? "nav-active" : ""}`} aria-haspopup="menu" aria-expanded="false">
-          {titulo}
-        </button>
+        <button type="button" className={`nav-dropdown-trigger ${ativo ? "nav-active" : ""}`} aria-haspopup="menu" aria-expanded="false">{titulo}</button>
         <div className="nav-dropdown-menu" role="menu">{visiveis}</div>
       </div>
     );
   }
 
-  if (carregando) return <main className="dashboard"><section className="card"><h1>Carregando sessão...</h1><p>Validando usuário no backend.</p></section></main>;
+  if (carregando) return <main className="dashboard"><section className="card"><h1>Carregando sessão...</h1><p>Validando usuário....</p></section></main>;
   if (!usuario) return <main className="dashboard"><section className="card"><h1>Sessão inválida</h1><button onClick={() => router.push("/login")}>Entrar</button></section></main>;
 
   return (
@@ -307,112 +277,25 @@ export default function LojaPage() {
           {grupoMenu("Cadastro", [itemMenu("materiais", "Materiais")], ["materiais"])}
           {grupoMenu("Usuários", [isMaster ? itemMenu("usuarios", "Usuários") : null], ["usuarios"])}
           {grupoMenu("Cálculos", [itemMenu("produtos", "Produtos"), itemMenu("tags", "Tags")], ["produtos", "tags"])}
+          {grupoMenu("Ajustes", pode("ajustes") ? [itemIntegracaoBloqueada("API Asaas"), itemIntegracaoBloqueada("API Inter"), itemIntegracaoBloqueada("API ChatGPT")] : [], ["ajustes"])}
           <button onClick={sair}>Sair</button>
         </nav>
       </aside>
 
       <section className="main">
-        <header className="dashboard-topbar">
-          <div>
-            <p className="dashboard-kicker">ANODIZA OS · ambiente autenticado</p>
-            <h1>{titulos[aba].titulo}</h1>
-            <p>{titulos[aba].subtitulo}</p>
-          </div>
-          <div className="dashboard-status">Operação online</div>
-        </header>
-
+        <header className="dashboard-topbar"><div><p className="dashboard-kicker">ANODIZA OS · ambiente autenticado</p><h1>{titulos[aba].titulo}</h1><p>{titulos[aba].subtitulo}</p></div><div className="dashboard-status">Operação online</div></header>
         {mensagem && <p>{mensagem}</p>}
-
         {aba === "painel" && <section className="card"><h1>Painel da Loja</h1><p>Usuário validado pelo backend. O menu é apenas visual; o bloqueio real está na API.</p><div className="grid"><div className="metric"><p>Clientes carregados</p><strong>{clientes.length}</strong></div><div className="metric"><p>Perfil</p><strong>{usuario.perfil || "-"}</strong></div><div className="metric"><p>Empresa ativa</p><strong>{empresaSlug || "-"}</strong></div></div></section>}
 
-        {aba === "clientes" && (
-          <section className="card" style={{ maxWidth: "none" }}>
-            <h1>Clientes</h1>
-            <form onSubmit={salvarCliente}>
-              <label>Nome<input value={clienteForm.nome} onChange={(e) => setClienteForm({ ...clienteForm, nome: e.target.value })} /></label>
-              <label>CPF/CNPJ<input value={clienteForm.documento} onChange={(e) => setClienteForm({ ...clienteForm, documento: e.target.value })} /></label>
-              <label>E-mail<input value={clienteForm.email} onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })} /></label>
-              <label>Celular<input value={clienteForm.telefone} onChange={(e) => setClienteForm({ ...clienteForm, telefone: e.target.value })} /></label>
-              <button>{clienteEditandoId ? "Salvar alterações" : "Cadastrar"}</button>
-              {clienteEditandoId && <button type="button" onClick={resetarCliente}>Cancelar edição</button>}
-            </form>
-            <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
-              {clientes.map((c) => (
-                <div className="metric" key={c.id}>
-                  <strong>{c.nome}</strong>
-                  <p>{c.documento || "Sem documento"} • {c.email || "Sem e-mail"} • {c.telefone || "Sem telefone"}</p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button type="button" onClick={() => editarCliente(c)}>Editar</button>
-                    <button type="button" onClick={() => apagarCliente(c)}>Apagar</button>
-                  </div>
-                </div>
-              ))}
-              {!clientes.length && <p>Nenhum cliente cadastrado.</p>}
-            </div>
-          </section>
-        )}
+        {aba === "clientes" && <section className="card" style={{ maxWidth: "none" }}><h1>Clientes</h1><form onSubmit={salvarCliente}><label>Nome<input value={clienteForm.nome} onChange={(e) => setClienteForm({ ...clienteForm, nome: e.target.value })} /></label><label>CPF/CNPJ<input value={clienteForm.documento} onChange={(e) => setClienteForm({ ...clienteForm, documento: e.target.value })} /></label><label>E-mail<input value={clienteForm.email} onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })} /></label><label>Celular<input value={clienteForm.telefone} onChange={(e) => setClienteForm({ ...clienteForm, telefone: e.target.value })} /></label><button>{clienteEditandoId ? "Salvar alterações" : "Cadastrar"}</button>{clienteEditandoId && <button type="button" onClick={resetarCliente}>Cancelar edição</button>}</form><div style={{ display: "grid", gap: 12, marginTop: 18 }}>{clientes.map((c) => <div className="metric" key={c.id}><strong>{c.nome}</strong><p>{c.documento || "Sem documento"} • {c.email || "Sem e-mail"} • {c.telefone || "Sem telefone"}</p><div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="button" onClick={() => editarCliente(c)}>Editar</button><button type="button" onClick={() => apagarCliente(c)}>Apagar</button></div></div>)}{!clientes.length && <p>Nenhum cliente cadastrado.</p>}</div></section>}
 
-        {aba === "orcamentos" && (
-          <section className="card" style={{ maxWidth: "none" }}>
-            <h1>Orçamentos</h1>
-            <form onSubmit={salvarOrcamento}>
-              <label>Nome<input value={orcamentoForm.nome_orcamento} onChange={(e) => setOrcamentoForm({ ...orcamentoForm, nome_orcamento: e.target.value })} /></label>
-              <label>Cliente<select value={orcamentoForm.cliente_id} onChange={(e) => setOrcamentoForm({ ...orcamentoForm, cliente_id: e.target.value })}><option value="">Selecione</option>{clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></label>
-              <button>{orcamentoEditandoId ? "Salvar alterações" : "Criar"}</button>
-              {orcamentoEditandoId && <button type="button" onClick={resetarOrcamento}>Cancelar edição</button>}
-            </form>
-            {orcamentoProduto && <GlobalQuotePanel empresaSlug={empresaSlug} orcamento={orcamentoProduto} onClose={() => setOrcamentoProduto(null)} onSaved={() => carregarOrcamentos(empresaSlug)} />}
-            <div style={{ overflowX: "auto", marginTop: 18 }}>
-              <table style={{ width: "100%", minWidth: 1280, borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: "left", padding: 10 }}>#</th>
-                    <th style={{ textAlign: "left", padding: 10 }}>Orçamento</th>
-                    <th style={{ textAlign: "left", padding: 10 }}>Cliente</th>
-                    <th style={{ textAlign: "left", padding: 10 }}>Criação</th>
-                    <th style={{ textAlign: "left", padding: 10 }}>Aprovação</th>
-                    <th style={{ textAlign: "right", padding: 10 }}>Custo</th>
-                    <th style={{ textAlign: "right", padding: 10 }}>Margem</th>
-                    <th style={{ textAlign: "right", padding: 10 }}>Preço</th>
-                    <th style={{ textAlign: "left", padding: 10 }}>Status</th>
-                    <th style={{ textAlign: "left", padding: 10 }}>Criado por</th>
-                    <th style={{ textAlign: "left", padding: 10 }}>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orcamentos.map((o) => (
-                    <tr key={o.id} style={{ borderTop: "1px solid var(--border)" }}>
-                      <td style={{ padding: 10 }}>{o.numero_pedido || "-"}</td>
-                      <td style={{ padding: 10 }}><strong>{o.nome_orcamento}</strong></td>
-                      <td style={{ padding: 10 }}>{o.cliente_nome || "-"}</td>
-                      <td style={{ padding: 10 }}>{dataCurta(o.created_at)}</td>
-                      <td style={{ padding: 10 }}>{dataCurta(o.aprovado_em)}</td>
-                      <td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.custo || 0)}</td>
-                      <td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.margem || 0)} <small>({percentual(o.margem_percentual)})</small></td>
-                      <td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.preco ?? o.valor_total)}</td>
-                      <td style={{ padding: 10 }}>{o.status || "rascunho"}</td>
-                      <td style={{ padding: 10 }}>{o.usuario_nome || "-"}</td>
-                      <td style={{ padding: 10 }}>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          <button type="button" onClick={() => setOrcamentoProduto(o)}>Orçamento</button>
-                          <button type="button" onClick={() => editarOrcamento(o)}>Editar</button>
-                          <button type="button" onClick={() => aprovarOrcamento(o)} disabled={o.status === "aprovado"}>{o.status === "aprovado" ? "Aprovado" : "Aprovar"}</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!orcamentos.length && <p style={{ marginTop: 12 }}>Nenhum orçamento cadastrado.</p>}
-            </div>
-          </section>
-        )}
+        {aba === "orcamentos" && <section className="card" style={{ maxWidth: "none" }}><h1>Orçamentos</h1><form onSubmit={salvarOrcamento}><label>Nome<input value={orcamentoForm.nome_orcamento} onChange={(e) => setOrcamentoForm({ ...orcamentoForm, nome_orcamento: e.target.value })} /></label><label>Cliente<select value={orcamentoForm.cliente_id} onChange={(e) => setOrcamentoForm({ ...orcamentoForm, cliente_id: e.target.value })}><option value="">Selecione</option>{clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></label><button>{orcamentoEditandoId ? "Salvar alterações" : "Criar"}</button>{orcamentoEditandoId && <button type="button" onClick={resetarOrcamento}>Cancelar edição</button>}</form>{orcamentoProduto && <GlobalQuotePanel empresaSlug={empresaSlug} orcamento={orcamentoProduto} onClose={() => setOrcamentoProduto(null)} onSaved={() => carregarOrcamentos(empresaSlug)} />}<div style={{ overflowX: "auto", marginTop: 18 }}><table style={{ width: "100%", minWidth: 1280, borderCollapse: "collapse" }}><thead><tr><th style={{ textAlign: "left", padding: 10 }}>#</th><th style={{ textAlign: "left", padding: 10 }}>Orçamento</th><th style={{ textAlign: "left", padding: 10 }}>Cliente</th><th style={{ textAlign: "left", padding: 10 }}>Criação</th><th style={{ textAlign: "left", padding: 10 }}>Aprovação</th><th style={{ textAlign: "right", padding: 10 }}>Custo</th><th style={{ textAlign: "right", padding: 10 }}>Margem</th><th style={{ textAlign: "right", padding: 10 }}>Preço</th><th style={{ textAlign: "left", padding: 10 }}>Status</th><th style={{ textAlign: "left", padding: 10 }}>Criado por</th><th style={{ textAlign: "left", padding: 10 }}>Ações</th></tr></thead><tbody>{orcamentos.map((o) => <tr key={o.id} style={{ borderTop: "1px solid var(--border)" }}><td style={{ padding: 10 }}>{o.numero_pedido || "-"}</td><td style={{ padding: 10 }}><strong>{o.nome_orcamento}</strong></td><td style={{ padding: 10 }}>{o.cliente_nome || "-"}</td><td style={{ padding: 10 }}>{dataCurta(o.created_at)}</td><td style={{ padding: 10 }}>{dataCurta(o.aprovado_em)}</td><td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.custo || 0)}</td><td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.margem || 0)} <small>({percentual(o.margem_percentual)})</small></td><td style={{ padding: 10, textAlign: "right" }}>{dinheiro(o.preco ?? o.valor_total)}</td><td style={{ padding: 10 }}>{o.status || "rascunho"}</td><td style={{ padding: 10 }}>{o.usuario_nome || "-"}</td><td style={{ padding: 10 }}><div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="button" onClick={() => setOrcamentoProduto(o)}>Orçamento</button><button type="button" onClick={() => editarOrcamento(o)}>Editar</button><button type="button" onClick={() => aprovarOrcamento(o)} disabled={o.status === "aprovado"}>{o.status === "aprovado" ? "Aprovado" : "Aprovar"}</button></div></td></tr>)}</tbody></table>{!orcamentos.length && <p style={{ marginTop: 12 }}>Nenhum orçamento cadastrado.</p>}</div></section>}
 
         {aba === "usuarios" && isMaster && <section className="card" style={{ maxWidth: "none" }}><h1>Usuários</h1><form onSubmit={criarUsuario}><label>Nome<input value={novoUsuario.nome} onChange={(e) => setNovoUsuario({ ...novoUsuario, nome: e.target.value })} /></label><label>E-mail<input value={novoUsuario.email} onChange={(e) => setNovoUsuario({ ...novoUsuario, email: e.target.value })} /></label><label>Senha inicial<input type="password" value={novoUsuario.senha} onChange={(e) => setNovoUsuario({ ...novoUsuario, senha: e.target.value })} /></label><label>Perfil<select value={novoUsuario.perfil} onChange={(e) => setNovoUsuario({ ...novoUsuario, perfil: e.target.value })}><option value="vendedor">Vendedor</option><option value="financeiro">Financeiro</option><option value="producao">Produção</option><option value="gerente">Gerente</option></select></label><button>Criar</button></form>{usuarios.map((u) => <div className="metric" key={u.id}><strong>{u.nome}</strong><p>{u.email} • {u.perfil}</p>{u.perfil === "owner" ? <p>Master com acesso total.</p> : <button onClick={() => salvarPermissoes(u, normalizar(u.permissoes, u.perfil))}>Salvar acessos atuais</button>}</div>)}</section>}
         {aba === "produtos" && <ProdutosPanel empresaSlug={empresaSlug} />}
         {aba === "materiais" && <MateriaisPanel empresaSlug={empresaSlug} />}
         {aba === "tags" && <TagsPanel empresaSlug={empresaSlug} />}
-        {aba === "ajustes" && <section className="card"><h1>Ajustes</h1><p>Configurações gerais da empresa em breve.</p></section>}
+        {aba === "ajustes" && <section className="card"><h1>Ajustes</h1><p>As integrações API Asaas, API Inter e API ChatGPT serão liberadas futuramente mediante contrato com a ANODIZA.</p></section>}
       </section>
     </main>
   );
