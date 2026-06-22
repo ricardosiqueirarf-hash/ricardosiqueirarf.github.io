@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
 import { apiGet, apiPost } from "@/lib/api";
 
 type OrcamentoResumo = { id: string; nome_orcamento: string; cliente_nome: string; numero_pedido: string };
@@ -88,41 +89,157 @@ function idsAgregados(material: Material | undefined, categoria: string) {
   return ((agregados[categoria] || (categoria === "puxador" ? config.puxadores_ids : []) || []) as string[]).map(String);
 }
 
-function DoorSvg({ form, puxador }: { form: PortaGiroForm; puxador?: Material }) {
+function Door3D({ form, puxador, compact = false }: { form: PortaGiroForm; puxador?: Material; compact?: boolean }) {
+  const mountRef = useRef<HTMLDivElement | null>(null);
   const largura = numero(form.largura);
   const altura = numero(form.altura);
-  const dobradicas = alturasDobradicas(altura, inteiro(form.dobradicas, 0));
+  const dobradicas = useMemo(() => alturasDobradicas(altura, inteiro(form.dobradicas, 0)), [altura, form.dobradicas]);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount || largura <= 0 || altura <= 0) return;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf6f8fb);
+
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    mount.innerHTML = "";
+    mount.appendChild(renderer.domElement);
+
+    const ratio = largura / altura;
+    const doorHeight = compact ? 3.35 : 4.4;
+    const doorWidth = Math.max(1.15, Math.min(2.65, doorHeight * ratio));
+    const doorDepth = 0.07;
+    const hingeSide: "esquerdo" | "direito" = form.lado_puxador === "direito" ? "esquerdo" : "direito";
+    const hingeSign = hingeSide === "esquerdo" ? 1 : -1;
+
+    const world = new THREE.Group();
+    scene.add(world);
+
+    const pivot = new THREE.Group();
+    world.add(pivot);
+
+    const door = new THREE.Group();
+    door.position.x = hingeSide === "esquerdo" ? doorWidth / 2 : -doorWidth / 2;
+    pivot.add(door);
+
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x1079ba, metalness: 0.62, roughness: 0.28 });
+    const glassMat = new THREE.MeshPhysicalMaterial({ color: 0xe8f6ff, transmission: 0.22, transparent: true, opacity: 0.58, roughness: 0.05, metalness: 0.02 });
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x083a5c, metalness: 0.72, roughness: 0.2 });
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.18 });
+    const hingeMat = new THREE.MeshStandardMaterial({ color: 0x0d5d8c, metalness: 0.78, roughness: 0.2 });
+
+    const addBox = (name: string, size: [number, number, number], pos: [number, number, number], mat: THREE.Material) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), mat);
+      mesh.name = name;
+      mesh.position.set(...pos);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      door.add(mesh);
+      return mesh;
+    };
+
+    addBox("vidro", [doorWidth - 0.26, doorHeight - 0.26, doorDepth * 0.72], [0, 0, 0], glassMat);
+    addBox("perfil-esquerdo", [0.12, doorHeight, 0.11], [-doorWidth / 2 + 0.06, 0, 0.02], frameMat);
+    addBox("perfil-direito", [0.12, doorHeight, 0.11], [doorWidth / 2 - 0.06, 0, 0.02], frameMat);
+    addBox("perfil-superior", [doorWidth, 0.12, 0.11], [0, doorHeight / 2 - 0.06, 0.02], frameMat);
+    addBox("perfil-inferior", [doorWidth, 0.12, 0.11], [0, -doorHeight / 2 + 0.06, 0.02], frameMat);
+    addBox("friso-interno", [doorWidth - 0.42, 0.035, 0.085], [0, doorHeight * 0.28, 0.05], edgeMat);
+
+    if (puxador) {
+      const handleMm = numero(form.medida_puxador);
+      const handleLength = puxador.unidade === "metro_linear" && handleMm > 0 ? Math.max(0.28, Math.min(doorHeight * 0.9, (handleMm / altura) * doorHeight)) : doorHeight * 0.42;
+      const handleHeightMm = numero(form.altura_puxador) || altura / 2;
+      const handleCenterY = Math.max(-doorHeight / 2 + handleLength / 2 + 0.1, Math.min(doorHeight / 2 - handleLength / 2 - 0.1, -doorHeight / 2 + (handleHeightMm / altura) * doorHeight));
+      const handleX = form.lado_puxador === "esquerdo" ? -doorWidth / 2 + 0.2 : doorWidth / 2 - 0.2;
+      addBox("puxador", [0.065, handleLength, 0.08], [handleX, handleCenterY, 0.16], handleMat);
+    }
+
+    dobradicas.forEach((alturaDobradica, index) => {
+      const y = -doorHeight / 2 + (alturaDobradica / altura) * doorHeight;
+      const x = hingeSide === "esquerdo" ? -doorWidth / 2 + 0.035 : doorWidth / 2 - 0.035;
+      const hinge = addBox(`dobradica-${index + 1}`, [0.12, 0.18, 0.13], [x, y, 0.17], hingeMat);
+      hinge.rotation.y = hingeSide === "esquerdo" ? -0.08 : 0.08;
+    });
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(9, 8), new THREE.ShadowMaterial({ opacity: 0.14 }));
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -doorHeight / 2 - 0.05;
+    floor.position.z = 0.35;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 1.45);
+    scene.add(ambient);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2.4);
+    mainLight.position.set(2.5, 4.5, 5);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+    const goldLight = new THREE.PointLight(0xd4af37, 1.2, 7);
+    goldLight.position.set(-2.5, 1.5, 3.2);
+    scene.add(goldLight);
+
+    const centerX = hingeSide === "esquerdo" ? doorWidth / 2 : -doorWidth / 2;
+    camera.position.set(centerX, 0.1, compact ? 6.2 : 6.8);
+    camera.lookAt(centerX, 0, 0);
+
+    const resize = () => {
+      const width = mount.clientWidth || 320;
+      const height = compact ? 280 : Math.min(560, Math.max(360, Math.round(width * 0.82)));
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+
+    const observer = new ResizeObserver(resize);
+    observer.observe(mount);
+    resize();
+
+    let frame = 0;
+    const startedAt = performance.now();
+    const animate = () => {
+      const t = (performance.now() - startedAt) / 1000;
+      const baseOpen = compact ? 0.34 : 0.46;
+      pivot.rotation.y = hingeSign * (baseOpen + Math.sin(t * 0.85) * 0.08);
+      world.rotation.x = -0.06;
+      world.rotation.y += 0.0009;
+      renderer.render(scene, camera);
+      frame = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      renderer.dispose();
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          obj.geometry.dispose();
+          const material = obj.material;
+          if (Array.isArray(material)) material.forEach((mat) => mat.dispose());
+          else material.dispose();
+        }
+      });
+      mount.innerHTML = "";
+    };
+  }, [largura, altura, form.dobradicas, form.lado_puxador, form.altura_puxador, form.medida_puxador, puxador?.id, puxador?.unidade, compact, dobradicas]);
 
   if (largura <= 0 || altura <= 0) {
-    return <svg className="global-door-svg" viewBox="0 0 400 600"><text x="50%" y="50%" textAnchor="middle" fill="#9ca3af">Informe largura e altura</text></svg>;
+    return <div className="global-door-3d"><div className="global-door-3d-empty">Informe largura e altura</div></div>;
   }
 
-  const scale = Math.min(320 / largura, 520 / altura);
-  const doorWidth = largura * scale;
-  const doorHeight = altura * scale;
-  const x = (400 - doorWidth) / 2;
-  const y = (600 - doorHeight) / 2;
-  const deveDesenharPuxador = Boolean(puxador);
-  const handleLength = Math.max(numero(form.medida_puxador) * scale, doorHeight * 0.4);
-  const handlePos = numero(form.altura_puxador) * scale;
-  const handleX = form.lado_puxador === "esquerdo" ? x + 10 : x + doorWidth - 18;
-  const handleY = y + doorHeight - handlePos - handleLength / 2;
-  const hingeX = form.lado_puxador === "esquerdo" ? x + doorWidth - 6 : x + 6;
-  const hingeLineEnd = form.lado_puxador === "esquerdo" ? hingeX - 18 : hingeX + 18;
-
   return (
-    <svg className="global-door-svg" viewBox="0 0 400 600" aria-label="Desenho técnico da porta de giro">
-      <rect x={x} y={y} width={doorWidth} height={doorHeight} fill="#e7f3fb" stroke="#1079ba" strokeWidth="4" rx="8" />
-      <rect x={x + 12} y={y + 12} width={Math.max(0, doorWidth - 24)} height={Math.max(0, doorHeight - 24)} fill="rgba(255,255,255,.42)" stroke="rgba(16,121,186,.18)" strokeWidth="2" rx="5" />
-      {deveDesenharPuxador && <rect x={handleX} y={handleY} width="8" height={handleLength} fill="#f0c24c" rx="3" />}
-      {dobradicas.map((alturaDobradica, index) => {
-        const pos = alturaDobradica * scale;
-        const yPos = y + doorHeight - pos;
-        return <g key={`${alturaDobradica}-${index}`}><circle cx={hingeX} cy={yPos} r="4" fill="#0d5d8c" /><line x1={hingeX} y1={yPos} x2={hingeLineEnd} y2={yPos} stroke="#0d5d8c" strokeWidth="2" /></g>;
-      })}
-      <text x={x + doorWidth / 2} y={Math.max(18, y - 14)} textAnchor="middle" fill="#1f2933" fontSize="16">{largura} mm</text>
-      <text x={Math.min(390, x + doorWidth + 20)} y={y + doorHeight / 2} fill="#1f2933" fontSize="16" transform={`rotate(90 ${Math.min(390, x + doorWidth + 20)} ${y + doorHeight / 2})`}>{altura} mm</text>
-    </svg>
+    <div className={compact ? "global-door-3d global-door-3d-compact" : "global-door-3d"}>
+      <div ref={mountRef} className="global-door-3d-canvas" />
+      <div className="global-door-3d-caption">
+        <span>{largura} × {altura} mm</span>
+        <span>{dobradicas.length ? `Dobradiças: ${dobradicas.join(", ")} mm` : "Dobradiças: -"}</span>
+      </div>
+    </div>
   );
 }
 
@@ -228,7 +345,7 @@ export default function GlobalQuotePanel({ empresaSlug, orcamento, onClose, onSa
             <article className="metric" style={{ minHeight: 260 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>Porta de Giro</strong><span>{produtoPortaGiro?.ativo === false ? "Desativado" : "Ativo"}</span></div>
               <p>Altura, largura, perfil, vidro, puxador, lado do puxador e dobradiças automáticas.</p>
-              <div style={{ margin: "16px auto", maxWidth: 220 }}><DoorSvg form={formInicial} /></div>
+              <div style={{ margin: "16px auto", maxWidth: 260 }}><Door3D form={formInicial} compact /></div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" disabled={produtoPortaGiro?.ativo === false} onClick={() => setEtapa("porta_giro")}>Abrir orçamento</button>
                 <button type="button" onClick={() => alternarAtivo(!(produtoPortaGiro?.ativo === false))}>{produtoPortaGiro?.ativo === false ? "Ativar" : "Desativar"}</button>
@@ -262,7 +379,7 @@ export default function GlobalQuotePanel({ empresaSlug, orcamento, onClose, onSa
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="submit">Calcular</button><button type="button" onClick={adicionar}>Adicionar ao orçamento</button><button type="button" onClick={() => setEtapa("classes")}>Voltar</button></div>
           </form>
           <div className="metric">
-            <DoorSvg form={form} puxador={puxadorSelecionado} />
+            <Door3D form={form} puxador={puxadorSelecionado} />
             {calculo && <div style={{ display: "grid", gap: 8, marginTop: 14 }}><strong>Total: {dinheiro(calculo.valor_total)}</strong><p>Unitário: {dinheiro(calculo.valor_unitario)} • Custo: {dinheiro(calculo.custo_total)} • Margem: {dinheiro(calculo.margem)} ({calculo.margem_percentual.toFixed(1).replace(".", ",")}%)</p>{calculo.linhas.map((linha, i) => <p key={i}>{linha.nome} — {linha.material}: {linha.quantidade} {linha.unidade} × {dinheiro(linha.valor_unitario)} = {dinheiro(linha.total)}</p>)}</div>}
           </div>
         </div>
