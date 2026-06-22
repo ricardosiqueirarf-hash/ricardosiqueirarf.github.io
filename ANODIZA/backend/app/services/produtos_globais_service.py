@@ -55,7 +55,7 @@ def calcular_porta_giro(empresa_id: str, payload: PortaGiroPayload):
         validar_puxador_agregado(perfil, puxador)
 
     medidas = calcular_medidas(payload.largura, payload.altura)
-    dobradicas_alturas = distribuir_dobradicas(payload.altura, payload.dobradicas)
+    dobradicas_alturas = normalizar_dobradicas(payload.altura, payload.dobradicas, payload.dobradicas_alturas)
 
     linhas: list[dict] = []
     preco_unitario = 0.0
@@ -127,6 +127,7 @@ def calcular_porta_giro(empresa_id: str, payload: PortaGiroPayload):
         "dobradicas_alturas": dobradicas_alturas,
         "linhas": linhas,
         "dados_porta": {
+            "ambiente": payload.ambiente,
             "largura": payload.largura,
             "altura": payload.altura,
             "perfil_id": payload.perfil_id,
@@ -137,6 +138,7 @@ def calcular_porta_giro(empresa_id: str, payload: PortaGiroPayload):
             "altura_puxador": payload.altura_puxador,
             "dobradicas": payload.dobradicas,
             "dobradicas_alturas": dobradicas_alturas,
+            "lado_dobradica": payload.lado_dobradica,
             "valor_adicional": payload.valor_adicional,
             "observacao_venda": payload.observacao_venda,
             "observacao_producao": payload.observacao_producao,
@@ -153,7 +155,7 @@ def adicionar_porta_giro(empresa_id: str, payload: PortaGiroAdicionar, current_u
     calculo = calcular_porta_giro(empresa_id, payload)
     linha = pedidos_repo.inserir_linha(empresa_id, {
         "orcamento_id": payload.orcamento_id,
-        "nome": "Porta de Giro",
+        "nome": nome_linha_porta(payload, calculo),
         "quantidade": payload.quantidade,
         "valor_unitario": calculo["valor_unitario"],
         "valor_total": calculo["valor_total"],
@@ -180,6 +182,13 @@ def adicionar_porta_giro(empresa_id: str, payload: PortaGiroAdicionar, current_u
 
     audit_event(current_user, "adicionar", "produto_global_porta_giro", linha.get("id"), None, linha, request)
     return linha
+
+
+def nome_linha_porta(payload: PortaGiroPayload, calculo: dict):
+    ambiente = payload.ambiente.strip()
+    medidas = calculo.get("medidas") or {}
+    medida_txt = f"{int(medidas.get('largura_mm') or payload.largura)}x{int(medidas.get('altura_mm') or payload.altura)}"
+    return f"Porta de Giro - {ambiente} - {medida_txt}" if ambiente else f"Porta de Giro - {medida_txt}"
 
 
 def buscar_material_ativo(empresa_id: str, material_id: str, categoria: str, nome_campo: str):
@@ -210,6 +219,21 @@ def calcular_medidas(largura_mm: float, altura_mm: float):
         "area": largura_m * altura_m,
         "perimetro": 2 * (largura_m + altura_m),
     }
+
+
+def normalizar_dobradicas(altura_mm: float, quantidade: int, alturas: list[float] | None = None):
+    alturas = alturas or []
+    if not alturas:
+        return distribuir_dobradicas(altura_mm, quantidade)
+    if len(alturas) != quantidade:
+        raise HTTPException(status_code=400, detail="A quantidade de alturas precisa ser igual a quantidade de dobradicas")
+    alturas_validas = []
+    for altura_dobradica in alturas:
+        valor = float(altura_dobradica)
+        if valor <= 0 or valor >= altura_mm:
+            raise HTTPException(status_code=400, detail="Alturas das dobradicas precisam estar dentro da altura da porta")
+        alturas_validas.append(round(valor, 2))
+    return alturas_validas
 
 
 def distribuir_dobradicas(altura_mm: float, quantidade: int):
