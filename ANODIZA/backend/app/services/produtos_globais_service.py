@@ -258,9 +258,9 @@ def quantidade_por_unidade(material: dict, medidas: dict):
 
 def quantidade_puxador(puxador: dict, medida_puxador_mm: float):
     unidade = puxador.get("unidade")
+    if unidade != "unidade" and medida_puxador_mm <= 0:
+        raise HTTPException(status_code=400, detail="Informe o tamanho do puxador em mm")
     if unidade == "metro_linear":
-        if medida_puxador_mm <= 0:
-            raise HTTPException(status_code=400, detail="Informe o tamanho do puxador em mm")
         return medida_puxador_mm / 1000
     return 1
 
