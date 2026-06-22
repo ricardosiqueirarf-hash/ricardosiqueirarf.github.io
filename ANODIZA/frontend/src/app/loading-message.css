@@ -1,8 +1,105 @@
-.dashboard > .card > h1 + p {
-  font-size: 0;
+.dashboard > .card:has(> h1 + p) {
+  position: relative;
+  width: min(440px, calc(100vw - 40px));
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  overflow: hidden;
+  text-align: center;
+  border: 1px solid rgba(212, 175, 55, .24);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(212, 175, 55, .16), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .028)),
+    rgba(7, 10, 18, .82);
+  box-shadow:
+    0 34px 120px rgba(0, 0, 0, .42),
+    0 0 70px rgba(212, 175, 55, .12),
+    inset 0 1px 0 rgba(255, 255, 255, .14);
+  backdrop-filter: blur(22px);
 }
 
-.dashboard > .card > h1 + p::after {
+.dashboard > .card:has(> h1 + p)::before {
+  content: "";
+  width: 96px;
+  height: 96px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, .16);
+  background:
+    conic-gradient(from 0deg, transparent 0deg, transparent 92deg, #d4af37 160deg, #fff1a8 210deg, transparent 300deg),
+    radial-gradient(circle, rgba(212, 175, 55, .16) 0 38%, transparent 40%);
+  box-shadow:
+    0 0 34px rgba(212, 175, 55, .22),
+    inset 0 0 22px rgba(212, 175, 55, .12);
+  animation: anodizaSessionSpin 1.35s linear infinite;
+}
+
+.dashboard > .card:has(> h1 + p)::after {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  z-index: -1;
+  border-radius: 26px;
+  background-image:
+    linear-gradient(rgba(212, 175, 55, .08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 175, 55, .08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(circle at 50% 36%, black, transparent 72%);
+  opacity: .55;
+  animation: anodizaSessionGrid 8s linear infinite;
+}
+
+.dashboard > .card:has(> h1 + p) > h1 {
+  margin: 0;
+  color: #fff7cf;
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 900;
+  letter-spacing: -.04em;
+  text-shadow: 0 0 28px rgba(212, 175, 55, .18);
+}
+
+.dashboard > .card:has(> h1 + p) > p {
+  position: relative;
+  margin: 0;
+  color: rgba(249, 250, 251, .68);
+  font-size: 0;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.dashboard > .card:has(> h1 + p) > p::after {
   content: "Validando usuário....";
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 1rem;
+}
+
+.dashboard > .card:has(> h1 + p) > p::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: #34d399;
+  box-shadow: 0 0 18px #34d399;
+  animation: anodizaSessionPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes anodizaSessionSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes anodizaSessionGrid {
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
+}
+
+@keyframes anodizaSessionPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.72); }
 }
