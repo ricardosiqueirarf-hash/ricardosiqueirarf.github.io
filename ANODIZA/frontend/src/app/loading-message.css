@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 12px;
+  gap: 14px;
   overflow: hidden;
   text-align: center;
   border: 1px solid rgba(212, 175, 55, .24);
@@ -23,18 +23,19 @@
 
 .dashboard > .card:has(> h1 + p)::before {
   content: "";
-  width: 96px;
-  height: 96px;
-  margin-bottom: 12px;
-  border-radius: 50%;
-  border: 1px solid rgba(212, 175, 55, .16);
+  width: min(280px, 74%);
+  height: 10px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, .26);
+  border-radius: 999px;
   background:
-    conic-gradient(from 0deg, transparent 0deg, transparent 92deg, #d4af37 160deg, #fff1a8 210deg, transparent 300deg),
-    radial-gradient(circle, rgba(212, 175, 55, .16) 0 38%, transparent 40%);
+    linear-gradient(90deg, transparent, rgba(255, 241, 168, .9), #d4af37, rgba(255, 241, 168, .9), transparent) 0 0 / 42% 100% no-repeat,
+    linear-gradient(90deg, rgba(255, 255, 255, .055), rgba(212, 175, 55, .08), rgba(255, 255, 255, .055));
   box-shadow:
-    0 0 34px rgba(212, 175, 55, .22),
-    inset 0 0 22px rgba(212, 175, 55, .12);
-  animation: anodizaSessionSpin 1.35s linear infinite;
+    0 0 30px rgba(212, 175, 55, .18),
+    inset 0 0 18px rgba(212, 175, 55, .12);
+  animation: anodizaSessionLoadBar 1.45s ease-in-out infinite;
 }
 
 .dashboard > .card:has(> h1 + p)::after {
@@ -90,8 +91,10 @@
   animation: anodizaSessionPulse 1.2s ease-in-out infinite;
 }
 
-@keyframes anodizaSessionSpin {
-  to { transform: rotate(360deg); }
+@keyframes anodizaSessionLoadBar {
+  0% { background-position: -46% 0, 0 0; }
+  50% { background-position: 62% 0, 0 0; }
+  100% { background-position: 146% 0, 0 0; }
 }
 
 @keyframes anodizaSessionGrid {
