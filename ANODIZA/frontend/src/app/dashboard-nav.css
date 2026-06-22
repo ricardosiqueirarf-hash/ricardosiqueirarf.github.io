@@ -6,12 +6,27 @@
 
 .app-nav .nav-dropdown-group:hover,
 .app-nav .nav-dropdown-group:focus-within {
-  z-index: 40;
+  z-index: 80;
 }
 
 .app-nav .nav-dropdown-trigger {
   width: 100%;
-  justify-content: flex-start;
+  justify-content: space-between;
+}
+
+.app-nav .nav-dropdown-trigger::after {
+  content: "›";
+  position: absolute;
+  right: 13px;
+  color: rgba(212, 175, 55, .72);
+  font-size: 18px;
+  font-weight: 900;
+  transition: transform .18s ease;
+}
+
+.app-nav .nav-dropdown-group:hover .nav-dropdown-trigger::after,
+.app-nav .nav-dropdown-group:focus-within .nav-dropdown-trigger::after {
+  transform: translateX(3px);
 }
 
 .app-nav .nav-dropdown-trigger.nav-active {
@@ -22,9 +37,9 @@
 
 .app-nav .nav-dropdown-menu {
   position: absolute;
-  top: calc(100% + 7px);
-  left: 0;
-  right: 0;
+  top: 0;
+  left: calc(100% + 12px);
+  width: 210px;
   display: grid;
   gap: 6px;
   padding: 8px;
@@ -32,21 +47,30 @@
   border-radius: 18px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .045)),
-    rgba(6, 9, 18, .94);
+    rgba(6, 9, 18, .96);
   box-shadow: 0 22px 54px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .12);
   backdrop-filter: blur(18px);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-8px) scale(.98);
-  transform-origin: top;
+  transform: translateX(-8px) scale(.98);
+  transform-origin: left top;
   transition: opacity .18s ease, transform .18s ease;
+}
+
+.app-nav .nav-dropdown-menu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -14px;
+  width: 14px;
 }
 
 .app-nav .nav-dropdown-group:hover .nav-dropdown-menu,
 .app-nav .nav-dropdown-group:focus-within .nav-dropdown-menu {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(0) scale(1);
+  transform: translateX(0) scale(1);
 }
 
 .app-nav .nav-dropdown-menu button {
@@ -77,10 +101,16 @@
 }
 
 @media (max-width: 980px) {
+  .app-nav .nav-dropdown-trigger {
+    justify-content: flex-start;
+  }
+
   .app-nav .nav-dropdown-menu {
     position: static;
     display: none;
+    width: auto;
     margin-top: 7px;
+    transform: none;
   }
 
   .app-nav .nav-dropdown-group:hover .nav-dropdown-menu,
