@@ -1,0 +1,53 @@
+.dashboard {
+  overflow: visible;
+}
+
+.sidebar {
+  z-index: 200;
+  overflow: visible;
+}
+
+.app-nav {
+  position: relative;
+  z-index: 240;
+  overflow: visible;
+}
+
+.app-nav .nav-dropdown-group {
+  z-index: 250;
+}
+
+.app-nav .nav-dropdown-group:hover,
+.app-nav .nav-dropdown-group:focus-within {
+  z-index: 400;
+}
+
+.app-nav .nav-dropdown-menu {
+  z-index: 999;
+}
+
+.main {
+  z-index: 1;
+}
+
+.app-nav .nav-disabled,
+.app-nav .nav-disabled:hover,
+.app-nav .nav-disabled:disabled {
+  cursor: not-allowed;
+  opacity: .58;
+  transform: none;
+  border-color: rgba(255, 255, 255, .075);
+  background: rgba(255, 255, 255, .025);
+  color: rgba(249, 250, 251, .46);
+}
+
+.app-nav .nav-disabled::before,
+.app-nav .nav-disabled:hover::before {
+  background: rgba(249, 250, 251, .18);
+  box-shadow: none;
+}
+
+.app-nav .nav-disabled::after,
+.app-nav .nav-disabled:hover::after {
+  transform: translateX(-110%);
+}
