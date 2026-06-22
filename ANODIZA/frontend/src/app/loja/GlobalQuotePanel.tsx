@@ -139,7 +139,6 @@ function Door3D({ form, puxador, compact = false }: { form: PortaGiroForm; puxad
 
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x1079ba, metalness: 0.62, roughness: 0.28 });
     const glassMat = new THREE.MeshPhysicalMaterial({ color: 0xe8f6ff, transmission: 0.22, transparent: true, opacity: 0.58, roughness: 0.05, metalness: 0.02 });
-    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x083a5c, metalness: 0.72, roughness: 0.2 });
     const handleMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.18 });
     const hingeMat = new THREE.MeshStandardMaterial({ color: 0x0d5d8c, metalness: 0.78, roughness: 0.2 });
 
@@ -158,13 +157,11 @@ function Door3D({ form, puxador, compact = false }: { form: PortaGiroForm; puxad
     addBox("perfil-direito", [0.12, doorHeight, 0.11], [doorWidth / 2 - 0.06, 0, 0.02], frameMat);
     addBox("perfil-superior", [doorWidth, 0.12, 0.11], [0, doorHeight / 2 - 0.06, 0.02], frameMat);
     addBox("perfil-inferior", [doorWidth, 0.12, 0.11], [0, -doorHeight / 2 + 0.06, 0.02], frameMat);
-    addBox("friso-interno", [doorWidth - 0.42, 0.035, 0.085], [0, doorHeight * 0.28, 0.05], edgeMat);
 
     if (puxador) {
       const handleMm = numero(form.medida_puxador);
       const handleLength = puxador.unidade === "metro_linear" && handleMm > 0 ? Math.max(0.28, Math.min(doorHeight * 0.9, (handleMm / altura) * doorHeight)) : doorHeight * 0.42;
-      const handleHeightMm = numero(form.altura_puxador) || altura / 2;
-      const handleCenterY = Math.max(-doorHeight / 2 + handleLength / 2 + 0.1, Math.min(doorHeight / 2 - handleLength / 2 - 0.1, -doorHeight / 2 + (handleHeightMm / altura) * doorHeight));
+      const handleCenterY = 0;
       const handleX = form.lado_puxador === "esquerdo" ? -doorWidth / 2 + 0.2 : doorWidth / 2 - 0.2;
       addBox("puxador", [0.065, handleLength, 0.08], [handleX, handleCenterY, 0.16], handleMat);
     }
@@ -233,7 +230,7 @@ function Door3D({ form, puxador, compact = false }: { form: PortaGiroForm; puxad
       });
       mount.innerHTML = "";
     };
-  }, [largura, altura, form.dobradicas, form.lado_dobradica, form.lado_puxador, form.altura_puxador, form.medida_puxador, puxador?.id, puxador?.unidade, compact, dobradicas.join("|")]);
+  }, [largura, altura, form.dobradicas, form.lado_dobradica, form.lado_puxador, form.medida_puxador, puxador?.id, puxador?.unidade, compact, dobradicas.join("|")]);
 
   if (largura <= 0 || altura <= 0) return <div className="global-door-3d"><div className="global-door-3d-empty">Informe largura e altura</div></div>;
 
@@ -260,6 +257,7 @@ export default function GlobalQuotePanel({ empresaSlug, orcamento, onClose, onSa
   const puxadoresPermitidosIds = idsAgregados(perfilSelecionado, "puxador");
   const puxadores = materiais.filter((m) => m.categoria === "puxador" && m.ativo && (!puxadoresPermitidosIds.length || puxadoresPermitidosIds.includes(String(m.id))));
   const puxadorSelecionado = materiais.find((m) => m.id === form.puxador_id);
+  const temPuxador = Boolean(puxadorSelecionado);
   const puxadorPrecisaMedida = Boolean(puxadorSelecionado && puxadorSelecionado.unidade !== "unidade");
   const alturasPreview = useMemo(() => alturasDoForm(form), [form.altura, form.dobradicas, form.dobradicas_alturas.join("|")]);
   const pendencias = useMemo(() => {
@@ -271,7 +269,7 @@ export default function GlobalQuotePanel({ empresaSlug, orcamento, onClose, onSa
     if (!form.lado_dobradica) lista.push("Lado da dobradiça");
     if (inteiro(form.dobradicas, 0) < 2) lista.push("Quantidade de dobradiças");
     if (form.dobradicas_alturas.length !== inteiro(form.dobradicas, 0) || !alturasPreview.length) lista.push("Alturas das dobradiças");
-    if (puxadorPrecisaMedida && numero(form.medida_puxador) <= 0) lista.push("Tamanho do puxador");
+    if (puxadorPrecisaMedida && numero(form.medida_puxador) <= 0) lista.push("Comprimento do puxador");
     return lista;
   }, [form, alturasPreview.length, puxadorPrecisaMedida]);
 
@@ -315,7 +313,7 @@ export default function GlobalQuotePanel({ empresaSlug, orcamento, onClose, onSa
       perfil_id: form.perfil_id,
       vidro_id: form.vidro_id,
       puxador_id: form.puxador_id || "sem_puxador",
-      medida_puxador: numero(form.medida_puxador),
+      medida_puxador: temPuxador ? numero(form.medida_puxador) : 0,
       lado_puxador: form.lado_puxador,
       altura_puxador: numero(form.altura_puxador),
       dobradicas: inteiro(form.dobradicas, 2),
@@ -373,7 +371,7 @@ export default function GlobalQuotePanel({ empresaSlug, orcamento, onClose, onSa
 
             <section className="quote-group">{grupoTitulo("Materiais", "Perfil e vidro usados no cálculo")}<label>Perfil<select value={form.perfil_id} onChange={(e) => atualizar("perfil_id", e.target.value)}><option value="">Selecione</option>{perfis.map((m) => <option key={m.id} value={m.id}>{m.nome} • {dinheiro(m.preco_unitario)}/m</option>)}</select></label><label>Vidro<select value={form.vidro_id} onChange={(e) => atualizar("vidro_id", e.target.value)}><option value="">Selecione</option>{vidros.map((m) => <option key={m.id} value={m.id}>{m.nome} • {dinheiro(m.preco_unitario)}/m²</option>)}</select></label></section>
 
-            <section className="quote-group">{grupoTitulo("Ferragens e sistemas", "Dobradiças, puxador e lados de instalação")}<label>Quantidade de dobradiças<input type="number" min="2" max="12" value={form.dobradicas} onChange={(e) => atualizar("dobradicas", e.target.value)} /></label><label>Lado da dobradiça<select value={form.lado_dobradica} onChange={(e) => atualizar("lado_dobradica", e.target.value)}><option value="esquerdo">Esquerdo</option><option value="direito">Direito</option></select></label><div className="hinge-editor"><strong>Altura das dobradiças</strong>{form.dobradicas_alturas.map((alturaDobradica, index) => <label key={index}>Dobradiça {index + 1}<input type="number" min="1" max={numero(form.altura) - 1} value={alturaDobradica} onChange={(e) => atualizarAlturaDobradica(index, e.target.value)} /></label>)}<button type="button" onClick={() => setForm({ ...form, dobradicas_alturas: alturasParaForm(form.altura, form.dobradicas) })}>Distribuir automaticamente</button></div><label>Puxador<select value={form.puxador_id} onChange={(e) => atualizar("puxador_id", e.target.value)}><option value="sem_puxador">Sem puxador</option>{puxadores.map((m) => <option key={m.id} value={m.id}>{m.nome} • {dinheiro(m.preco_unitario)}/{m.unidade === "metro_linear" ? "m" : "un"}</option>)}</select></label><label>Lado do puxador<select value={form.lado_puxador} onChange={(e) => atualizar("lado_puxador", e.target.value)}><option value="direito">Direito</option><option value="esquerdo">Esquerdo</option></select></label>{puxadorPrecisaMedida && <label>Tamanho do puxador (mm)<input type="number" min="1" value={form.medida_puxador} onChange={(e) => atualizar("medida_puxador", e.target.value)} /></label>}<label>Altura do puxador (mm)<input type="number" min="0" value={form.altura_puxador} onChange={(e) => atualizar("altura_puxador", e.target.value)} /></label></section>
+            <section className="quote-group">{grupoTitulo("Ferragens e sistemas", "Dobradiças, puxador e lados de instalação")}<label>Quantidade de dobradiças<input type="number" min="2" max="12" value={form.dobradicas} onChange={(e) => atualizar("dobradicas", e.target.value)} /></label><label>Lado da dobradiça<select value={form.lado_dobradica} onChange={(e) => atualizar("lado_dobradica", e.target.value)}><option value="esquerdo">Esquerdo</option><option value="direito">Direito</option></select></label><div className="hinge-editor"><strong>Altura das dobradiças</strong>{form.dobradicas_alturas.map((alturaDobradica, index) => <label key={index}>Dobradiça {index + 1}<input type="number" min="1" max={numero(form.altura) - 1} value={alturaDobradica} onChange={(e) => atualizarAlturaDobradica(index, e.target.value)} /></label>)}<button type="button" onClick={() => setForm({ ...form, dobradicas_alturas: alturasParaForm(form.altura, form.dobradicas) })}>Distribuir automaticamente</button></div><label>Puxador<select value={form.puxador_id} onChange={(e) => atualizar("puxador_id", e.target.value)}><option value="sem_puxador">Sem puxador</option>{puxadores.map((m) => <option key={m.id} value={m.id}>{m.nome} • {dinheiro(m.preco_unitario)}/{m.unidade === "metro_linear" ? "m" : "un"}</option>)}</select></label>{temPuxador && <label>Lado do puxador<select value={form.lado_puxador} onChange={(e) => atualizar("lado_puxador", e.target.value)}><option value="direito">Direito</option><option value="esquerdo">Esquerdo</option></select></label>}{temPuxador && <label>Comprimento do puxador (mm)<input type="number" min="0" value={form.medida_puxador} onChange={(e) => atualizar("medida_puxador", e.target.value)} /></label>}</section>
 
             <section className="quote-group">{grupoTitulo("Valores e observações", "Ajustes comerciais e instruções")}<label>Valor adicional (R$)<input type="number" min="0" step="0.01" value={form.valor_adicional} onChange={(e) => atualizar("valor_adicional", e.target.value)} /></label><label>Observação de venda<textarea rows={2} value={form.observacao_venda} onChange={(e) => atualizar("observacao_venda", e.target.value)} /></label><label>Observação de produção<textarea rows={2} value={form.observacao_producao} onChange={(e) => atualizar("observacao_producao", e.target.value)} /></label></section>
 
