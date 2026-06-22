@@ -51,3 +51,126 @@
 .app-nav .nav-disabled:hover::after {
   transform: translateX(-110%);
 }
+
+.settings-panel {
+  display: grid;
+  gap: 22px;
+}
+
+.settings-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(212, 175, 55, .16);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(212, 175, 55, .16), transparent 34%),
+    rgba(255, 255, 255, .045);
+}
+
+.settings-logo-block,
+.settings-brand-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-logo-mark {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff1a8 0%, #d4af37 46%, #9c7112 100%);
+  color: #060912;
+  font-weight: 950;
+  box-shadow: 0 0 34px rgba(212, 175, 55, .34), inset 0 1px 0 rgba(255, 255, 255, .62);
+}
+
+.settings-company-pill,
+.settings-lock {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .045);
+  color: rgba(249, 250, 251, .72);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.settings-grid,
+.settings-integration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.settings-card,
+.settings-integration-card {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-brand-preview {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .035);
+}
+
+.settings-brand-preview .settings-logo-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.settings-mode-toggle {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .035);
+}
+
+.settings-mode-toggle button {
+  min-height: 38px;
+  border-radius: 13px;
+  box-shadow: none;
+}
+
+.settings-mode-toggle .settings-mode-active {
+  border-color: rgba(212, 175, 55, .35);
+  background: rgba(212, 175, 55, .14);
+  color: #fff5c7;
+}
+
+.settings-integrations {
+  display: grid;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.settings-lock {
+  border-color: rgba(251, 191, 36, .22);
+  background: rgba(251, 191, 36, .08);
+  color: #fde68a;
+}
+
+.settings-integration-card button:disabled,
+.settings-card button:disabled {
+  cursor: not-allowed;
+  opacity: .62;
+}
+
+@media (max-width: 780px) {
+  .settings-hero {
+    display: grid;
+  }
+}
