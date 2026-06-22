@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./dashboard.css";
 import "./dashboard-nav.css";
+import "./dashboard-layer.css";
 import "./loading-message.css";
 import "./global-door-3d.css";
 import "./reference-landing.css";
