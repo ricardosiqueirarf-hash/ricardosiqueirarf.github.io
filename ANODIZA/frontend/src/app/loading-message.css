@@ -1,0 +1,8 @@
+.dashboard > .card > h1 + p {
+  font-size: 0;
+}
+
+.dashboard > .card > h1 + p::after {
+  content: "Validando usuário....";
+  font-size: 1rem;
+}
