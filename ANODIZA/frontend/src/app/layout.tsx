@@ -7,6 +7,7 @@ import "./global-door-3d.css";
 import "./reference-landing.css";
 import "./ux-polish.css";
 import "./sidebar-extension.css";
+import AprovadorLoja from "./loja/LojaAprovacaoOverride";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -17,7 +18,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        {children}
+        <AprovadorLoja />
+      </body>
     </html>
   );
 }
