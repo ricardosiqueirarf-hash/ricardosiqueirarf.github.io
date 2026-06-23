@@ -230,7 +230,7 @@ def api_financeiro():
 
     level = _nivel_usuario(usuario)
     storeid = _storeid_usuario(usuario)
-    acesso_global = level in (3, 4)
+    acesso_global = level in (2, 3, 4)
 
     if not acesso_global and not storeid:
         return make_response(jsonify({"error": "Loja não vinculada ao usuário."}), 403)
