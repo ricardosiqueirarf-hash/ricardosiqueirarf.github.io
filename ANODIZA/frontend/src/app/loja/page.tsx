@@ -11,6 +11,7 @@ import TagsPanel from "./TagsPanel";
 
 type Aba = "painel" | "orcamentos" | "clientes" | "usuarios" | "ajustes" | "produtos" | "materiais" | "tags";
 type MenuGrupoId = "gerencial" | "orcamentos" | "cadastro" | "usuarios" | "calculos" | "ajustes";
+type IconName = "home" | "finance" | "cadastro" | "users" | "calc" | "settings";
 type Permissoes = Record<Aba, boolean>;
 type Usuario = { id?: string; nome?: string; email?: string; perfil?: string; permissoes?: Partial<Permissoes> };
 type AuthMe = { ok: boolean; usuario: Usuario };
@@ -37,7 +38,7 @@ type Orcamento = {
 type ClienteForm = { nome: string; documento: string; email: string; telefone: string };
 type OrcamentoForm = { nome_orcamento: string; cliente_id: string };
 type MenuItem = { aba: Aba; rotulo: string; badge?: string };
-type MenuGrupo = { id: MenuGrupoId; rotulo: string; icone: string; itens: MenuItem[] };
+type MenuGrupo = { id: MenuGrupoId; rotulo: string; icone: IconName; itens: MenuItem[] };
 
 const basePermissoes: Permissoes = {
   painel: true,
@@ -99,6 +100,36 @@ function dataCurta(valor?: string) {
 
 function percentual(valor?: number) {
   return `${Number(valor || 0).toFixed(1).replace(".", ",")}%`;
+}
+
+function NavIcon({ name }: { name: IconName | "logout" }) {
+  const common = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  if (name === "home") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...common} d="M4 11.5 12 5l8 6.5" /><path {...common} d="M6.5 10.5V20h11v-9.5" /><path {...common} d="M10 20v-5h4v5" /></svg>;
+  }
+  if (name === "finance") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><circle {...common} cx="12" cy="12" r="8" /><path {...common} d="M14.5 9.5c-.55-.42-1.38-.7-2.35-.7-1.32 0-2.35.62-2.35 1.55 0 2.25 4.9.92 4.9 3.35 0 .95-1.02 1.6-2.45 1.6-1.04 0-2.04-.35-2.72-.9" /><path {...common} d="M12 7.6v8.8" /></svg>;
+  }
+  if (name === "cadastro") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><rect {...common} x="5" y="5" width="6" height="6" rx="1" /><rect {...common} x="13" y="5" width="6" height="6" rx="1" /><rect {...common} x="5" y="13" width="6" height="6" rx="1" /><path {...common} d="M14 16h4" /><path {...common} d="M16 14v4" /></svg>;
+  }
+  if (name === "users") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><circle {...common} cx="12" cy="8" r="3.2" /><path {...common} d="M5.5 19c1.05-3.2 3.08-4.8 6.5-4.8s5.45 1.6 6.5 4.8" /><path {...common} d="M17.5 11.2c1.2.22 2.15.8 2.8 1.75" /><path {...common} d="M6.5 11.2c-1.2.22-2.15.8-2.8 1.75" /></svg>;
+  }
+  if (name === "calc") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><rect {...common} x="6" y="4" width="12" height="16" rx="2" /><path {...common} d="M9 8h6" /><path {...common} d="M9 12h.01" /><path {...common} d="M12 12h.01" /><path {...common} d="M15 12h.01" /><path {...common} d="M9 16h.01" /><path {...common} d="M12 16h.01" /><path {...common} d="M15 16h.01" /></svg>;
+  }
+  if (name === "settings") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><circle {...common} cx="12" cy="12" r="3" /><path {...common} d="M12 3.8v2" /><path {...common} d="M12 18.2v2" /><path {...common} d="M4.9 7.9l1.7 1" /><path {...common} d="M17.4 15.1l1.7 1" /><path {...common} d="M19.1 7.9l-1.7 1" /><path {...common} d="M6.6 15.1l-1.7 1" /><path {...common} d="M3.8 12h2" /><path {...common} d="M18.2 12h2" /></svg>;
+  }
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...common} d="M10 6H6.5A2.5 2.5 0 0 0 4 8.5v7A2.5 2.5 0 0 0 6.5 18H10" /><path {...common} d="M14 8l4 4-4 4" /><path {...common} d="M18 12H9" /></svg>;
 }
 
 export default function LojaPage() {
@@ -292,12 +323,12 @@ export default function LojaPage() {
   }
 
   const gruposMenu: MenuGrupo[] = [
-    { id: "gerencial", rotulo: "Gerencial", icone: "⌂", itens: [{ aba: "painel", rotulo: "Painel" }] },
-    { id: "orcamentos", rotulo: "Orçamentos", icone: "R$", itens: [{ aba: "orcamentos", rotulo: "Orçamentos" }, { aba: "clientes", rotulo: "Clientes" }] },
-    { id: "cadastro", rotulo: "Cadastro", icone: "▣", itens: [{ aba: "materiais", rotulo: "Materiais" }] },
-    { id: "usuarios", rotulo: "Usuários", icone: "👤", itens: [{ aba: "usuarios", rotulo: "Usuários" }] },
-    { id: "calculos", rotulo: "Cálculos", icone: "∑", itens: [{ aba: "produtos", rotulo: "Produtos" }, { aba: "tags", rotulo: "Tags" }] },
-    { id: "ajustes", rotulo: "Ajustes", icone: "⚙", itens: [{ aba: "ajustes", rotulo: "Ajustes" }] },
+    { id: "gerencial", rotulo: "Gerencial", icone: "home", itens: [{ aba: "painel", rotulo: "Painel" }] },
+    { id: "orcamentos", rotulo: "Orçamentos", icone: "finance", itens: [{ aba: "orcamentos", rotulo: "Orçamentos" }, { aba: "clientes", rotulo: "Clientes" }] },
+    { id: "cadastro", rotulo: "Cadastro", icone: "cadastro", itens: [{ aba: "materiais", rotulo: "Materiais" }] },
+    { id: "usuarios", rotulo: "Usuários", icone: "users", itens: [{ aba: "usuarios", rotulo: "Usuários" }] },
+    { id: "calculos", rotulo: "Cálculos", icone: "calc", itens: [{ aba: "produtos", rotulo: "Produtos" }, { aba: "tags", rotulo: "Tags" }] },
+    { id: "ajustes", rotulo: "Ajustes", icone: "settings", itens: [{ aba: "ajustes", rotulo: "Ajustes" }] },
   ];
 
   const gruposVisiveis = gruposMenu
@@ -330,16 +361,17 @@ export default function LojaPage() {
               key={grupo.id}
               type="button"
               className={`nav-primary-button ${grupoAtivo(grupo) ? "nav-active" : ""} ${grupoSecundario?.id === grupo.id ? "nav-open" : ""}`}
-              data-icon={grupo.icone}
               aria-haspopup="menu"
               aria-expanded={grupoSecundario?.id === grupo.id}
               onClick={() => abrirGrupo(grupo)}
             >
+              <span className="nav-icon"><NavIcon name={grupo.icone} /></span>
               <span className="nav-label">{grupo.rotulo}</span>
               <span className="nav-chevron">›</span>
             </button>
           ))}
-          <button type="button" className="nav-primary-button nav-logout" data-icon="⎋" onClick={sair}>
+          <button type="button" className="nav-primary-button nav-logout" onClick={sair}>
+            <span className="nav-icon"><NavIcon name="logout" /></span>
             <span className="nav-label">Sair</span>
           </button>
         </nav>
