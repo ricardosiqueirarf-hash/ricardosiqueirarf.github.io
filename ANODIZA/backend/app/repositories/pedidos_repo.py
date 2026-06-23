@@ -1,4 +1,5 @@
 from app.repositories.common import supabase_client
+from app.services.snapshot_service import normalizar_snapshot_de_linha
 
 
 ORCAMENTO_SELECT = "id,empresa_id,loja_id,usuario_id,cliente_id,numero_pedido,nome_orcamento,cliente_nome,cliente_documento,cliente_telefone,status,valor_total,dados,created_at,updated_at"
@@ -75,6 +76,7 @@ def listar_linhas_por_orcamentos(empresa_id: str, orcamento_ids: list[str]):
 
 def inserir_linha(empresa_id: str, dados: dict):
     dados = {**dados, "empresa_id": empresa_id}
+    dados["dados"] = normalizar_snapshot_de_linha(dados)
     result = supabase_client().table("orcamento_produtos").insert(dados).execute()
     return result.data[0] if result.data else None
 
