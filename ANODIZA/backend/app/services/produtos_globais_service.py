@@ -5,6 +5,8 @@ from app.repositories import materiais_repo, pedidos_repo, produtos_globais_repo
 from app.schemas.produtos_globais import PRODUTO_PORTA_GIRO, PortaGiroAdicionar, PortaGiroPayload, ProdutoGlobalToggle
 
 
+SNAPSHOT_SCHEMA = "orcamento_produto_v1"
+
 CATALOGO_GLOBAL = [
     {
         "produto_chave": PRODUTO_PORTA_GIRO,
@@ -115,6 +117,9 @@ def calcular_porta_giro(empresa_id: str, payload: PortaGiroPayload):
 
     return {
         "produto_chave": PRODUTO_PORTA_GIRO,
+        "produto_origem": "global",
+        "produto_id": None,
+        "produto_versao_id": None,
         "nome": "Porta de Giro",
         "quantidade": payload.quantidade,
         "valor_unitario": preco_unitario,
@@ -126,6 +131,8 @@ def calcular_porta_giro(empresa_id: str, payload: PortaGiroPayload):
         "medidas": medidas,
         "dobradicas_alturas": dobradicas_alturas,
         "linhas": linhas,
+        "configuracao_snapshot": configuracao_snapshot_porta_giro(),
+        "materiais_snapshot": materiais_snapshot(linhas),
         "dados_porta": {
             "ambiente": payload.ambiente,
             "largura": payload.largura,
@@ -159,13 +166,7 @@ def adicionar_porta_giro(empresa_id: str, payload: PortaGiroAdicionar, current_u
         "quantidade": payload.quantidade,
         "valor_unitario": calculo["valor_unitario"],
         "valor_total": calculo["valor_total"],
-        "dados": {
-            "produto_global": PRODUTO_PORTA_GIRO,
-            "calculo": calculo,
-            "custo_total": calculo["custo_total"],
-            "margem": calculo["margem"],
-            "margem_percentual": calculo["margem_percentual"],
-        },
+        "dados": montar_snapshot_orcamento_global(payload, calculo),
     })
     if not linha:
         raise HTTPException(status_code=400, detail="Porta de Giro nao adicionada ao orcamento")
@@ -182,6 +183,73 @@ def adicionar_porta_giro(empresa_id: str, payload: PortaGiroAdicionar, current_u
 
     audit_event(current_user, "adicionar", "produto_global_porta_giro", linha.get("id"), None, linha, request)
     return linha
+
+
+def montar_snapshot_orcamento_global(payload: PortaGiroAdicionar, calculo: dict):
+    return {
+        "snapshot_schema": SNAPSHOT_SCHEMA,
+        "produto_origem": "global",
+        "produto_id": calculo.get("produto_id"),
+        "produto_versao_id": calculo.get("produto_versao_id"),
+        "produto_global": PRODUTO_PORTA_GIRO,
+        "produto_chave": PRODUTO_PORTA_GIRO,
+        "nome_produto_snapshot": calculo.get("nome"),
+        "valores": calculo.get("dados_porta") or payload.model_dump(),
+        "configuracao_snapshot": calculo.get("configuracao_snapshot") or {},
+        "materiais_snapshot": calculo.get("materiais_snapshot") or [],
+        "calculo_snapshot": calculo,
+        "calculo": calculo,
+        "custo_total": calculo["custo_total"],
+        "margem": calculo["margem"],
+        "margem_percentual": calculo["margem_percentual"],
+    }
+
+
+def configuracao_snapshot_porta_giro():
+    return {
+        "produto_chave": PRODUTO_PORTA_GIRO,
+        "formula": "legacy_porta_giro_v1",
+        "escopo": "global",
+        "campos": [
+            "largura",
+            "altura",
+            "perfil_id",
+            "vidro_id",
+            "puxador_id",
+            "medida_puxador",
+            "dobradicas",
+            "dobradicas_alturas",
+            "valor_adicional",
+        ],
+        "componentes": [
+            "perfil_por_perimetro",
+            "vidro_por_area",
+            "insumos_do_perfil",
+            "puxador_opcional",
+            "regras_por_tags",
+            "valor_adicional",
+        ],
+    }
+
+
+def materiais_snapshot(linhas: list[dict]):
+    snapshot = []
+    for linha in linhas:
+        material_id = linha.get("material_id")
+        if not material_id:
+            continue
+        snapshot.append({
+            "material_id": material_id,
+            "nome": linha.get("material"),
+            "origem_linha": linha.get("nome"),
+            "quantidade": linha.get("quantidade"),
+            "unidade": linha.get("unidade"),
+            "valor_unitario": linha.get("valor_unitario"),
+            "custo_unitario": linha.get("custo_unitario", 0),
+            "valor_total": linha.get("total"),
+            "custo_total": linha.get("custo_total", 0),
+        })
+    return snapshot
 
 
 def nome_linha_porta(payload: PortaGiroPayload, calculo: dict):
@@ -363,7 +431,7 @@ def custo_linha(linha: dict):
     if isinstance(dados, dict):
         if dados.get("custo_total") is not None:
             return float(dados.get("custo_total") or 0)
-        calculo = dados.get("calculo") or {}
+        calculo = dados.get("calculo") or dados.get("calculo_snapshot") or {}
         if isinstance(calculo, dict) and calculo.get("custo_total") is not None:
             return float(calculo.get("custo_total") or 0)
     return 0.0
