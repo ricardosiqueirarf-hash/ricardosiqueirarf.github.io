@@ -8,6 +8,7 @@ import "./reference-landing.css";
 import "./ux-polish.css";
 import "./sidebar-extension.css";
 import AprovadorLoja from "./loja/LojaAprovacaoOverride";
+import FinanceiroLoja from "./loja/LojaFinanceiroOverlay";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <AprovadorLoja />
+        <FinanceiroLoja />
       </body>
     </html>
   );
