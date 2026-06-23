@@ -30,7 +30,9 @@ def criar_tag(empresa_id: str, payload: TagCreate, current_user: dict, request: 
         "empresa_id": empresa_id,
         "nome": nome,
         "descricao": payload.descricao.strip(),
-        "categorias_aplicaveis": payload.categorias_aplicaveis,
+        # Tag é uma característica livre. A categoria é definida no uso da regra,
+        # não na criação da tag. Mantemos a coluna para compatibilidade histórica.
+        "categorias_aplicaveis": [],
         "ativo": payload.ativo,
     }
     tag = tags_repo.criar_tag(dados)
@@ -57,7 +59,7 @@ def editar_tag(empresa_id: str, payload: TagUpdate, current_user: dict, request:
     dados = {
         "nome": nome,
         "descricao": payload.descricao.strip(),
-        "categorias_aplicaveis": payload.categorias_aplicaveis,
+        "categorias_aplicaveis": [],
         "ativo": payload.ativo,
     }
     tag = tags_repo.editar_tag(empresa_id, payload.id, dados)
@@ -87,9 +89,6 @@ def atualizar_tags_material(empresa_id: str, payload: MaterialTagsUpdate, curren
         tag = tags_repo.buscar_tag(empresa_id, tag_id)
         if not tag:
             raise HTTPException(status_code=400, detail="Tag informada nao existe")
-        categorias = tag.get("categorias_aplicaveis") or []
-        if categorias and material.get("categoria") not in categorias:
-            raise HTTPException(status_code=400, detail=f"Tag {tag.get('nome')} nao se aplica a {material.get('categoria')}")
 
     anterior = tags_repo.listar_tags_do_material(empresa_id, payload.material_id)
     vinculos = tags_repo.substituir_tags_material(empresa_id, payload.material_id, payload.tag_ids)
@@ -151,8 +150,8 @@ def excluir_regra(empresa_id: str, payload: RegraTagDelete, current_user: dict, 
 def montar_dados_regra(empresa_id: str, payload: RegraTagCreate):
     validar_categoria(payload.categoria_a)
     validar_categoria(payload.categoria_b)
-    validar_tags_da_regra(empresa_id, payload.tag_ids_a, payload.categoria_a)
-    validar_tags_da_regra(empresa_id, payload.tag_ids_b, payload.categoria_b)
+    validar_tags_da_regra(empresa_id, payload.tag_ids_a)
+    validar_tags_da_regra(empresa_id, payload.tag_ids_b)
 
     cobranca_nome = payload.cobranca_nome.strip() or payload.nome.strip()
 
@@ -181,11 +180,8 @@ def validar_categoria(categoria: str):
         raise HTTPException(status_code=400, detail="Categoria invalida")
 
 
-def validar_tags_da_regra(empresa_id: str, tag_ids: list[str], categoria: str):
+def validar_tags_da_regra(empresa_id: str, tag_ids: list[str]):
     for tag_id in tag_ids or []:
         tag = tags_repo.buscar_tag(empresa_id, tag_id)
         if not tag:
             raise HTTPException(status_code=400, detail="Tag da regra nao encontrada")
-        categorias = tag.get("categorias_aplicaveis") or []
-        if categorias and categoria not in categorias:
-            raise HTTPException(status_code=400, detail=f"Tag {tag.get('nome')} nao se aplica a {categoria}")
