@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -18,6 +20,29 @@ class PedidoUpdate(PedidoCreate):
     @field_validator("id", mode="before")
     @classmethod
     def strip_id(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
+
+
+class PedidoAprovar(BaseModel):
+    empresa_slug: str = ""
+    id: str = Field(min_length=1)
+    parcelas_boletos: int = Field(default=1, ge=1, le=24)
+    vencimentos_boletos: list[date] = Field(default_factory=list)
+
+    @field_validator("empresa_slug", "id", mode="before")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
+
+
+class PedidoStatusUpdate(BaseModel):
+    empresa_slug: str = ""
+    id: str = Field(min_length=1)
+    status: str = Field(min_length=1)
+
+    @field_validator("empresa_slug", "id", "status", mode="before")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
         return value.strip() if isinstance(value, str) else value
 
 
