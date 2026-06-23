@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 
 from app.core.auth import assert_same_company, require_permission
-from app.schemas.pedidos import PedidoCreate, PedidoProdutoCreate, PedidoUpdate
+from app.schemas.pedidos import PedidoAprovar, PedidoCreate, PedidoProdutoCreate, PedidoStatusUpdate, PedidoUpdate
 from app.services import pedidos_service
 
 router = APIRouter()
@@ -32,9 +32,15 @@ def editar_orcamento(payload: PedidoUpdate, request: Request, current_user: dict
 
 
 @router.post("/orcamentos/aprovar")
-def aprovar_orcamento(payload: dict, request: Request, current_user: dict = Depends(require_permission("orcamentos"))):
-    empresa_id = assert_same_company(current_user, empresa_slug=str(payload.get("empresa_slug") or ""))
-    return pedidos_service.aprovar(empresa_id, str(payload.get("id") or ""), current_user, request)
+def aprovar_orcamento(payload: PedidoAprovar, request: Request, current_user: dict = Depends(require_permission("orcamentos"))):
+    empresa_id = assert_same_company(current_user, empresa_slug=payload.empresa_slug)
+    return pedidos_service.aprovar(empresa_id, payload, current_user, request)
+
+
+@router.post("/orcamentos/status")
+def atualizar_status_orcamento(payload: PedidoStatusUpdate, request: Request, current_user: dict = Depends(require_permission("orcamentos"))):
+    empresa_id = assert_same_company(current_user, empresa_slug=payload.empresa_slug)
+    return pedidos_service.atualizar_status(empresa_id, payload, current_user, request)
 
 
 @router.get("/orcamentos/produtos")
