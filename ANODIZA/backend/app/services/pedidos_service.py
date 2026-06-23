@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
 from fastapi import HTTPException, Request
@@ -101,9 +101,16 @@ def dividir_valor(total: float, parcelas: int) -> list[Decimal]:
     return valores
 
 
+def vencimentos_padrao(parcelas: int):
+    hoje = datetime.now(timezone.utc).date()
+    return [hoje + timedelta(days=7 * indice) for indice in range(parcelas)]
+
+
 def montar_plano_boletos(valor_total: float, parcelas: int, vencimentos) -> dict:
     parcelas = max(1, int(parcelas or 1))
     vencimentos = list(vencimentos or [])
+    if not vencimentos:
+        vencimentos = vencimentos_padrao(parcelas)
     if len(vencimentos) != parcelas:
         raise HTTPException(status_code=400, detail="Informe uma data de vencimento para cada boleto")
 
