@@ -26,6 +26,8 @@ UNIDADE_TEXTO = {
     "par": "par",
 }
 
+SNAPSHOT_SCHEMA = "orcamento_produto_v1"
+
 
 def listar(empresa_id: str, ativos_apenas: bool = False):
     return produtos_repo.listar(empresa_id, ativos_apenas=ativos_apenas)
@@ -100,11 +102,7 @@ def adicionar_ao_orcamento(empresa_id: str, payload: ProdutoConfiguravelOrcament
         "quantidade": payload.quantidade,
         "valor_unitario": calculo["valor_unitario"],
         "valor_total": calculo["valor_total"],
-        "dados": {
-            "produto_configuravel_id": payload.produto_id,
-            "valores": payload.valores,
-            "calculo": calculo,
-        },
+        "dados": montar_snapshot_orcamento_local(payload, calculo),
     }
     linha = pedidos_repo.inserir_linha(empresa_id, dados_linha)
     if not linha:
@@ -129,6 +127,7 @@ def calcular_produto(empresa_id: str, produto: dict, valores: dict, quantidade: 
 
     linhas = []
     valor_unitario = 0.0
+    custo_unitario = 0.0
 
     for componente in componentes:
         origem = componente.get("origem")
@@ -137,30 +136,87 @@ def calcular_produto(empresa_id: str, produto: dict, valores: dict, quantidade: 
             if linha:
                 linhas.append(linha)
                 valor_unitario += linha["total"]
+                custo_unitario += linha.get("custo_total", 0)
         elif origem == "insumos_do_material":
             for linha in calcular_insumos_do_material(empresa_id, componente, materiais_cache, valores, medidas):
                 linhas.append(linha)
                 valor_unitario += linha["total"]
+                custo_unitario += linha.get("custo_total", 0)
         elif origem == "tag_regras":
             for linha in calcular_tag_regras(empresa_id, materiais_cache, medidas):
                 linhas.append(linha)
                 valor_unitario += linha["total"]
+                custo_unitario += linha.get("custo_total", 0)
         elif origem == "valor_adicional":
             linha = calcular_valor_adicional(componente, valores)
             if linha:
                 linhas.append(linha)
                 valor_unitario += linha["total"]
+                custo_unitario += linha.get("custo_total", 0)
 
     valor_unitario = round(valor_unitario, 2)
+    custo_unitario = round(custo_unitario, 2)
+    valor_total = round(valor_unitario * qtd, 2)
+    custo_total = round(custo_unitario * qtd, 2)
+    margem = round(valor_total - custo_total, 2)
+    margem_percentual = round((margem / valor_total * 100) if valor_total and custo_total else 0, 2)
+
     return {
         "produto_id": produto.get("id"),
+        "produto_versao_id": produto.get("produto_versao_id") or produto.get("versao_atual_id"),
+        "produto_origem": "local",
         "nome": produto.get("nome"),
         "quantidade": qtd,
         "valor_unitario": valor_unitario,
-        "valor_total": round(valor_unitario * qtd, 2),
+        "valor_total": valor_total,
+        "custo_unitario": custo_unitario,
+        "custo_total": custo_total,
+        "margem": margem,
+        "margem_percentual": margem_percentual,
         "medidas": medidas,
         "linhas": linhas,
+        "configuracao_snapshot": config,
+        "materiais_snapshot": materiais_snapshot(linhas),
     }
+
+
+def montar_snapshot_orcamento_local(payload: ProdutoConfiguravelOrcamentoCreate, calculo: dict):
+    return {
+        "snapshot_schema": SNAPSHOT_SCHEMA,
+        "produto_origem": "local",
+        "produto_id": calculo.get("produto_id") or payload.produto_id,
+        "produto_versao_id": calculo.get("produto_versao_id"),
+        "produto_configuravel_id": payload.produto_id,
+        "nome_produto_snapshot": calculo.get("nome"),
+        "valores": payload.valores,
+        "configuracao_snapshot": calculo.get("configuracao_snapshot") or {},
+        "materiais_snapshot": calculo.get("materiais_snapshot") or [],
+        "calculo_snapshot": calculo,
+        "calculo": calculo,
+        "custo_total": calculo.get("custo_total", 0),
+        "margem": calculo.get("margem", 0),
+        "margem_percentual": calculo.get("margem_percentual", 0),
+    }
+
+
+def materiais_snapshot(linhas: list[dict]):
+    snapshot = []
+    for linha in linhas:
+        material_id = linha.get("material_id")
+        if not material_id:
+            continue
+        snapshot.append({
+            "material_id": material_id,
+            "nome": linha.get("material"),
+            "origem_linha": linha.get("origem"),
+            "quantidade": linha.get("quantidade"),
+            "unidade": linha.get("unidade"),
+            "valor_unitario": linha.get("valor_unitario"),
+            "custo_unitario": linha.get("custo_unitario", 0),
+            "valor_total": linha.get("total"),
+            "custo_total": linha.get("custo_total", 0),
+        })
+    return snapshot
 
 
 def validar_campos(campos: list[dict], valores: dict):
@@ -250,8 +306,10 @@ def calcular_componente_material(componente: dict, materiais_cache: dict, valore
     if quantidade <= 0:
         return None
     preco = float(material.get("preco_unitario") or 0)
+    custo = float(material.get("custo_unitario") or 0)
     total = preco * quantidade
-    return linha_calculo(componente.get("nome") or material.get("nome"), material.get("nome"), quantidade, componente.get("base_quantidade"), preco, total, material.get("id"))
+    custo_total = custo * quantidade
+    return linha_calculo(componente.get("nome") or material.get("nome"), material.get("nome"), quantidade, componente.get("base_quantidade"), preco, total, material.get("id"), custo, custo_total)
 
 
 def calcular_insumos_do_material(empresa_id: str, componente: dict, materiais_cache: dict, valores: dict, medidas: dict):
@@ -267,9 +325,11 @@ def calcular_insumos_do_material(empresa_id: str, componente: dict, materiais_ca
             continue
         quantidade = quantidade_por_unidade_material(insumo, componente, valores, medidas)
         preco = float(insumo.get("preco_unitario") or 0)
+        custo = float(insumo.get("custo_unitario") or 0)
         total = preco * quantidade
+        custo_total = custo * quantidade
         if quantidade > 0:
-            linhas.append(linha_calculo(componente.get("nome") or "Insumo do material", insumo.get("nome"), quantidade, componente.get("base_quantidade"), preco, total, insumo.get("id")))
+            linhas.append(linha_calculo(componente.get("nome") or "Insumo do material", insumo.get("nome"), quantidade, componente.get("base_quantidade"), preco, total, insumo.get("id"), custo, custo_total))
     return linhas
 
 
@@ -303,6 +363,8 @@ def calcular_tag_regras(empresa_id: str, materiais_cache: dict, medidas: dict):
                         "unidade": unidade_texto_regra(regra.get("unidade_calculo")),
                         "valor_unitario": round(valor_unitario, 2),
                         "total": round(total, 2),
+                        "custo_unitario": 0,
+                        "custo_total": 0,
                         "regra_id": regra.get("id"),
                     })
     return linhas
@@ -338,6 +400,8 @@ def calcular_valor_adicional(componente: dict, valores: dict):
         "unidade": "un",
         "valor_unitario": round(valor, 2),
         "total": round(valor, 2),
+        "custo_unitario": 0,
+        "custo_total": 0,
     }
 
 
@@ -387,7 +451,7 @@ def unidade_texto_regra(unidade: str):
     return UNIDADE_TEXTO.get(unidade, unidade or "un")
 
 
-def linha_calculo(nome: str, material_nome: str, quantidade: float, base: str, preco: float, total: float, material_id: str | None = None):
+def linha_calculo(nome: str, material_nome: str, quantidade: float, base: str, preco: float, total: float, material_id: str | None = None, custo: float = 0, custo_total: float = 0):
     return {
         "nome": nome,
         "origem": "material",
@@ -397,4 +461,6 @@ def linha_calculo(nome: str, material_nome: str, quantidade: float, base: str, p
         "unidade": UNIDADE_TEXTO.get(base or "unidade", "un"),
         "valor_unitario": round(float(preco or 0), 2),
         "total": round(float(total or 0), 2),
+        "custo_unitario": round(float(custo or 0), 2),
+        "custo_total": round(float(custo_total or 0), 2),
     }
