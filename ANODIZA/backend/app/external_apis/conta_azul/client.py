@@ -1,10 +1,12 @@
+import json
 import os
 import re
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
-
-import requests
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 
 CONTA_AZUL_BASE_URL = (os.getenv("CONTA_AZUL_BASE_URL") or "https://api-v2.contaazul.com").rstrip("/")
@@ -26,50 +28,55 @@ def decimal_money(valor: Any) -> Decimal:
     return Decimal(str(valor or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-def conta_azul_headers(access_token: str) -> dict[str, str]:
-    if not access_token:
-        raise ContaAzulConfigError("Access token da Conta Azul nao configurado para esta empresa.")
+def conta_azul_headers(auth_value: str) -> dict[str, str]:
+    if not auth_value:
+        raise ContaAzulConfigError("Credencial da Conta Azul nao configurada para esta empresa.")
 
     return {
         "accept": "application/json",
         "content-type": "application/json",
-        "Authorization": f"Bearer {access_token}",
+        "Authorization": f"Bearer {auth_value}",
     }
 
 
-def _request(access_token: str, method: str, path: str, **kwargs) -> dict[str, Any]:
-    url = f"{CONTA_AZUL_BASE_URL}{path}"
+def _decode_response(raw: bytes) -> dict[str, Any]:
+    if not raw:
+        return {}
+    texto = raw.decode("utf-8", errors="replace")
+    return json.loads(texto) if texto else {}
+
+
+def _request(auth_value: str, method: str, path: str, **kwargs) -> dict[str, Any]:
+    params = kwargs.pop("params", None) or {}
+    query = f"?{urlencode(params)}" if params else ""
+    url = f"{CONTA_AZUL_BASE_URL}{path}{query}"
+    body = kwargs.pop("json", None)
+    data = json.dumps(body).encode("utf-8") if body is not None else None
+    req = Request(url, data=data, headers=conta_azul_headers(auth_value), method=method.upper())
+
     try:
-        response = requests.request(
-            method,
-            url,
-            headers=conta_azul_headers(access_token),
-            timeout=30,
-            **kwargs,
-        )
-    except requests.RequestException as exc:
+        with urlopen(req, timeout=30) as response:
+            return _decode_response(response.read())
+    except HTTPError as exc:
+        raw = exc.read()
+        detalhe = raw.decode("utf-8", errors="replace") if raw else str(exc)
+        try:
+            body_error = json.loads(detalhe)
+            detalhe = body_error.get("error") or body_error.get("description") or body_error.get("message") or detalhe
+        except ValueError:
+            pass
+        raise ContaAzulApiError(f"Conta Azul HTTP {exc.code}: {detalhe}") from exc
+    except URLError as exc:
         raise ContaAzulApiError(f"Erro de conexao com Conta Azul: {exc}") from exc
 
-    if response.ok:
-        return response.json() if response.text else {}
 
-    detalhe = response.text
-    try:
-        body = response.json()
-        detalhe = body.get("error") or body.get("description") or body.get("message") or detalhe
-    except ValueError:
-        pass
-
-    raise ContaAzulApiError(f"Conta Azul HTTP {response.status_code}: {detalhe}")
-
-
-def buscar_pessoa_por_documento(access_token: str, documento: str) -> dict[str, Any] | None:
+def buscar_pessoa_por_documento(auth_value: str, documento: str) -> dict[str, Any] | None:
     documento_limpo = apenas_digitos(documento)
     if not documento_limpo:
         return None
 
     data = _request(
-        access_token,
+        auth_value,
         "GET",
         "/v1/pessoas",
         params={
@@ -84,24 +91,24 @@ def buscar_pessoa_por_documento(access_token: str, documento: str) -> dict[str, 
     return None
 
 
-def criar_pessoa(access_token: str, payload: dict[str, Any]) -> dict[str, Any]:
+def criar_pessoa(auth_value: str, payload: dict[str, Any]) -> dict[str, Any]:
     nome = str(payload.get("nome") or "").strip()
     if not nome:
         raise ValueError("Nome do cliente nao informado para criar pessoa na Conta Azul.")
 
-    return _request(access_token, "POST", "/v1/pessoas", json=payload)
+    return _request(auth_value, "POST", "/v1/pessoas", json=payload)
 
 
-def obter_ou_criar_pessoa(access_token: str, payload: dict[str, Any]) -> dict[str, Any]:
+def obter_ou_criar_pessoa(auth_value: str, payload: dict[str, Any]) -> dict[str, Any]:
     documento = payload.get("cpf") or payload.get("cnpj") or ""
-    existente = buscar_pessoa_por_documento(access_token, str(documento))
+    existente = buscar_pessoa_por_documento(auth_value, str(documento))
     if existente:
         return existente
-    return criar_pessoa(access_token, payload)
+    return criar_pessoa(auth_value, payload)
 
 
-def proximo_numero_venda(access_token: str) -> int:
-    data = _request(access_token, "GET", "/v1/venda/proximo-numero")
+def proximo_numero_venda(auth_value: str) -> int:
+    data = _request(auth_value, "GET", "/v1/venda/proximo-numero")
     if isinstance(data, int):
         return data
     for chave in ("numero", "next", "proximo_numero", "proximoNumero"):
@@ -110,8 +117,8 @@ def proximo_numero_venda(access_token: str) -> int:
     raise ContaAzulApiError("Conta Azul nao retornou o proximo numero da venda.")
 
 
-def criar_venda(access_token: str, payload: dict[str, Any]) -> dict[str, Any]:
-    return _request(access_token, "POST", "/v1/venda", json=payload)
+def criar_venda(auth_value: str, payload: dict[str, Any]) -> dict[str, Any]:
+    return _request(auth_value, "POST", "/v1/venda", json=payload)
 
 
 def data_iso(valor: date | str | None = None) -> str:
