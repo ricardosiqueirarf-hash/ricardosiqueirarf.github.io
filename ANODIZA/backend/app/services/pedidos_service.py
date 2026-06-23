@@ -11,9 +11,11 @@ from app.schemas.pedidos import PedidoAprovar, PedidoCreate, PedidoProdutoCreate
 
 logger = logging.getLogger(__name__)
 
-STATUS_ORCAMENTO = "orcamento"
+# Status 1 continua sendo exibido como "Orçamento", mas o valor salvo no banco
+# precisa respeitar o check constraint atual da tabela orcamentos.
+STATUS_ORCAMENTO = "rascunho"
 STATUS_APROVADO = "aprovado"
-STATUS_EM_PRODUCAO = "em_producao"
+STATUS_EM_PRODUCAO = "producao"
 STATUS_SEPARADO = "separado"
 STATUS_ENTREGUE = "entregue"
 
@@ -27,8 +29,10 @@ STATUS_ORDEM = {
 
 STATUS_LABELS = {
     STATUS_ORCAMENTO: "Orçamento",
+    "orcamento": "Orçamento",
     STATUS_APROVADO: "Aprovado",
     STATUS_EM_PRODUCAO: "Em produção",
+    "em_producao": "Em produção",
     STATUS_SEPARADO: "Separado",
     STATUS_ENTREGUE: "Entregue",
 }
@@ -38,12 +42,16 @@ STATUS_ALIASES = {
     "rascunho": STATUS_ORCAMENTO,
     "orcamento": STATUS_ORCAMENTO,
     "orçamento": STATUS_ORCAMENTO,
+    "enviado": STATUS_ORCAMENTO,
     "aprovado": STATUS_APROVADO,
+    "producao": STATUS_EM_PRODUCAO,
+    "produção": STATUS_EM_PRODUCAO,
     "em_producao": STATUS_EM_PRODUCAO,
     "em produção": STATUS_EM_PRODUCAO,
     "em_produção": STATUS_EM_PRODUCAO,
     "separado": STATUS_SEPARADO,
     "entregue": STATUS_ENTREGUE,
+    "finalizado": STATUS_ENTREGUE,
 }
 
 TRANSICOES_PRODUCAO = {
