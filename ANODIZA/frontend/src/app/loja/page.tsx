@@ -10,6 +10,7 @@ import ProdutosPanel from "./ProdutosPanel";
 import TagsPanel from "./TagsPanel";
 
 type Aba = "painel" | "orcamentos" | "clientes" | "usuarios" | "ajustes" | "produtos" | "materiais" | "tags";
+type MenuGrupoId = "gerencial" | "orcamentos" | "cadastro" | "usuarios" | "calculos" | "ajustes";
 type Permissoes = Record<Aba, boolean>;
 type Usuario = { id?: string; nome?: string; email?: string; perfil?: string; permissoes?: Partial<Permissoes> };
 type AuthMe = { ok: boolean; usuario: Usuario };
@@ -35,6 +36,8 @@ type Orcamento = {
 
 type ClienteForm = { nome: string; documento: string; email: string; telefone: string };
 type OrcamentoForm = { nome_orcamento: string; cliente_id: string };
+type MenuItem = { aba: Aba; rotulo: string; badge?: string };
+type MenuGrupo = { id: MenuGrupoId; rotulo: string; icone: string; itens: MenuItem[] };
 
 const basePermissoes: Permissoes = {
   painel: true,
@@ -104,6 +107,7 @@ export default function LojaPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [empresaSlug, setEmpresaSlug] = useState("");
   const [aba, setAba] = useState<Aba>("painel");
+  const [menuAberto, setMenuAberto] = useState<MenuGrupoId | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [orcamentoProduto, setOrcamentoProduto] = useState<Orcamento | null>(null);
@@ -287,43 +291,82 @@ export default function LojaPage() {
     }
   }
 
-  function itemMenu(chave: Aba, rotulo: string) {
-    if (!pode(chave)) return null;
-    return <button key={chave} type="button" role="menuitem" className={aba === chave ? "nav-active" : ""} onClick={() => abrir(chave)}>{rotulo}</button>;
+  const gruposMenu: MenuGrupo[] = [
+    { id: "gerencial", rotulo: "Gerencial", icone: "⌂", itens: [{ aba: "painel", rotulo: "Painel" }] },
+    { id: "orcamentos", rotulo: "Orçamentos", icone: "R$", itens: [{ aba: "orcamentos", rotulo: "Orçamentos" }, { aba: "clientes", rotulo: "Clientes" }] },
+    { id: "cadastro", rotulo: "Cadastro", icone: "▣", itens: [{ aba: "materiais", rotulo: "Materiais" }] },
+    { id: "usuarios", rotulo: "Usuários", icone: "👤", itens: [{ aba: "usuarios", rotulo: "Usuários" }] },
+    { id: "calculos", rotulo: "Cálculos", icone: "∑", itens: [{ aba: "produtos", rotulo: "Produtos" }, { aba: "tags", rotulo: "Tags" }] },
+    { id: "ajustes", rotulo: "Ajustes", icone: "⚙", itens: [{ aba: "ajustes", rotulo: "Ajustes" }] },
+  ];
+
+  const gruposVisiveis = gruposMenu
+    .map((grupo) => ({ ...grupo, itens: grupo.itens.filter((item) => pode(item.aba)) }))
+    .filter((grupo) => grupo.itens.length > 0);
+  const grupoSecundario = gruposVisiveis.find((grupo) => grupo.id === menuAberto) || null;
+
+  function grupoAtivo(grupo: MenuGrupo) {
+    return grupo.itens.some((item) => item.aba === aba);
   }
 
-  function grupoMenu(titulo: string, itens: Array<React.ReactNode>, chaves: Aba[]) {
-    const visiveis = itens.filter(Boolean);
-    if (!visiveis.length) return null;
-    const ativo = chaves.includes(aba);
-    return (
-      <div className="nav-dropdown-group">
-        <button type="button" className={`nav-dropdown-trigger ${ativo ? "nav-active" : ""}`} aria-haspopup="menu" aria-expanded="false">
-          {titulo}
-        </button>
-        <div className="nav-dropdown-menu" role="menu">{visiveis}</div>
-      </div>
-    );
+  function abrirGrupo(grupo: MenuGrupo) {
+    setMenuAberto(grupo.id);
+    if (grupo.itens.length === 1) {
+      void abrir(grupo.itens[0].aba);
+    }
   }
 
   if (carregando) return <main className="dashboard"><section className="card"><h1>Carregando sessão...</h1><p>Validando usuário....</p></section></main>;
   if (!usuario) return <main className="dashboard"><section className="card"><h1>Sessão inválida</h1><button onClick={() => router.push("/login")}>Entrar</button></section></main>;
 
   return (
-    <main className="dashboard">
+    <main className={`dashboard ${grupoSecundario ? "menu-secondary-open" : ""}`}>
       <aside className="sidebar">
         <div className="brand"><div className="brand-mark">A</div><div><strong>ANODIZA</strong><p>{usuario.nome}</p></div></div>
-        <p>Empresa: {empresaSlug}</p>
-        <nav className="app-nav">
-          {grupoMenu("Gerencial", [itemMenu("painel", "Painel")], ["painel"])}
-          {grupoMenu("Orçamentos", [itemMenu("orcamentos", "Orçamentos"), itemMenu("clientes", "Clientes")], ["orcamentos", "clientes"])}
-          {grupoMenu("Cadastro", [itemMenu("materiais", "Materiais")], ["materiais"])}
-          {grupoMenu("Usuários", [isMaster ? itemMenu("usuarios", "Usuários") : null], ["usuarios"])}
-          {grupoMenu("Cálculos", [itemMenu("produtos", "Produtos"), itemMenu("tags", "Tags")], ["produtos", "tags"])}
-          {itemMenu("ajustes", "Ajustes")}
-          <button onClick={sair}>Sair</button>
+        <p className="sidebar-company">Empresa: {empresaSlug}</p>
+        <nav className="app-nav" aria-label="Menu principal">
+          {gruposVisiveis.map((grupo) => (
+            <button
+              key={grupo.id}
+              type="button"
+              className={`nav-primary-button ${grupoAtivo(grupo) ? "nav-active" : ""} ${grupoSecundario?.id === grupo.id ? "nav-open" : ""}`}
+              data-icon={grupo.icone}
+              aria-haspopup="menu"
+              aria-expanded={grupoSecundario?.id === grupo.id}
+              onClick={() => abrirGrupo(grupo)}
+            >
+              <span className="nav-label">{grupo.rotulo}</span>
+              <span className="nav-chevron">›</span>
+            </button>
+          ))}
+          <button type="button" className="nav-primary-button nav-logout" data-icon="⎋" onClick={sair}>
+            <span className="nav-label">Sair</span>
+          </button>
         </nav>
       </aside>
+
+      {grupoSecundario && (
+        <aside className="nav-secondary-panel" aria-label={`Submenu ${grupoSecundario.rotulo}`}>
+          <div className="nav-secondary-header">
+            <span>{grupoSecundario.rotulo}</span>
+            <button type="button" aria-label="Fechar submenu" onClick={() => setMenuAberto(null)}>×</button>
+          </div>
+          <nav className="nav-secondary-list" role="menu">
+            {grupoSecundario.itens.map((item) => (
+              <button
+                key={item.aba}
+                type="button"
+                role="menuitem"
+                className={aba === item.aba ? "nav-active" : ""}
+                onClick={() => abrir(item.aba)}
+              >
+                <span>{item.rotulo}</span>
+                {item.badge && <small>{item.badge}</small>}
+              </button>
+            ))}
+          </nav>
+        </aside>
+      )}
 
       <section className="main">
         <header className="dashboard-topbar">
