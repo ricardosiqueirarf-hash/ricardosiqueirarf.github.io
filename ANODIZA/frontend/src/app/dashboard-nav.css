@@ -93,23 +93,28 @@
   box-shadow: none;
 }
 
-.app-nav .nav-primary-button::before {
-  content: attr(data-icon) !important;
-  width: 50px !important;
-  height: 48px !important;
-  margin: 0 !important;
+.app-nav .nav-primary-button::before,
+.app-nav .nav-primary-button::after {
+  display: none !important;
+  content: none !important;
+}
+
+.nav-icon {
+  width: 50px;
+  height: 48px;
   display: grid;
   place-items: center;
   border-radius: 15px;
-  background: rgba(255, 255, 255, .035) !important;
-  color: rgba(249, 250, 251, .86);
-  font-size: 16px;
-  font-weight: 950;
-  box-shadow: none !important;
+  background: rgba(255, 255, 255, .045);
+  color: rgba(249, 250, 251, .9);
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 
-.app-nav .nav-primary-button::after {
-  display: none !important;
+.nav-icon svg {
+  width: 21px;
+  height: 21px;
+  display: block;
+  overflow: visible;
 }
 
 .app-nav .nav-primary-button:hover,
@@ -120,12 +125,12 @@
   color: #fff5c7;
 }
 
-.app-nav .nav-primary-button:hover::before,
-.app-nav .nav-primary-button.nav-active::before,
-.app-nav .nav-primary-button.nav-open::before {
-  background: linear-gradient(135deg, #fff1a8 0%, #d4af37 52%, #9c7112 100%) !important;
+.app-nav .nav-primary-button:hover .nav-icon,
+.app-nav .nav-primary-button.nav-active .nav-icon,
+.app-nav .nav-primary-button.nav-open .nav-icon {
+  background: linear-gradient(135deg, #fff1a8 0%, #d4af37 52%, #9c7112 100%);
   color: #060912;
-  box-shadow: 0 0 20px rgba(212, 175, 55, .48) !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, .48);
 }
 
 .nav-label {
@@ -169,11 +174,11 @@
   border-color: rgba(248, 113, 113, .34);
 }
 
-.app-nav .nav-logout:hover::before,
-.app-nav .nav-logout::before {
+.app-nav .nav-logout .nav-icon,
+.app-nav .nav-logout:hover .nav-icon {
   color: #fecaca;
-  background: rgba(248, 113, 113, .10) !important;
-  box-shadow: none !important;
+  background: rgba(248, 113, 113, .10);
+  box-shadow: none;
 }
 
 .nav-secondary-panel {
