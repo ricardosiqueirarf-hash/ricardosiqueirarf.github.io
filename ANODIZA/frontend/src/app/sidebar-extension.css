@@ -35,6 +35,28 @@
   overflow: visible !important;
 }
 
+.app-nav .nav-primary-button::before,
+.app-nav .nav-primary-button::after {
+  display: none !important;
+  content: none !important;
+}
+
+.nav-icon {
+  width: 50px !important;
+  height: 48px !important;
+  min-width: 50px !important;
+  display: grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+}
+
+.nav-icon svg {
+  width: 21px !important;
+  height: 21px !important;
+  display: block !important;
+  overflow: visible !important;
+}
+
 .nav-label,
 .nav-chevron,
 .sidebar .brand > div:last-child,
