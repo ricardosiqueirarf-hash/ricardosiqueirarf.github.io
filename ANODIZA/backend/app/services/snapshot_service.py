@@ -108,3 +108,58 @@ def snapshot_manual(nome: str, quantidade: float, valor_unitario: float) -> dict
         valor_unitario=valor_unitario,
         valor_total=valor_total,
     )
+
+
+def normalizar_snapshot_de_linha(dados_linha: dict) -> dict:
+    """Normaliza dados jsonb antes de inserir em orcamento_produtos.
+
+    Centralizar aqui garante que produto local, produto global e produto manual
+    passem a ter o mesmo envelope minimo de snapshot sem refatorar os services
+    existentes nem depender das colunas novas da migration 010.
+    """
+    dados = dados_linha.get("dados") if isinstance(dados_linha.get("dados"), dict) else {}
+    if not dados:
+        return snapshot_manual(
+            str(dados_linha.get("nome") or "Produto manual"),
+            numero(dados_linha.get("quantidade"), 1),
+            numero(dados_linha.get("valor_unitario")),
+        )
+
+    calculo = dados.get("calculo_snapshot") or dados.get("calculo") or {}
+    if not isinstance(calculo, dict):
+        calculo = {}
+
+    produto_nome = (
+        dados.get("produto_nome")
+        or dados.get("nome_produto_snapshot")
+        or calculo.get("nome")
+        or dados_linha.get("nome")
+        or "Produto"
+    )
+    produto_origem = dados.get("produto_origem") or calculo.get("produto_origem") or "manual"
+    valores = dados.get("valores_preenchidos") or dados.get("valores") or calculo.get("valores") or {}
+    configuracao = dados.get("configuracao_snapshot") or calculo.get("configuracao_snapshot") or {}
+    materiais = dados.get("materiais_snapshot") or calculo.get("materiais_snapshot") or []
+    custo_total = dados.get("custo_total", calculo.get("custo_total", 0))
+    margem_total = dados.get("margem_total", dados.get("margem", calculo.get("margem")))
+    margem_percentual = dados.get("margem_percentual", calculo.get("margem_percentual", 0))
+
+    snapshot = montar_snapshot_linha_orcamento(
+        produto_id=dados.get("produto_id") or calculo.get("produto_id"),
+        produto_nome=str(produto_nome),
+        produto_origem=str(produto_origem),
+        produto_versao_id=dados.get("produto_versao_id") or calculo.get("produto_versao_id"),
+        produto_versao_numero=dados.get("produto_versao_numero") or calculo.get("produto_versao_numero") or 1,
+        valores_preenchidos=valores if isinstance(valores, dict) else {},
+        configuracao_snapshot=configuracao if isinstance(configuracao, dict) else {},
+        calculo_snapshot=calculo,
+        materiais_snapshot=materiais if isinstance(materiais, list) else [],
+        custo_total=custo_total,
+        margem_total=margem_total,
+        margem_percentual=margem_percentual,
+        valor_unitario=dados.get("valor_unitario", dados_linha.get("valor_unitario", calculo.get("valor_unitario", 0))),
+        valor_total=dados.get("valor_total", dados_linha.get("valor_total", calculo.get("valor_total", 0))),
+        extras=dados,
+    )
+    snapshot.setdefault("congelado_em", agora_utc_iso())
+    return snapshot
